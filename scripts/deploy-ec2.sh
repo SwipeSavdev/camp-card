@@ -36,12 +36,12 @@ echo "=== Stopping existing containers ==="
 docker compose -f "$COMPOSE_FILE" down --remove-orphans || true
 
 echo ""
-echo "=== Pulling latest images ==="
+echo "=== Pulling latest images from GHCR ==="
 docker compose -f "$COMPOSE_FILE" pull || true
 
 echo ""
-echo "=== Starting containers ==="
-docker compose -f "$COMPOSE_FILE" up -d
+echo "=== Starting containers (using pre-built images) ==="
+docker compose -f "$COMPOSE_FILE" up -d --no-build
 
 echo ""
 echo "=== Waiting for services to be healthy ==="

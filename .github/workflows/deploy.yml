@@ -179,19 +179,37 @@ jobs:
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/campcard/
 
       - name: Deploy on EC2
+        env:
+          BACKEND_IMG: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+          WEB_IMG: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE }}:latest
+          MOBILE_IMG: ${{ env.REGISTRY }}/${{ env.MOBILE_IMAGE }}:latest
         run: |
           ssh -i ~/.ssh/campcard.pem -o StrictHostKeyChecking=no \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << ENDSSH
 
             cd /home/${{ secrets.EC2_USER }}/campcard
 
             # Login to GitHub Container Registry
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+            # Set image environment variables for docker-compose
+            export BACKEND_IMAGE="${BACKEND_IMG}"
+            export WEB_IMAGE="${WEB_IMG}"
+            export MOBILE_IMAGE="${MOBILE_IMG}"
+
             # Pull latest images
-            docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest || true
-            docker pull ${{ env.REGISTRY }}/${{ env.WEB_IMAGE }}:latest || true
-            docker pull ${{ env.REGISTRY }}/${{ env.MOBILE_IMAGE }}:latest || true
+            docker pull \${BACKEND_IMAGE} || true
+            docker pull \${WEB_IMAGE} || true
+            docker pull \${MOBILE_IMAGE} || true
+
+            # Update .env with image names
+            grep -v "^BACKEND_IMAGE=" .env > .env.tmp || true
+            grep -v "^WEB_IMAGE=" .env.tmp > .env.tmp2 || true
+            grep -v "^MOBILE_IMAGE=" .env.tmp2 > .env || true
+            echo "BACKEND_IMAGE=\${BACKEND_IMAGE}" >> .env
+            echo "WEB_IMAGE=\${WEB_IMAGE}" >> .env
+            echo "MOBILE_IMAGE=\${MOBILE_IMAGE}" >> .env
+            rm -f .env.tmp .env.tmp2
 
             # Run deployment script
             chmod +x deploy-ec2.sh

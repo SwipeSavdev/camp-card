@@ -1,13 +1,11 @@
-version: '3.8'
-
 # ============================================================================
-# Camp Card - AWS Docker Compose (All Services Dockerized)
+# Camp Card - AWS Docker Compose (Using Pre-built Images from GHCR)
 # ============================================================================
 # PostgreSQL is external (RDS) - not included here
 #
 # Usage:
 #   1. Copy .env.aws.example to .env and fill values
-#   2. Run: docker-compose -f docker-compose-aws.yml up -d --build
+#   2. Run: docker-compose -f docker-compose-aws.yml up -d
 # ============================================================================
 
 services:
@@ -15,9 +13,7 @@ services:
   # BACKEND API (Java Spring Boot) - Port 7010
   # ==========================================================================
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-ghcr.io/swipesavdev/camp-card/backend:latest}
     container_name: campcard-backend
     ports:
       - "7010:7010"
@@ -53,9 +49,7 @@ services:
   # WEB PORTAL (Next.js) - Port 7020
   # ==========================================================================
   web:
-    build:
-      context: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
-      dockerfile: Dockerfile
+    image: ${WEB_IMAGE:-ghcr.io/swipesavdev/camp-card/web:latest}
     container_name: campcard-web
     ports:
       - "7020:7020"
@@ -85,9 +79,7 @@ services:
   # Testers can connect via Expo Go app on their phones
   # The tunnel URL will be printed in docker logs
   mobile:
-    build:
-      context: ./camp-card-mobile-app-v2-mobile-main/mobile
-      dockerfile: Dockerfile
+    image: ${MOBILE_IMAGE:-ghcr.io/swipesavdev/camp-card/mobile:latest}
     container_name: campcard-mobile
     ports:
       - "8081:8081"
