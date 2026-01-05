@@ -22,6 +22,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --legacy-peer-deps
 
+# Install ngrok globally for Expo tunnel mode
+RUN npm install -g @expo/ngrok@^4.1.0
+
 # Copy source code
 COPY . .
 
@@ -42,6 +45,8 @@ EXPOSE 8081 19000 19001 19002
 # Environment variables for Expo
 ENV EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
 ENV REACT_NATIVE_PACKAGER_HOSTNAME=0.0.0.0
+# CI=1 enables non-interactive mode properly
+ENV CI=1
 
 # Start Expo in tunnel mode for remote access
-CMD ["npx", "expo", "start", "--tunnel", "--non-interactive"]
+CMD ["npx", "expo", "start", "--tunnel"]
