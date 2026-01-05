@@ -50,9 +50,11 @@ HELP.md
 # Flyway
 flyway.conf
 
-# Secrets (never commit)
-*secret*
-*password*
+# Secrets (never commit actual secret/password files, but allow Java source files)
+*.secret
+*.secret.*
+secret.properties
+password.properties
 *.pem
 *.key
 *.crt
