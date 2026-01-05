@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "campcard-mobile",
+    "slug": "campcard-mobile",
+    "version": "1.0.0",
+    "description": "BSA Camp Card Mobile App - Digital discount subscription supporting Scout fundraising",
+    "sdkVersion": "54.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "icon": "./assets/images/appicon_1024.png",
+    "splash": {
+      "image": "./assets/images/campcard_bg.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000C2F"
+    },
+    "extra": {
+      "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8080",
+      "ENABLE_MOCK_AUTH": "true"
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.campcard-mobile"
+    },
+    "android": {
+      "package": "com.anonymous.campcardmobile"
+    }
+  }
+}

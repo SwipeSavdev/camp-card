@@ -1,0 +1,98 @@
+# ============================================================================
+# AWS SINGLE EC2 INSTANCE DEPLOYMENT PROFILE
+# ============================================================================
+# Use this profile for single EC2 deployment: --spring.profiles.active=aws
+
+spring:
+  config:
+    activate:
+      on-profile: aws
+
+  # Database - Amazon RDS PostgreSQL
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:campcard}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 600000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Schema managed by Flyway migrations
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        "[default_schema]": campcard
+        format_sql: false
+
+  # Flyway - Database migrations
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 9  # Skip V001-V009 since database already has tables in campcard schema
+    locations: classpath:db/migration
+    schemas: campcard
+    default-schema: campcard
+
+  # Redis - ElastiCache or local Redis on EC2
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  # Kafka - MSK or local Kafka on EC2
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+  # Email - Amazon SES
+  mail:
+    host: ${SMTP_HOST:email-smtp.us-east-1.amazonaws.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Security
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: 900000
+    refresh-expiration: 604800000
+    issuer: campcard-api
+
+  cors:
+    allowed-origins:
+      - ${CORS_ALLOWED_ORIGINS:*}
+
+# Server
+server:
+  port: ${SERVER_PORT:7010}
+
+# Logging - production level
+logging:
+  level:
+    root: INFO
+    org.bsa.campcard: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  file:
+    name: /var/log/campcard/api.log
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

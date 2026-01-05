@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Camp Card – Multi‑Tenant App UI/UX Prototype</title>
+  <link rel="icon" href="assets/images/appicon_1024.png" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+
+<body>
+  <div class="kbd-hint">
+    Demo shortcuts: press <strong>1</strong> Customer, <strong>2</strong> Troop Leader, <strong>3</strong> Scout. Click the role pill to cycle roles.
+  </div>
+
+  <div class="preview-wrap">
+    <div class="phone" role="application" aria-label="Camp Card Prototype">
+      <div class="phone-inner">
+        <!-- Header -->
+        <header class="app-header">
+          <div class="header-row">
+            <div class="header-action">
+              <button id="backBtn" class="header-btn" type="button" aria-label="Back" style="visibility:hidden;">
+                <!-- back icon -->
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="header-title" aria-live="polite">
+              <div id="tenantName" class="tenant">Central Florida Council</div>
+              <div id="screenName" class="screenname">Sign in</div>
+            </div>
+
+            <div class="header-action">
+              <button class="header-btn logoutBtn" type="button" aria-label="Sign out">
+                <!-- simple power icon -->
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 2v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M6.2 4.6a9 9 0 1 0 11.6 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="header-sub">
+            <div class="pill" title="Click to cycle roles (demo)">
+              <span id="rolePill"><span class="dot"></span><strong>Guest</strong></span>
+            </div>
+            <div class="pill" title="Prototype build">
+              <span class="dot"></span><span>UI/UX Preview</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Content -->
+        <main id="content" class="app-content">
+          <!-- LOGIN -->
+          <section class="screen is-active" data-screen="login" aria-label="Login">
+            <div class="section center">
+              <img src="assets/images/council_logo.png" alt="Scouting America Central Florida Council" style="max-width: 100%; height: auto; margin: 8px auto 8px; display: block;" />
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="row" style="gap:14px; align-items:flex-start;">
+                  <div style="flex:1;">
+                    <div class="h1" style="margin-bottom:6px;">Welcome back</div>
+                    <div class="muted" style="font-size:13px; line-height:1.4;">
+                      One login. Different experiences for Customers, Troop Leaders, and Scouts.
+                    </div>
+                  </div>
+                  <div style="width:64px; height:64px; border-radius:18px; overflow:hidden; border:1px solid rgba(216,224,236,0.9);">
+                    <img src="assets/images/appicon_1024.png" alt="Camp Card" style="width:100%; height:100%; object-fit:cover;" />
+                  </div>
+                </div>
+
+                <div class="hr"></div>
+
+                <form id="loginForm" class="form" autocomplete="on">
+                  <div class="input">
+                    <label class="label" for="roleSelect">Account type (demo)</label>
+                    <select id="roleSelect" class="field select">
+                      <option value="customer">Customer</option>
+                      <option value="leader">Troop Leader</option>
+                      <option value="scout">Scout</option>
+                    </select>
+                  </div>
+
+                  <div class="input">
+                    <label class="label" for="loginName">Name</label>
+                    <input id="loginName" class="field" type="text" placeholder="Taylor" />
+                  </div>
+
+                  <div class="split">
+                    <div class="input">
+                      <label class="label" for="loginEmail">Email</label>
+                      <input id="loginEmail" class="field" type="email" placeholder="name@email.com" />
+                    </div>
+                    <div class="input">
+                      <label class="label" for="loginPass">Password</label>
+                      <input id="loginPass" class="field" type="password" placeholder="••••••••" />
+                    </div>
+                  </div>
+
+                  <button class="btn btn-primary" type="submit">Sign in</button>
+
+                  <div class="row" style="justify-content:space-between;">
+                    <button id="gotoSignup" class="btn btn-ghost btn-sm" type="button">Create account</button>
+                    <a class="btn btn-ghost btn-sm" href="javascript:void(0)" onclick="alert('Prototype: integrate reset flow here.')">Forgot password</a>
+                  </div>
+
+                  <div class="helper">
+                    Tip: this prototype uses a role selector to demonstrate multi‑tenant experiences.
+                    In production, role comes from your tenant + user permissions.
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Branding in-app</div>
+                <div class="muted small">
+                  This prototype uses the Camp Card navy gradient, red CTAs, rounded “credit card” surfaces, and the Central Florida Council lockup.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SIGNUP -->
+          <section class="screen" data-screen="signup" aria-label="Sign up">
+            <div class="section">
+              <div class="card pad">
+                <div class="h1" style="margin-bottom:6px;">Create account</div>
+                <div class="muted" style="font-size:13px; line-height:1.4;">
+                  One account per tenant (council). Leaders/Scouts can be invited via a code.
+                </div>
+
+                <div class="hr"></div>
+
+                <form id="signupForm" class="form" autocomplete="on">
+                  <div class="input">
+                    <label class="label" for="signupTenant">Council / Tenant</label>
+                    <select id="signupTenant" class="field select">
+                      <option value="Central Florida Council">Central Florida Council</option>
+                      <option value="Demo Council (Example)">Demo Council (Example)</option>
+                    </select>
+                  </div>
+
+                  <div class="input">
+                    <label class="label" for="signupRole">Account type</label>
+                    <select id="signupRole" class="field select">
+                      <option value="customer">Customer</option>
+                      <option value="leader">Troop Leader</option>
+                      <option value="scout">Scout</option>
+                    </select>
+                  </div>
+
+                  <div class="input">
+                    <label class="label" for="signupName">Full name</label>
+                    <input id="signupName" class="field" type="text" placeholder="Taylor Morgan" />
+                  </div>
+
+                  <div class="input">
+                    <label class="label" for="signupEmail">Email</label>
+                    <input id="signupEmail" class="field" type="email" placeholder="name@email.com" />
+                  </div>
+
+                  <div class="input">
+                    <label class="label" for="signupPass">Password</label>
+                    <input id="signupPass" class="field" type="password" placeholder="Create a password" />
+                  </div>
+
+                  <div class="input">
+                    <label class="label" for="inviteCode">Invitation code (optional)</label>
+                    <input id="inviteCode" class="field" type="text" placeholder="LEADER-XXXX or SCOUT-XXXX" />
+                    <div class="helper">Use for Troop Leader / Scout onboarding in production.</div>
+                  </div>
+
+                  <button class="btn btn-primary" type="submit">Create account</button>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <!-- CUSTOMER HOME -->
+          <section class="screen" data-screen="customer-home" aria-label="Customer home">
+            <div class="section">
+              <div class="hero-card">
+                <div class="row" style="align-items:flex-start;">
+                  <div style="display:grid; gap:10px;">
+                    <div class="badge"><span class="mini"></span>Customer</div>
+                    <div class="hero-title">Support local Scouts with Camp Card</div>
+                    <p class="hero-sub">Browse discounts, redeem offers, and get notified when you’re near participating locations.</p>
+                  </div>
+                  <img class="lockup" src="assets/images/campcard_lockup.png" alt="Camp Card lockup" />
+                </div>
+
+                <div class="grid2" style="margin-top:12px;">
+                  <div class="stat">
+                    <div class="k">Saved this month</div>
+                    <div class="v" id="customerSaved">$0.00</div>
+                  </div>
+                  <div class="stat">
+                    <div class="k">Favorite offers</div>
+                    <div class="v" id="customerFav">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Quick actions</div>
+                <div class="split">
+                  <button class="btn btn-primary" type="button" onclick="window.__nav('customer-offers')">Browse offers</button>
+                  <button class="btn btn-ghost" type="button" onclick="alert('Prototype: add map / store locator here.')">Find stores</button>
+                </div>
+                <div class="helper" style="margin-top:10px;">Use Settings to turn on Geo Notifications for nearby deals.</div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Popular near Central Florida</div>
+                <div class="list">
+                  <div class="item">
+                    <div class="top">
+                      <div>
+                        <p class="title">20% off at Ace Hardware</p>
+                        <div class="meta">Hardware • In‑store • Ends 12/31</div>
+                      </div>
+                      <span class="chip red">Hot</span>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="top">
+                      <div>
+                        <p class="title">Free fountain drink (with purchase)</p>
+                        <div class="meta">Food • 1.2 mi • Limited time</div>
+                      </div>
+                      <span class="chip">Nearby</span>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="top">
+                      <div>
+                        <p class="title">$10 off $50 at Outdoor Outfitters</p>
+                        <div class="meta">Retail • Online/In‑store</div>
+                      </div>
+                      <span class="chip">Popular</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <button class="btn btn-ghost btn-sm logoutBtn" type="button" style="width:100%;">Sign out</button>
+            </div>
+          </section>
+
+          <!-- CUSTOMER OFFERS -->
+          <section class="screen" data-screen="customer-offers" aria-label="Customer offers">
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Filters</div>
+                <div class="split">
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: category filter')">Category</button>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: distance filter')">Near me</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="list">
+                <div class="item">
+                  <div class="top">
+                    <div>
+                      <p class="title">20% off at Ace Hardware</p>
+                      <div class="meta">Hardware • In‑store • Ends 12/31</div>
+                    </div>
+                    <span class="chip red">Limited</span>
+                  </div>
+                  <div class="row">
+                    <span class="muted small">Show at checkout</span>
+                    <button class="btn btn-primary btn-sm" type="button" onclick="toast('Saved to wallet (prototype)')">Use offer</button>
+                  </div>
+                </div>
+
+                <div class="item">
+                  <div class="top">
+                    <div>
+                      <p class="title">Free fountain drink (with purchase)</p>
+                      <div class="meta">Food • 1.2 mi • This week</div>
+                    </div>
+                    <span class="chip">Nearby</span>
+                  </div>
+                  <div class="row">
+                    <span class="muted small">Geo reminder available</span>
+                    <button class="btn btn-primary btn-sm" type="button" onclick="toast('Geo reminder set (prototype)')">Remind me</button>
+                  </div>
+                </div>
+
+                <div class="item">
+                  <div class="top">
+                    <div>
+                      <p class="title">$10 off $50 at Outdoor Outfitters</p>
+                      <div class="meta">Retail • Online/In‑store</div>
+                    </div>
+                    <span class="chip green">New</span>
+                  </div>
+                  <div class="row">
+                    <span class="muted small">Code: CAMP10</span>
+                    <button class="btn btn-primary btn-sm" type="button" onclick="toast('Code copied (prototype)')">Copy code</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CUSTOMER SETTINGS -->
+          <section class="screen" data-screen="customer-settings" aria-label="Customer settings">
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Profile</div>
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Name</div>
+                    <div class="d">Manage your profile info</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: edit profile')">Edit</button>
+                </div>
+
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Email</div>
+                    <div class="d">name@email.com</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: change email')">Change</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Notifications</div>
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Geo notifications</div>
+                    <div class="d">Get nearby offer alerts</div>
+                  </div>
+                  <div id="toggleGeo" class="toggle is-on" role="switch" aria-checked="true" tabindex="0" title="Toggle geo notifications"></div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Offer updates</div>
+                    <div class="d">New deals & expiring reminders</div>
+                  </div>
+                  <span class="chip">On</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Council / Tenant</div>
+                <div class="muted small">This app supports multiple councils. In production, this comes from your account’s tenant.</div>
+                <div class="hr"></div>
+                <button class="btn btn-ghost" type="button" onclick="toast('Prototype: switch tenant')">Switch council</button>
+              </div>
+            </div>
+
+            <div class="section">
+              <button class="btn btn-ghost btn-sm logoutBtn" type="button" style="width:100%;">Sign out</button>
+            </div>
+          </section>
+
+          <!-- LEADER HOME -->
+          <section class="screen" data-screen="leader-home" aria-label="Troop leader home">
+            <div class="section">
+              <div class="hero-card">
+                <div class="row" style="align-items:flex-start;">
+                  <div style="display:grid; gap:10px;">
+                    <div class="badge"><span class="mini"></span>Troop Leader</div>
+                    <div class="hero-title">Track progress & help Scouts succeed</div>
+                    <p class="hero-sub">See fundraising totals, share your troop link, and manage Scouts in one place.</p>
+                  </div>
+                  <img class="lockup" src="assets/images/campcard_lockup.png" alt="Camp Card lockup" />
+                </div>
+
+                <div class="grid2" style="margin-top:12px;">
+                  <div class="stat">
+                    <div class="k">Funds raised</div>
+                    <div class="v" id="leaderFunds">$0</div>
+                  </div>
+                  <div class="stat">
+                    <div class="k">Camp Cards sold</div>
+                    <div class="v" id="leaderCards">0</div>
+                  </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                  <div class="row" style="margin-bottom:8px;">
+                    <div class="small" style="opacity:0.92;">Goal progress</div>
+                    <div class="small" style="opacity:0.92;"><span id="leaderGoalPct">0%</span> of <span id="leaderGoalValue">$0</span></div>
+                  </div>
+                  <div class="progress" aria-label="Progress toward goal">
+                    <div id="leaderProgressBar" style="width:60%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Quick actions</div>
+                <div class="split">
+                  <button class="btn btn-primary" type="button" onclick="window.__nav('leader-share')">Share troop link</button>
+                  <button class="btn btn-ghost" type="button" onclick="window.__nav('leader-scouts')">Manage scouts</button>
+                </div>
+                <div class="helper" style="margin-top:10px;">Tip: send the troop link via text, email, or social.</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- LEADER SHARE -->
+          <section class="screen" data-screen="leader-share" aria-label="Troop leader share">
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Troop fundraising link</div>
+
+                <div class="share-box">
+                  <div class="linkbox">
+                    <code id="troopLink">https://campcard.app</code>
+                    <button id="copyTroopLink" class="btn btn-ghost btn-sm" type="button" aria-label="Copy link">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:18px;height:18px;">
+                        <path d="M9 9h10v12H9V9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+
+                  <div class="row" style="gap:12px;">
+                    <div class="qr" aria-label="QR code placeholder">
+                      <!-- placeholder QR icon -->
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 3h7v7H3V3Zm11 0h7v7h-7V3ZM3 14h7v7H3v-7Zm11 11v-5h2v5h-2Zm4-8h3v8h-3v-8Zm-4 0h2v2h-2v-2Zm4-3h3v2h-3v-2Zm-5 3h2v2h-2v-2Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                    <div style="flex:1;">
+                      <div class="muted small" style="line-height:1.4;">
+                        Share this link so supporters can buy Camp Cards and credit your troop.
+                      </div>
+                      <div style="height:10px;"></div>
+                      <button id="shareTroopLink" class="btn btn-primary" type="button" style="width:100%;">Share</button>
+                    </div>
+                  </div>
+
+                  <div class="helper">
+                    In production: generate a real QR, add UTM tags, and support deep links into the Customer offer experience.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- LEADER SCOUTS -->
+          <section class="screen" data-screen="leader-scouts" aria-label="Troop leader scout management">
+            <div class="section">
+              <div class="card pad">
+                <div class="row">
+                  <div>
+                    <div class="h2" style="margin:0;">Scout management</div>
+                    <div id="leaderTotals" class="muted small">—</div>
+                  </div>
+                  <button id="addScoutBtn" class="btn btn-primary btn-sm" type="button">Add</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div id="scoutList" class="list" aria-label="Scout list">
+                <!-- rendered by JS -->
+              </div>
+            </div>
+          </section>
+
+          <!-- LEADER SETTINGS -->
+          <section class="screen" data-screen="leader-settings" aria-label="Leader settings">
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Profile</div>
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Leader name</div>
+                    <div class="d">Manage your profile</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: edit leader profile')">Edit</button>
+                </div>
+
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Troop info</div>
+                    <div class="d">Troop 512 • Central Florida</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: edit troop info')">Edit</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Tools</div>
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Export report</div>
+                    <div class="d">Download CSV (prototype)</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: export')">Export</button>
+                </div>
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Share defaults</div>
+                    <div class="d">Link message template</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: template')">Edit</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <button class="btn btn-ghost btn-sm logoutBtn" type="button" style="width:100%;">Sign out</button>
+            </div>
+          </section>
+
+          <!-- SCOUT HOME -->
+          <section class="screen" data-screen="scout-home" aria-label="Scout home">
+            <div class="section">
+              <div class="hero-card">
+                <div class="row" style="align-items:flex-start;">
+                  <div style="display:grid; gap:10px;">
+                    <div class="badge"><span class="mini"></span>Scout</div>
+                    <div class="hero-title">Your fundraising progress</div>
+                    <p class="hero-sub">Share your link to sell more Camp Cards and reach your goal.</p>
+                  </div>
+                  <img class="lockup" src="assets/images/campcard_lockup.png" alt="Camp Card lockup" />
+                </div>
+
+                <div class="grid2" style="margin-top:12px;">
+                  <div class="stat">
+                    <div class="k">Funds raised</div>
+                    <div class="v" id="scoutFunds">$0</div>
+                  </div>
+                  <div class="stat">
+                    <div class="k">Camp Cards sold</div>
+                    <div class="v" id="scoutCards">0</div>
+                  </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                  <div class="row" style="margin-bottom:8px;">
+                    <div class="small" style="opacity:0.92;">Goal progress</div>
+                    <div class="small" style="opacity:0.92;"><span id="scoutGoalPct">0%</span> of <span id="scoutGoalValue">$0</span></div>
+                  </div>
+                  <div class="progress" aria-label="Progress toward goal">
+                    <div id="scoutProgressBar" style="width:60%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Quick actions</div>
+                <button class="btn btn-primary" type="button" style="width:100%;" onclick="window.__nav('scout-share')">Share my link</button>
+                <div class="helper" style="margin-top:10px;">Tip: send to friends/family and post on social with a short message.</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SCOUT SHARE -->
+          <section class="screen" data-screen="scout-share" aria-label="Scout share">
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Your personal link</div>
+
+                <div class="share-box">
+                  <div class="linkbox">
+                    <code id="scoutLink">https://campcard.app</code>
+                    <button id="copyScoutLink" class="btn btn-ghost btn-sm" type="button" aria-label="Copy link">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:18px;height:18px;">
+                        <path d="M9 9h10v12H9V9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+
+                  <div class="row" style="gap:12px;">
+                    <div class="qr" aria-label="QR code placeholder">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 3h7v7H3V3Zm11 0h7v7h-7V3ZM3 14h7v7H3v-7Zm11 11v-5h2v5h-2Zm4-8h3v8h-3v-8Zm-4 0h2v2h-2v-2Zm4-3h3v2h-3v-2Zm-5 3h2v2h-2v-2Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                    <div style="flex:1;">
+                      <div class="muted small" style="line-height:1.4;">
+                        Share your link so purchases credit you automatically.
+                      </div>
+                      <div style="height:10px;"></div>
+                      <button id="shareScoutLink" class="btn btn-primary" type="button" style="width:100%;">Share</button>
+                    </div>
+                  </div>
+
+                  <div class="helper">In production: add a message template and real QR rendering.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SCOUT SETTINGS -->
+          <section class="screen" data-screen="scout-settings" aria-label="Scout settings">
+            <div class="section">
+              <div class="card pad">
+                <div class="h2">Profile</div>
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Scout name</div>
+                    <div class="d">Manage your profile</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: edit scout profile')">Edit</button>
+                </div>
+
+                <div class="setting-row">
+                  <div class="left">
+                    <div class="k">Goal</div>
+                    <div class="d">Update your fundraising goal</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="toast('Prototype: update goal')">Edit</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <button class="btn btn-ghost btn-sm logoutBtn" type="button" style="width:100%;">Sign out</button>
+            </div>
+          </section>
+
+        </main>
+
+        <!-- Bottom tabs -->
+        <nav id="tabbar" class="tabbar" aria-label="Bottom navigation"></nav>
+
+        <!-- Toast -->
+        <div id="toast" class="toast" role="status" aria-live="polite">Copied</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Helper so inline buttons can route without importing modules
+    window.__nav = (screenId) => {
+      if (window.__navigate) window.__navigate(screenId);
+    };
+    // Expose toast for inline demo actions
+    window.toast = (msg) => {
+      if (window.__toast) window.__toast(msg);
+    };
+  </script>
+  <script src="js/app.js"></script>
+  <script>
+    // Bridge internal functions to global helpers used in HTML
+    window.__navigate = (id) => navigate(id);
+    window.__toast = (msg) => toast(msg);
+  </script>
+</body>
+</html>

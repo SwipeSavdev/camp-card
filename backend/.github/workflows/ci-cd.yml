@@ -1,0 +1,181 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Xmx2048m'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: campcard_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Run tests
+        run: mvn clean test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: campcard_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+      
+      - name: Generate coverage report
+        run: mvn jacoco:report
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./target/site/jacoco/jacoco.xml
+          flags: backend
+          name: backend-coverage
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Build JAR
+        run: mvn clean package -DskipTests
+      
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: campcard-jar
+          path: target/campcard.jar
+          retention-days: 7
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://api-staging.campcard.org
+    
+    steps:
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: campcard-jar
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Upload to S3
+        run: |
+          aws s3 cp campcard.jar s3://campcard-deployments/staging/campcard-${{ github.sha }}.jar
+      
+      - name: Deploy to EC2 via CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name campcard-backend \
+            --deployment-group-name staging \
+            --s3-location bucket=campcard-deployments,key=staging/campcard-${{ github.sha }}.jar,bundleType=jar \
+            --description "Deploy ${{ github.sha }}"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.campcard.org
+    
+    steps:
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: campcard-jar
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Upload to S3
+        run: |
+          aws s3 cp campcard.jar s3://campcard-deployments/prod/campcard-${{ github.sha }}.jar
+      
+      - name: Deploy to EC2 via CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name campcard-backend \
+            --deployment-group-name production \
+            --s3-location bucket=campcard-deployments,key=prod/campcard-${{ github.sha }}.jar,bundleType=jar \
+            --description "Deploy ${{ github.sha }}"
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            ## Changes in this Release
+            - Automated deployment from commit ${{ github.sha }}
+          draft: false
+          prerelease: false

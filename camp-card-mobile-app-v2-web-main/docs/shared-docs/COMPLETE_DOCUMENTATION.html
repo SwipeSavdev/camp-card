@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camp Card Mobile App - Complete Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', 'Garamond', serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .document {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 120px 60px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+        }
+        
+        .cover-page h1 {
+            font-size: 3.5em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 1.8em;
+            margin-bottom: 80px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        
+        .cover-page .meta {
+            margin-top: 100px;
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 2;
+        }
+        
+        /* Table of Contents */
+        .toc-page {
+            padding: 80px 60px;
+            page-break-after: always;
+        }
+        
+        .toc-page h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 60px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .toc-content {
+            margin-bottom: 40px;
+        }
+        
+        .toc-section {
+            margin-bottom: 30px;
+        }
+        
+        .toc-section h3 {
+            color: #764ba2;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            margin-top: 0;
+        }
+        
+        .toc-item {
+            margin-bottom: 10px;
+            padding-left: 30px;
+        }
+        
+        .toc-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1.05em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toc-item a:hover {
+            text-decoration: underline;
+            color: #764ba2;
+        }
+        
+        .toc-number {
+            color: #999;
+            margin-right: 10px;
+        }
+        
+        /* Main Content */
+        .content {
+            padding: 80px 60px;
+            display: none;
+        }
+        
+        .content.active {
+            display: block;
+        }
+        
+        .section {
+            display: none;
+            page-break-before: always;
+        }
+        
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .section-number {
+            color: #667eea;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 2.8em;
+            margin: 30px 0;
+            font-weight: 700;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.9em;
+            margin: 40px 0 25px 0;
+            font-weight: 600;
+        }
+        
+        .section h4 {
+            color: #555;
+            font-size: 1.4em;
+            margin: 30px 0 20px 0;
+            font-weight: 600;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+        
+        .section p {
+            margin-bottom: 18px;
+            text-align: justify;
+            color: #444;
+        }
+        
+        .section ul, .section ol {
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .section li {
+            margin-bottom: 10px;
+            color: #444;
+            line-height: 1.8;
+        }
+        
+        .section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: #f9f9f9;
+        }
+        
+        .section th {
+            background: #667eea;
+            color: white;
+            padding: 14px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #555;
+        }
+        
+        .section td {
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        
+        .section tr:nth-child(even) td {
+            background: #f9f9f9;
+        }
+        
+        .section code {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+            font-size: 0.95em;
+        }
+        
+        .section pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .section pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: #f8f8f2;
+        }
+        
+        .section blockquote {
+            border-left: 5px solid #667eea;
+            padding-left: 25px;
+            margin: 25px 0;
+            color: #666;
+            font-style: italic;
+            font-size: 1.05em;
+        }
+        
+        .checklist {
+            background: #f0f7ff;
+            border-left: 5px solid #0066cc;
+            padding: 20px 25px;
+            border-radius: 4px;
+            margin: 25px 0;
+        }
+        
+        .checklist h4 {
+            margin-top: 0;
+        }
+        
+        .checklist label {
+            display: block;
+            margin: 10px 0;
+            cursor: pointer;
+            line-height: 1.6;
+        }
+        
+        .checklist input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px 25px;
+            border-radius: 4px;
+            margin: 25px 0;
+        }
+        
+        .toc-box {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .toc-box h4 {
+            color: #667eea;
+            border: none;
+            padding: 0;
+            margin-top: 0;
+        }
+        
+        .toc-box ul {
+            margin-left: 25px;
+        }
+        
+        /* Navigation */
+        .nav-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background 0.3s;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-btn:hover {
+            background: #764ba2;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            padding: 60px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e0e0e0;
+            font-size: 0.95em;
+            page-break-before: always;
+        }
+        
+        .footer p {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .document {
+                max-width: 100%;
+            }
+            
+            .cover-page, .toc-page, .content, .footer {
+                padding: 40px 30px;
+            }
+            
+            .cover-page h1 {
+                font-size: 2.2em;
+            }
+            
+            .section h2 {
+                font-size: 1.8em;
+            }
+            
+            .section h3 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <h1>📚 Camp Card Mobile App</h1>
+            <div class="subtitle">Complete Documentation</div>
+            <div class="meta">
+                <p><strong>All-in-One Reference Guide</strong></p>
+                <p>Technical Documentation & Implementation Guide</p>
+                <p style="margin-top: 40px; font-size: 0.95em;">December 28, 2025</p>
+            </div>
+        </div>
+        
+        <!-- Table of Contents -->
+        <div class="toc-page">
+            <h1>Table of Contents</h1>
+            
+            <div class="toc-content">
+                <div class="toc-section">
+                    <h3>1. Overview & Introduction</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('overview', event)">
+                            <span>Documentation Overview & Structure</span>
+                            <span class="toc-number">3</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="toc-section">
+                    <h3>2. Getting Started</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('getting-started', event)">
+                            <span>Setup, Installation & Onboarding</span>
+                            <span class="toc-number">4</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="toc-section">
+                    <h3>3. Backend Development</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('backend', event)">
+                            <span>Architecture, APIs & Database</span>
+                            <span class="toc-number">5</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="toc-section">
+                    <h3>4. Frontend & Mobile Development</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('frontend', event)">
+                            <span>UI/UX, Components & Design System</span>
+                            <span class="toc-number">6</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="toc-section">
+                    <h3>5. API Integration & Reference</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('api', event)">
+                            <span>Endpoints, Standards & Integration Patterns</span>
+                            <span class="toc-number">7</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="toc-section">
+                    <h3>6. Quality Assurance & Testing</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('testing', event)">
+                            <span>Test Plans, Checklists & Procedures</span>
+                            <span class="toc-number">8</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="toc-section">
+                    <h3>7. Deployment & Production</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('deployment', event)">
+                            <span>Release, Deployment & Operations</span>
+                            <span class="toc-number">9</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="toc-section">
+                    <h3>8. Reference & Support</h3>
+                    <div class="toc-item">
+                        <a href="#" onclick="showSection('reference', event)">
+                            <span>Quick Lookup, Troubleshooting & Resources</span>
+                            <span class="toc-number">10</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Overview Section -->
+            <div id="overview" class="section active">
+                <span class="section-number">Section 1</span>
+                <h2>Documentation Overview</h2>
+                
+                <h3>Welcome to Camp Card Documentation</h3>
+                <p>This comprehensive documentation hub contains all essential information for developing, deploying, and maintaining the Camp Card Mobile App project. This document serves as a complete reference guide for all team members.</p>
+                
+                <h3>About This Document</h3>
+                <p>This all-in-one reference brings together documentation from multiple sections covering the complete development lifecycle, from initial setup through production deployment.</p>
+                
+                <div class="toc-box">
+                    <h4>📂 Documentation Structure</h4>
+                    <ul>
+                        <li><strong>Section 1:</strong> Documentation Overview</li>
+                        <li><strong>Section 2:</strong> Getting Started - Setup and onboarding</li>
+                        <li><strong>Section 3:</strong> Backend - Architecture and API implementation</li>
+                        <li><strong>Section 4:</strong> Frontend & Mobile - UI/UX and mobile development</li>
+                        <li><strong>Section 5:</strong> API Integration - Complete API reference</li>
+                        <li><strong>Section 6:</strong> Testing - QA procedures and test plans</li>
+                        <li><strong>Section 7:</strong> Deployment - Production release processes</li>
+                        <li><strong>Section 8:</strong> Reference - Quick lookup and troubleshooting</li>
+                    </ul>
+                </div>
+                
+                <h3>Key Documentation Areas</h3>
+                
+                <h4>Getting Started 🚀</h4>
+                <p>Setup your development environment, understand project structure, and onboarding for new team members. Start here if you're new to the project.</p>
+                
+                <h4>Backend ⚙️</h4>
+                <p>Architecture, database schema, API controllers, and backend integration procedures. Essential for backend developers and frontend developers integrating with backend services.</p>
+                
+                <h4>Frontend & Mobile 📲</h4>
+                <p>Mobile app features, UI components, design system, and web portal configuration. Reference for frontend, mobile, and UI/UX developers.</p>
+                
+                <h4>API Integration 🔗</h4>
+                <p>Complete API endpoint reference, mock data generation, and platform synchronization. Required reading for all developers.</p>
+                
+                <h4>Testing ✅</h4>
+                <p>Testing checklists, QA procedures, automated test suites, and performance testing. Essential for QA engineers and developers.</p>
+                
+                <h4>Deployment 🚢</h4>
+                <p>Production deployment procedures, build configuration, and release management. Required for DevOps and release engineers.</p>
+                
+                <h4>Reference 📚</h4>
+                <p>Quick lookup guides, troubleshooting tips, and user documentation. Useful for all team members.</p>
+            </div>
+            
+            <!-- Getting Started Section -->
+            <div id="getting-started" class="section">
+                <span class="section-number">Section 2</span>
+                <h2>Getting Started</h2>
+                
+                <h3>Getting Started Documentation</h3>
+                <p>This section contains essential documentation for getting up to speed with the Camp Card Mobile App project.</p>
+                
+                <h4>📖 Contents</h4>
+                <ul>
+                    <li><strong>Quick Start Guide</strong> - Project setup in minutes with essential first steps</li>
+                    <li><strong>Development Environment Setup</strong> - System requirements, dependencies, and configuration</li>
+                    <li><strong>Project Overview</strong> - Architecture overview and technology stack</li>
+                    <li><strong>New Users Setup</strong> - Onboarding checklist and team processes</li>
+                </ul>
+                
+                <h3>🚀 Recommended Reading Order</h3>
+                <ol>
+                    <li><strong>Project Overview</strong> - Understand what we're building</li>
+                    <li><strong>Development Environment Setup</strong> - Get your machine ready</li>
+                    <li><strong>Quick Start Guide</strong> - Get your first build running</li>
+                    <li><strong>New Users Setup</strong> - Learn team processes</li>
+                </ol>
+                
+                <div class="checklist">
+                    <h4>✅ Checklist for New Developers</h4>
+                    <label><input type="checkbox"> Read Project Overview</label>
+                    <label><input type="checkbox"> Complete Development Environment Setup</label>
+                    <label><input type="checkbox"> Run Quick Start Guide commands</label>
+                    <label><input type="checkbox"> Successfully build and run app locally</label>
+                    <label><input type="checkbox"> Review New Users Setup</label>
+                    <label><input type="checkbox"> Attend team onboarding session</label>
+                    <label><input type="checkbox"> Review code style guidelines</label>
+                    <label><input type="checkbox"> Set up development tools</label>
+                </div>
+            </div>
+            
+            <!-- Backend Section -->
+            <div id="backend" class="section">
+                <span class="section-number">Section 3</span>
+                <h2>Backend Development</h2>
+                
+                <h3>Complete Backend Architecture & APIs</h3>
+                <p>Complete documentation for backend architecture, APIs, database, and integration.</p>
+                
+                <h4>📖 Contents</h4>
+                <ul>
+                    <li><strong>Backend Implementation Guide</strong> - Architecture patterns, service layer design, and database structure</li>
+                    <li><strong>Backend Integration Guide</strong> - Connecting backend to frontend, API integration patterns, data flow and synchronization</li>
+                    <li><strong>Database Schema Documentation</strong> - Entity relationships, table structures, indexes and constraints, migration procedures</li>
+                    <li><strong>Controllers Summary</strong> - All API endpoints, controller organization, request/response formats, error codes and handling</li>
+                    <li><strong>Backend Audit Reports</strong> - Code quality analysis, performance assessment, security review, completeness verification</li>
+                </ul>
+                
+                <h3>🎯 Key Topics</h3>
+                <ul>
+                    <li><strong>REST API Design</strong> - Endpoint patterns and conventions</li>
+                    <li><strong>Database Operations</strong> - CRUD operations and queries</li>
+                    <li><strong>Authentication</strong> - User authentication and sessions</li>
+                    <li><strong>Authorization</strong> - Role-based access control</li>
+                    <li><strong>Error Handling</strong> - Exception handling patterns</li>
+                    <li><strong>Validation</strong> - Input validation strategies</li>
+                </ul>
+                
+                <h4>📋 Quick Reference</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Topic</th>
+                            <th>Document</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>API Endpoints</td>
+                            <td>Controllers Summary</td>
+                            <td>Find available endpoints</td>
+                        </tr>
+                        <tr>
+                            <td>Database Tables</td>
+                            <td>Database Schema</td>
+                            <td>Understand data structure</td>
+                        </tr>
+                        <tr>
+                            <td>Service Design</td>
+                            <td>Implementation Guide</td>
+                            <td>Learn architecture patterns</td>
+                        </tr>
+                        <tr>
+                            <td>Integration Steps</td>
+                            <td>Integration Guide</td>
+                            <td>Connect components</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🔍 For Different Roles</h3>
+                <ul>
+                    <li><strong>Backend Developers:</strong> Start with Implementation Guide</li>
+                    <li><strong>Frontend Developers:</strong> Start with Integration Guide + Controllers Summary</li>
+                    <li><strong>DevOps:</strong> Focus on Deployment guides</li>
+                    <li><strong>QA:</strong> Review all audit reports</li>
+                </ul>
+            </div>
+            
+            <!-- Frontend Section -->
+            <div id="frontend" class="section">
+                <span class="section-number">Section 4</span>
+                <h2>Frontend & Mobile Development</h2>
+                
+                <h3>Complete Mobile App & UI Documentation</h3>
+                <p>Complete guide for mobile app development, UI components, and web portal.</p>
+                
+                <h4>📖 Contents</h4>
+                <ul>
+                    <li><strong>Mobile App Guide</strong> - Feature walkthrough, user workflows, mobile-specific considerations, performance optimization</li>
+                    <li><strong>Card Redesign Summary</strong> - UI/UX improvements, design rationale, implementation details, animation guidelines</li>
+                    <li><strong>Mobile Card Flip Feature</strong> - Card interaction mechanics, animation implementation, state management, browser compatibility</li>
+                    <li><strong>Wallet Implementation</strong> - Wallet feature overview, transaction handling, UI components, integration with backend</li>
+                    <li><strong>Web Portal Setup Guide</strong> - Portal features, configuration, admin interface, user management</li>
+                    <li><strong>Design System Reference</strong> - Component library, style guidelines, color palette, typography standards</li>
+                </ul>
+                
+                <h3>🎨 Design & UI</h3>
+                <ul>
+                    <li><strong>Component Library</strong> - Reusable UI components</li>
+                    <li><strong>Design Tokens</strong> - Colors, spacing, and typography</li>
+                    <li><strong>Responsive Design</strong> - Mobile and web layouts</li>
+                    <li><strong>Accessibility</strong> - WCAG compliance standards</li>
+                </ul>
+                
+                <h3>📱 Mobile Development</h3>
+                <ul>
+                    <li><strong>React Native</strong> - Cross-platform development</li>
+                    <li><strong>State Management</strong> - Redux and Context API</li>
+                    <li><strong>Navigation</strong> - Screen routing patterns</li>
+                    <li><strong>Performance</strong> - Optimization techniques</li>
+                </ul>
+                
+                <h3>🔍 For Different Roles</h3>
+                <ul>
+                    <li><strong>Mobile Developers:</strong> Start with Mobile App Guide + Design System</li>
+                    <li><strong>UI/UX Designers:</strong> Focus on Design System + Card Redesign Summary</li>
+                    <li><strong>Web Developers:</strong> Start with Web Portal Setup Guide</li>
+                    <li><strong>QA:</strong> Review Feature walkthrough + Mobile App Guide</li>
+                </ul>
+            </div>
+            
+            <!-- API Section -->
+            <div id="api" class="section">
+                <span class="section-number">Section 5</span>
+                <h2>API Integration & Reference</h2>
+                
+                <h3>Complete API Documentation</h3>
+                <p>Complete API documentation, endpoints, and integration guides for the Camp Card platform.</p>
+                
+                <h4>📖 Contents</h4>
+                <ul>
+                    <li><strong>Complete API Documentation</strong> - Full endpoint reference, request/response examples, parameter documentation, error responses</li>
+                    <li><strong>Controllers Quick Reference</strong> - Endpoint summary table, HTTP methods and paths, required parameters, response formats</li>
+                    <li><strong>Mock Data Delivery</strong> - Mock data generation, test data fixtures, using mock backend, data consistency</li>
+                    <li><strong>Feature Flags</strong> - Feature flag management, A/B testing setup, release management, configuration</li>
+                    <li><strong>Platform Sync Strategy</strong> - Data synchronization, conflict resolution, state management, real-time updates</li>
+                </ul>
+                
+                <h3>🔗 API Standards</h3>
+                <ul>
+                    <li><strong>Base URL</strong> - API endpoint configuration</li>
+                    <li><strong>Authentication</strong> - Bearer tokens and API keys</li>
+                    <li><strong>Rate Limiting</strong> - Request throttling rules</li>
+                    <li><strong>Versioning</strong> - API version management</li>
+                    <li><strong>Pagination</strong> - Large result handling</li>
+                    <li><strong>Filtering</strong> - Search and filter parameters</li>
+                </ul>
+                
+                <h4>📋 Common Integration Patterns</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Use Case</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>REST API</td>
+                            <td>CRUD operations</td>
+                            <td>Standard operations</td>
+                        </tr>
+                        <tr>
+                            <td>WebSocket</td>
+                            <td>Real-time updates</td>
+                            <td>Live data</td>
+                        </tr>
+                        <tr>
+                            <td>Polling</td>
+                            <td>Scheduled checks</td>
+                            <td>Background updates</td>
+                        </tr>
+                        <tr>
+                            <td>Webhooks</td>
+                            <td>Event notifications</td>
+                            <td>Async events</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🧪 Testing APIs</h3>
+                <ul>
+                    <li><strong>Postman Collection</strong> - API testing setup</li>
+                    <li><strong>Mock Server</strong> - Local API testing</li>
+                    <li><strong>Test Cases</strong> - Integration test cases</li>
+                    <li><strong>Load Testing</strong> - Performance testing</li>
+                </ul>
+                
+                <h3>🔍 For Different Roles</h3>
+                <ul>
+                    <li><strong>Backend Developers:</strong> Full API Documentation</li>
+                    <li><strong>Frontend Developers:</strong> Controllers Reference + Integration Guide</li>
+                    <li><strong>QA:</strong> Mock Data Guide + Test Cases</li>
+                    <li><strong>DevOps:</strong> API Configuration + Monitoring</li>
+                </ul>
+            </div>
+            
+            <!-- Testing Section -->
+            <div id="testing" class="section">
+                <span class="section-number">Section 6</span>
+                <h2>Quality Assurance & Testing</h2>
+                
+                <h3>Complete Testing Guides & Procedures</h3>
+                <p>Complete testing guides, checklists, and procedures for quality assurance.</p>
+                
+                <h4>📖 Contents</h4>
+                <ul>
+                    <li><strong>Master Testing Checklist</strong> - All test cases, verification procedures, sign-off criteria, regression tests</li>
+                    <li><strong>Comprehensive QA Plan</strong> - QA strategy, test scope, risk assessment, quality metrics</li>
+                    <li><strong>Testing Execution Plan</strong> - Phase breakdown, timeline, resource allocation, success criteria</li>
+                    <li><strong>Manual Testing Guide</strong> - Step-by-step procedures, test environment setup, result documentation, bug reporting</li>
+                    <li><strong>Automated Testing Suite</strong> - Unit tests, integration tests, end-to-end tests, CI/CD pipeline</li>
+                    <li><strong>Performance & Load Testing</strong> - Load test scenarios, performance baselines, bottleneck analysis, optimization recommendations</li>
+                </ul>
+                
+                <h3>🧪 Testing Phases</h3>
+                <ol>
+                    <li><strong>Unit Testing</strong> - Individual component testing</li>
+                    <li><strong>Integration Testing</strong> - Component interaction testing</li>
+                    <li><strong>System Testing</strong> - End-to-end functionality</li>
+                    <li><strong>Acceptance Testing</strong> - Business requirements validation</li>
+                    <li><strong>Performance Testing</strong> - Load and stress testing</li>
+                    <li><strong>Security Testing</strong> - Vulnerability assessment</li>
+                </ol>
+                
+                <h4>📋 Test Categories</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Purpose</th>
+                            <th>Tools</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Functional</td>
+                            <td>Feature verification</td>
+                            <td>Jest, Mocha</td>
+                        </tr>
+                        <tr>
+                            <td>Performance</td>
+                            <td>Speed and efficiency</td>
+                            <td>JMeter, Load Runner</td>
+                        </tr>
+                        <tr>
+                            <td>Security</td>
+                            <td>Vulnerability identification</td>
+                            <td>OWASP, Burp Suite</td>
+                        </tr>
+                        <tr>
+                            <td>Usability</td>
+                            <td>User experience validation</td>
+                            <td>Manual testing</td>
+                        </tr>
+                        <tr>
+                            <td>Compatibility</td>
+                            <td>Multi-platform support</td>
+                            <td>Device testing</td>
+                        </tr>
+                        <tr>
+                            <td>Accessibility</td>
+                            <td>WCAG compliance</td>
+                            <td>axe, WAVE</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🔍 For Different Roles</h3>
+                <ul>
+                    <li><strong>QA Engineers:</strong> Master Checklist + Comprehensive QA Plan</li>
+                    <li><strong>Developers:</strong> Unit Tests + Integration Tests</li>
+                    <li><strong>DevOps:</strong> Automated Testing + CI/CD Pipeline</li>
+                    <li><strong>Product Managers:</strong> QA Plan + Acceptance Criteria</li>
+                </ul>
+            </div>
+            
+            <!-- Deployment Section -->
+            <div id="deployment" class="section">
+                <span class="section-number">Section 7</span>
+                <h2>Deployment & Production</h2>
+                
+                <h3>Production Deployment & Release Management</h3>
+                <p>Production deployment procedures, build configuration, and release management documentation.</p>
+                
+                <h4>📖 Contents</h4>
+                <ul>
+                    <li><strong>Production Deployment Procedures</strong> - Pre-deployment checklist, deployment steps, verification procedures, post-deployment monitoring</li>
+                    <li><strong>Deployment Testing Guide</strong> - Pre-deployment testing, staging environment setup, smoke tests, rollback procedures</li>
+                    <li><strong>Build & Release Configuration</strong> - Build process, environment variables, Docker/container setup, CI/CD pipeline</li>
+                    <li><strong>Phase 4: Build & Deployment Guide</strong> - Build optimization, artifact management, deployment automation, release notes</li>
+                    <li><strong>Phase 5: Integration Testing</strong> - End-to-end testing, performance validation, security verification, production readiness</li>
+                </ul>
+                
+                <h3>🚀 Deployment Process</h3>
+                <ol>
+                    <li><strong>Pre-Deployment Review</strong>
+                        <ul>
+                            <li>Code review approval</li>
+                            <li>Test completion verification</li>
+                            <li>Stakeholder sign-off</li>
+                        </ul>
+                    </li>
+                    <li><strong>Build & Prepare</strong>
+                        <ul>
+                            <li>Build artifact creation</li>
+                            <li>Version tagging</li>
+                            <li>Release notes preparation</li>
+                        </ul>
+                    </li>
+                    <li><strong>Deploy to Staging</strong>
+                        <ul>
+                            <li>Environment setup</li>
+                            <li>Smoke tests</li>
+                            <li>Performance validation</li>
+                        </ul>
+                    </li>
+                    <li><strong>Deploy to Production</strong>
+                        <ul>
+                            <li>Backup existing data</li>
+                            <li>Deploy new version</li>
+                            <li>Monitor closely</li>
+                        </ul>
+                    </li>
+                    <li><strong>Post-Deployment</strong>
+                        <ul>
+                            <li>Verify functionality</li>
+                            <li>Monitor performance</li>
+                            <li>Collect feedback</li>
+                        </ul>
+                    </li>
+                </ol>
+                
+                <div class="checklist">
+                    <h4>📋 Deployment Checklist</h4>
+                    <label><input type="checkbox"> Code review approved</label>
+                    <label><input type="checkbox"> All tests passing</label>
+                    <label><input type="checkbox"> Release notes prepared</label>
+                    <label><input type="checkbox"> Backup created</label>
+                    <label><input type="checkbox"> Staging deployment successful</label>
+                    <label><input type="checkbox"> Performance targets met</label>
+                    <label><input type="checkbox"> Security scan complete</label>
+                    <label><input type="checkbox"> Stakeholders notified</label>
+                    <label><input type="checkbox"> Rollback plan ready</label>
+                    <label><input type="checkbox"> Monitoring configured</label>
+                </div>
+                
+                <h3>🔄 Rollback Procedures</h3>
+                <ul>
+                    <li><strong>Quick Rollback</strong> - Immediate previous version</li>
+                    <li><strong>Data Migration Rollback</strong> - Database reversal</li>
+                    <li><strong>Feature Flag Rollback</strong> - Disable new features</li>
+                    <li><strong>Communication</strong> - Stakeholder notification</li>
+                </ul>
+                
+                <h3>🔍 For Different Roles</h3>
+                <ul>
+                    <li><strong>DevOps/Release Engineers:</strong> Full deployment procedures</li>
+                    <li><strong>Backend Developers:</strong> Build configuration + Integration testing</li>
+                    <li><strong>QA:</strong> Deployment testing guide + Smoke tests</li>
+                    <li><strong>Product Managers:</strong> Release notes + Communication</li>
+                </ul>
+            </div>
+            
+            <!-- Reference Section -->
+            <div id="reference" class="section">
+                <span class="section-number">Section 8</span>
+                <h2>Reference & Support</h2>
+                
+                <h3>Quick References & Troubleshooting</h3>
+                <p>Quick references, troubleshooting, and additional resources for ongoing development.</p>
+                
+                <h4>📖 Contents</h4>
+                <ul>
+                    <li><strong>Quick Reference Guides</strong> - Command reference, common tasks, keyboard shortcuts, useful tools</li>
+                    <li><strong>Test User Credentials</strong> - Test account list, user roles and permissions, test data fixtures, account reset procedures</li>
+                    <li><strong>Troubleshooting Guide</strong> - Common issues, solutions, debug procedures, support contacts</li>
+                    <li><strong>User & Admin Documentation</strong> - End-user guide, admin panel guide, feature walkthrough, FAQ</li>
+                    <li><strong>Scout Leader Documentation</strong> - Role-specific features, admin capabilities, reporting tools, management features</li>
+                    <li><strong>Analytics & Monitoring</strong> - Key metrics, performance monitoring, error tracking, usage analytics</li>
+                </ul>
+                
+                <h3>🔍 Quick Lookup Tables</h3>
+                
+                <h4>Common Issues</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Issue</th>
+                            <th>Solution</th>
+                            <th>Prevention</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Build fails</td>
+                            <td>Check Node.js version and dependencies</td>
+                            <td>Keep dependencies updated</td>
+                        </tr>
+                        <tr>
+                            <td>API timeout</td>
+                            <td>Verify backend is running and network connectivity</td>
+                            <td>Monitor backend health</td>
+                        </tr>
+                        <tr>
+                            <td>UI not updating</td>
+                            <td>Check Redux state and component props</td>
+                            <td>Use debugging tools</td>
+                        </tr>
+                        <tr>
+                            <td>Test failures</td>
+                            <td>Review test data and mock setup</td>
+                            <td>Maintain test fixtures</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h4>Important Directories</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Path</th>
+                            <th>Purpose</th>
+                            <th>Contents</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/src</code></td>
+                            <td>Source code</td>
+                            <td>Application code</td>
+                        </tr>
+                        <tr>
+                            <td><code>/src/components</code></td>
+                            <td>React components</td>
+                            <td>UI components</td>
+                        </tr>
+                        <tr>
+                            <td><code>/src/services</code></td>
+                            <td>API services</td>
+                            <td>API integration</td>
+                        </tr>
+                        <tr>
+                            <td><code>/src/redux</code></td>
+                            <td>State management</td>
+                            <td>Redux store</td>
+                        </tr>
+                        <tr>
+                            <td><code>/tests</code></td>
+                            <td>Test files</td>
+                            <td>Unit & integration tests</td>
+                        </tr>
+                        <tr>
+                            <td><code>/docs</code></td>
+                            <td>Documentation</td>
+                            <td>Project documentation</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>🔑 Key Commands</h3>
+                <pre><code>npm install          # Install dependencies
+npm start            # Start development server
+npm run build        # Build for production
+npm test             # Run tests
+npm run lint         # Check code style
+npm run deploy       # Deploy to production</code></pre>
+                
+                <h3>🆘 Getting Help</h3>
+                <ol>
+                    <li><strong>Check this Reference</strong> - Most questions answered here</li>
+                    <li><strong>Search Documentation</strong> - Use Ctrl+F to search this page</li>
+                    <li><strong>Review Related Docs</strong> - Cross-referenced documents</li>
+                    <li><strong>Contact Team</strong> - Ask team members</li>
+                </ol>
+                
+                <h3>📊 Performance Baselines</h3>
+                <ul>
+                    <li><strong>Build time:</strong> &lt; 2 minutes</li>
+                    <li><strong>Test suite:</strong> &lt; 5 minutes</li>
+                    <li><strong>Load time:</strong> &lt; 2 seconds</li>
+                    <li><strong>API response:</strong> &lt; 500ms</li>
+                </ul>
+                
+                <div class="checklist">
+                    <h4>🔐 Security Checklist</h4>
+                    <label><input type="checkbox"> Credentials never in code</label>
+                    <label><input type="checkbox"> Environment variables used</label>
+                    <label><input type="checkbox"> HTTPS in production</label>
+                    <label><input type="checkbox"> Input validation implemented</label>
+                    <label><input type="checkbox"> SQL injection prevention</label>
+                    <label><input type="checkbox"> XSS protection enabled</label>
+                    <label><input type="checkbox"> CORS configured properly</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Camp Card Mobile App - Complete Documentation</strong></p>
+            <p>Technical Reference & Implementation Guide</p>
+            <p>Document Date: December 28, 2025</p>
+            <p style="margin-top: 20px; font-size: 0.9em;">For the latest documentation and updates, visit the shared-docs directory or contact the development team.</p>
+        </div>
+    </div>
+    
+    <!-- Navigation Controls -->
+    <div class="nav-controls">
+        <button class="nav-btn" onclick="scrollToTop()" title="Back to Top">↑</button>
+        <button class="nav-btn" onclick="showTOC()" title="Table of Contents">📑</button>
+    </div>
+    
+    <script>
+        function showSection(sectionId, event) {
+            if (event) event.preventDefault();
+            
+            // Hide cover and toc pages
+            document.querySelector('.cover-page').style.display = 'none';
+            document.querySelector('.toc-page').style.display = 'none';
+            
+            // Show content
+            document.querySelector('.content').classList.add('active');
+            
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            const selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.classList.add('active');
+            }
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+        
+        function showTOC() {
+            // Hide content sections
+            document.querySelector('.content').classList.remove('active');
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show TOC
+            document.querySelector('.cover-page').style.display = 'none';
+            document.querySelector('.toc-page').style.display = 'block';
+            
+            window.scrollTo(0, 0);
+        }
+        
+        function scrollToTop() {
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+        
+        // Initialize
+        window.addEventListener('load', function() {
+            document.querySelector('.cover-page').style.display = 'block';
+            document.querySelector('.toc-page').style.display = 'none';
+            document.querySelector('.content').classList.remove('active');
+            
+            // Make sure all sections are hidden
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{
+  "name": "Camp Card (Central Florida Council) \u2013 App + Web Tokens",
+  "colors": {
+    "navy900": "#000C2F",
+    "navy800": "#01153A",
+    "navy700": "#05244A",
+    "navy600": "#0F2F55",
+    "blue500": "#0A4384",
+    "blue400": "#294A6F",
+    "highlight": "#3B5C82",
+    "white": "#FFFFFF",
+    "red500": "#D9012C",
+    "red600": "#B01427",
+    "gray50": "#F4F6FA",
+    "gray200": "#D8E0EC"
+  },
+  "gradients": {
+    "primaryRadial": {
+      "type": "radial",
+      "stops": [
+        {
+          "color": "#3B5C82",
+          "pos": 0.0
+        },
+        {
+          "color": "#000C2F",
+          "pos": 1.0
+        }
+      ],
+      "center": [
+        0.35,
+        0.45
+      ],
+      "radius": 0.92
+    }
+  },
+  "radius": {
+    "card": 24,
+    "button": 14,
+    "chip": 999
+  },
+  "spacing": {
+    "xs": 8,
+    "sm": 12,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "2xl": 48
+  },
+  "shadow": {
+    "card": "0 10px 30px rgba(0, 12, 47, 0.22)",
+    "floating": "0 18px 45px rgba(0, 12, 47, 0.28)"
+  },
+  "typography": {
+    "fontFamily": {
+      "ui": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      "display": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+    },
+    "sizes": {
+      "h1": 44,
+      "h2": 32,
+      "h3": 24,
+      "body": 16,
+      "small": 14
+    },
+    "weights": {
+      "regular": 400,
+      "semibold": 600,
+      "bold": 700
+    }
+  },
+  "breakpoints": {
+    "sm": 480,
+    "md": 768,
+    "lg": 1024,
+    "xl": 1280
+  }
+}

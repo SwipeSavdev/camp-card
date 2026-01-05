@@ -1,0 +1,78 @@
+# Local Terraform files
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!example.tfvars
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform plans
+*.tfplan
+tfplan
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Sensitive files
+secrets.tf
+secrets.auto.tfvars
+*-secrets.tf
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Terraform plugin cache
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+
+# SSH keys
+*.pem
+*.key
+*.pub
+
+# Logs
+*.log
+logs/
+
+# Backup files
+*.backup
+*.bak
+
+# Terraform module cache
+.terraform.d/
+
+# AWS CLI
+.aws/
+
+# Python (for Terraform helpers)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Terragrunt
+.terragrunt-cache/
+
+# Ansible (if used for provisioning)
+*.retry
+inventory/hosts
+
+# Other
+tmp/
+temp/
+.cache/

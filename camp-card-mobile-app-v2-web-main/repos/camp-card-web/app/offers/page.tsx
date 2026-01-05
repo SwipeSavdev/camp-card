@@ -1,0 +1,865 @@
+'use client';
+
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+
+const themeColors = {
+ white: '#ffffff',
+ gray50: '#f9fafb',
+ gray100: '#f3f4f6',
+ gray200: '#e5e7eb',
+ gray300: '#d1d5db',
+ gray500: '#6b7280',
+ gray600: '#4b5563',
+ text: '#1f2937',
+ primary50: '#eff6ff',
+ primary100: '#dbeafe',
+ primary200: '#bfdbfe',
+ primary300: '#93c5fd',
+ primary600: '#2563eb',
+ primary800: '#1e40af',
+ primary900: '#1e3a8a',
+ success50: '#f0fdf4',
+ success200: '#bbf7d0',
+ success600: '#16a34a',
+ warning50: '#fefce8',
+ warning200: '#fed7aa',
+ warning600: '#eab308',
+ info50: '#f0f9ff',
+ info200: '#cffafe',
+ info600: '#0284c7',
+ error400: '#f87171',
+ error500: '#ef4444',
+};
+
+const themeSpace = { xs: '3px', sm: '8px', md: '16px', lg: '24px', xl: '32px', '2xl': '40px', '3xl': '48px' };
+const themeRadius = { sm: '4px', card: '12px', lg: '16px' };
+const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' };
+
+const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?: number; color?: string }) => {
+ const icons: { [key: string]: any } = {
+ add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
+ edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
+ delete: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>,
+ search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>,
+ back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
+ chevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>,
+ chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>,
+ x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
+ upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
+ };
+ return icons[name] || null;
+};
+
+interface OfferItem {
+ id: string;
+ name: string;
+ description: string;
+ merchantId: string;
+ merchantName: string;
+ discountType: string;
+ discountAmount: string;
+ useType: 'one-time' | 'reusable';
+ image?: string;
+ barcode?: string;
+}
+
+interface Offer {
+ id: string;
+ merchantId: string;
+ merchantName: string;
+ items: OfferItem[];
+}
+
+export default function OffersPage() {
+ const { data: session, status } = useSession();
+ const router = useRouter();
+ const [merchants, setMerchants] = useState<any[]>([]);
+ const [items, setItems] = useState<Offer[]>([]);
+ const [loading, setLoading] = useState(true);
+ const [error, setError] = useState<string | null>(null);
+ const [searchTerm, setSearchTerm] = useState('');
+ const [showAddForm, setShowAddForm] = useState(false);
+ const [expandedOffers, setExpandedOffers] = useState<Set<string>>(new Set());
+
+ // Form states
+ const [newMerchantId, setNewMerchantId] = useState('');
+ const [newOfferName, setNewOfferName] = useState('');
+ const [newOfferDescription, setNewOfferDescription] = useState('');
+ const [newDiscountType, setNewDiscountType] = useState('');
+ const [newDiscountAmount, setNewDiscountAmount] = useState('');
+ const [newUseType, setNewUseType] = useState<'one-time' | 'reusable'>('reusable');
+ const [newImage, setNewImage] = useState<string | null>(null);
+ const [newImageName, setNewImageName] = useState('');
+ const [multipleOffers, setMultipleOffers] = useState(false);
+ const [tempOffers, setTempOffers] = useState<OfferItem[]>([]);
+ const [showAddMultiple, setShowAddMultiple] = useState(false);
+
+ const discountTypes = ['$', '%', 'BOGO', 'Free Item', 'Points', 'Buy One Get'];
+ const usageTypes = ['one-time', 'reusable'];
+
+ useEffect(() => {
+ // Load data on mount, don't redirect if unauthenticated
+ fetchMerchants();
+ fetchData();
+ }, []);
+
+ const fetchMerchants = async () => {
+ try {
+ const data = await api.getMerchants(session);
+ setMerchants(data.content || data || []);
+ } catch (err) {
+ console.error('Failed to load merchants', err);
+ }
+ };
+
+ const fetchData = async () => {
+ try {
+ setLoading(true);
+ setError(null);
+ const response = await api.getOffers(session);
+ console.log('Raw offers data:', response);
+ // Handle both old structure (with items property) and new flat structure
+ // API returns { data: [...], pagination: {...} }
+ let offersData = (response as any)?.data || (response as any)?.content || response || [];
+ // Ensure offersData is always an array
+ if (!Array.isArray(offersData)) {
+ offersData = [];
+ }
+ console.log('Offers array:', offersData);
+ console.log('Offers count:', offersData.length);
+ // If offers are flat objects, transform them to the expected structure
+ if (offersData.length > 0 && !offersData[0].items) {
+ console.log('Transforming flat offers to grouped structure...');
+ // Group offers by merchant
+ const grouped: { [key: string]: any } = {};
+ offersData.forEach((offer: any) => {
+ // Handle both API format (merchant object) and legacy format
+ const merchantObj = offer.merchant || {};
+ const merchantName = (typeof merchantObj === 'object' ? merchantObj.business_name : merchantObj) || offer.merchantName || 'Unknown';
+ const merchantId = (typeof merchantObj === 'object' ? merchantObj.id : offer.merchantId) || 'unknown';
+
+ if (!grouped[merchantId]) {
+ grouped[merchantId] = {
+ id: merchantId,
+ merchantId: merchantId,
+ merchantName: merchantName,
+ items: [],
+ };
+ }
+ grouped[merchantId].items.push({
+ id: offer.id,
+ name: offer.title || offer.name,
+ description: offer.description,
+ merchantId: merchantId,
+ merchantName: merchantName,
+ discountType: offer.discount,
+ discountAmount: offer.value,
+ useType: (offer.usage_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
+ image: offer.image,
+ barcode: offer.barcode,
+ valid_from: offer.valid_from,
+ valid_until: offer.valid_until,
+ can_redeem: offer.can_redeem,
+ });
+ });
+ offersData = Object.values(grouped);
+ console.log('Grouped offers:', offersData);
+ }
+ console.log('Final offers state:', offersData);
+ setItems(offersData);
+ } catch (err) {
+ console.error('Error loading offers:', err);
+ setError('Failed to load offers');
+ setItems([]); // Ensure items is set to empty array on error
+ console.error(err);
+ } finally {
+ setLoading(false);
+ }
+ };
+
+ const handleDelete = async (merchantId: string) => {
+ if (!confirm('Delete this offer?')) return;
+ try {
+ setItems(items.filter(i => i.merchantId !== merchantId));
+ } catch (err) {
+ setError('Failed to delete');
+ }
+ };
+
+ const toggleOfferExpand = (merchantId: string) => {
+ const newExpanded = new Set(expandedOffers);
+ if (newExpanded.has(merchantId)) {
+ newExpanded.delete(merchantId);
+ } else {
+ newExpanded.add(merchantId);
+ }
+ setExpandedOffers(newExpanded);
+ };
+
+ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+ const file = e.target.files?.[0];
+ if (file) {
+ const reader = new FileReader();
+ reader.onloadend = () => {
+ setNewImage(reader.result as string);
+ setNewImageName(file.name);
+ };
+ reader.readAsDataURL(file);
+ }
+ };
+
+ const addSingleOffer = async () => {
+ if (!newMerchantId || !newOfferName.trim() || !newDiscountType || !newDiscountAmount.trim()) {
+ setError('Please fill all required fields');
+ return;
+ }
+
+ try {
+ const newOfferItem: OfferItem = {
+ id: Date.now().toString(),
+ name: newOfferName,
+ description: newOfferDescription,
+ merchantId: newMerchantId,
+ merchantName: merchants.find(m => m.id === newMerchantId)?.name || '',
+ discountType: newDiscountType,
+ discountAmount: newDiscountAmount,
+ useType: newUseType,
+ image: newImage || undefined,
+ barcode: newImage || undefined,
+ };
+
+ if (!multipleOffers) {
+ const offerData = {
+ merchant_id: newMerchantId,
+ name: newOfferName,
+ description: newOfferDescription,
+ discount_type: newDiscountType,
+ discount_amount: newDiscountAmount,
+ use_type: newUseType,
+ };
+
+ console.log('[PAGE] Creating offer:', offerData);
+ const createdOffer = await api.createOffer(offerData, session);
+ console.log('[PAGE] Offer created successfully:', createdOffer);
+
+ // Add to local state immediately
+ if (createdOffer) {
+ const merchantName = merchants.find(m => m.id === newMerchantId)?.name || '';
+ const groupKey = newMerchantId;
+
+ // Check if merchant group exists
+ const existingGroupIndex = items.findIndex(g => g.merchantId === groupKey);
+
+ if (existingGroupIndex >= 0) {
+ // Add to existing merchant group
+ const updatedItems = [...items];
+ updatedItems[existingGroupIndex].items.push({
+ id: createdOffer.id || Date.now().toString(),
+ name: createdOffer.name || newOfferName,
+ description: createdOffer.description || newOfferDescription,
+ merchantId: groupKey,
+ merchantName: merchantName,
+ discountType: createdOffer.discount_type || newDiscountType,
+ discountAmount: createdOffer.discount_amount || newDiscountAmount,
+ useType: (createdOffer.use_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
+ image: createdOffer.image,
+ barcode: createdOffer.barcode,
+ });
+ setItems(updatedItems);
+ } else {
+ // Create new merchant group
+ const newGroup = {
+ id: newMerchantId,
+ merchantId: newMerchantId,
+ merchantName: merchantName,
+ items: [{
+ id: createdOffer.id || Date.now().toString(),
+ name: createdOffer.name || newOfferName,
+ description: createdOffer.description || newOfferDescription,
+ merchantId: newMerchantId,
+ merchantName: merchantName,
+ discountType: createdOffer.discount_type || newDiscountType,
+ discountAmount: createdOffer.discount_amount || newDiscountAmount,
+ useType: (createdOffer.use_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
+ image: createdOffer.image,
+ barcode: createdOffer.barcode,
+ }]
+ };
+ setItems([...items, newGroup]);
+ }
+ }
+
+ // Don't refresh data - keep the optimistically added item
+ resetForm();
+ setShowAddForm(false);
+ } else {
+ setTempOffers([...tempOffers, newOfferItem]);
+ setNewOfferName('');
+ setNewOfferDescription('');
+ setNewDiscountType('');
+ setNewDiscountAmount('');
+ setNewUseType('reusable');
+ setNewImage(null);
+ setNewImageName('');
+ setShowAddMultiple(false);
+ }
+ } catch (err) {
+ setError('Failed to create offer: ' + (err instanceof Error ? err.message : 'Unknown error'));
+ console.error('[PAGE] Error:', err);
+ }
+ };
+
+ const deleteFromTemp = (offerId: string) => {
+ setTempOffers(tempOffers.filter(o => o.id !== offerId));
+ };
+
+ const finalizMultipleOffers = async () => {
+ if (tempOffers.length === 0) {
+ setError('Please add at least one offer');
+ return;
+ }
+
+ try {
+ const createdOffers: any[] = [];
+ // Submit each offer to the API
+ for (const offer of tempOffers) {
+ const offerData = {
+ merchant_id: newMerchantId,
+ name: offer.name,
+ description: offer.description,
+ discount_type: offer.discountType,
+ discount_amount: offer.discountAmount,
+ use_type: offer.useType,
+ };
+ console.log('[PAGE] Creating offer:', offerData);
+ const createdOffer = await api.createOffer(offerData, session);
+ createdOffers.push(createdOffer);
+ }
+
+ console.log('[PAGE] All offers created successfully:', createdOffers);
+
+ // Add all offers to local state immediately
+ if (createdOffers.length > 0) {
+ const merchantName = merchants.find(m => m.id === newMerchantId)?.name || '';
+ const groupKey = newMerchantId;
+
+ const mappedOffers = createdOffers.map(offer => ({
+ id: offer.id || Date.now().toString(),
+ name: offer.name,
+ description: offer.description,
+ merchantId: groupKey,
+ merchantName: merchantName,
+ discountType: offer.discount_type,
+ discountAmount: offer.discount_amount,
+ useType: (offer.use_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
+ image: offer.image,
+ barcode: offer.barcode,
+ }));
+
+ // Check if merchant group exists
+ const existingGroupIndex = items.findIndex(g => g.merchantId === groupKey);
+
+ if (existingGroupIndex >= 0) {
+ // Add to existing merchant group
+ const updatedItems = [...items];
+ updatedItems[existingGroupIndex].items.push(...mappedOffers);
+ setItems(updatedItems);
+ } else {
+ // Create new merchant group
+ const newGroup = {
+ id: newMerchantId,
+ merchantId: newMerchantId,
+ merchantName: merchantName,
+ items: mappedOffers
+ };
+ setItems([...items, newGroup]);
+ }
+ }
+
+ // Don't refresh data - keep the optimistically added items
+ resetForm();
+ setShowAddForm(false);
+ } catch (err) {
+ setError('Failed to create offers: ' + (err instanceof Error ? err.message : 'Unknown error'));
+ console.error('[PAGE] Error:', err);
+ }
+ };
+
+ const resetForm = () => {
+ setNewMerchantId('');
+ setNewOfferName('');
+ setNewOfferDescription('');
+ setNewDiscountType('');
+ setNewDiscountAmount('');
+ setNewUseType('reusable');
+ setNewImage(null);
+ setNewImageName('');
+ setMultipleOffers(false);
+ setTempOffers([]);
+ setShowAddMultiple(false);
+ setError(null);
+ };
+
+ const filteredItems = (Array.isArray(items) ? items : []).filter(item =>
+ item.merchantName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+ item.items?.some((offer: OfferItem) =>
+ offer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+ offer.description?.toLowerCase().includes(searchTerm.toLowerCase())
+ )
+ );
+
+ if (status === 'loading') return null;
+
+ return (
+ <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
+ <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+ <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
+ <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
+ <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600 }}>
+ <Icon name="back" size={20} />
+ </button>
+ <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Offers</h1>
+ </div>
+ <button onClick={() => setShowAddForm(true)} style={{ background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
+ <Icon name="add" size={18} color={themeColors.white} />
+ Add Offer
+ </button>
+ </div>
+
+ <div style={{ position: 'relative' }}>
+ <div style={{ position: 'absolute', left: themeSpace.md, top: '12px' }}>
+ <Icon name="search" size={18} color={themeColors.gray500} />
+ </div>
+ <input
+ type="text"
+ placeholder="Search offers..."
+ value={searchTerm}
+ onChange={(e) => setSearchTerm(e.target.value)}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md} ${themeSpace.sm} ${themeSpace.xl}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ }}
+ />
+ </div>
+ </div>
+
+ <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
+ {error && <div style={{ backgroundColor: '#fee2e2', border: `1px solid ${themeColors.error500}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.error500 }}>{error}</div>}
+
+ {loading ? (
+ <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
+ ) : filteredItems.length === 0 ? (
+ <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>No offers found</div>
+ ) : (
+ <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg }}>
+ {filteredItems.map((offer) => (
+ <div key={offer.id} style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.sm, overflow: 'hidden' }}>
+ <div
+ onClick={() => toggleOfferExpand(offer.merchantId)}
+ style={{
+ padding: themeSpace.lg,
+ cursor: 'pointer',
+ backgroundColor: expandedOffers.has(offer.merchantId) ? themeColors.warning50 : themeColors.white,
+ borderLeft: `4px solid ${themeColors.warning600}`,
+ display: 'flex',
+ justifyContent: 'space-between',
+ alignItems: 'center',
+ transition: 'background-color 0.2s'
+ }}
+ >
+ <div style={{ flex: 1 }}>
+ <div style={{ fontSize: '16px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
+ {offer.merchantName}
+ </div>
+ <div style={{ fontSize: '13px', color: themeColors.gray600 }}>
+ {offer.items.length} offer{offer.items.length !== 1 ? 's' : ''}
+ </div>
+ </div>
+ <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
+ <button style={{ background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+ <Icon name="edit" size={16} color={themeColors.info600} />
+ </button>
+ <button onClick={(e) => { e.stopPropagation(); handleDelete(offer.merchantId); }} style={{ background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <Icon name="delete" size={16} color={themeColors.error500} />
+ </button>
+ <Icon name={expandedOffers.has(offer.merchantId) ? 'chevronDown' : 'chevronRight'} size={20} color={themeColors.gray600} />
+ </div>
+ </div>
+
+ {expandedOffers.has(offer.merchantId) && (
+ <div style={{ padding: themeSpace.lg, borderTop: `1px solid ${themeColors.gray200}`, backgroundColor: themeColors.gray50 }}>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
+ {(offer.items || []).map((item) => (
+ <div key={item.id} style={{ padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.sm, borderLeft: `3px solid ${themeColors.warning600}` }}>
+ <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: themeSpace.md }}>
+ <div style={{ flex: 1 }}>
+ <div style={{ fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.xs }}>
+ {item.name}
+ </div>
+ <div style={{ fontSize: '13px', color: themeColors.gray600, marginBottom: themeSpace.sm }}>
+ {item.description}
+ </div>
+ <div style={{ display: 'flex', gap: themeSpace.md, flexWrap: 'wrap' }}>
+ <span style={{ padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: themeColors.info50, color: themeColors.info600, borderRadius: themeRadius.sm, fontSize: '11px', fontWeight: '600' }}>
+ {item.discountAmount} {item.discountType}
+ </span>
+ <span style={{ padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: themeColors.success50, color: themeColors.success600, borderRadius: themeRadius.sm, fontSize: '11px', fontWeight: '600' }}>
+ {item.useType === 'one-time' ? 'One-Time' : 'Reusable'}
+ </span>
+ </div>
+ </div>
+ {item.image && (
+ <div style={{ marginLeft: themeSpace.lg, textAlign: 'center' }}>
+ <img
+ src={item.image}
+ alt="Offer barcode"
+ style={{ maxWidth: '100px', maxHeight: '100px', borderRadius: themeRadius.sm, border: `1px solid ${themeColors.gray200}` }}
+ />
+ </div>
+ )}
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
+
+ {showAddForm && (
+ <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, overflowY: 'auto', padding: `${themeSpace.xl} 0` }}>
+ <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '650px', boxShadow: themeShadow.md, margin: 'auto' }}>
+ <h2 style={{ fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0 }}>Add New Offer</h2>
+
+ <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl, maxHeight: '70vh', overflowY: 'auto' }}>
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Associated Merchant</label>
+ <select
+ value={newMerchantId}
+ onChange={(e) => setNewMerchantId(e.target.value)}
+ disabled={tempOffers.length > 0}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ <option value="">Select a merchant</option>
+ {merchants.map((merchant) => (
+ <option key={merchant.id} value={merchant.id}>
+ {merchant.name}
+ </option>
+ ))}
+ </select>
+ </div>
+
+ {multipleOffers && tempOffers.length > 0 && (
+ <div style={{ padding: themeSpace.lg, backgroundColor: themeColors.warning50, borderRadius: themeRadius.sm, borderLeft: `3px solid ${themeColors.warning600}` }}>
+ <h4 style={{ fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.md, margin: 0 }}>Offers to Add ({tempOffers.length})</h4>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.sm }}>
+ {tempOffers.map((o) => (
+ <div key={o.id} style={{ padding: themeSpace.sm, backgroundColor: themeColors.white, borderRadius: themeRadius.sm, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+ <div style={{ flex: 1 }}>
+ <div style={{ fontSize: '12px', fontWeight: '600', color: themeColors.text }}>
+ {o.name}
+ </div>
+ <div style={{ fontSize: '11px', color: themeColors.gray600 }}>
+ {o.discountAmount} {o.discountType}  {o.useType === 'one-time' ? 'One-Time' : 'Reusable'}
+ </div>
+ </div>
+ <button
+ onClick={() => deleteFromTemp(o.id)}
+ style={{
+ background: 'none',
+ border: 'none',
+ color: themeColors.error500,
+ cursor: 'pointer',
+ padding: 0,
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
+ }}
+ >
+ <Icon name="x" size={14} color={themeColors.error500} />
+ </button>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+
+ {!multipleOffers || showAddMultiple ? (
+ <>
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Offer Name</label>
+ <input
+ type="text"
+ value={newOfferName}
+ onChange={(e) => setNewOfferName(e.target.value)}
+ placeholder="e.g., 20% Off Winter Clothes"
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Offer Description</label>
+ <textarea
+ value={newOfferDescription}
+ onChange={(e) => setNewOfferDescription(e.target.value)}
+ placeholder="Describe the offer details..."
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ minHeight: '80px',
+ fontFamily: 'inherit',
+ }}
+ />
+ </div>
+
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: themeSpace.lg }}>
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Discount Type</label>
+ <select
+ value={newDiscountType}
+ onChange={(e) => setNewDiscountType(e.target.value)}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ <option value="">Select type</option>
+ {discountTypes.map((type) => (
+ <option key={type} value={type}>
+ {type}
+ </option>
+ ))}
+ </select>
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Discount Amount</label>
+ <input
+ type="text"
+ value={newDiscountAmount}
+ onChange={(e) => setNewDiscountAmount(e.target.value)}
+ placeholder="e.g., 20, 100, etc"
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Usage Type</label>
+ <div style={{ display: 'flex', gap: themeSpace.lg }}>
+ {usageTypes.map((type) => (
+ <label key={type} style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer' }}>
+ <input
+ type="radio"
+ name="useType"
+ value={type}
+ checked={newUseType === type}
+ onChange={(e) => setNewUseType(e.target.value as 'one-time' | 'reusable')}
+ style={{ cursor: 'pointer' }}
+ />
+ <span style={{ fontSize: '14px', fontWeight: '500', color: themeColors.text }}>
+ {type === 'one-time' ? 'One-Time Use' : 'Reusable'}
+ </span>
+ </label>
+ ))}
+ </div>
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Upload Image / Barcode</label>
+ <div style={{ border: `2px dashed ${themeColors.gray200}`, borderRadius: themeRadius.sm, padding: themeSpace.lg, textAlign: 'center', cursor: 'pointer', backgroundColor: themeColors.gray50, transition: 'border-color 0.2s' }}>
+ <input
+ type="file"
+ accept="image/*"
+ onChange={handleImageUpload}
+ style={{ display: 'none' }}
+ id="imageUpload"
+ />
+ <label htmlFor="imageUpload" style={{ display: 'block', cursor: 'pointer' }}>
+ <Icon name="upload" size={32} color={themeColors.primary600} />
+ <div style={{ fontSize: '14px', fontWeight: '500', color: themeColors.text, marginTop: themeSpace.sm }}>
+ {newImageName || 'Click to upload image or barcode'}
+ </div>
+ <div style={{ fontSize: '12px', color: themeColors.gray600, marginTop: themeSpace.xs }}>
+ PNG, JPG, GIF up to 10MB
+ </div>
+ </label>
+ </div>
+ {newImage && (
+ <div style={{ marginTop: themeSpace.md, textAlign: 'center' }}>
+ <img
+ src={newImage}
+ alt="Preview"
+ style={{ maxWidth: '150px', maxHeight: '150px', borderRadius: themeRadius.sm, border: `1px solid ${themeColors.gray200}` }}
+ />
+ <button
+ onClick={() => { setNewImage(null); setNewImageName(''); }}
+ style={{
+ marginTop: themeSpace.sm,
+ background: 'none',
+ border: `1px solid ${themeColors.error500}`,
+ color: themeColors.error500,
+ padding: `${themeSpace.xs} ${themeSpace.sm}`,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '12px',
+ fontWeight: '500',
+ }}
+ >
+ Remove Image
+ </button>
+ </div>
+ )}
+ </div>
+ </>
+ ) : null}
+
+ {!multipleOffers || showAddMultiple ? (
+ <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md, padding: themeSpace.lg, backgroundColor: themeColors.info50, borderRadius: themeRadius.sm, borderLeft: `3px solid ${themeColors.info600}` }}>
+ <input
+ type="checkbox"
+ id="multipleOffers"
+ checked={multipleOffers}
+ onChange={(e) => {
+ setMultipleOffers(e.target.checked);
+ if (!e.target.checked) {
+ setTempOffers([]);
+ setShowAddMultiple(false);
+ }
+ }}
+ style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+ />
+ <label htmlFor="multipleOffers" style={{ fontSize: '14px', fontWeight: '500', color: themeColors.text, cursor: 'pointer', flex: 1 }}>
+ Add Multiple Offers for This Merchant
+ </label>
+ </div>
+ ) : null}
+ </div>
+
+ <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => {
+ setShowAddForm(false);
+ resetForm();
+ }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ border: `1px solid ${themeColors.gray200}`,
+ backgroundColor: themeColors.white,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ color: themeColors.gray600,
+ }}
+ >
+ Cancel
+ </button>
+
+ {multipleOffers && tempOffers.length > 0 ? (
+ <>
+ <button
+ onClick={() => {
+ if (!showAddMultiple) {
+ setShowAddMultiple(true);
+ } else {
+ addSingleOffer();
+ }
+ }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ background: themeColors.warning600,
+ color: themeColors.white,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ }}
+ >
+ {showAddMultiple ? 'Add Offer' : 'Add Another Offer'}
+ </button>
+ <button
+ onClick={finalizMultipleOffers}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ background: themeColors.success600,
+ color: themeColors.white,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ }}
+ >
+ Save All Offers
+ </button>
+ </>
+ ) : (
+ <button
+ onClick={addSingleOffer}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ background: themeColors.primary600,
+ color: themeColors.white,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ }}
+ >
+ Create Offer
+ </button>
+ )}
+ </div>
+ </div>
+ </div>
+ )}
+ </div>
+ </div>
+ );
+}

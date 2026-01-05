@@ -1,0 +1,3 @@
+Test Name,Status,Duration (ms),Response Code,Details
+Health Check,PASS,10,200,OK
+Readiness Check,FAIL,9,404,Expected 200

@@ -1,0 +1,156 @@
+# ============================================================================
+# Camp Card - Local Docker with AWS RDS
+# ============================================================================
+# Uses AWS RDS for database, local Redis/Kafka for other services
+#
+# Usage:
+#   docker-compose -f docker-compose-local-rds.yml up -d --build
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # BACKEND API (Java Spring Boot) - Port 7010
+  # ==========================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campcard-backend
+    ports:
+      - "7010:7010"
+    environment:
+      - SPRING_PROFILE=local-rds
+      - DB_HOST=database-3.cn00u2kgkr3j.us-east-2.rds.amazonaws.com
+      - DB_PORT=5432
+      - DB_NAME=campcard
+      - DB_USERNAME=campcard_app
+      - DB_PASSWORD=CampCard2025!Secure
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=localdevpassword
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - JWT_SECRET=local-dev-secret-key-for-testing-only-minimum-256-bits-required
+      - SERVER_PORT=7010
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - campcard-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7010/actuator/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # ==========================================================================
+  # REDIS CACHE - Port 6379
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: campcard-redis
+    command: redis-server --requirepass localdevpassword
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - campcard-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "localdevpassword", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # ZOOKEEPER - Port 2181
+  # ==========================================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: campcard-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    restart: unless-stopped
+    networks:
+      - campcard-network
+
+  # ==========================================================================
+  # KAFKA - Port 9092
+  # ==========================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: campcard-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    restart: unless-stopped
+    networks:
+      - campcard-network
+
+  # ==========================================================================
+  # WEB PORTAL (Next.js) - Port 7020
+  # ==========================================================================
+  web:
+    build:
+      context: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+      dockerfile: Dockerfile
+    container_name: campcard-web
+    ports:
+      - "7020:7020"
+    environment:
+      - NODE_ENV=production
+      - PORT=7020
+      - NEXT_PUBLIC_API_URL=http://localhost:7010/api/v1
+      - INTERNAL_API_URL=http://backend:7010/api/v1
+      - NEXTAUTH_URL=http://localhost:7020
+      - NEXTAUTH_SECRET=local-dev-secret-32-chars-minimum!!
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - campcard-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7020"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  redis-data:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  campcard-network:
+    driver: bridge

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camp Card Mobile App - Documentation Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .nav-container {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        
+        .nav-item {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .nav-item:last-child {
+            border-right: none;
+        }
+        
+        .nav-item:hover {
+            background: #e8eef7;
+        }
+        
+        .nav-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: block;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .doc-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .doc-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .doc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .doc-card h3 {
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        .doc-card p {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .doc-card .tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+        
+        .search-box {
+            margin-bottom: 30px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .nav-item {
+                min-width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .doc-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Camp Card Mobile App</h1>
+            <p>Complete Documentation Hub</p>
+        </div>
+        
+        <div class="nav-container">
+            <div class="nav-item" onclick="showSection('getting-started')">
+                <a href="#getting-started">🚀 Getting Started</a>
+            </div>
+            <div class="nav-item" onclick="showSection('backend')">
+                <a href="#backend">⚙️ Backend</a>
+            </div>
+            <div class="nav-item" onclick="showSection('frontend')">
+                <a href="#frontend">📲 Frontend/Mobile</a>
+            </div>
+            <div class="nav-item" onclick="showSection('api')">
+                <a href="#api">🔗 API</a>
+            </div>
+            <div class="nav-item" onclick="showSection('testing')">
+                <a href="#testing">✅ Testing</a>
+            </div>
+            <div class="nav-item" onclick="showSection('deployment')">
+                <a href="#deployment">🚢 Deployment</a>
+            </div>
+            <div class="nav-item" onclick="showSection('reference')">
+                <a href="#reference">📚 Reference</a>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Getting Started Section -->
+            <div id="getting-started" class="section active">
+                <h2>🚀 Getting Started</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search documentation..." onkeyup="filterDocs(this.value)">
+                </div>
+                <div class="doc-list">
+                    <a href="01-Getting-Started/" class="doc-card">
+                        <h3>Quick Start Guide</h3>
+                        <p>Get up and running in minutes with essential setup steps.</p>
+                        <span class="tag">Essential</span>
+                    </a>
+                    <a href="01-Getting-Started/" class="doc-card">
+                        <h3>Development Environment Setup</h3>
+                        <p>Complete guide to setting up your local development environment.</p>
+                        <span class="tag">Setup</span>
+                    </a>
+                    <a href="01-Getting-Started/" class="doc-card">
+                        <h3>Project Overview</h3>
+                        <p>Understand the project architecture and key components.</p>
+                        <span class="tag">Overview</span>
+                    </a>
+                    <a href="01-Getting-Started/" class="doc-card">
+                        <h3>New Users Setup</h3>
+                        <p>Guide for new team members joining the project.</p>
+                        <span class="tag">Onboarding</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Backend Section -->
+            <div id="backend" class="section">
+                <h2>⚙️ Backend Documentation</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search backend docs..." onkeyup="filterDocs(this.value)">
+                </div>
+                <div class="doc-list">
+                    <a href="02-Backend/" class="doc-card">
+                        <h3>Backend Implementation Guide</h3>
+                        <p>Complete guide to backend structure, APIs, and database setup.</p>
+                        <span class="tag">Backend</span>
+                    </a>
+                    <a href="02-Backend/" class="doc-card">
+                        <h3>Backend Integration Guide</h3>
+                        <p>How to integrate backend services with frontend components.</p>
+                        <span class="tag">Integration</span>
+                    </a>
+                    <a href="02-Backend/" class="doc-card">
+                        <h3>Database Schema</h3>
+                        <p>Complete database schema documentation and relationships.</p>
+                        <span class="tag">Database</span>
+                    </a>
+                    <a href="02-Backend/" class="doc-card">
+                        <h3>All Controllers Summary</h3>
+                        <p>Reference guide for all backend controllers and endpoints.</p>
+                        <span class="tag">Reference</span>
+                    </a>
+                    <a href="02-Backend/" class="doc-card">
+                        <h3>Backend Audit Report</h3>
+                        <p>Comprehensive audit of backend implementation and quality.</p>
+                        <span class="tag">QA</span>
+                    </a>
+                    <a href="02-Backend/" class="doc-card">
+                        <h3>Principal Backend Summary</h3>
+                        <p>High-level summary of backend architecture and features.</p>
+                        <span class="tag">Summary</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Frontend/Mobile Section -->
+            <div id="frontend" class="section">
+                <h2>📲 Frontend & Mobile Development</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search frontend docs..." onkeyup="filterDocs(this.value)">
+                </div>
+                <div class="doc-list">
+                    <a href="03-Frontend-Mobile/" class="doc-card">
+                        <h3>Mobile App Guide</h3>
+                        <p>Complete guide to mobile app features and functionality.</p>
+                        <span class="tag">Mobile</span>
+                    </a>
+                    <a href="03-Frontend-Mobile/" class="doc-card">
+                        <h3>Card Redesign Summary</h3>
+                        <p>Details on card UI redesign and implementation.</p>
+                        <span class="tag">UI Design</span>
+                    </a>
+                    <a href="03-Frontend-Mobile/" class="doc-card">
+                        <h3>Mobile Card Flip Feature</h3>
+                        <p>Documentation for card flip animation and interaction.</p>
+                        <span class="tag">Feature</span>
+                    </a>
+                    <a href="03-Frontend-Mobile/" class="doc-card">
+                        <h3>Wallet Implementation</h3>
+                        <p>Complete wallet feature implementation and UI guide.</p>
+                        <span class="tag">Feature</span>
+                    </a>
+                    <a href="03-Frontend-Mobile/" class="doc-card">
+                        <h3>Web Portal Setup Guide</h3>
+                        <p>Guide for setting up and configuring the web portal.</p>
+                        <span class="tag">Web</span>
+                    </a>
+                    <a href="03-Frontend-Mobile/" class="doc-card">
+                        <h3>Design System Reference</h3>
+                        <p>UI component library and design system documentation.</p>
+                        <span class="tag">Design</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- API Section -->
+            <div id="api" class="section">
+                <h2>🔗 API Integration & Documentation</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search API docs..." onkeyup="filterDocs(this.value)">
+                </div>
+                <div class="doc-list">
+                    <a href="04-API-Integration/" class="doc-card">
+                        <h3>Complete API Documentation</h3>
+                        <p>Full API reference with all endpoints and parameters.</p>
+                        <span class="tag">API</span>
+                    </a>
+                    <a href="04-API-Integration/" class="doc-card">
+                        <h3>Controllers Quick Reference</h3>
+                        <p>Quick lookup for all API controller endpoints.</p>
+                        <span class="tag">Reference</span>
+                    </a>
+                    <a href="04-API-Integration/" class="doc-card">
+                        <h3>Mock Data Delivery Summary</h3>
+                        <p>Documentation for mock data generation and usage.</p>
+                        <span class="tag">Testing</span>
+                    </a>
+                    <a href="04-API-Integration/" class="doc-card">
+                        <h3>Platform Sync Strategy</h3>
+                        <p>Strategy for synchronizing data across platforms.</p>
+                        <span class="tag">Integration</span>
+                    </a>
+                    <a href="04-API-Integration/" class="doc-card">
+                        <h3>Feature Flags Documentation</h3>
+                        <p>Feature flag implementation and management guide.</p>
+                        <span class="tag">Feature</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Testing Section -->
+            <div id="testing" class="section">
+                <h2>✅ Testing Documentation</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search testing docs..." onkeyup="filterDocs(this.value)">
+                </div>
+                <div class="doc-list">
+                    <a href="05-Testing/" class="doc-card">
+                        <h3>Master Testing Checklist</h3>
+                        <p>Comprehensive checklist for all testing phases.</p>
+                        <span class="tag">Testing</span>
+                    </a>
+                    <a href="05-Testing/" class="doc-card">
+                        <h3>Comprehensive QA Plan</h3>
+                        <p>Complete QA strategy and test plan.</p>
+                        <span class="tag">QA</span>
+                    </a>
+                    <a href="05-Testing/" class="doc-card">
+                        <h3>Testing Execution Plan</h3>
+                        <p>Detailed execution plan for all testing phases.</p>
+                        <span class="tag">Testing</span>
+                    </a>
+                    <a href="05-Testing/" class="doc-card">
+                        <h3>Manual Testing Guide</h3>
+                        <p>Guide for performing manual testing of features.</p>
+                        <span class="tag">Testing</span>
+                    </a>
+                    <a href="05-Testing/" class="doc-card">
+                        <h3>Phase 5B: Automated Testing</h3>
+                        <p>Automated testing suite and execution guide.</p>
+                        <span class="tag">Automation</span>
+                    </a>
+                    <a href="05-Testing/" class="doc-card">
+                        <h3>Load Testing Report</h3>
+                        <p>Performance and load testing results and analysis.</p>
+                        <span class="tag">Performance</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Deployment Section -->
+            <div id="deployment" class="section">
+                <h2>🚢 Deployment & Production</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search deployment docs..." onkeyup="filterDocs(this.value)">
+                </div>
+                <div class="doc-list">
+                    <a href="06-Deployment/" class="doc-card">
+                        <h3>Production Deployment Procedures</h3>
+                        <p>Step-by-step guide for deploying to production.</p>
+                        <span class="tag">Deployment</span>
+                    </a>
+                    <a href="06-Deployment/" class="doc-card">
+                        <h3>Deployment Testing Guide</h3>
+                        <p>Testing procedures before and after deployment.</p>
+                        <span class="tag">Testing</span>
+                    </a>
+                    <a href="06-Deployment/" class="doc-card">
+                        <h3>Phase 4: Build & Deployment</h3>
+                        <p>Build process and deployment configuration guide.</p>
+                        <span class="tag">Build</span>
+                    </a>
+                    <a href="06-Deployment/" class="doc-card">
+                        <h3>Option E: Production Deployment</h3>
+                        <p>Advanced production deployment strategies and options.</p>
+                        <span class="tag">Deployment</span>
+                    </a>
+                    <a href="06-Deployment/" class="doc-card">
+                        <h3>Phase 5 Integration Testing</h3>
+                        <p>Integration testing strategy for deployment readiness.</p>
+                        <span class="tag">Testing</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Reference Section -->
+            <div id="reference" class="section">
+                <h2>📚 Reference & Resources</h2>
+                <div class="search-box">
+                    <input type="text" placeholder="Search reference docs..." onkeyup="filterDocs(this.value)">
+                </div>
+                <div class="doc-list">
+                    <a href="07-Reference/" class="doc-card">
+                        <h3>QA Quick Reference</h3>
+                        <p>Quick lookup for QA procedures and checklists.</p>
+                        <span class="tag">Reference</span>
+                    </a>
+                    <a href="07-Reference/" class="doc-card">
+                        <h3>Test User Credentials</h3>
+                        <p>Test user accounts and credentials for testing.</p>
+                        <span class="tag">Testing</span>
+                    </a>
+                    <a href="07-Reference/" class="doc-card">
+                        <h3>Scout Leader Documentation</h3>
+                        <p>Documentation for scout leader features and admin panel.</p>
+                        <span class="tag">Feature</span>
+                    </a>
+                    <a href="07-Reference/" class="doc-card">
+                        <h3>User & Admin Documentation</h3>
+                        <p>End-user and administrator documentation.</p>
+                        <span class="tag">User Guide</span>
+                    </a>
+                    <a href="07-Reference/" class="doc-card">
+                        <h3>Accessibility Audit</h3>
+                        <p>Accessibility compliance and audit results.</p>
+                        <span class="tag">QA</span>
+                    </a>
+                    <a href="07-Reference/" class="doc-card">
+                        <h3>Analytics & Performance Report</h3>
+                        <p>Performance metrics and analytics documentation.</p>
+                        <span class="tag">Monitoring</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Camp Card Mobile App Documentation | Last Updated: December 28, 2025</p>
+            <p>For support, contact the development team or check the README.md for additional resources.</p>
+        </div>
+    </div>
+    
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            const selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.classList.add('active');
+            }
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+        
+        function filterDocs(searchTerm) {
+            const cards = document.querySelectorAll('.doc-card');
+            const lowerSearchTerm = searchTerm.toLowerCase();
+            
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(lowerSearchTerm) || description.includes(lowerSearchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

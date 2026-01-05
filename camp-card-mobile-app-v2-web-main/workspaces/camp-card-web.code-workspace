@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "name": "camp-card-web",
+      "path": "../repos/camp-card-web"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.next": true,
+      "**/node_modules": true
+    }
+  }
+}

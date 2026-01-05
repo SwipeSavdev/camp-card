@@ -1,0 +1,56 @@
+# Java / Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+log/
+
+# Test coverage
+.jacoco/
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+HELP.md
+.springBeans
+
+# Flyway
+flyway.conf
+
+# Secrets (never commit)
+*secret*
+*password*
+*.pem
+*.key
+*.crt

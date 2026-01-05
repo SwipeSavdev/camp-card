@@ -1,0 +1,35 @@
+{
+  "folders": [
+    {
+      "name": "mobile",
+      "path": "../repos/camp-card-mobile"
+    },
+    {
+      "name": "web",
+      "path": "../repos/camp-card-web"
+    },
+    {
+      "name": "backend",
+      "path": "../repos/camp-card-backend"
+    },
+    {
+      "name": "infrastructure",
+      "path": "../repos/camp-card-infrastructure"
+    },
+    {
+      "name": "docs",
+      "path": "../repos/camp-card-docs"
+    },
+    {
+      "name": "uiux",
+      "path": "../repos/CampCard_MultiTenant_MobileApp_UIUX"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/.expo": true
+    }
+  }
+}

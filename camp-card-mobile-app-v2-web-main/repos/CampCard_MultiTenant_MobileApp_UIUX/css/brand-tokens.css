@@ -1,0 +1,23 @@
+:root {
+  --cc-navy900: #000C2F;
+  --cc-navy800: #01153A;
+  --cc-navy700: #05244A;
+  --cc-navy600: #0F2F55;
+  --cc-blue500: #0A4384;
+  --cc-blue400: #294A6F;
+  --cc-highlight: #3B5C82;
+  --cc-white: #FFFFFF;
+  --cc-red500: #D9012C;
+  --cc-red600: #B01427;
+  --cc-gray50: #F4F6FA;
+  --cc-gray200: #D8E0EC;
+  --cc-radius-card: 24px;
+  --cc-radius-button: 14px;
+  --cc-space-md: 16px;
+  --cc-space-lg: 24px;
+  --cc-shadow-card: 0 10px 30px rgba(0, 12, 47, 0.22);
+}
+
+.cc-hero-gradient {
+  background: radial-gradient(circle at 35% 45%, var(--cc-highlight) 0%, var(--cc-navy900) 100%);
+}

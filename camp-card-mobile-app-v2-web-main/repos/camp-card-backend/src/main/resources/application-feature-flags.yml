@@ -1,0 +1,32 @@
+-- Redis Configuration
+-- Add to application.yml or application.properties
+
+# Redis Configuration for Feature Flags Caching
+spring:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+    timeout: 60000ms
+    connect-timeout: 10000ms
+    client-type: lettuce
+    ssl: false
+    
+    # Connection pool configuration
+    lettuce:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 5
+        max-wait: -1ms
+      shutdown-timeout: 2000ms
+
+# Feature Flags Service Configuration
+feature-flags:
+  cache:
+    ttl-minutes: 1  # Redis cache TTL for admin changes
+    mobile-ttl-hours: 1  # Mobile local cache TTL
+  defaults:
+    enabled: true  # Default flag state for new flags
+    scope: GLOBAL  # Default scope

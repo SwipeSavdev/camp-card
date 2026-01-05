@@ -1,0 +1,119 @@
+# Fastfile for iOS and Android deployment
+
+default_platform(:ios)
+
+# iOS Platform
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Increment build number
+    increment_build_number(xcodeproj: "CampCard.xcodeproj")
+    
+    # Build the app
+    build_app(
+      workspace: "CampCard.xcworkspace",
+      scheme: "CampCard",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "org.bsa.campcard" => "match AppStore org.bsa.campcard"
+        }
+      }
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: "Bug fixes and improvements"
+    )
+    
+    # Send notification
+    slack(
+      message: "Successfully uploaded iOS build to TestFlight! 🎉",
+      channel: "#mobile-deployments",
+      success: true
+    )
+  end
+
+  desc "Deploy a new version to the App Store"
+  lane :release do
+    # Increment version
+    increment_version_number(bump_type: "patch")
+    
+    # Build and upload
+    beta
+    
+    # Submit for review
+    upload_to_app_store(
+      force: true,
+      submit_for_review: true,
+      automatic_release: false,
+      submission_information: {
+        add_id_info_uses_idfa: false
+      }
+    )
+  end
+end
+
+# Android Platform
+platform :android do
+  desc "Submit a new Beta Build to Google Play Internal Testing"
+  lane :beta do
+    # Increment version code
+    increment_version_code(
+      gradle_file_path: "app/build.gradle"
+    )
+    
+    # Build the app
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_PATH"],
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"]
+      }
+    )
+    
+    # Upload to Google Play
+    upload_to_play_store(
+      track: "internal",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+    
+    # Send notification
+    slack(
+      message: "Successfully uploaded Android build to Internal Testing! 🎉",
+      channel: "#mobile-deployments",
+      success: true
+    )
+  end
+
+  desc "Deploy a new version to the Google Play Store"
+  lane :release do
+    # Build and upload
+    beta
+    
+    # Promote to production
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "production",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
+
+# Error handling
+error do |lane, exception|
+  slack(
+    message: "Deployment failed: #{exception.message}",
+    channel: "#mobile-deployments",
+    success: false
+  )
+end

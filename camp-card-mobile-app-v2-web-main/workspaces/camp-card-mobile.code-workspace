@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "name": "camp-card-mobile",
+      "path": "../repos/camp-card-mobile"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.expo": true,
+      "**/node_modules": true
+    }
+  }
+}
