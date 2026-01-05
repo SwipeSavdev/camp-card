@@ -28,6 +28,10 @@ RUN npm install -g @expo/ngrok@^4.1.0
 # Copy source code
 COPY . .
 
+# Use AWS environment config
+# Copy .env.aws as .env so Expo picks up the correct API URL
+RUN cp .env.aws .env 2>/dev/null || true
+
 # Create non-root user
 RUN addgroup -S campcard && adduser -S campcard -G campcard
 RUN chown -R campcard:campcard /app
