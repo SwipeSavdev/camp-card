@@ -90,6 +90,16 @@ logging:
   file:
     name: /var/log/campcard/api.log
 
+# Authorize.Net Payment Gateway
+authorize:
+  net:
+    api:
+      login:
+        id: ${AUTHORIZE_NET_API_LOGIN_ID:placeholder}
+    transaction:
+      key: ${AUTHORIZE_NET_TRANSACTION_KEY:placeholder}
+    environment: ${AUTHORIZE_NET_ENVIRONMENT:SANDBOX}
+
 # Actuator
 management:
   endpoints:

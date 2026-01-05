@@ -31,6 +31,10 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - JWT_SECRET=${JWT_SECRET}
       - SERVER_PORT=7010
+      # Authorize.Net Payment Gateway
+      - AUTHORIZE_NET_API_LOGIN_ID=${AUTHORIZE_NET_API_LOGIN_ID:-placeholder}
+      - AUTHORIZE_NET_TRANSACTION_KEY=${AUTHORIZE_NET_TRANSACTION_KEY:-placeholder}
+      - AUTHORIZE_NET_ENVIRONMENT=${AUTHORIZE_NET_ENVIRONMENT:-SANDBOX}
     depends_on:
       redis:
         condition: service_healthy
