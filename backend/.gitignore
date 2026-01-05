@@ -1,11 +1,13 @@
 # Java / Maven
 target/
-!.mvn/wrapper/maven-wrapper.jar
 *.class
 *.jar
 *.war
 *.ear
 *.log
+
+# But keep Maven wrapper jar
+!.mvn/wrapper/maven-wrapper.jar
 
 # IDE
 .idea/

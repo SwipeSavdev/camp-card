@@ -5,22 +5,20 @@ FROM amazoncorretto:21-alpine AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper and pom
-COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
+# Install Maven directly (more reliable for CI/CD than maven wrapper)
+RUN apk add --no-cache maven
 
-# Make mvnw executable
-RUN chmod +x mvnw
+# Copy pom
+COPY pom.xml .
 
 # Download dependencies (cached layer)
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 # ============================================================================
 # Runtime Stage
