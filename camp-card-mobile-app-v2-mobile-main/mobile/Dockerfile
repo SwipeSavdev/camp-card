@@ -14,7 +14,8 @@ RUN apk add --no-cache \
     git \
     python3 \
     make \
-    g++
+    g++ \
+    curl
 
 # Copy package files
 COPY package*.json ./
@@ -32,6 +33,9 @@ COPY . .
 # Copy .env.aws as .env so Expo picks up the correct API URL
 RUN cp .env.aws .env 2>/dev/null || true
 
+# Make startup script executable
+RUN chmod +x start-expo.sh 2>/dev/null || true
+
 # Create non-root user
 RUN addgroup -S campcard && adduser -S campcard -G campcard
 RUN chown -R campcard:campcard /app
@@ -44,7 +48,8 @@ USER campcard
 # 19000 - Expo DevTools
 # 19001 - Expo DevTools (packager)
 # 19002 - Expo DevTools (web interface)
-EXPOSE 8081 19000 19001 19002
+# 4040 - ngrok inspector
+EXPOSE 8081 19000 19001 19002 4040
 
 # Environment variables for Expo
 ENV EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
@@ -52,5 +57,5 @@ ENV REACT_NATIVE_PACKAGER_HOSTNAME=0.0.0.0
 # CI=1 enables non-interactive mode properly
 ENV CI=1
 
-# Start Expo in tunnel mode for remote access
-CMD ["npx", "expo", "start", "--tunnel"]
+# Start Expo with custom script that prints tunnel URL
+CMD ["/bin/sh", "./start-expo.sh"]
