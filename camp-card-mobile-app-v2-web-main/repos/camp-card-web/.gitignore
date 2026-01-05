@@ -9,7 +9,7 @@ node_modules/
 npm-debug.log
 yarn-error.log
 yarn.lock
-package-lock.json
+# Note: package-lock.json is NOT ignored - it's required for npm ci in CI/CD
 
 # Environment
 .env

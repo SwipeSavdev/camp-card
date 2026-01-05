@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -39,7 +39,7 @@ RUN addgroup -S campcard && adduser -S campcard -G campcard
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --only=production
+RUN npm ci --legacy-peer-deps --only=production
 
 # Copy built application from builder
 COPY --from=builder /app/.next ./.next
