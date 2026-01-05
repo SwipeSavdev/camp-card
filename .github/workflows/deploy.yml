@@ -13,11 +13,16 @@ on:
         description: 'Deploy Web Portal'
         type: boolean
         default: true
+      deploy_mobile:
+        description: 'Deploy Mobile Dev Server'
+        type: boolean
+        default: true
 
 env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE: ${{ github.repository }}/backend
   WEB_IMAGE: ${{ github.repository }}/web
+  MOBILE_IMAGE: ${{ github.repository }}/mobile
 
 jobs:
   # ==========================================================================
@@ -105,13 +110,55 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ==========================================================================
+  # Build Mobile Dev Server Docker Image
+  # ==========================================================================
+  build-mobile:
+    name: Build Mobile Dev Server
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.deploy_mobile == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Mobile
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.MOBILE_IMAGE }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push Mobile image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./camp-card-mobile-app-v2-mobile-main/mobile
+          file: ./camp-card-mobile-app-v2-mobile-main/mobile/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ==========================================================================
   # Deploy to EC2
   # ==========================================================================
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    needs: [build-backend, build-web]
-    if: always() && (needs.build-backend.result == 'success' || needs.build-web.result == 'success')
+    needs: [build-backend, build-web, build-mobile]
+    if: always() && (needs.build-backend.result == 'success' || needs.build-web.result == 'success' || needs.build-mobile.result == 'success')
 
     steps:
       - name: Checkout code
@@ -144,6 +191,7 @@ jobs:
             # Pull latest images
             docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest || true
             docker pull ${{ env.REGISTRY }}/${{ env.WEB_IMAGE }}:latest || true
+            docker pull ${{ env.REGISTRY }}/${{ env.MOBILE_IMAGE }}:latest || true
 
             # Run deployment script
             chmod +x deploy-ec2.sh
@@ -167,6 +215,10 @@ jobs:
             echo ""
             echo "=== Web Portal Health Check ==="
             curl -sf http://localhost:7020 > /dev/null && echo "Web portal is up" || echo "Web portal not healthy yet"
+
+            echo ""
+            echo "=== Mobile Dev Server ==="
+            docker logs campcard-mobile --tail 20 2>/dev/null || echo "Mobile dev server logs not available"
 
           ENDSSH
 

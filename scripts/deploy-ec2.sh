@@ -83,8 +83,16 @@ echo ""
 echo "============================================"
 echo "Deployment completed at: $(date)"
 echo "============================================"
+
+EC2_IP=$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR_EC2_IP')
+
 echo ""
 echo "Services available at:"
-echo "  - Backend API: http://$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR_EC2_IP'):7010"
-echo "  - Web Portal:  http://$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR_EC2_IP'):7020"
+echo "  - Backend API: http://${EC2_IP}:7010"
+echo "  - Web Portal:  http://${EC2_IP}:7020"
+echo "  - Swagger UI:  http://${EC2_IP}:7010/swagger-ui.html"
+echo ""
+echo "Mobile App Testing:"
+echo "  - Run 'docker logs campcard-mobile' to get Expo tunnel URL"
+echo "  - Open Expo Go app on your phone and scan the QR code"
 echo ""

@@ -80,6 +80,32 @@ services:
       start_period: 30s
 
   # ==========================================================================
+  # MOBILE APP DEV SERVER (Expo) - Ports 8081, 19000-19002
+  # ==========================================================================
+  # Testers can connect via Expo Go app on their phones
+  # The tunnel URL will be printed in docker logs
+  mobile:
+    build:
+      context: ./camp-card-mobile-app-v2-mobile-main/mobile
+      dockerfile: Dockerfile
+    container_name: campcard-mobile
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    environment:
+      - API_BASE_URL=http://${EC2_PUBLIC_IP:-localhost}:7010/api/v1
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=0.0.0.0
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: always
+    networks:
+      - campcard-network
+
+  # ==========================================================================
   # REDIS CACHE - Port 6379
   # ==========================================================================
   redis:
