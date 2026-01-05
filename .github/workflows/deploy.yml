@@ -20,9 +20,11 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ${{ github.repository }}/backend
-  WEB_IMAGE: ${{ github.repository }}/web
-  MOBILE_IMAGE: ${{ github.repository }}/mobile
+  # Image names must be lowercase - github.repository may have mixed case
+  IMAGE_PREFIX: swipesavdev/camp-card
+  BACKEND_IMAGE: swipesavdev/camp-card/backend
+  WEB_IMAGE: swipesavdev/camp-card/web
+  MOBILE_IMAGE: swipesavdev/camp-card/mobile
 
 jobs:
   # ==========================================================================

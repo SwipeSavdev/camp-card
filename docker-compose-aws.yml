@@ -14,6 +14,7 @@ services:
   # ==========================================================================
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/swipesavdev/camp-card/backend:latest}
+    # Note: Image names MUST be lowercase
     container_name: campcard-backend
     ports:
       - "7010:7010"
