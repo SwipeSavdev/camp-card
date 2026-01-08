@@ -223,7 +223,19 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>10.4.1</version>
+                <version>9.22.3</version>
+                <configuration>
+                    <url>jdbc:postgresql://127.0.0.1:7001/campcard_dev</url>
+                    <user>postgres</user>
+                    <password>postgres</password>
+                    <schemas>
+                        <schema>campcard</schema>
+                    </schemas>
+                    <defaultSchema>campcard</defaultSchema>
+                    <locations>
+                        <location>filesystem:src/main/resources/db/migration</location>
+                    </locations>
+                </configuration>
             </plugin>
             
             <!-- Jacoco Code Coverage -->

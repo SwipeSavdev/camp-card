@@ -30,8 +30,8 @@ public class NotificationController {
             @Valid @RequestBody DeviceTokenRequest request,
             Authentication authentication) {
         // In real implementation, extract user ID from authentication
-        Long userId = 1L; // Placeholder
-        
+        java.util.UUID userId = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001"); // Placeholder
+
         log.info("Registering device token for user: {}", userId);
         notificationService.registerDeviceToken(userId, request);
         return ResponseEntity.ok().build();
@@ -63,7 +63,7 @@ public class NotificationController {
             @RequestParam(defaultValue = "20") int size,
             Authentication authentication) {
         // In real implementation, extract user ID from authentication
-        Long userId = 1L; // Placeholder
+        java.util.UUID userId = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001"); // Placeholder
         
         Page<NotificationResponse> notifications = notificationService.getUserNotifications(
                 userId, 
@@ -77,7 +77,7 @@ public class NotificationController {
     @Operation(summary = "Get unread count", description = "Get count of unread notifications")
     public ResponseEntity<Long> getUnreadCount(Authentication authentication) {
         // In real implementation, extract user ID from authentication
-        Long userId = 1L; // Placeholder
+        java.util.UUID userId = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001"); // Placeholder
         
         Long count = notificationService.getUnreadCount(userId);
         return ResponseEntity.ok(count);
@@ -97,7 +97,7 @@ public class NotificationController {
     @Operation(summary = "Mark all as read", description = "Mark all notifications as read")
     public ResponseEntity<Void> markAllAsRead(Authentication authentication) {
         // In real implementation, extract user ID from authentication
-        Long userId = 1L; // Placeholder
+        java.util.UUID userId = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001"); // Placeholder
         
         log.info("Marking all notifications as read for user: {}", userId);
         notificationService.markAllAsRead(userId);

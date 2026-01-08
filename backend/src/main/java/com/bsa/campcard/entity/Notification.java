@@ -21,7 +21,7 @@ public class Notification {
     private Long id;
     
     @Column(nullable = false)
-    private Long userId;
+    private java.util.UUID userId;
     
     @Column(nullable = false, length = 100)
     private String title;

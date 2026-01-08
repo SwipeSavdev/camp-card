@@ -65,16 +65,20 @@ public class MerchantLocation {
     private String hours; // JSON or formatted string
     
     // Features
+    @Column(name = "primary_location")
     private Boolean primaryLocation = false;
+
+    @Column(name = "is_active")
     private Boolean active = true;
-    
+
     // Audit
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
-    @Column(nullable = false)
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
+
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
     
     @PrePersist

@@ -18,7 +18,7 @@ import java.util.Map;
 public class NotificationRequest {
     
     @NotNull(message = "User IDs are required")
-    private List<Long> userIds;
+    private List<java.util.UUID> userIds;
     
     @NotBlank(message = "Title is required")
     private String title;

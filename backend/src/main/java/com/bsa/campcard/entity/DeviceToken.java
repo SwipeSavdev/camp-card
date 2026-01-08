@@ -19,35 +19,36 @@ public class DeviceToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(nullable = false)
-    private Long userId;
-    
-    @Column(nullable = false, unique = true, length = 512)
+
+    @Column(name = "user_id", nullable = false)
+    private java.util.UUID userId;
+
+    @Column(nullable = false, length = 500)
     private String token;
-    
-    @Column(nullable = false, length = 20)
+
+    @Column(name = "platform", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private DeviceType deviceType;
-    
-    @Column(length = 50)
+
+    @Column(name = "device_model", length = 100)
     private String deviceModel;
-    
-    @Column(length = 20)
+
+    @Column(name = "os_version", length = 50)
     private String osVersion;
-    
-    @Column(length = 20)
+
+    @Column(name = "app_version", length = 20)
     private String appVersion;
-    
-    @Column(nullable = false)
+
+    @Column(name = "is_active", nullable = false)
     private Boolean active = true;
-    
-    @Column(nullable = false)
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
-    @Column(nullable = false)
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
+
+    @Column(name = "last_used_at")
     private LocalDateTime lastUsedAt;
     
     @PrePersist

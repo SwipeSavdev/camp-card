@@ -19,11 +19,14 @@ spring:
   # JPA/Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate  # Schema managed by Flyway migrations
+      ddl-auto: none  # Temporarily disabled - Schema managed by Flyway migrations
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        "[default_schema]": campcard
         format_sql: true
 
   # Flyway migrations
@@ -31,6 +34,8 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+    schemas: campcard
+    default-schema: campcard
 
   # Redis (via Docker)
   data:
