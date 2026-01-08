@@ -1,0 +1,209 @@
+name: Build & Deploy Frontend
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-web-main/repos/camp-card-web/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm ci
+      
+      - name: Type check
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm run type-check
+      
+      - name: Lint
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm run lint
+      
+      - name: Run tests
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm run test -- --passWithNoTests
+      
+      - name: Build
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+
+  build-mobile:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-mobile-main/mobile/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm ci
+      
+      - name: Type check
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm run type-check
+      
+      - name: Lint
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm run lint
+      
+      - name: Run tests
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm run test -- --passWithNoTests
+
+  deploy-web-staging:
+    needs: build-web
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging-web
+      url: https://web-staging.campcard.org
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: |
+          npm install -g vercel
+          vercel --token $VERCEL_TOKEN --prod=false
+
+  deploy-web-production:
+    needs: build-web
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production-web
+      url: https://campcard.org
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: |
+          npm install -g vercel
+          vercel --token $VERCEL_TOKEN --prod
+
+  deploy-mobile-testflight:
+    needs: build-mobile
+    runs-on: macos-latest
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: testflight
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile/ios
+      
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: |
+          npm ci
+          cd ios && pod install && cd ..
+      
+      - name: Build for TestFlight
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APP_PASSWORD }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: |
+          cd ios
+          fastlane beta
+          cd ..
+
+  deploy-mobile-playstore:
+    needs: build-mobile
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: playstore
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm ci
+      
+      - name: Build APK/AAB
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd android
+          ./gradlew bundleRelease \
+            -PANDROID_KEYSTORE=$ANDROID_KEYSTORE \
+            -PANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD \
+            -PANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS \
+            -PANDROID_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
+      
+      - name: Deploy to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT }}
+          packageName: org.bsa.campcard
+          releaseFiles: './camp-card-mobile-app-v2-mobile-main/mobile/android/app/build/outputs/bundle/release/app-release.aab'
+          track: internal
