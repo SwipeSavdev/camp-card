@@ -46,6 +46,7 @@ const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?
  back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
  chevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>,
  chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>,
+ chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>,
  x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
  };
  return icons[name] || null;
@@ -92,6 +93,14 @@ export default function MerchantsPage() {
  const [showAddLocation, setShowAddLocation] = useState(false);
  const [newLocationName, setNewLocationName] = useState('');
  const [newLocationAddress, setNewLocationAddress] = useState('');
+
+ // Filter state
+ const [businessTypeFilter, setBusinessTypeFilter] = useState('');
+ const [locationCountFilter, setLocationCountFilter] = useState('');
+
+ // Pagination state
+ const [currentPage, setCurrentPage] = useState(1);
+ const [itemsPerPage, setItemsPerPage] = useState(10);
 
  const businessTypes = [
  'Retail',
@@ -275,11 +284,34 @@ export default function MerchantsPage() {
  }
  };
 
- const filteredItems = (Array.isArray(items) ? items : []).filter(item =>
+ const filteredItems = (Array.isArray(items) ? items : []).filter(item => {
+ const matchesSearch = searchTerm === '' ||
  item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
  item.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
- item.contactName?.toLowerCase().includes(searchTerm.toLowerCase())
- );
+ item.contactName?.toLowerCase().includes(searchTerm.toLowerCase());
+
+ const matchesBusinessType = businessTypeFilter === '' || item.businessType === businessTypeFilter;
+
+ const matchesLocationCount = locationCountFilter === '' ||
+ (locationCountFilter === 'single' && item.isSingleLocation) ||
+ (locationCountFilter === 'multi' && !item.isSingleLocation) ||
+ (locationCountFilter === '0' && (!item.locations || item.locations.length === 0)) ||
+ (locationCountFilter === '1-5' && item.locations && item.locations.length >= 1 && item.locations.length <= 5) ||
+ (locationCountFilter === '5+' && item.locations && item.locations.length > 5);
+
+ return matchesSearch && matchesBusinessType && matchesLocationCount;
+ });
+
+ // Pagination calculations
+ const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+ const startIndex = (currentPage - 1) * itemsPerPage;
+ const endIndex = startIndex + itemsPerPage;
+ const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+ // Reset to page 1 when filters change
+ useEffect(() => {
+ setCurrentPage(1);
+ }, [searchTerm, businessTypeFilter, locationCountFilter, itemsPerPage]);
 
  if (status === 'loading') return null;
 
@@ -294,13 +326,20 @@ export default function MerchantsPage() {
  </button>
  <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Merchants</h1>
  </div>
+ <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
+ <span style={{ fontSize: '13px', color: themeColors.gray600 }}>
+ Showing {filteredItems.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length}
+ </span>
  <button onClick={() => setShowAddForm(true)} style={{ background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
  <Icon name="add" size={18} color={themeColors.white} />
  Add Merchant
  </button>
  </div>
+ </div>
 
- <div style={{ position: 'relative' }}>
+ {/* Search and Filters */}
+ <div style={{ display: 'flex', gap: themeSpace.md, flexWrap: 'wrap', alignItems: 'center' }}>
+ <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '300px' }}>
  <div style={{ position: 'absolute', left: themeSpace.md, top: '12px' }}>
  <Icon name="search" size={18} color={themeColors.gray500} />
  </div>
@@ -315,8 +354,94 @@ export default function MerchantsPage() {
  border: `1px solid ${themeColors.gray200}`,
  borderRadius: themeRadius.sm,
  fontSize: '14px',
+ boxSizing: 'border-box',
  }}
  />
+ </div>
+
+ {/* Business Type Filter */}
+ <select
+ value={businessTypeFilter}
+ onChange={(e) => setBusinessTypeFilter(e.target.value)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ minWidth: '140px',
+ }}
+ >
+ <option value="">All Types</option>
+ {businessTypes.map(type => (
+ <option key={type} value={type}>{type}</option>
+ ))}
+ </select>
+
+ {/* Location Count Filter */}
+ <select
+ value={locationCountFilter}
+ onChange={(e) => setLocationCountFilter(e.target.value)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ minWidth: '150px',
+ }}
+ >
+ <option value="">All Locations</option>
+ <option value="single">Single Location</option>
+ <option value="multi">Multi-Location</option>
+ <option value="0">No Locations</option>
+ <option value="1-5">1-5 Locations</option>
+ <option value="5+">More than 5</option>
+ </select>
+
+ {/* Items Per Page */}
+ <select
+ value={itemsPerPage}
+ onChange={(e) => setItemsPerPage(Number(e.target.value))}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ <option value={10}>10 per page</option>
+ <option value={25}>25 per page</option>
+ <option value={50}>50 per page</option>
+ <option value={100}>100 per page</option>
+ </select>
+
+ {/* Clear Filters */}
+ {(searchTerm || businessTypeFilter || locationCountFilter) && (
+ <button
+ onClick={() => {
+ setSearchTerm('');
+ setBusinessTypeFilter('');
+ setLocationCountFilter('');
+ }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: themeColors.gray100,
+ color: themeColors.gray600,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ }}
+ >
+ Clear Filters
+ </button>
+ )}
  </div>
  </div>
 
@@ -326,10 +451,13 @@ export default function MerchantsPage() {
  {loading ? (
  <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
  ) : filteredItems.length === 0 ? (
- <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>No merchants found</div>
+ <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>
+ {items.length === 0 ? 'No merchants found' : 'No merchants match your filters'}
+ </div>
  ) : (
+ <>
  <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg }}>
- {filteredItems.map((merchant) => (
+ {paginatedItems.map((merchant) => (
  <div key={merchant.id} style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.sm, overflow: 'hidden' }}>
  <div
  onClick={() => toggleMerchantExpand(merchant.id)}
@@ -392,6 +520,118 @@ export default function MerchantsPage() {
  </div>
  ))}
  </div>
+
+ {/* Pagination Controls */}
+ {totalPages > 1 && (
+ <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: themeSpace.sm, marginTop: themeSpace.xl, padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.card, boxShadow: themeShadow.xs }}>
+ <button
+ onClick={() => setCurrentPage(1)}
+ disabled={currentPage === 1}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+ color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ }}
+ >
+ First
+ </button>
+ <button
+ onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+ disabled={currentPage === 1}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+ color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.xs,
+ }}
+ >
+ <Icon name="chevronLeft" size={16} /> Prev
+ </button>
+
+ <div style={{ display: 'flex', gap: themeSpace.xs }}>
+ {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+ let pageNum;
+ if (totalPages <= 5) {
+ pageNum = i + 1;
+ } else if (currentPage <= 3) {
+ pageNum = i + 1;
+ } else if (currentPage >= totalPages - 2) {
+ pageNum = totalPages - 4 + i;
+ } else {
+ pageNum = currentPage - 2 + i;
+ }
+ return (
+ <button
+ key={pageNum}
+ onClick={() => setCurrentPage(pageNum)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === pageNum ? themeColors.primary600 : themeColors.white,
+ color: currentPage === pageNum ? themeColors.white : themeColors.text,
+ border: `1px solid ${currentPage === pageNum ? themeColors.primary600 : themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '13px',
+ fontWeight: currentPage === pageNum ? '600' : '500',
+ minWidth: '36px',
+ }}
+ >
+ {pageNum}
+ </button>
+ );
+ })}
+ </div>
+
+ <button
+ onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+ disabled={currentPage === totalPages}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+ color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.xs,
+ }}
+ >
+ Next <Icon name="chevronRight" size={16} />
+ </button>
+ <button
+ onClick={() => setCurrentPage(totalPages)}
+ disabled={currentPage === totalPages}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+ color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ }}
+ >
+ Last
+ </button>
+ </div>
+ )}
+ </>
  )}
  </div>
 

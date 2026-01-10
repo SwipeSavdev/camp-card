@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
 
 const themeColors = {
@@ -47,6 +47,8 @@ const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?
  back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
  chevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>,
  chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>,
+ chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>,
+ filter: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
  x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
  upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
  };
@@ -83,6 +85,15 @@ export default function OffersPage() {
  const [searchTerm, setSearchTerm] = useState('');
  const [showAddForm, setShowAddForm] = useState(false);
  const [expandedOffers, setExpandedOffers] = useState<Set<string>>(new Set());
+
+ // Filter state
+ const [merchantFilter, setMerchantFilter] = useState('');
+ const [discountTypeFilter, setDiscountTypeFilter] = useState('');
+ const [usageTypeFilter, setUsageTypeFilter] = useState('');
+
+ // Pagination state
+ const [currentPage, setCurrentPage] = useState(1);
+ const [itemsPerPage, setItemsPerPage] = useState(10);
 
  // Form states
  const [newMerchantId, setNewMerchantId] = useState('');
@@ -403,13 +414,52 @@ export default function OffersPage() {
  setError(null);
  };
 
- const filteredItems = (Array.isArray(items) ? items : []).filter(item =>
+ const filteredItems = (Array.isArray(items) ? items : []).filter(item => {
+ const matchesSearch = searchTerm === '' ||
  item.merchantName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
  item.items?.some((offer: OfferItem) =>
  offer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
  offer.description?.toLowerCase().includes(searchTerm.toLowerCase())
- )
  );
+ const matchesMerchant = merchantFilter === '' || item.merchantId === merchantFilter;
+ const matchesDiscountType = discountTypeFilter === '' ||
+ item.items?.some((offer: OfferItem) => offer.discountType === discountTypeFilter);
+ const matchesUsageType = usageTypeFilter === '' ||
+ item.items?.some((offer: OfferItem) => offer.useType === usageTypeFilter);
+ return matchesSearch && matchesMerchant && matchesDiscountType && matchesUsageType;
+ });
+
+ // Pagination calculations
+ const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+ const startIndex = (currentPage - 1) * itemsPerPage;
+ const endIndex = startIndex + itemsPerPage;
+ const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+ // Reset to first page when filters change
+ useEffect(() => {
+ setCurrentPage(1);
+ }, [searchTerm, merchantFilter, discountTypeFilter, usageTypeFilter]);
+
+ // Get unique merchants for filter dropdown
+ const uniqueMerchants = useMemo(() => {
+ const merchantMap = new Map<string, string>();
+ items.forEach(item => {
+ if (item.merchantId && item.merchantName) {
+ merchantMap.set(item.merchantId, item.merchantName);
+ }
+ });
+ return Array.from(merchantMap.entries()).map(([id, name]) => ({ id, name }));
+ }, [items]);
+
+ const clearFilters = () => {
+ setSearchTerm('');
+ setMerchantFilter('');
+ setDiscountTypeFilter('');
+ setUsageTypeFilter('');
+ setCurrentPage(1);
+ };
+
+ const hasActiveFilters = searchTerm !== '' || merchantFilter !== '' || discountTypeFilter !== '' || usageTypeFilter !== '';
 
  if (status === 'loading') return null;
 
@@ -423,6 +473,9 @@ export default function OffersPage() {
  <Icon name="back" size={20} />
  </button>
  <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Offers</h1>
+ <span style={{ fontSize: '14px', color: themeColors.gray500, marginLeft: themeSpace.sm }}>
+ Showing {startIndex + 1}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length} merchants
+ </span>
  </div>
  <button onClick={() => setShowAddForm(true)} style={{ background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
  <Icon name="add" size={18} color={themeColors.white} />
@@ -430,7 +483,8 @@ export default function OffersPage() {
  </button>
  </div>
 
- <div style={{ position: 'relative' }}>
+ <div style={{ display: 'flex', gap: themeSpace.md, flexWrap: 'wrap', alignItems: 'center' }}>
+ <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
  <div style={{ position: 'absolute', left: themeSpace.md, top: '12px' }}>
  <Icon name="search" size={18} color={themeColors.gray500} />
  </div>
@@ -448,6 +502,106 @@ export default function OffersPage() {
  }}
  />
  </div>
+
+ <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
+ <Icon name="filter" size={16} color={themeColors.gray500} />
+ </div>
+
+ <select
+ value={merchantFilter}
+ onChange={(e) => setMerchantFilter(e.target.value)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ minWidth: '150px',
+ }}
+ >
+ <option value="">All Merchants</option>
+ {uniqueMerchants.map((merchant) => (
+ <option key={merchant.id} value={merchant.id}>{merchant.name}</option>
+ ))}
+ </select>
+
+ <select
+ value={discountTypeFilter}
+ onChange={(e) => setDiscountTypeFilter(e.target.value)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ minWidth: '130px',
+ }}
+ >
+ <option value="">All Types</option>
+ {discountTypes.map((type) => (
+ <option key={type} value={type}>{type}</option>
+ ))}
+ </select>
+
+ <select
+ value={usageTypeFilter}
+ onChange={(e) => setUsageTypeFilter(e.target.value)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ minWidth: '120px',
+ }}
+ >
+ <option value="">All Usage</option>
+ <option value="one-time">One-Time</option>
+ <option value="reusable">Reusable</option>
+ </select>
+
+ <select
+ value={itemsPerPage}
+ onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ <option value={10}>10 per page</option>
+ <option value={25}>25 per page</option>
+ <option value={50}>50 per page</option>
+ <option value={100}>100 per page</option>
+ </select>
+
+ {hasActiveFilters && (
+ <button
+ onClick={clearFilters}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.error400}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ color: themeColors.error500,
+ cursor: 'pointer',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.xs,
+ }}
+ >
+ <Icon name="x" size={14} color={themeColors.error500} />
+ Clear
+ </button>
+ )}
+ </div>
  </div>
 
  <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
@@ -455,11 +609,12 @@ export default function OffersPage() {
 
  {loading ? (
  <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
- ) : filteredItems.length === 0 ? (
+ ) : paginatedItems.length === 0 ? (
  <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>No offers found</div>
  ) : (
+ <>
  <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg }}>
- {filteredItems.map((offer) => (
+ {paginatedItems.map((offer) => (
  <div key={offer.id} style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.sm, overflow: 'hidden' }}>
  <div
  onClick={() => toggleOfferExpand(offer.merchantId)}
@@ -533,6 +688,111 @@ export default function OffersPage() {
  </div>
  ))}
  </div>
+
+ {/* Pagination Controls */}
+ {totalPages > 1 && (
+ <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: themeSpace.sm, marginTop: themeSpace.xl, padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}` }}>
+ <button
+ onClick={() => setCurrentPage(1)}
+ disabled={currentPage === 1}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+ color: currentPage === 1 ? themeColors.gray500 : themeColors.text,
+ cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+ fontSize: '14px',
+ }}
+ >
+ First
+ </button>
+ <button
+ onClick={() => setCurrentPage(currentPage - 1)}
+ disabled={currentPage === 1}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+ color: currentPage === 1 ? themeColors.gray500 : themeColors.text,
+ cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.xs,
+ }}
+ >
+ <Icon name="chevronLeft" size={16} />
+ Prev
+ </button>
+
+ {(() => {
+ const pages = [];
+ let startPage = Math.max(1, currentPage - 2);
+ let endPage = Math.min(totalPages, startPage + 4);
+ if (endPage - startPage < 4) {
+ startPage = Math.max(1, endPage - 4);
+ }
+ for (let i = startPage; i <= endPage; i++) {
+ pages.push(
+ <button
+ key={i}
+ onClick={() => setCurrentPage(i)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${currentPage === i ? themeColors.primary600 : themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ backgroundColor: currentPage === i ? themeColors.primary100 : themeColors.white,
+ color: currentPage === i ? themeColors.primary600 : themeColors.text,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: currentPage === i ? '600' : '400',
+ minWidth: '40px',
+ }}
+ >
+ {i}
+ </button>
+ );
+ }
+ return pages;
+ })()}
+
+ <button
+ onClick={() => setCurrentPage(currentPage + 1)}
+ disabled={currentPage === totalPages}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+ color: currentPage === totalPages ? themeColors.gray500 : themeColors.text,
+ cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.xs,
+ }}
+ >
+ Next
+ <Icon name="chevronRight" size={16} />
+ </button>
+ <button
+ onClick={() => setCurrentPage(totalPages)}
+ disabled={currentPage === totalPages}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+ color: currentPage === totalPages ? themeColors.gray500 : themeColors.text,
+ cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+ fontSize: '14px',
+ }}
+ >
+ Last
+ </button>
+ </div>
+ )}
+ </>
  )}
  </div>
 

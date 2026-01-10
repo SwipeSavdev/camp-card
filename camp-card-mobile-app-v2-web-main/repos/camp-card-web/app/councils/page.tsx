@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 
@@ -62,9 +62,12 @@ const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?
  x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
  chevronDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="6 9 12 15 18 9" /></svg>,
  chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>,
+ chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>,
  trash: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>,
  users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
  building: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+ search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>,
+ filter: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
  };
  return icons[name] || null;
 };
@@ -135,6 +138,47 @@ export default function CouncilsPage() {
  const [availableTroopLeaders, setAvailableTroopLeaders] = useState<any[]>([]);
  const [troopLeaderSearchTerm, setTroopLeaderSearchTerm] = useState('');
  const [selectedTroopLeader, setSelectedTroopLeader] = useState<any | null>(null);
+
+ // Search and filter state
+ const [searchTerm, setSearchTerm] = useState('');
+ const [locationFilter, setLocationFilter] = useState('');
+ const [troopCountFilter, setTroopCountFilter] = useState('');
+
+ // Pagination state
+ const [currentPage, setCurrentPage] = useState(1);
+ const [itemsPerPage, setItemsPerPage] = useState(10);
+
+ // Get unique locations for filter dropdown
+ const uniqueLocations = [...new Set(councils.map(c => c.location))].filter(Boolean).sort();
+
+ // Filter and search councils
+ const filteredCouncils = councils.filter(council => {
+   const matchesSearch = searchTerm === '' ||
+     council.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     council.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     council.troopUnits.some(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+   const matchesLocation = locationFilter === '' || council.location === locationFilter;
+
+   const matchesTroopCount = troopCountFilter === '' ||
+     (troopCountFilter === '0' && council.troopUnits.length === 0) ||
+     (troopCountFilter === '1-5' && council.troopUnits.length >= 1 && council.troopUnits.length <= 5) ||
+     (troopCountFilter === '6-10' && council.troopUnits.length >= 6 && council.troopUnits.length <= 10) ||
+     (troopCountFilter === '10+' && council.troopUnits.length > 10);
+
+   return matchesSearch && matchesLocation && matchesTroopCount;
+ });
+
+ // Pagination calculations
+ const totalPages = Math.ceil(filteredCouncils.length / itemsPerPage);
+ const startIndex = (currentPage - 1) * itemsPerPage;
+ const endIndex = startIndex + itemsPerPage;
+ const paginatedCouncils = filteredCouncils.slice(startIndex, endIndex);
+
+ // Reset to page 1 when filters change
+ useEffect(() => {
+   setCurrentPage(1);
+ }, [searchTerm, locationFilter, troopCountFilter, itemsPerPage]);
 
  useEffect(() => {
  // Load councils, troops, and troop leaders data
@@ -326,7 +370,8 @@ export default function CouncilsPage() {
  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
  {/* Header */}
  <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md, marginBottom: themeSpace.lg }}>
+ <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.lg }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
  <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, padding: themeSpace.sm }}>
  <Icon name="back" size={24} />
  </button>
@@ -334,6 +379,117 @@ export default function CouncilsPage() {
  <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0, marginBottom: themeSpace.xs }}>Councils & Troops</h1>
  <p style={{ margin: 0, color: themeColors.gray600, fontSize: '13px' }}>Manage councils, troop units, and troop leaders</p>
  </div>
+ </div>
+ <div style={{ fontSize: '13px', color: themeColors.gray600 }}>
+ Showing {startIndex + 1}-{Math.min(endIndex, filteredCouncils.length)} of {filteredCouncils.length} councils
+ </div>
+ </div>
+
+ {/* Search and Filters */}
+ <div style={{ display: 'flex', gap: themeSpace.md, flexWrap: 'wrap', alignItems: 'center' }}>
+ {/* Search Input */}
+ <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '400px' }}>
+ <div style={{ position: 'absolute', left: themeSpace.md, top: '50%', transform: 'translateY(-50%)' }}>
+ <Icon name="search" size={18} color={themeColors.gray500} />
+ </div>
+ <input
+ type="text"
+ placeholder="Search councils, troops..."
+ value={searchTerm}
+ onChange={(e) => setSearchTerm(e.target.value)}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md} ${themeSpace.sm} ${themeSpace.xl}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+
+ {/* Location Filter */}
+ <select
+ value={locationFilter}
+ onChange={(e) => setLocationFilter(e.target.value)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ minWidth: '150px',
+ }}
+ >
+ <option value="">All Locations</option>
+ {uniqueLocations.map(loc => (
+ <option key={loc} value={loc}>{loc}</option>
+ ))}
+ </select>
+
+ {/* Troop Count Filter */}
+ <select
+ value={troopCountFilter}
+ onChange={(e) => setTroopCountFilter(e.target.value)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ minWidth: '150px',
+ }}
+ >
+ <option value="">All Troop Counts</option>
+ <option value="0">No Troops</option>
+ <option value="1-5">1-5 Troops</option>
+ <option value="6-10">6-10 Troops</option>
+ <option value="10+">More than 10</option>
+ </select>
+
+ {/* Items Per Page */}
+ <select
+ value={itemsPerPage}
+ onChange={(e) => setItemsPerPage(Number(e.target.value))}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ <option value={10}>10 per page</option>
+ <option value={25}>25 per page</option>
+ <option value={50}>50 per page</option>
+ <option value={100}>100 per page</option>
+ </select>
+
+ {/* Clear Filters */}
+ {(searchTerm || locationFilter || troopCountFilter) && (
+ <button
+ onClick={() => {
+ setSearchTerm('');
+ setLocationFilter('');
+ setTroopCountFilter('');
+ }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: themeColors.gray100,
+ color: themeColors.gray600,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ }}
+ >
+ Clear Filters
+ </button>
+ )}
  </div>
  </div>
 
@@ -441,14 +597,16 @@ export default function CouncilsPage() {
  )}
 
  {/* Councils List */}
- {councils.length === 0 ? (
+ {filteredCouncils.length === 0 ? (
  <div style={{ textAlign: 'center', padding: themeSpace.xl, backgroundColor: themeColors.white, borderRadius: themeRadius.lg, color: themeColors.gray600 }}>
  <Icon name="building" size={48} color={themeColors.gray300} />
- <p style={{ marginTop: themeSpace.lg, fontSize: '15px', fontWeight: '500' }}>No councils yet. Create one to get started!</p>
+ <p style={{ marginTop: themeSpace.lg, fontSize: '15px', fontWeight: '500' }}>
+ {councils.length === 0 ? 'No councils yet. Create one to get started!' : 'No councils match your filters.'}
+ </p>
  </div>
  ) : (
  <div style={{ display: 'grid', gap: themeSpace.lg }}>
- {councils.map((council) => (
+ {paginatedCouncils.map((council) => (
  <div key={council.id} style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.lg, overflow: 'hidden', boxShadow: themeShadow.sm, border: `1px solid ${themeColors.gray200}` }}>
  {/* Council Header */}
  <div
@@ -840,6 +998,117 @@ export default function CouncilsPage() {
  )}
  </div>
  ))}
+ </div>
+ )}
+
+ {/* Pagination Controls */}
+ {totalPages > 1 && (
+ <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: themeSpace.sm, marginTop: themeSpace.xl, padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.card, boxShadow: themeShadow.xs }}>
+ <button
+ onClick={() => setCurrentPage(1)}
+ disabled={currentPage === 1}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+ color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ }}
+ >
+ First
+ </button>
+ <button
+ onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+ disabled={currentPage === 1}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+ color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.xs,
+ }}
+ >
+ <Icon name="chevronLeft" size={16} /> Prev
+ </button>
+
+ <div style={{ display: 'flex', gap: themeSpace.xs }}>
+ {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+ let pageNum;
+ if (totalPages <= 5) {
+ pageNum = i + 1;
+ } else if (currentPage <= 3) {
+ pageNum = i + 1;
+ } else if (currentPage >= totalPages - 2) {
+ pageNum = totalPages - 4 + i;
+ } else {
+ pageNum = currentPage - 2 + i;
+ }
+ return (
+ <button
+ key={pageNum}
+ onClick={() => setCurrentPage(pageNum)}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === pageNum ? themeColors.primary600 : themeColors.white,
+ color: currentPage === pageNum ? themeColors.white : themeColors.text,
+ border: `1px solid ${currentPage === pageNum ? themeColors.primary600 : themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '13px',
+ fontWeight: currentPage === pageNum ? '600' : '500',
+ minWidth: '36px',
+ }}
+ >
+ {pageNum}
+ </button>
+ );
+ })}
+ </div>
+
+ <button
+ onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+ disabled={currentPage === totalPages}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+ color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.xs,
+ }}
+ >
+ Next <Icon name="chevronRight" size={16} />
+ </button>
+ <button
+ onClick={() => setCurrentPage(totalPages)}
+ disabled={currentPage === totalPages}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+ color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+ border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary200}`,
+ borderRadius: themeRadius.sm,
+ cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+ fontSize: '13px',
+ fontWeight: '500',
+ }}
+ >
+ Last
+ </button>
  </div>
  )}
  </div>
