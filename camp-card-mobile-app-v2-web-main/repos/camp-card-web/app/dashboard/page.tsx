@@ -164,6 +164,12 @@ const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?
  <circle cx="12.5" cy="12.5" r="3.5" />
  </svg>
  ),
+ brain: (
+ <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+ <path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08A2.5 2.5 0 0 0 12 19.5a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 12 4.5" />
+ <path d="M12 4.5v15M8 8h8M8 12h8M10 16h4" />
+ </svg>
+ ),
  };
  return icons[name] || null;
 };
@@ -219,6 +225,7 @@ export default function Dashboard() {
  { name: 'offers', label: 'Offers', href: '/offers' },
  { name: 'cards', label: 'Cards', href: '/camp-cards' },
  { name: 'analytics', label: 'Analytics', href: '/analytics' },
+ { name: 'brain', label: 'AI Marketing', href: '/ai-marketing' },
  { name: 'creditCard', label: 'Subscriptions', href: '/subscriptions' },
  { name: 'settings', label: 'Settings', href: '/settings' }
  ].map((item, idx) => (
