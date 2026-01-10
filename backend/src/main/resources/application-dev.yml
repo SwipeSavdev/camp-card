@@ -56,6 +56,15 @@ spring:
           starttls:
             enable: false
 
+  # DevTools Hot Reload Configuration
+  devtools:
+    restart:
+      enabled: true
+      poll-interval: 2s
+      quiet-period: 1s
+    livereload:
+      enabled: true
+
 # Authorize.net (dev placeholders)
 authorize:
   net:

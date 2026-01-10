@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/scouts")
+@RequestMapping("/api/v1/scouts")
 @RequiredArgsConstructor
 public class ScoutController {
     

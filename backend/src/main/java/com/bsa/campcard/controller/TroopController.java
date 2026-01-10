@@ -12,7 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/troops")
+@RequestMapping("/api/v1/troops")
 @RequiredArgsConstructor
 public class TroopController {
     

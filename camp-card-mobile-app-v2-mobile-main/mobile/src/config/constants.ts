@@ -1,8 +1,9 @@
 import Constants from 'expo-constants';
 
 // API Configuration
+// Default port 7010 matches the backend Spring Boot server
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:7010';
 
 // Authorize.net Configuration
 export const AUTHORIZENET_PUBLIC_CLIENT_KEY =

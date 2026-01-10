@@ -32,8 +32,9 @@ interface AuthState {
   devBypass: () => void;
 }
 
-// DEV MODE: Set to true to bypass login
-const DEV_BYPASS_AUTH = true;
+// DEV MODE: Only enable in development builds via __DEV__ flag
+// SECURITY: Never set to true in production builds
+const DEV_BYPASS_AUTH = __DEV__ && false; // Set second value to true only for local testing
 
 const DEV_MOCK_USER: User = {
   id: 'dev-user-123',
