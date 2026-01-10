@@ -171,6 +171,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- WebFlux for Together.AI API calls -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
         <!-- Apache Commons -->
         <dependency>
             <groupId>org.apache.commons</groupId>

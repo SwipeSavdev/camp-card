@@ -570,4 +570,238 @@ export const api = {
  return { status: 'error' };
  }
  },
+
+ // ============ AI MARKETING CAMPAIGNS ============
+ getCampaigns: async (params?: { status?: string; type?: string; search?: string; page?: number; size?: number }, session?: Session | null) => {
+   try {
+     const queryParams = new URLSearchParams();
+     if (params?.status) queryParams.append('status', params.status);
+     if (params?.type) queryParams.append('type', params.type);
+     if (params?.search) queryParams.append('search', params.search);
+     if (params?.page !== undefined) queryParams.append('page', String(params.page));
+     if (params?.size !== undefined) queryParams.append('size', String(params.size));
+     const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+     return await apiCall<any>(`/campaigns${query}`, {}, session);
+   } catch (error) {
+     console.error('Failed to fetch campaigns:', error);
+     return { content: [], totalElements: 0, totalPages: 0 };
+   }
+ },
+
+ getCampaignById: async (id: string, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/${id}`, {}, session);
+   } catch (error) {
+     console.error('Failed to fetch campaign:', error);
+     return null;
+   }
+ },
+
+ createCampaign: async (data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to create campaign:', error);
+     throw error;
+   }
+ },
+
+ updateCampaign: async (id: string, data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/${id}`, {
+       method: 'PUT',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to update campaign:', error);
+     throw error;
+   }
+ },
+
+ updateCampaignStatus: async (id: string, status: string, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/${id}/status`, {
+       method: 'PATCH',
+       body: JSON.stringify({ status }),
+     }, session);
+   } catch (error) {
+     console.error('Failed to update campaign status:', error);
+     throw error;
+   }
+ },
+
+ deleteCampaign: async (id: string, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/${id}`, {
+       method: 'DELETE',
+     }, session);
+   } catch (error) {
+     console.error('Failed to delete campaign:', error);
+     throw error;
+   }
+ },
+
+ // Saved Campaigns
+ getSavedCampaigns: async (params?: { saveType?: string; search?: string }, session?: Session | null) => {
+   try {
+     const queryParams = new URLSearchParams();
+     if (params?.saveType) queryParams.append('saveType', params.saveType);
+     if (params?.search) queryParams.append('search', params.search);
+     const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+     return await apiCall<any>(`/campaigns/saved${query}`, {}, session);
+   } catch (error) {
+     console.error('Failed to fetch saved campaigns:', error);
+     return { content: [] };
+   }
+ },
+
+ saveCampaign: async (data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns/saved', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to save campaign:', error);
+     throw error;
+   }
+ },
+
+ updateSavedCampaign: async (id: string, data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/saved/${id}`, {
+       method: 'PUT',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to update saved campaign:', error);
+     throw error;
+   }
+ },
+
+ deleteSavedCampaign: async (id: string, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/saved/${id}`, {
+       method: 'DELETE',
+     }, session);
+   } catch (error) {
+     console.error('Failed to delete saved campaign:', error);
+     throw error;
+   }
+ },
+
+ createCampaignFromSaved: async (savedId: string, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/saved/${savedId}/create`, {
+       method: 'POST',
+     }, session);
+   } catch (error) {
+     console.error('Failed to create campaign from saved:', error);
+     throw error;
+   }
+ },
+
+ // AI Content Generation
+ generateAIContent: async (data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns/ai/generate', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to generate AI content:', error);
+     throw error;
+   }
+ },
+
+ generateAIVariations: async (data: any, numVariations: number = 3, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/ai/generate/variations?numVariations=${numVariations}`, {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to generate AI variations:', error);
+     throw error;
+   }
+ },
+
+ modifyAIContent: async (data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns/ai/modify', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to modify AI content:', error);
+     throw error;
+   }
+ },
+
+ optimizeContent: async (data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns/ai/optimize', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to optimize content:', error);
+     throw error;
+   }
+ },
+
+ suggestCampaign: async (data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns/ai/suggest', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to suggest campaign:', error);
+     throw error;
+   }
+ },
+
+ analyzeSegment: async (segmentId: string, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/ai/analyze/segment/${segmentId}`, {}, session);
+   } catch (error) {
+     console.error('Failed to analyze segment:', error);
+     throw error;
+   }
+ },
+
+ predictCampaignPerformance: async (campaignId: string, session?: Session | null) => {
+   try {
+     return await apiCall<any>(`/campaigns/${campaignId}/ai/predict`, {}, session);
+   } catch (error) {
+     console.error('Failed to predict campaign performance:', error);
+     throw error;
+   }
+ },
+
+ executeAIAgentTask: async (data: any, session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns/ai/agent/task', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     }, session);
+   } catch (error) {
+     console.error('Failed to execute AI agent task:', error);
+     throw error;
+   }
+ },
+
+ // Segments
+ getMarketingSegments: async (session?: Session | null) => {
+   try {
+     return await apiCall<any>('/campaigns/segments', {}, session);
+   } catch (error) {
+     console.error('Failed to fetch segments:', error);
+     return [];
+   }
+ },
 };

@@ -12,14 +12,13 @@ resource "aws_db_subnet_group" "postgres" {
 resource "aws_db_instance" "postgres" {
   identifier     = "${var.project_name}-${var.environment}-postgres"
   engine         = "postgres"
-  engine_version = "16.1"
+  engine_version = "16.6"
   instance_class = var.db_instance_class
 
   allocated_storage     = var.db_allocated_storage
   storage_type          = "gp3"
   storage_encrypted     = true
-  iops                  = 3000
-  storage_throughput    = 125
+  # Note: For gp3 storage < 400GB, IOPS/throughput use default values
 
   db_name  = var.db_name
   username = var.db_username
@@ -55,8 +54,9 @@ resource "aws_db_parameter_group" "postgres" {
   family = "postgres16"
 
   parameter {
-    name  = "shared_preload_libraries"
-    value = "pg_stat_statements"
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot"
   }
 
   parameter {

@@ -10,9 +10,9 @@ resource "aws_elasticache_subnet_group" "redis" {
 
 # ElastiCache Redis Replication Group (Cluster Mode Enabled)
 resource "aws_elasticache_replication_group" "redis" {
-  replication_group_id       = "${var.project_name}-${var.environment}-redis"
-  replication_group_description = "Redis cluster for ${var.project_name} ${var.environment}"
-  
+  replication_group_id = "${var.project_name}-${var.environment}-redis"
+  description          = "Redis cluster for ${var.project_name} ${var.environment}"
+
   engine         = "redis"
   engine_version = "7.0"
   node_type      = var.redis_node_type
@@ -26,7 +26,7 @@ resource "aws_elasticache_replication_group" "redis" {
 
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
-  auth_token_enabled         = true
+  auth_token                 = var.redis_auth_token
 
   automatic_failover_enabled = true
   multi_az_enabled          = true

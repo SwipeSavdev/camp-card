@@ -2,10 +2,9 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { api } from '@/lib/api';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -221,10 +220,14 @@ export default function AIMarketingPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('campaigns');
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [segments, setSegments] = useState(BEHAVIORAL_PATTERNS);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiGeneratedContent, setAiGeneratedContent] = useState<string | null>(null);
 
   // Campaign creation form state
   const [newCampaign, setNewCampaign] = useState({
@@ -243,11 +246,72 @@ export default function AIMarketingPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Fetch campaigns from API
+  const fetchCampaigns = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const result = await api.getCampaigns({
+        status: statusFilter || undefined,
+        type: typeFilter || undefined,
+        search: searchTerm || undefined
+      }, session);
+      if (result?.content && Array.isArray(result.content)) {
+        const mapped = result.content.map((c: any) => ({
+          id: c.id?.toString() || String(Date.now()),
+          name: c.name || c.campaignName || 'Unnamed',
+          type: c.campaignType?.toLowerCase() || c.type || 'reactivation',
+          status: c.status?.toLowerCase() || 'active',
+          segments: c.targetAudience?.segments || c.segments || [],
+          channels: c.channels || ['email'],
+          sent: c.metrics?.sent || c.sent || 0,
+          opened: c.metrics?.opened || c.opened || 0,
+          converted: c.metrics?.converted || c.converted || 0,
+          roi: c.metrics?.roi ? `+${c.metrics.roi}%` : c.roi || '-',
+          createdAt: c.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        }));
+        setCampaigns(mapped.length > 0 ? mapped : mockCampaigns);
+      }
+    } catch (error) {
+      console.error('Failed to fetch campaigns:', error);
+      // Keep mock data as fallback
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session, statusFilter, typeFilter, searchTerm]);
+
+  // Fetch segments from API
+  const fetchSegments = useCallback(async () => {
+    try {
+      const result = await api.getMarketingSegments(session);
+      if (result && Array.isArray(result)) {
+        const mapped = result.map((s: any) => ({
+          id: s.segmentType?.toLowerCase() || s.id || 'unknown',
+          name: s.name || 'Unknown Segment',
+          description: s.description || '',
+          count: s.userCount || s.count || 0,
+        }));
+        if (mapped.length > 0) {
+          setSegments(mapped);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch segments:', error);
+      // Keep default segments as fallback
+    }
+  }, [session]);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchCampaigns();
+      fetchSegments();
+    }
+  }, [status, fetchCampaigns, fetchSegments]);
 
   // Filter campaigns
   const filteredCampaigns = useMemo(() => {
@@ -263,37 +327,127 @@ export default function AIMarketingPage() {
   const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
   const paginatedCampaigns = filteredCampaigns.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const handleCreateCampaign = () => {
+  // Generate AI content for campaign
+  const handleGenerateAIContent = async () => {
+    if (!newCampaign.type || newCampaign.segments.length === 0) {
+      alert('Please select campaign type and target segments first');
+      return;
+    }
+    try {
+      setIsGeneratingAI(true);
+      const typeInfo = getCampaignTypeInfo(newCampaign.type);
+      const segmentNames = newCampaign.segments.map(s =>
+        segments.find(seg => seg.id === s)?.name || s
+      ).join(', ');
+
+      const result = await api.generateAIContent({
+        campaignType: newCampaign.type.toUpperCase(),
+        targetSegments: newCampaign.segments,
+        tone: 'friendly',
+        keyMessages: [`${typeInfo.description} for ${segmentNames}`],
+        channels: newCampaign.channels,
+      }, session);
+
+      if (result?.content) {
+        setAiGeneratedContent(result.content);
+        setNewCampaign(prev => ({ ...prev, message: result.content }));
+      } else if (result?.subject) {
+        const content = `${result.subject}\n\n${result.body || result.content || ''}`;
+        setAiGeneratedContent(content);
+        setNewCampaign(prev => ({ ...prev, message: content }));
+      }
+    } catch (error) {
+      console.error('Failed to generate AI content:', error);
+      alert('Failed to generate AI content. Please try again.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const handleCreateCampaign = async () => {
     if (!newCampaign.name || !newCampaign.type || newCampaign.segments.length === 0 || newCampaign.channels.length === 0) {
       alert('Please fill in all required fields');
       return;
     }
-    const campaign: Campaign = {
-      id: Date.now().toString(),
-      name: newCampaign.name,
-      type: newCampaign.type,
-      status: newCampaign.scheduleDate ? 'scheduled' : 'active',
-      segments: newCampaign.segments,
-      channels: newCampaign.channels,
-      sent: 0,
-      opened: 0,
-      converted: 0,
-      roi: '-',
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setCampaigns([campaign, ...campaigns]);
-    setShowCreateForm(false);
-    setNewCampaign({
-      name: '',
-      type: '',
-      segments: [],
-      channels: [],
-      message: '',
-      scheduleDate: '',
-      enableGeofencing: false,
-      enableGamification: false,
-      enableLearning: true,
-    });
+
+    try {
+      setIsLoading(true);
+      const campaignData = {
+        name: newCampaign.name,
+        campaignType: newCampaign.type.toUpperCase(),
+        status: newCampaign.scheduleDate ? 'SCHEDULED' : 'ACTIVE',
+        channels: newCampaign.channels,
+        targetAudience: { segments: newCampaign.segments },
+        contentJson: { message: newCampaign.message },
+        scheduledAt: newCampaign.scheduleDate || null,
+        aiGenerated: !!aiGeneratedContent,
+        metadata: {
+          enableGeofencing: newCampaign.enableGeofencing,
+          enableGamification: newCampaign.enableGamification,
+          enableLearning: newCampaign.enableLearning,
+        }
+      };
+
+      const result = await api.createCampaign(campaignData, session);
+
+      // Add to local state
+      const campaign: Campaign = {
+        id: result?.id?.toString() || Date.now().toString(),
+        name: newCampaign.name,
+        type: newCampaign.type,
+        status: newCampaign.scheduleDate ? 'scheduled' : 'active',
+        segments: newCampaign.segments,
+        channels: newCampaign.channels,
+        sent: 0,
+        opened: 0,
+        converted: 0,
+        roi: '-',
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setCampaigns([campaign, ...campaigns]);
+      setShowCreateForm(false);
+      setAiGeneratedContent(null);
+      setNewCampaign({
+        name: '',
+        type: '',
+        segments: [],
+        channels: [],
+        message: '',
+        scheduleDate: '',
+        enableGeofencing: false,
+        enableGamification: false,
+        enableLearning: true,
+      });
+    } catch (error) {
+      console.error('Failed to create campaign:', error);
+      alert('Failed to create campaign. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete campaign
+  const handleDeleteCampaign = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this campaign?')) return;
+    try {
+      await api.deleteCampaign(id, session);
+      setCampaigns(campaigns.filter(c => c.id !== id));
+    } catch (error) {
+      console.error('Failed to delete campaign:', error);
+    }
+  };
+
+  // Toggle campaign status (pause/resume)
+  const handleToggleCampaignStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'PAUSED' : 'ACTIVE';
+    try {
+      await api.updateCampaignStatus(id, newStatus, session);
+      setCampaigns(campaigns.map(c =>
+        c.id === id ? { ...c, status: newStatus.toLowerCase() } : c
+      ));
+    } catch (error) {
+      console.error('Failed to update campaign status:', error);
+    }
   };
 
   const toggleSegment = (segmentId: string) => {
@@ -482,6 +636,11 @@ export default function AIMarketingPage() {
 
               {/* Campaigns List */}
               <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, overflow: 'hidden' }}>
+                {isLoading ? (
+                  <div style={{ padding: themeSpace.xl, textAlign: 'center', color: themeColors.gray500 }}>
+                    <div style={{ marginBottom: themeSpace.md }}>Loading campaigns...</div>
+                  </div>
+                ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ backgroundColor: themeColors.gray50 }}>
@@ -541,15 +700,15 @@ export default function AIMarketingPage() {
                                 <Icon name="edit" size={16} color={themeColors.gray500} />
                               </button>
                               {campaign.status === 'active' ? (
-                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Pause">
+                                <button onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Pause">
                                   <Icon name="pause" size={16} color={themeColors.warning600} />
                                 </button>
                               ) : (
-                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Start">
+                                <button onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Start">
                                   <Icon name="play" size={16} color={themeColors.success600} />
                                 </button>
                               )}
-                              <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Delete">
+                              <button onClick={() => handleDeleteCampaign(campaign.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Delete">
                                 <Icon name="trash" size={16} color={themeColors.error500} />
                               </button>
                             </div>
@@ -559,6 +718,7 @@ export default function AIMarketingPage() {
                     })}
                   </tbody>
                 </table>
+                )}
               </div>
 
               {/* Pagination */}
@@ -590,7 +750,7 @@ export default function AIMarketingPage() {
           {activeTab === 'segments' && (
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: themeSpace.lg }}>
-                {BEHAVIORAL_PATTERNS.map((segment) => (
+                {segments.map((segment) => (
                   <div key={segment.id} style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.lg, border: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.sm }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: themeSpace.md }}>
                       <div>
@@ -955,14 +1115,43 @@ export default function AIMarketingPage() {
 
                 {/* Message */}
                 <div style={{ marginBottom: themeSpace.lg }}>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.gray700, marginBottom: themeSpace.sm }}>Campaign Message</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.sm }}>
+                    <label style={{ fontSize: '14px', fontWeight: '600', color: themeColors.gray700 }}>Campaign Message</label>
+                    <button
+                      onClick={handleGenerateAIContent}
+                      disabled={isGeneratingAI}
+                      style={{
+                        background: `linear-gradient(135deg, ${themeColors.purple600} 0%, ${themeColors.primary600} 100%)`,
+                        color: themeColors.white,
+                        border: 'none',
+                        padding: `${themeSpace.xs} ${themeSpace.md}`,
+                        borderRadius: themeRadius.sm,
+                        cursor: isGeneratingAI ? 'wait' : 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: themeSpace.xs,
+                        opacity: isGeneratingAI ? 0.7 : 1,
+                      }}
+                    >
+                      <Icon name="brain" size={14} color={themeColors.white} />
+                      {isGeneratingAI ? 'Generating...' : 'Generate with AI'}
+                    </button>
+                  </div>
                   <textarea
                     value={newCampaign.message}
                     onChange={(e) => setNewCampaign(prev => ({ ...prev, message: e.target.value }))}
-                    placeholder="Enter your campaign message..."
-                    rows={3}
-                    style={{ width: '100%', padding: themeSpace.md, border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, fontSize: '14px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+                    placeholder="Enter your campaign message or click 'Generate with AI' to create content automatically..."
+                    rows={4}
+                    style={{ width: '100%', padding: themeSpace.md, border: `1px solid ${aiGeneratedContent ? themeColors.purple600 : themeColors.gray200}`, borderRadius: themeRadius.sm, fontSize: '14px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', backgroundColor: aiGeneratedContent ? themeColors.purple50 : themeColors.white }}
                   />
+                  {aiGeneratedContent && (
+                    <p style={{ fontSize: '12px', color: themeColors.purple600, marginTop: themeSpace.xs, display: 'flex', alignItems: 'center', gap: themeSpace.xs }}>
+                      <Icon name="brain" size={12} color={themeColors.purple600} />
+                      AI-generated content - feel free to edit
+                    </p>
+                  )}
                 </div>
 
                 {/* Schedule */}

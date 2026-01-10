@@ -70,6 +70,12 @@ variable "redis_num_shards" {
   default     = 3
 }
 
+variable "redis_auth_token" {
+  description = "Auth token for Redis (must be at least 16 characters)"
+  type        = string
+  sensitive   = true
+}
+
 variable "kafka_instance_type" {
   description = "MSK Kafka instance type"
   type        = string

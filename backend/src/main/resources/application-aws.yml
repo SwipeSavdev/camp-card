@@ -40,12 +40,14 @@ spring:
     schemas: campcard
     default-schema: campcard
 
-  # Redis - ElastiCache or local Redis on EC2
+  # Redis - ElastiCache (with TLS)
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:true}
 
   # Kafka - MSK or local Kafka on EC2
   kafka:
@@ -99,6 +101,13 @@ authorize:
     transaction:
       key: ${AUTHORIZE_NET_TRANSACTION_KEY:placeholder}
     environment: ${AUTHORIZE_NET_ENVIRONMENT:SANDBOX}
+
+# Together.AI Configuration
+together:
+  ai:
+    api-key: ${TOGETHER_AI_API_KEY:}
+    base-url: https://api.together.xyz/v1
+    default-model: meta-llama/Llama-3.3-70B-Instruct-Turbo
 
 # Actuator
 management:

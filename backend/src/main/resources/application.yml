@@ -157,6 +157,15 @@ aws:
     enabled: true
 
 # ============================================================================
+# TOGETHER.AI CONFIGURATION
+# ============================================================================
+together:
+  ai:
+    api-key: ${TOGETHER_AI_API_KEY:}
+    base-url: https://api.together.xyz/v1
+    default-model: meta-llama/Llama-3.3-70B-Instruct-Turbo
+
+# ============================================================================
 # APPLICATION CONFIGURATION
 # ============================================================================
 campcard:
