@@ -110,7 +110,16 @@ export default function UsersPage() {
  setLoading(true);
  setError(null);
  const data = await api.getUsers(session);
- setItems(data.content || data || []);
+ const rawUsers = data.content || data || [];
+ // Map API response to frontend User interface
+ const mappedUsers = rawUsers.map((u: any) => ({
+ id: u.id,
+ name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+ email: u.email,
+ status: u.status || (u.isActive === false ? 'inactive' : 'active'),
+ role: u.role ? u.role.toLowerCase() : 'scout',
+ }));
+ setItems(mappedUsers);
  } catch (err) {
  setError('Failed to load users');
  console.error(err);
@@ -130,11 +139,12 @@ export default function UsersPage() {
  };
 
  const handleEdit = (user: User) => {
+ console.log('[PAGE] Editing user:', user);
  setEditingUser(user);
- setEditUserName(user.name);
- setEditUserEmail(user.email);
- setEditUserStatus(user.status);
- setEditUserRole(user.role);
+ setEditUserName(user.name || '');
+ setEditUserEmail(user.email || '');
+ setEditUserStatus(user.status || 'active');
+ setEditUserRole(user.role || 'scout');
  setShowEditForm(true);
  };
 
