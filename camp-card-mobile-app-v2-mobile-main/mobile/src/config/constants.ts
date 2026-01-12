@@ -27,6 +27,19 @@ export const FIREBASE_CONFIG = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || '',
 };
 
+// AWS Location Service Configuration
+export const AWS_CONFIG = {
+  region: process.env.EXPO_PUBLIC_AWS_REGION || 'us-east-2',
+  identityPoolId: process.env.EXPO_PUBLIC_AWS_IDENTITY_POOL_ID || '',
+  location: {
+    placeIndex: 'campcard-place-index',
+    routeCalculator: 'campcard-route-calculator',
+    geofenceCollection: 'campcard-geofences',
+    tracker: 'campcard-tracker',
+    map: 'campcard-map',
+  },
+};
+
 // Feature Flags
 export const FEATURES = {
   ENABLE_CUSTOMER_REFERRALS:

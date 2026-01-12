@@ -173,6 +173,14 @@ aws:
   cloudwatch:
     namespace: CampCard/API
     enabled: true
+  # AWS Location Service Configuration
+  location:
+    enabled: ${LOCATION_ENABLED:true}
+    place-index: ${LOCATION_PLACE_INDEX:campcard-place-index}
+    route-calculator: ${LOCATION_ROUTE_CALCULATOR:campcard-route-calculator}
+    geofence-collection: ${LOCATION_GEOFENCE_COLLECTION:campcard-geofences}
+    tracker: ${LOCATION_TRACKER:campcard-tracker}
+    map: ${LOCATION_MAP:campcard-map}
 
 # ============================================================================
 # TOGETHER.AI CONFIGURATION

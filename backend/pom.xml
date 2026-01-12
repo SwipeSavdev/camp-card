@@ -142,6 +142,11 @@
             <artifactId>sns</artifactId>
             <version>2.21.29</version>
         </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>location</artifactId>
+            <version>2.21.29</version>
+        </dependency>
 
         <!-- OpenAPI / Swagger -->
         <dependency>
