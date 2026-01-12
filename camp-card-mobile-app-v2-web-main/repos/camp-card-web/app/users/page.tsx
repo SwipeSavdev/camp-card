@@ -47,7 +47,7 @@ const Icon = ({ name, size = 18, color = 'currentColor', ...props }: { name: str
  return <span {...props}>{icons[name] || null}</span>;
 };
 
-type UserRole = 'super_admin' | 'system_admin' | 'admin' | 'council' | 'troop_leader' | 'scout' | 'customer';
+type UserRole = 'super_admin' | 'system_admin' | 'admin' | 'council' | 'troop_leader' | 'scout' | 'customer' | 'national_admin' | 'council_admin';
 
 interface User {
  id: string;
@@ -91,6 +91,8 @@ export default function UsersPage() {
  const [itemsPerPage, setItemsPerPage] = useState(10);
 
  const roleOptions = [
+ { value: 'national_admin', label: 'National Admin' },
+ { value: 'council_admin', label: 'Council Admin' },
  { value: 'super_admin', label: 'Super Admin' },
  { value: 'system_admin', label: 'System Admin' },
  { value: 'admin', label: 'Admin' },
