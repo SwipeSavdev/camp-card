@@ -74,6 +74,14 @@ export default function UsersPage() {
  const [newTroopLeaderName, setNewTroopLeaderName] = useState('');
  const [newTroopLeaderEmail, setNewTroopLeaderEmail] = useState('');
 
+ // Edit user state
+ const [showEditForm, setShowEditForm] = useState(false);
+ const [editingUser, setEditingUser] = useState<User | null>(null);
+ const [editUserName, setEditUserName] = useState('');
+ const [editUserEmail, setEditUserEmail] = useState('');
+ const [editUserStatus, setEditUserStatus] = useState<'active' | 'inactive'>('active');
+ const [editUserRole, setEditUserRole] = useState<UserRole>('scout');
+
  // Filter state
  const [roleFilter, setRoleFilter] = useState('');
  const [statusFilter, setStatusFilter] = useState('');
@@ -118,6 +126,65 @@ export default function UsersPage() {
  setItems(items.filter(i => i.id !== id));
  } catch (err) {
  setError('Failed to delete');
+ }
+ };
+
+ const handleEdit = (user: User) => {
+ setEditingUser(user);
+ setEditUserName(user.name);
+ setEditUserEmail(user.email);
+ setEditUserStatus(user.status);
+ setEditUserRole(user.role);
+ setShowEditForm(true);
+ };
+
+ const saveEditUser = async () => {
+ if (!editingUser) return;
+ if (!editUserName.trim() || !editUserEmail.trim()) {
+ setError('Name and email are required');
+ return;
+ }
+
+ try {
+ const nameParts = editUserName.trim().split(' ');
+ const firstName = nameParts[0];
+ const lastName = nameParts.slice(1).join(' ') || '';
+
+ const updateData = {
+ firstName,
+ lastName,
+ isActive: editUserStatus === 'active',
+ role: editUserRole.toUpperCase(),
+ };
+
+ console.log('[PAGE] Updating user:', editingUser.id, updateData);
+ const updatedUser = await api.updateUser(editingUser.id, updateData, session);
+ console.log('[PAGE] User updated successfully:', updatedUser);
+
+ // Update local state
+ setItems(items.map(item =>
+ item.id === editingUser.id
+ ? {
+ ...item,
+ name: editUserName,
+ email: editUserEmail,
+ status: editUserStatus,
+ role: editUserRole,
+ }
+ : item
+ ));
+
+ // Reset form
+ setShowEditForm(false);
+ setEditingUser(null);
+ setEditUserName('');
+ setEditUserEmail('');
+ setEditUserStatus('active');
+ setEditUserRole('scout');
+ setError(null);
+ } catch (err) {
+ setError('Failed to update user: ' + (err instanceof Error ? err.message : 'Unknown error'));
+ console.error('[PAGE] Error updating user:', err);
  }
  };
 
@@ -416,7 +483,7 @@ export default function UsersPage() {
  </td>
  <td style={{ padding: themeSpace.lg, textAlign: 'center' }}>
  <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
- <button style={{ background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <button onClick={() => handleEdit(item)} style={{ background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
  <Icon name="edit" size={16} color={themeColors.info600} />
  </button>
  <button onClick={() => handleDelete(item.id)} style={{ background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -669,6 +736,142 @@ export default function UsersPage() {
  }}
  >
  Create User
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {showEditForm && editingUser && (
+ <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+ <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '500px', boxShadow: themeShadow.md }}>
+ <h2 style={{ fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0 }}>Edit User</h2>
+
+ <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl }}>
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Name</label>
+ <input
+ type="text"
+ value={editUserName}
+ onChange={(e) => setEditUserName(e.target.value)}
+ placeholder="Enter user name"
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Email</label>
+ <input
+ type="email"
+ value={editUserEmail}
+ onChange={(e) => setEditUserEmail(e.target.value)}
+ placeholder="Enter email address"
+ disabled
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ backgroundColor: themeColors.gray100,
+ cursor: 'not-allowed',
+ }}
+ />
+ <span style={{ fontSize: '11px', color: themeColors.gray500 }}>Email cannot be changed</span>
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Status</label>
+ <select
+ value={editUserStatus}
+ onChange={(e) => setEditUserStatus(e.target.value as 'active' | 'inactive')}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ <option value="active">Active</option>
+ <option value="inactive">Inactive</option>
+ </select>
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Role</label>
+ <select
+ value={editUserRole}
+ onChange={(e) => setEditUserRole(e.target.value as UserRole)}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ {roleOptions.map((role) => (
+ <option key={role.value} value={role.value}>
+ {role.label}
+ </option>
+ ))}
+ </select>
+ </div>
+ </div>
+
+ <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => {
+ setShowEditForm(false);
+ setEditingUser(null);
+ setEditUserName('');
+ setEditUserEmail('');
+ setEditUserStatus('active');
+ setEditUserRole('scout');
+ setError(null);
+ }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ border: `1px solid ${themeColors.gray200}`,
+ backgroundColor: themeColors.white,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ color: themeColors.gray600,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={saveEditUser}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ background: themeColors.primary600,
+ color: themeColors.white,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ }}
+ >
+ Save Changes
  </button>
  </div>
  </div>
