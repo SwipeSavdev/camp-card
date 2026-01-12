@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/subscription-plans").permitAll()
                 .requestMatchers("/api/v1/offers/**").permitAll()
                 .requestMatchers("/api/v1/merchants/**").permitAll()
+                .requestMatchers("/api/v1/location/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
@@ -67,6 +68,8 @@ public class SecurityConfig {
             "http://localhost:8085",  // Mobile Expo (dev)
             "http://18.190.69.205:7020",  // AWS Admin Portal
             "http://18.190.69.205:7010",  // AWS API
+            "https://bsa.swipesavvy.com",  // Production domain
+            "http://bsa.swipesavvy.com",   // HTTP redirect
             "https://portal.campcard.org",  // Web portal (prod)
             "https://api.campcard.org"      // API (prod)
         ));
