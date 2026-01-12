@@ -66,6 +66,7 @@ public class Notification {
         SUBSCRIPTION_RENEWED,
         REFERRAL_REWARD,
         TROOP_ANNOUNCEMENT,
-        SYSTEM_ALERT
+        SYSTEM_ALERT,
+        MARKETING
     }
 }
