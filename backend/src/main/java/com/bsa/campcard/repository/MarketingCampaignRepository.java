@@ -70,4 +70,16 @@ public interface MarketingCampaignRepository extends JpaRepository<MarketingCamp
     List<MarketingCampaign> findByMerchantId(Long merchantId);
 
     List<MarketingCampaign> findBySegmentId(Long segmentId);
+
+    // Find scheduled campaigns ready to execute
+    List<MarketingCampaign> findByStatusAndScheduledAtBefore(CampaignStatus status, LocalDateTime dateTime);
+
+    // Find active campaigns with geofencing enabled
+    @Query("SELECT c FROM MarketingCampaign c WHERE " +
+           "c.status = 'ACTIVE' AND " +
+           "c.enableGeofencing = true")
+    List<MarketingCampaign> findActiveCampaignsWithGeofencing();
+
+    // Find campaigns by status list
+    List<MarketingCampaign> findByStatusIn(List<CampaignStatus> statuses);
 }

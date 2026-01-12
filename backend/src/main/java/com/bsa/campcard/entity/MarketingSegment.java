@@ -89,11 +89,18 @@ public class MarketingSegment {
     }
 
     public enum SegmentType {
+        // Base types
         BEHAVIORAL,
         DEMOGRAPHIC,
         GEOGRAPHIC,
         TRANSACTIONAL,
         CUSTOM,
-        AI_GENERATED
+        AI_GENERATED,
+        // Predefined segment types for CampaignDispatchService
+        ALL_USERS,
+        ACTIVE_SUBSCRIBERS,
+        SCOUTS,
+        PARENTS,
+        TROOP_LEADERS
     }
 }

@@ -418,6 +418,38 @@ public class SmsService {
     }
 
     // ========================================================================
+    // MARKETING CAMPAIGN SMS
+    // ========================================================================
+
+    /**
+     * Send a marketing campaign SMS
+     * Used by CampaignDispatchService for bulk campaign delivery
+     *
+     * @param phoneNumber The recipient's phone number
+     * @param content The campaign message content (will be prefixed and have opt-out appended)
+     * @param campaignId The campaign ID for tracking/logging
+     */
+    @Async
+    public void sendCampaignSms(String phoneNumber, String content, String campaignId) {
+        if (!smsEnabled) {
+            log.info("SMS disabled - would send campaign SMS to {} for campaign {}",
+                maskPhoneNumber(phoneNumber), campaignId);
+            return;
+        }
+
+        // Content should already be formatted by CampaignDispatchService
+        // Just ensure it doesn't exceed limits
+        String message = content;
+        if (message.length() > 160) {
+            log.debug("Campaign {} SMS truncated from {} to 160 chars", campaignId, message.length());
+            message = message.substring(0, 157) + "...";
+        }
+
+        sendSms(phoneNumber, message);
+        log.info("Campaign SMS sent to {} for campaign {}", maskPhoneNumber(phoneNumber), campaignId);
+    }
+
+    // ========================================================================
     // PROMOTIONAL SMS (Opt-in only)
     // ========================================================================
 

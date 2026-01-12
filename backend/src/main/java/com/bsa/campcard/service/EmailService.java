@@ -950,6 +950,166 @@ public class EmailService {
         log.info("Merchant welcome email sent to: {}", to);
     }
 
+    // ========================================================================
+    // MARKETING CAMPAIGN EMAILS
+    // ========================================================================
+
+    /**
+     * Send a marketing campaign email with tracking
+     * Used by CampaignDispatchService for bulk campaign delivery
+     */
+    @Async
+    public void sendCampaignEmail(String to, String firstName, String subject,
+                                   String htmlContent, String textContent, String campaignId) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send campaign email to: {} for campaign {}", to, campaignId);
+            return;
+        }
+
+        // Add tracking pixel for open tracking
+        String trackingPixel = String.format(
+            "<img src=\"%s/api/v1/campaigns/%s/track/open?email=%s\" width=\"1\" height=\"1\" alt=\"\" />",
+            baseUrl, campaignId, java.net.URLEncoder.encode(to, java.nio.charset.StandardCharsets.UTF_8)
+        );
+
+        // Wrap links for click tracking
+        String trackedHtml = htmlContent;
+        if (trackedHtml != null) {
+            trackedHtml = addClickTracking(trackedHtml, campaignId, to);
+        }
+
+        // Build the campaign email template
+        String personalizedHtml = trackedHtml;
+        if (personalizedHtml != null && firstName != null) {
+            personalizedHtml = personalizedHtml.replace("{{firstName}}", firstName);
+            personalizedHtml = personalizedHtml.replace("{{first_name}}", firstName);
+        }
+
+        // Add unsubscribe link
+        String unsubscribeUrl = String.format(
+            "%s/unsubscribe?email=%s&campaign=%s",
+            baseUrl,
+            java.net.URLEncoder.encode(to, java.nio.charset.StandardCharsets.UTF_8),
+            campaignId
+        );
+
+        String htmlBody = buildCampaignEmailTemplate(
+            subject,
+            personalizedHtml != null ? personalizedHtml : "",
+            trackingPixel,
+            unsubscribeUrl
+        );
+
+        String textBody = textContent;
+        if (textBody != null && firstName != null) {
+            textBody = textBody.replace("{{firstName}}", firstName);
+            textBody = textBody.replace("{{first_name}}", firstName);
+        }
+        if (textBody == null) {
+            textBody = "Visit " + baseUrl + " to view this message.";
+        }
+        textBody += "\n\n---\nTo unsubscribe: " + unsubscribeUrl;
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Campaign email sent to: {} for campaign {}", to, campaignId);
+    }
+
+    /**
+     * Build email template specifically for marketing campaigns
+     */
+    private String buildCampaignEmailTemplate(String title, String content, String trackingPixel, String unsubscribeUrl) {
+        return """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>%s</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f4;">
+                <table role="presentation" style="width: 100%%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 20px 0;">
+                            <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, %s 0%%, #004494 100%%); padding: 24px; text-align: center;">
+                                        <h1 style="color: white; margin: 0; font-size: 24px;">BSA Camp Card</h1>
+                                    </td>
+                                </tr>
+
+                                <!-- Content -->
+                                <tr>
+                                    <td style="padding: 32px 24px;">
+                                        %s
+                                    </td>
+                                </tr>
+
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="background-color: #f8f9fa; padding: 24px; border-top: 1px solid #dee2e6;">
+                                        <table role="presentation" style="width: 100%%;">
+                                            <tr>
+                                                <td style="text-align: center;">
+                                                    <p style="margin: 0 0 8px 0; font-size: 14px; color: #666666;">
+                                                        <strong>BSA Camp Card</strong> | Supporting Scouts, One Card at a Time
+                                                    </p>
+                                                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #999999;">
+                                                        You received this email because you're a BSA Camp Card member.
+                                                    </p>
+                                                    <p style="margin: 0; font-size: 11px; color: #aaaaaa;">
+                                                        <a href="%s" style="color: #999999;">Unsubscribe</a> |
+                                                        <a href="%s/privacy" style="color: #999999;">Privacy Policy</a>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                %s
+            </body>
+            </html>
+            """.formatted(title, BSA_NAVY, content, unsubscribeUrl, baseUrl, trackingPixel);
+    }
+
+    /**
+     * Add click tracking to links in HTML content
+     */
+    private String addClickTracking(String html, String campaignId, String email) {
+        // Simple link wrapping for tracking - wraps href URLs
+        String encodedEmail = java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8);
+        String trackingPrefix = baseUrl + "/api/v1/campaigns/" + campaignId + "/track/click?email=" + encodedEmail + "&url=";
+
+        // Use regex to find and wrap links
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "href=[\"']([^\"']+)[\"']",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        java.util.regex.Matcher matcher = pattern.matcher(html);
+
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String originalUrl = matcher.group(1);
+            // Skip mailto, tel, and anchor links
+            if (!originalUrl.startsWith("mailto:") &&
+                !originalUrl.startsWith("tel:") &&
+                !originalUrl.startsWith("#") &&
+                !originalUrl.contains("/track/")) {
+                String trackedUrl = trackingPrefix + java.net.URLEncoder.encode(originalUrl, java.nio.charset.StandardCharsets.UTF_8);
+                matcher.appendReplacement(result, "href=\"" + trackedUrl + "\"");
+            } else {
+                matcher.appendReplacement(result, matcher.group(0));
+            }
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+
     @Async
     public void sendMerchantApprovalEmail(String to, String businessName, String contactName) {
         if (!emailEnabled) {
