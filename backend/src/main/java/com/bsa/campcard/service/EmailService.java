@@ -297,7 +297,7 @@ public class EmailService {
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Congratulations on joining the BSA Camp Card program with <strong>Troop %s</strong>!</p>
 
-            <div style="background: linear-gradient(135deg, %s 0%%, #004494 100%%); border-radius: 12px; padding: 24px; margin: 24px 0; color: white; text-align: center;">
+            <div style="background: linear-gradient(135deg, %s 0%%, #004494 100%%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
                 <h3 style="margin: 0 0 12px 0; color: white;">Your Personal Referral Code</h3>
                 <div style="background-color: white; color: %s; font-size: 28px; font-weight: bold; padding: 16px 24px; border-radius: 8px; display: inline-block; letter-spacing: 2px;">
                     %s
@@ -522,9 +522,9 @@ public class EmailService {
             </div>
             <p style="font-size: 18px; color: #333333; text-align: center;">Outstanding work, %s!</p>
 
-            <div style="background: linear-gradient(135deg, %s 0%%, #e5a912 100%%); border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center; color: #333333;">
-                <h2 style="margin: 0 0 8px 0; color: #333333;">%s</h2>
-                <p style="margin: 0; font-size: 48px; font-weight: bold;">%d Sales</p>
+            <div style="background: linear-gradient(135deg, %s 0%%, #e5a912 100%%); border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center;">
+                <h2 style="margin: 0 0 8px 0; color: white;">%s</h2>
+                <p style="margin: 0; font-size: 48px; font-weight: bold; color: white;">%d Sales</p>
             </div>
 
             <p style="font-size: 16px; color: #333333;">You've reached the <strong>%s</strong> milestone! Your dedication is making a real difference for your troop.</p>
