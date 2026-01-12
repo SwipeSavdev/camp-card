@@ -52,6 +52,9 @@ public interface TroopRepository extends JpaRepository<Troop, Long> {
     @Query("SELECT COUNT(t) FROM Troop t WHERE t.councilId = :councilId AND t.status = :status")
     long countByCouncilIdAndStatus(@Param("councilId") Long councilId,
                                    @Param("status") TroopStatus status);
+
+    @Query("SELECT COUNT(t) FROM Troop t WHERE t.councilId = :councilId")
+    Long countByCouncilId(@Param("councilId") Long councilId);
     
     @Query("SELECT SUM(t.totalSales) FROM Troop t WHERE t.councilId = :councilId")
     java.math.BigDecimal sumSalesByCouncil(@Param("councilId") Long councilId);

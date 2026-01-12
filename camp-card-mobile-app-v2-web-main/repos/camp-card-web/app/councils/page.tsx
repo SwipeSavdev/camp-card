@@ -198,15 +198,26 @@ export default function CouncilsPage() {
  setAvailableTroopLeaders(troopLeaders);
 
  const councilsArray = (councilData.content || councilData || []).map((council: any) => ({
- id: council.id,
+ id: council.id?.toString() || council.uuid,
  name: council.name,
- location: `${council.city}, ${council.state}`,
+ location: council.location || `${council.city || ''}, ${council.state || ''}`.replace(/^, |, $/g, ''),
+ region: council.region,
+ status: council.status,
+ totalTroops: council.totalTroops || 0,
+ totalScouts: council.totalScouts || 0,
  troopUnits: (troopsData.content || troopsData || [])
- .filter((troop: any) => troop.council === council.name || troop.councilId === council.id)
+ .filter((troop: any) => {
+ // Match by councilId (number) or by council name
+ const councilId = council.id?.toString();
+ const troopCouncilId = troop.councilId?.toString();
+ return troopCouncilId === councilId || troop.council === council.name;
+ })
  .map((troop: any) => ({
- id: troop.id,
- name: troop.name,
- leaderName: 'Scout Leader',
+ id: troop.id?.toString() || troop.uuid,
+ name: troop.troopName || troop.name || `Troop ${troop.troopNumber}`,
+ troopNumber: troop.troopNumber,
+ leaderName: troop.charterOrganization || troop.scoutmasterName || 'Scout Leader',
+ scouts: troop.totalScouts || 0,
  troopLeaders: [],
  })),
  }));
@@ -239,8 +250,40 @@ export default function CouncilsPage() {
  setExpandedTroops(newExpanded);
  };
 
- const addCouncil = () => {
+ const addCouncil = async () => {
  if (newCouncilName && newCouncilLocation) {
+ try {
+ // Parse location into city and state
+ const locationParts = newCouncilLocation.split(',').map(s => s.trim());
+ const city = locationParts[0] || '';
+ const state = locationParts[1] || '';
+
+ // Create council via API
+ const councilData = {
+ councilNumber: `C${Date.now().toString().slice(-6)}`,
+ name: newCouncilName,
+ city: city,
+ state: state,
+ region: 'CENTRAL', // Default region
+ status: 'ACTIVE'
+ };
+
+ const savedCouncil = await api.createOrganization(councilData, session);
+
+ // Add to local state
+ const newCouncil: Council = {
+ id: savedCouncil.id?.toString() || Date.now().toString(),
+ name: savedCouncil.name || newCouncilName,
+ location: savedCouncil.location || newCouncilLocation,
+ troopUnits: [],
+ };
+ setCouncils([...councils, newCouncil]);
+ setNewCouncilName('');
+ setNewCouncilLocation('');
+ setShowAddCouncil(false);
+ } catch (error) {
+ console.error('Failed to create council:', error);
+ // Fallback to local-only creation
  const newCouncil: Council = {
  id: Date.now().toString(),
  name: newCouncilName,
@@ -252,10 +295,47 @@ export default function CouncilsPage() {
  setNewCouncilLocation('');
  setShowAddCouncil(false);
  }
+ }
  };
 
- const addTroopUnit = (councilId: string) => {
+ const addTroopUnit = async (councilId: string) => {
  if (newTroopName && newTroopLeader) {
+ try {
+ // Create troop via API
+ const troopData = {
+ troopNumber: `T${Date.now().toString().slice(-6)}`,
+ troopName: newTroopName,
+ councilId: parseInt(councilId, 10) || councilId,
+ charterOrganization: newTroopLeader,
+ troopType: 'BOY_TROOP',
+ status: 'ACTIVE'
+ };
+
+ const savedTroop = await api.createTroop(troopData, session);
+
+ // Update local state
+ setCouncils(
+ councils.map((council) => {
+ if (council.id === councilId) {
+ return {
+ ...council,
+ troopUnits: [
+ ...council.troopUnits,
+ {
+ id: savedTroop.id?.toString() || `${councilId}-${Date.now()}`,
+ name: savedTroop.troopName || newTroopName,
+ leaderName: newTroopLeader,
+ troopLeaders: [],
+ },
+ ],
+ };
+ }
+ return council;
+ })
+ );
+ } catch (error) {
+ console.error('Failed to create troop:', error);
+ // Fallback to local-only
  setCouncils(
  councils.map((council) => {
  if (council.id === councilId) {
@@ -275,6 +355,7 @@ export default function CouncilsPage() {
  return council;
  })
  );
+ }
  setNewTroopName('');
  setNewTroopLeader('');
  setShowAddTroop(null);
@@ -325,11 +406,27 @@ export default function CouncilsPage() {
  setNewLeaderRole('');
  };
 
- const deleteCouncil = (councilId: string) => {
+ const deleteCouncil = async (councilId: string) => {
+ try {
+ // Delete from backend
+ await api.deleteOrganization(councilId, session);
+ // Update local state
  setCouncils(councils.filter((c) => c.id !== councilId));
+ } catch (error) {
+ console.error('Failed to delete council:', error);
+ // Still remove from local state for UX
+ setCouncils(councils.filter((c) => c.id !== councilId));
+ }
  };
 
- const deleteTroopUnit = (councilId: string, troopId: string) => {
+ const deleteTroopUnit = async (councilId: string, troopId: string) => {
+ try {
+ // Delete from backend
+ await api.deleteTroop(troopId, session);
+ } catch (error) {
+ console.error('Failed to delete troop:', error);
+ }
+ // Update local state regardless
  setCouncils(
  councils.map((council) => {
  if (council.id === councilId) {
