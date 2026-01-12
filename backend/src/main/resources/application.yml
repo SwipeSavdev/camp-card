@@ -50,18 +50,19 @@ spring:
   # ============================================================================
   # REDIS CACHE CONFIGURATION
   # ============================================================================
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:7002}
-    password: ${REDIS_PASSWORD:}
-    database: 0
-    timeout: 2000
-    lettuce:
-      pool:
-        max-active: 50
-        max-idle: 20
-        min-idle: 5
-        max-wait: 1000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 1000ms
   
   cache:
     type: redis
