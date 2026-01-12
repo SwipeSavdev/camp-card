@@ -139,22 +139,31 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        // First, immediately set isAuthenticated to false to trigger navigation
+        set({
+          isAuthenticated: false,
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+        });
+
         try {
-          // Call logout endpoint
-          await apiClient.post('/api/v1/auth/logout');
-        } catch (error) {
-          console.error('Logout error:', error);
-        } finally {
           // Clear tokens from secure storage
           await SecureStore.deleteItemAsync('accessToken');
           await SecureStore.deleteItemAsync('refreshToken');
 
-          set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-          });
+          // Clear persisted storage
+          await AsyncStorage.removeItem('auth-storage');
+        } catch (error) {
+          console.error('Logout cleanup error:', error);
+        }
+
+        // Optionally call logout endpoint (don't block on it)
+        try {
+          await apiClient.post('/api/v1/auth/logout');
+        } catch (error) {
+          // Ignore logout endpoint errors - user is already logged out locally
+          console.log('Logout endpoint call failed (ignored):', error);
         }
       },
 

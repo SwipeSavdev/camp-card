@@ -23,6 +23,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
+    private final SmsService smsService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -46,7 +47,13 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
+        // Send verification email
         emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getEmailVerificationToken());
+
+        // Send welcome SMS if phone number provided
+        if (savedUser.getPhoneNumber() != null && !savedUser.getPhoneNumber().isBlank()) {
+            smsService.sendWelcomeSms(savedUser.getPhoneNumber(), savedUser.getFirstName());
+        }
 
         String accessToken = jwtTokenProvider.generateAccessToken(savedUser);
         String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser);

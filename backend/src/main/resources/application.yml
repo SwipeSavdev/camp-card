@@ -146,9 +146,15 @@ stripe:
 # AWS CONFIGURATION
 # ============================================================================
 aws:
-  region: ${AWS_REGION:us-east-1}
+  region: ${AWS_REGION:us-east-2}
   s3:
     bucket: ${S3_BUCKET:campcard-assets-prod}
+  ses:
+    # Verified email identity in AWS SES
+    from-email: ${SES_FROM_EMAIL:no-reply@campcard.org}
+  sns:
+    # SMS sender ID (alphanumeric, max 11 chars)
+    sender-id: ${SNS_SENDER_ID:CampCard}
   secrets-manager:
     enabled: true
     secret-name: campcard/api/secrets
@@ -196,14 +202,17 @@ campcard:
     default-limit: 100  # Requests per minute
     burst-capacity: 20
   
-  # Notifications
+  # Base URL for email links
+  base-url: ${CAMPCARD_BASE_URL:https://bsa.swipesavvy.com}
+
+  # Notifications (AWS SES for email, AWS SNS for SMS)
   notifications:
     email:
-      from: no-reply@campcard.org
-      provider: ${EMAIL_PROVIDER:ses}  # ses, sendgrid, etc.
+      from: ${SES_FROM_EMAIL:no-reply@bsa.swipesavvy.com}
+      enabled: ${EMAIL_ENABLED:true}  # SES is configured for bsa.swipesavvy.com
     sms:
-      provider: ${SMS_PROVIDER:twilio}
-      from-number: ${SMS_FROM_NUMBER:+15555551234}
+      enabled: ${SMS_ENABLED:false}  # Set to true when SNS is configured
+      sender-id: ${SNS_SENDER_ID:CampCard}
   
   # Dashboard Caching
   dashboard:

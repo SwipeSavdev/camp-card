@@ -1,7 +1,7 @@
 // Profile Screen with Settings and Navigation
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { COLORS } from '../../config/constants';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigation = useNavigation<RootNavigation>();
 
   const menuItems = [
@@ -98,12 +99,38 @@ export default function ProfileScreen() {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={logout}
+        <TouchableOpacity
+          style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]}
+          onPress={async () => {
+            if (isLoggingOut) return;
+
+            Alert.alert(
+              'Logout',
+              'Are you sure you want to logout?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Logout',
+                  style: 'destructive',
+                  onPress: () => {
+                    setIsLoggingOut(true);
+                    logout().catch((error) => {
+                      console.error('Logout failed:', error);
+                      setIsLoggingOut(false);
+                    });
+                  },
+                },
+              ]
+            );
+          }}
+          disabled={isLoggingOut}
         >
-          <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
-          <Text style={styles.logoutText}>Logout</Text>
+          {isLoggingOut ? (
+            <ActivityIndicator size="small" color={COLORS.error} />
+          ) : (
+            <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
+          )}
+          <Text style={styles.logoutText}>{isLoggingOut ? 'Logging out...' : 'Logout'}</Text>
         </TouchableOpacity>
 
         <Text style={styles.version}>Version 1.0.0</Text>
@@ -215,6 +242,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  logoutButtonDisabled: {
+    opacity: 0.6,
   },
   version: {
     textAlign: 'center',

@@ -203,11 +203,6 @@ export default function OffersScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Offers</Text>
-      </View>
-
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
@@ -293,25 +288,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  header: {
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#003f87',
-  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
     marginHorizontal: 16,
-    marginTop: 16,
+    marginTop: 12,
     marginBottom: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -328,20 +310,24 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   categoryContainer: {
-    maxHeight: 50,
+    flexGrow: 0,
+    marginBottom: 8,
   },
   categoryContent: {
     paddingHorizontal: 16,
-    gap: 8,
+    paddingVertical: 8,
+    alignItems: 'center',
   },
   categoryButton: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    marginRight: 8,
+    marginRight: 10,
+    minHeight: 40,
+    justifyContent: 'center',
   },
   categoryButtonActive: {
     backgroundColor: '#003f87',
