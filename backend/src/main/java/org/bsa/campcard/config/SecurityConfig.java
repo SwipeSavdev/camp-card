@@ -65,6 +65,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:7020",  // Web portal (dev)
             "http://localhost:8085",  // Mobile Expo (dev)
+            "http://18.190.69.205:7020",  // AWS Admin Portal
+            "http://18.190.69.205:7010",  // AWS API
             "https://portal.campcard.org",  // Web portal (prod)
             "https://api.campcard.org"      // API (prod)
         ));

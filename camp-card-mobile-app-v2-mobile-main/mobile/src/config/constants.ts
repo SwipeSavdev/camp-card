@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 // Default port 7010 matches the backend Spring Boot server
 // AWS EC2 backend for production
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://54.224.8.14:7010';
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://18.190.69.205:7010';
 
 // Authorize.net Configuration
 export const AUTHORIZENET_PUBLIC_CLIENT_KEY =
