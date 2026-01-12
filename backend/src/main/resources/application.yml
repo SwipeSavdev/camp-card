@@ -143,6 +143,18 @@ stripe:
   cancel-url: https://app.campcard.org/subscription/cancel
 
 # ============================================================================
+# AUTHORIZE.NET PAYMENT CONFIGURATION
+# ============================================================================
+authorize:
+  net:
+    api:
+      login:
+        id: ${AUTHORIZE_NET_API_LOGIN_ID:}
+    transaction:
+      key: ${AUTHORIZE_NET_TRANSACTION_KEY:}
+    environment: ${AUTHORIZE_NET_ENVIRONMENT:SANDBOX}
+
+# ============================================================================
 # AWS CONFIGURATION
 # ============================================================================
 aws:
