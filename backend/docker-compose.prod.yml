@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # PostgreSQL Database
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: campcard-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: campcard
+      POSTGRES_USER: campcard_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-CampCard2024!}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campcard_admin -d campcard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - campcard
+
+  # ============================================================================
+  # Redis Cache (internal only - no external port needed)
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: campcard-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - campcard
+
+  # ============================================================================
+  # Apache Kafka (Zookeeper + Broker)
+  # ============================================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: campcard-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    networks:
+      - campcard
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: campcard-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - campcard
+
+  # ============================================================================
+  # Backend API
+  # ============================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: campcard-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILE: aws
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: campcard
+      DB_USERNAME: campcard_admin
+      DB_PASSWORD: ${DB_PASSWORD:-CampCard2024!}
+      # Hibernate - validate schema (tables already exist)
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # Use campcard schema
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: campcard
+      # Flyway - disable for initial setup
+      SPRING_FLYWAY_ENABLED: "false"
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_SSL: "false"
+      # Kafka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-CampCardJWTSecretKey2024ForProductionUseOnly!}
+      # CORS - Allow all origins for mobile app
+      CORS_ALLOWED_ORIGINS: "*"
+      # SMTP (placeholder - will fail gracefully)
+      SMTP_HOST: localhost
+      SMTP_PORT: 25
+      SMTP_USERNAME: ""
+      SMTP_PASSWORD: ""
+      # Payment (placeholder)
+      AUTHORIZE_NET_API_LOGIN_ID: placeholder
+      AUTHORIZE_NET_TRANSACTION_KEY: placeholder
+      AUTHORIZE_NET_ENVIRONMENT: SANDBOX
+    ports:
+      - "7010:7010"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7010/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    networks:
+      - campcard
+
+volumes:
+  postgres_data:
+  redis_data:
+  zookeeper_data:
+  kafka_data:
+
+networks:
+  campcard:
+    driver: bridge

@@ -44,7 +44,7 @@ export default function OfferDetailScreen() {
 
   const loadOffer = async () => {
     try {
-      const response = await apiClient.get(`/offers/${offerId}`);
+      const response = await apiClient.get(`/api/v1/offers/${offerId}`);
       setOffer(response.data);
     } catch (error) {
       console.error('Error loading offer:', error);
@@ -60,7 +60,14 @@ export default function OfferDetailScreen() {
       Alert.alert('Unavailable', 'This offer is no longer available');
       return;
     }
-    navigation.navigate('RedeemOffer', { offerId: offer.id });
+    Alert.alert(
+      'Redeem Offer',
+      `Show this screen to the merchant to redeem your "${offer.title}" offer.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Got it!', style: 'default' }
+      ]
+    );
   };
 
   const getDiscountText = () => {
@@ -94,16 +101,17 @@ export default function OfferDetailScreen() {
       </View>
 
       <ScrollView>
-        {offer.imageUrl ? (
-          <Image source={{ uri: offer.imageUrl }} style={styles.heroImage} />
-        ) : (
-          <View style={[styles.heroImage, styles.imagePlaceholder]}>
-            <Ionicons name="pricetag" size={80} color="#ccc" />
+        <View style={styles.imageContainer}>
+          {offer.imageUrl ? (
+            <Image source={{ uri: offer.imageUrl }} style={styles.heroImage} />
+          ) : (
+            <View style={[styles.heroImage, styles.imagePlaceholder]}>
+              <Ionicons name="pricetag" size={80} color="#ccc" />
+            </View>
+          )}
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountText}>{getDiscountText()}</Text>
           </View>
-        )}
-
-        <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>{getDiscountText()}</Text>
         </View>
 
         <View style={styles.content}>
@@ -165,9 +173,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#003f87',
   },
+  imageContainer: {
+    position: 'relative',
+  },
   heroImage: {
     width: '100%',
-    height: 250,
+    height: 220,
     backgroundColor: '#f0f0f0',
   },
   imagePlaceholder: {
@@ -176,17 +187,17 @@ const styles = StyleSheet.create({
   },
   discountBadge: {
     position: 'absolute',
-    top: 310,
-    right: 20,
+    bottom: 16,
+    right: 16,
     backgroundColor: '#ce1126',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   discountText: {
     color: 'white',

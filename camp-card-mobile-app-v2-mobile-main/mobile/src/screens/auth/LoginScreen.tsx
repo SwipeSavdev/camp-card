@@ -8,7 +8,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
-import { runAllTests } from '../../utils/testConnection';
 
 /**
  * Login Screen
@@ -46,30 +44,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleTestConnection = async () => {
-    Alert.alert(
-      'Testing Database Connection',
-      'This will test the connection to the backend server and database. Check the console for detailed results.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Run Tests',
-          onPress: async () => {
-            try {
-              const results = await runAllTests();
-              Alert.alert(
-                'Test Results',
-                `${results.passed}/${results.totalTests} tests passed\n\nCheck console for detailed results.`,
-                [{ text: 'OK' }]
-              );
-            } catch (error: any) {
-              Alert.alert('Test Error', error.message);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -122,13 +96,6 @@ export default function LoginScreen() {
               editable={!isLoading}
             />
 
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={handleTestConnection}
-          >
-            <Ionicons name="flask-outline" size={16} color={COLORS.secondary} />
-            <Text style={styles.testButtonText}>Test Database Connection</Text>
-          </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
               style={styles.eyeIcon}
@@ -233,23 +200,6 @@ const styles = StyleSheet.create({
     color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
-  },
-  testButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.secondary,
-    backgroundColor: COLORS.surface,
-    gap: 8,
-  },
-  testButtonText: {
-    color: COLORS.secondary,
-    fontSize: 13,
-    fontWeight: '500',
   },
   forgotPassword: {
     alignItems: 'center',

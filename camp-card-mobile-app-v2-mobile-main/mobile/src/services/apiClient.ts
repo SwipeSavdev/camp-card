@@ -135,9 +135,9 @@ export const authApi = {
     password: string;
     firstName: string;
     lastName: string;
-    phoneNumber?: string;
+    phone?: string;
     role: string;
-  }) => apiClient.post('/api/v1/auth/signup', data),
+  }) => apiClient.post('/api/v1/auth/register', data),
   
   logout: () => apiClient.post('/api/v1/auth/logout'),
   
@@ -160,11 +160,15 @@ export const offersApi = {
     radius?: number;
     category?: string;
   }) => apiClient.get('/api/v1/offers', { params }),
-  
-  getOfferById: (id: string) => apiClient.get(`/api/v1/offers/${id}`),
-  
+
+  getActiveOffers: () => apiClient.get('/api/v1/offers/active'),
+
+  getFeaturedOffers: () => apiClient.get('/api/v1/offers/featured'),
+
+  getOfferById: (id: string | number) => apiClient.get(`/api/v1/offers/${id}`),
+
   searchOffers: (query: string) =>
-    apiClient.get('/api/v1/offers/search', { params: { q: query } }),
+    apiClient.get('/api/v1/offers', { params: { search: query } }),
 };
 
 export const subscriptionsApi = {

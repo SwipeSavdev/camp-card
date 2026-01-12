@@ -49,7 +49,7 @@ interface SignupData {
   password: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
+  phone?: string;
   role: User['role'];
 }
 
@@ -161,7 +161,7 @@ export const useAuthStore = create<AuthState>()(
       signup: async (data: SignupData) => {
         set({ isLoading: true });
         try {
-          const response = await apiClient.post('/api/v1/auth/signup', data);
+          const response = await apiClient.post('/api/v1/auth/register', data);
 
           const { user, accessToken, refreshToken } = response.data;
 

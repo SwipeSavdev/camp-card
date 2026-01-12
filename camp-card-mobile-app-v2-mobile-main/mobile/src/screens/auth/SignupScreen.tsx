@@ -61,7 +61,7 @@ export default function SignupScreen() {
         password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        phoneNumber: phone ? phone.trim() : undefined,
+        phone: phone ? phone.trim() : undefined,
         role: 'SCOUT' as const, // Default role
       };
 

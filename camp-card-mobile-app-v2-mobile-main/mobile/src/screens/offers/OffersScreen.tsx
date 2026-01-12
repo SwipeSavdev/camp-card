@@ -65,7 +65,7 @@ export default function OffersScreen() {
   const loadOffers = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/offers/active');
+      const response = await apiClient.get('/api/v1/offers/active');
       setOffers(response.data.content || response.data);
     } catch (error) {
       console.error('Error loading offers:', error);
@@ -126,19 +126,21 @@ export default function OffersScreen() {
       style={styles.offerCard}
       onPress={() => navigation.navigate('OfferDetail', { offerId: item.id })}
     >
-      {item.imageUrl ? (
-        <Image source={{ uri: item.imageUrl }} style={styles.offerImage} />
-      ) : (
-        <View style={[styles.offerImage, styles.imagePlaceholder]}>
-          <Ionicons name="pricetag" size={48} color="#ccc" />
-        </View>
-      )}
-
-      <View style={styles.offerContent}>
-        {/* Discount Badge */}
+      <View style={styles.imageContainer}>
+        {item.imageUrl ? (
+          <Image source={{ uri: item.imageUrl }} style={styles.offerImage} />
+        ) : (
+          <View style={[styles.offerImage, styles.imagePlaceholder]}>
+            <Ionicons name="pricetag" size={48} color="#ccc" />
+          </View>
+        )}
+        {/* Discount Badge - positioned over image */}
         <View style={styles.discountBadge}>
           <Text style={styles.discountText}>{getDiscountText(item)}</Text>
         </View>
+      </View>
+
+      <View style={styles.offerContent}>
 
         {/* Tags */}
         <View style={styles.tags}>
@@ -377,9 +379,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  imageContainer: {
+    position: 'relative',
+  },
   offerImage: {
     width: '100%',
-    height: 180,
+    height: 150,
     backgroundColor: '#f0f0f0',
   },
   imagePlaceholder: {
@@ -391,12 +396,12 @@ const styles = StyleSheet.create({
   },
   discountBadge: {
     position: 'absolute',
-    top: -90,
-    right: 16,
+    bottom: 12,
+    right: 12,
     backgroundColor: '#ce1126',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
