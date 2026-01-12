@@ -316,11 +316,11 @@ public class CouncilService {
         // Get troop counts and stats
         Long troopCount = troopRepository.countByCouncilId(councilId);
         BigDecimal totalSales = troopRepository.sumSalesByCouncil(councilId);
-        Long cardsSold = troopRepository.sumCardsSoldByCouncil(councilId);
+        Integer cardsSold = troopRepository.sumCardsSoldByCouncil(councilId);
 
         council.setTotalTroops(troopCount != null ? troopCount.intValue() : 0);
         council.setTotalSales(totalSales != null ? totalSales : BigDecimal.ZERO);
-        council.setCardsSold(cardsSold != null ? cardsSold.intValue() : 0);
+        council.setCardsSold(cardsSold != null ? cardsSold : 0);
 
         Council saved = councilRepository.save(council);
         log.info("Council stats updated: troops={}, sales={}, cards={}",

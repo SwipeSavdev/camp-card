@@ -143,6 +143,51 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Get scouts by troop", description = "Get all scouts in a troop")
+    @GetMapping("/troop/{troopId}/scouts")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    public ResponseEntity<Page<UserResponse>> getScoutsByTroop(
+        @Parameter(description = "Troop ID") @PathVariable UUID troopId,
+        @PageableDefault(size = 50) Pageable pageable
+    ) {
+        Page<User> scouts = userService.getScoutsByTroop(troopId, pageable);
+        Page<UserResponse> response = scouts.map(this::toResponse);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Assign scout to troop", description = "Assign a scout user to a troop")
+    @PatchMapping("/{userId}/assign-troop/{troopId}")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    public ResponseEntity<UserResponse> assignScoutToTroop(
+        @Parameter(description = "User ID (Scout)") @PathVariable UUID userId,
+        @Parameter(description = "Troop ID") @PathVariable UUID troopId
+    ) {
+        User user = userService.assignToTroop(userId, troopId);
+        return ResponseEntity.ok(toResponse(user));
+    }
+
+    @Operation(summary = "Remove scout from troop", description = "Remove a scout from their troop")
+    @DeleteMapping("/{userId}/troop")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    public ResponseEntity<UserResponse> removeScoutFromTroop(
+        @Parameter(description = "User ID (Scout)") @PathVariable UUID userId
+    ) {
+        User user = userService.removeFromTroop(userId);
+        return ResponseEntity.ok(toResponse(user));
+    }
+
+    @Operation(summary = "Get unassigned scouts", description = "Get scouts not assigned to any troop")
+    @GetMapping("/scouts/unassigned")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    public ResponseEntity<Page<UserResponse>> getUnassignedScouts(
+        @Parameter(description = "Council ID (optional)") @RequestParam(required = false) UUID councilId,
+        @PageableDefault(size = 50) Pageable pageable
+    ) {
+        Page<User> scouts = userService.getUnassignedScouts(councilId, pageable);
+        Page<UserResponse> response = scouts.map(this::toResponse);
+        return ResponseEntity.ok(response);
+    }
+
     // Response DTO
     private UserResponse toResponse(User user) {
         return new UserResponse(

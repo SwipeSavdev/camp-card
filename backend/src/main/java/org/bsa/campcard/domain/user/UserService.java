@@ -201,6 +201,67 @@ public class UserService {
         });
     }
 
+    /**
+     * Get scouts by troop
+     */
+    public Page<User> getScoutsByTroop(UUID troopId, Pageable pageable) {
+        return userRepository.findByTroopIdAndRole(troopId, User.UserRole.SCOUT, pageable);
+    }
+
+    /**
+     * Get unassigned scouts (scouts with no troop)
+     */
+    public Page<User> getUnassignedScouts(UUID councilId, Pageable pageable) {
+        if (councilId != null) {
+            return userRepository.findUnassignedScoutsByCouncil(councilId, pageable);
+        }
+        return userRepository.findUnassignedScouts(pageable);
+    }
+
+    /**
+     * Assign user to troop
+     */
+    @Transactional
+    @CacheEvict(value = "users", key = "#userId")
+    public User assignToTroop(UUID userId, UUID troopId) {
+        log.info("Assigning user {} to troop {}", userId, troopId);
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        if (user.isDeleted()) {
+            throw new IllegalStateException("Cannot assign deleted user: " + userId);
+        }
+
+        user.setTroopId(troopId);
+        User savedUser = userRepository.save(user);
+
+        log.info("User {} assigned to troop {}", userId, troopId);
+        return savedUser;
+    }
+
+    /**
+     * Remove user from troop
+     */
+    @Transactional
+    @CacheEvict(value = "users", key = "#userId")
+    public User removeFromTroop(UUID userId) {
+        log.info("Removing user {} from troop", userId);
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        if (user.isDeleted()) {
+            throw new IllegalStateException("Cannot modify deleted user: " + userId);
+        }
+
+        user.setTroopId(null);
+        User savedUser = userRepository.save(user);
+
+        log.info("User {} removed from troop", userId);
+        return savedUser;
+    }
+
     // DTOs
     public record UserCreateRequest(
         String email,

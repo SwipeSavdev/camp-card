@@ -119,6 +119,54 @@ export const api = {
  }
  },
 
+ // ============ SCOUTS ============
+ getScoutsByTroop: async (troopId: string, session?: Session | null) => {
+ try {
+ const result = await apiCall<any>(`/users/troop/${troopId}/scouts`, {}, session);
+ return {
+ content: result.content || result || []
+ };
+ } catch (error) {
+ console.error('Failed to fetch scouts by troop:', error);
+ return { content: [] };
+ }
+ },
+
+ getUnassignedScouts: async (councilId?: string, session?: Session | null) => {
+ try {
+ const url = councilId ? `/users/scouts/unassigned?councilId=${councilId}` : '/users/scouts/unassigned';
+ const result = await apiCall<any>(url, {}, session);
+ return {
+ content: result.content || result || []
+ };
+ } catch (error) {
+ console.error('Failed to fetch unassigned scouts:', error);
+ return { content: [] };
+ }
+ },
+
+ assignScoutToTroop: async (userId: string, troopId: string, session?: Session | null) => {
+ try {
+ return await apiCall<any>(`/users/${userId}/assign-troop/${troopId}`, {
+ method: 'PATCH',
+ }, session);
+ } catch (error) {
+ console.error('Failed to assign scout to troop:', error);
+ throw error;
+ }
+ },
+
+ removeScoutFromTroop: async (userId: string, session?: Session | null) => {
+ try {
+ return await apiCall<any>(`/users/${userId}/troop`, {
+ method: 'DELETE',
+ }, session);
+ } catch (error) {
+ console.error('Failed to remove scout from troop:', error);
+ throw error;
+ }
+ },
+
  // ============ ORGANIZATIONS ============
  getOrganizations: async (session?: Session | null) => {
  try {

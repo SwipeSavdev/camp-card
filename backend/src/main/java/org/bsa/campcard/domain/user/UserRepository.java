@@ -87,4 +87,26 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * Find user by referral code
      */
     Optional<User> findByReferralCode(String referralCode);
+
+    /**
+     * Find users by troop and role
+     */
+    @Query("SELECT u FROM User u WHERE u.troopId = :troopId AND u.role = :role AND u.deletedAt IS NULL")
+    Page<User> findByTroopIdAndRole(
+        @Param("troopId") UUID troopId,
+        @Param("role") User.UserRole role,
+        Pageable pageable
+    );
+
+    /**
+     * Find unassigned scouts (scouts with no troop)
+     */
+    @Query("SELECT u FROM User u WHERE u.troopId IS NULL AND u.role = 'SCOUT' AND u.isActive = true AND u.deletedAt IS NULL")
+    Page<User> findUnassignedScouts(Pageable pageable);
+
+    /**
+     * Find unassigned scouts by council
+     */
+    @Query("SELECT u FROM User u WHERE u.councilId = :councilId AND u.troopId IS NULL AND u.role = 'SCOUT' AND u.isActive = true AND u.deletedAt IS NULL")
+    Page<User> findUnassignedScoutsByCouncil(@Param("councilId") UUID councilId, Pageable pageable);
 }
