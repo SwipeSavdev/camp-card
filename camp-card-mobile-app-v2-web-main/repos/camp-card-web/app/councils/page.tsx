@@ -80,6 +80,7 @@ interface TroopLeader {
 
 interface TroopUnit {
  id: string;
+ uuid: string;
  name: string;
  leaderName: string;
  troopLeaders: TroopLeader[];
@@ -96,6 +97,7 @@ export default function CouncilsPage() {
  const { data: session, status } = useSession();
  const router = useRouter();
  const [councils, setCouncils] = useState<Council[]>([]);
+ const [isLoading, setIsLoading] = useState(true);
 
  const [expandedCouncils, setExpandedCouncils] = useState<Set<string>>(new Set(['1']));
  const [expandedTroops, setExpandedTroops] = useState<Set<string>>(new Set());
@@ -157,11 +159,14 @@ export default function CouncilsPage() {
  }, [searchTerm, locationFilter, troopCountFilter, itemsPerPage]);
 
  useEffect(() => {
- // Load councils, troops, and troop leaders data
- loadData();
- }, []);
+ // Wait for session to be authenticated before loading data
+ if (status === 'authenticated' && session) {
+   loadData();
+ }
+ }, [status, session]);
 
  const loadData = async () => {
+ setIsLoading(true);
  try {
  const councilData = await api.getOrganizations(session);
  const troopsData = await api.getTroops(session);
@@ -189,9 +194,10 @@ export default function CouncilsPage() {
  return troopCouncilId === councilId || troop.council === council.name;
  })
  .map((troop: any) => {
- // Find troop leaders assigned to this troop
+ // Find troop leaders assigned to this troop (match by UUID)
+ const troopUuid = troop.uuid || troop.id?.toString();
  const assignedLeaders = troopLeaders.filter(
- (leader: any) => leader.troopId?.toString() === troop.id?.toString()
+ (leader: any) => leader.troopId === troopUuid || leader.troopId?.toString() === troop.id?.toString()
  ).map((leader: any) => ({
  id: `${troop.id}-${leader.id}`,
  name: leader.name || `${leader.firstName} ${leader.lastName}`,
@@ -201,7 +207,8 @@ export default function CouncilsPage() {
  }));
 
  return {
- id: troop.id?.toString() || troop.uuid,
+ id: troop.id?.toString(),
+ uuid: troop.uuid || troop.id?.toString(),
  name: troop.troopName || troop.name || `Troop ${troop.troopNumber}`,
  troopNumber: troop.troopNumber,
  leaderName: troop.charterOrganization || troop.scoutmasterName || 'Scout Leader',
@@ -214,6 +221,8 @@ export default function CouncilsPage() {
  setCouncils(councilsArray);
  } catch (err) {
  console.error('Failed to load councils and troops:', err);
+ } finally {
+ setIsLoading(false);
  }
  };
 
@@ -302,6 +311,7 @@ export default function CouncilsPage() {
  ...council.troopUnits,
  {
  id: savedTroop.id?.toString() || `${councilId}-${Date.now()}`,
+ uuid: savedTroop.uuid || savedTroop.id?.toString() || `${councilId}-${Date.now()}`,
  name: savedTroop.troopName || newTroopName,
  leaderName: newTroopLeader,
  troopLeaders: [],
@@ -330,11 +340,8 @@ export default function CouncilsPage() {
  }
 
  try {
- // Assign the leader to the troop via API
- await api.updateUser(selectedTroopLeader.id, {
- ...selectedTroopLeader,
- troopId: parseInt(troopId, 10) || troopId,
- }, session);
+ // Assign the leader to the troop via API using the dedicated endpoint
+ await api.assignScoutToTroop(selectedTroopLeader.id, troopId, session);
 
  // Create assignment with existing leader
  const newLeaderAssignment = {
@@ -433,6 +440,37 @@ export default function CouncilsPage() {
  })
  );
  };
+
+ // Show loading state while session is loading or data is being fetched
+ if (status === 'loading' || isLoading) {
+   return (
+     <PageLayout title="Councils & Troops" currentPath="/councils">
+       <div style={{
+         display: 'flex',
+         justifyContent: 'center',
+         alignItems: 'center',
+         minHeight: '400px',
+         flexDirection: 'column',
+         gap: themeSpace.md
+       }}>
+         <div style={{
+           width: '40px',
+           height: '40px',
+           border: `3px solid ${themeColors.gray200}`,
+           borderTopColor: themeColors.primary600,
+           borderRadius: '50%',
+           animation: 'spin 1s linear infinite',
+         }} />
+         <p style={{ color: themeColors.gray600, margin: 0 }}>Loading councils...</p>
+         <style>{`
+           @keyframes spin {
+             to { transform: rotate(360deg); }
+           }
+         `}</style>
+       </div>
+     </PageLayout>
+   );
+ }
 
  return (
  <PageLayout title="Councils & Troops" currentPath="/councils">
@@ -970,7 +1008,7 @@ export default function CouncilsPage() {
  <button
  onClick={() => {
  if (selectedTroopLeader) {
- addTroopLeader(council.id, troop.id);
+ addTroopLeader(council.id, troop.uuid);
  }
  }}
  disabled={!selectedTroopLeader}
