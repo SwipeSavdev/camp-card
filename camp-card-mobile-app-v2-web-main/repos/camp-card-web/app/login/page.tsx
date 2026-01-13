@@ -366,7 +366,7 @@ export default function LoginPage() {
  letterSpacing: '0.5px',
  }}
  >
- Test1234
+ Password123
  </p>
  </div>
  </div>

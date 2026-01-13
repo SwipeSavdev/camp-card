@@ -333,8 +333,8 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
 
 ### Test Credentials
 
-- **Admin User**: `admin@campcard.org` / `Test1234` (role: NATIONAL_ADMIN)
-- **Test User**: `test@campcard.org` / `Test1234` (role: SCOUT)
+- **Admin User**: `admin@campcard.org` / `Password123` (role: NATIONAL_ADMIN)
+- **Test User**: `test@campcard.org` / `Password123` (role: SCOUT)
 
 ### Password Hashing Notes
 
