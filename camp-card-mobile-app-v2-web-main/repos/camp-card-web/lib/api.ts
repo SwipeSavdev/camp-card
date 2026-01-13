@@ -1,6 +1,6 @@
 import { Session } from 'next-auth';
-import { mockUsers, mockCouncils, mockTroops, mockMerchants, mockOffers, mockCards } from './mockData';
 
+// API Base URL - must include /api/v1 suffix
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7010/api/v1';
 
 export class ApiError extends Error {
@@ -62,8 +62,8 @@ export const api = {
  content: result.content || result.users || result || []
  };
  } catch (error) {
- console.error('Failed to fetch users:', error);
- return mockUsers;
+ console.error('Failed to fetch users from API:', error);
+ return { content: [] };
  }
  },
 
@@ -84,13 +84,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to create user:', error);
- // Fallback: Create mock user
- const newUser = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newUser;
+ throw error;
  }
  },
 
@@ -102,8 +96,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to update user:', error);
- // Fallback: Return updated user
- return { id, ...data };
+ throw error;
  }
  },
 
@@ -114,8 +107,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to delete user:', error);
- // Fallback: Return success
- return { id, deleted: true };
+ throw error;
  }
  },
 
@@ -175,8 +167,8 @@ export const api = {
  content: result.content || result.organizations || result || []
  };
  } catch (error) {
- console.error('Failed to fetch organizations:', error);
- return mockCouncils;
+ console.error('Failed to fetch organizations from API:', error);
+ return { content: [] };
  }
  },
 
@@ -197,13 +189,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to create organization:', error);
- // Fallback: Create mock organization
- const newOrg = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newOrg;
+ throw error;
  }
  },
 
@@ -215,8 +201,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to update organization:', error);
- // Fallback: Return updated organization
- return { id, ...data };
+ throw error;
  }
  },
 
@@ -227,8 +212,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to delete organization:', error);
- // Fallback: Return success
- return { id, deleted: true };
+ throw error;
  }
  },
 
@@ -240,8 +224,8 @@ export const api = {
  content: result.content || result.troops || result || []
  };
  } catch (error) {
- console.error('Failed to fetch troops:', error);
- return mockTroops;
+ console.error('Failed to fetch troops from API:', error);
+ return { content: [] };
  }
  },
 
@@ -262,13 +246,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to create troop:', error);
- // Fallback: Create mock troop
- const newTroop = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newTroop;
+ throw error;
  }
  },
 
@@ -280,8 +258,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to update troop:', error);
- // Fallback: Return updated troop
- return { id, ...data };
+ throw error;
  }
  },
 
@@ -292,8 +269,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to delete troop:', error);
- // Fallback: Return success
- return { id, deleted: true };
+ throw error;
  }
  },
 
@@ -310,9 +286,8 @@ export const api = {
  content: merchants
  };
  } catch (error) {
- console.error('[API] Failed to fetch merchants, using mock data:', error);
- // Fall back to mock data if backend is unavailable
- return mockMerchants;
+ console.error('[API] Failed to fetch merchants from API:', error);
+ return { merchants: [], content: [] };
  }
  },
 
@@ -336,13 +311,7 @@ export const api = {
  return result;
  } catch (error) {
  console.error('[API] Failed to create merchant:', error);
- // Fallback: Create mock merchant
- const newMerchant = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newMerchant;
+ throw error;
  }
  },
 
@@ -357,8 +326,7 @@ export const api = {
  return result;
  } catch (error) {
  console.error('[API] Failed to update merchant:', error);
- // Fallback: Return updated merchant
- return { id, ...data };
+ throw error;
  }
  },
 
@@ -370,8 +338,7 @@ export const api = {
  return { success: true };
  } catch (error) {
  console.error('Failed to delete merchant:', error);
- // Fallback: Return success
- return { success: true, id, deleted: true };
+ throw error;
  }
  },
 
@@ -388,9 +355,8 @@ export const api = {
  content: offers
  };
  } catch (error) {
- console.error('[API] Failed to fetch offers, using mock data:', error);
- // Fall back to mock data if backend is unavailable
- return mockOffers;
+ console.error('[API] Failed to fetch offers from API:', error);
+ return { data: [], content: [] };
  }
  },
 
@@ -411,13 +377,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to create offer:', error);
- // Fallback: Create mock offer
- const newOffer = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newOffer;
+ throw error;
  }
  },
 
@@ -429,20 +389,19 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to update offer:', error);
- // Fallback: Return updated offer
- return { id, ...data };
+ throw error;
  }
  },
 
  deleteOffer: async (id: string, session?: Session | null) => {
  try {
- return await apiCall<any>(`/offers/${id}`, {
+ await apiCall<any>(`/offers/${id}`, {
  method: 'DELETE',
  }, session);
+ return { success: true };
  } catch (error) {
  console.error('Failed to delete offer:', error);
- // Fallback: Return success
- return { id, deleted: true };
+ throw error;
  }
  },
 
@@ -453,8 +412,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to activate offer:', error);
- // Fallback: Return activated offer
- return { id, activated: true };
+ throw error;
  }
  },
 
@@ -466,8 +424,8 @@ export const api = {
  content: result.content || result.cards || result || []
  };
  } catch (error) {
- console.error('Failed to fetch cards:', error);
- return mockCards;
+ console.error('Failed to fetch cards from API:', error);
+ return { content: [] };
  }
  },
 
@@ -488,13 +446,7 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to create card:', error);
- // Fallback: Create mock card
- const newCard = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newCard;
+ throw error;
  }
  },
 
@@ -506,20 +458,19 @@ export const api = {
  }, session);
  } catch (error) {
  console.error('Failed to update card:', error);
- // Fallback: Return updated card
- return { id, ...data };
+ throw error;
  }
  },
 
  deleteCard: async (id: string, session?: Session | null) => {
  try {
- return await apiCall<any>(`/camp-cards/${id}`, {
+ await apiCall<any>(`/camp-cards/${id}`, {
  method: 'DELETE',
  }, session);
+ return { success: true };
  } catch (error) {
  console.error('Failed to delete card:', error);
- // Fallback: Return success
- return { id, deleted: true };
+ throw error;
  }
  },
 

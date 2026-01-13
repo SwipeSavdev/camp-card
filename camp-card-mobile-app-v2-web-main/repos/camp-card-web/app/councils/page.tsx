@@ -3,8 +3,8 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import Image from 'next/image';
 import { api } from '@/lib/api';
+import PageLayout from '../components/PageLayout';
 
 const themeColors = {
  white: '#ffffff',
@@ -95,31 +95,7 @@ interface Council {
 export default function CouncilsPage() {
  const { data: session, status } = useSession();
  const router = useRouter();
- const [councils, setCouncils] = useState<Council[]>([
- {
- id: '1',
- name: 'Northern Council',
- location: 'North Region',
- troopUnits: [
- {
- id: '1-1',
- name: 'Troop A',
- leaderName: 'John Smith',
- troopLeaders: [
- { id: '1-1-1', name: 'Sarah Johnson', role: 'Senior Leader' },
- { id: '1-1-2', name: 'Mike Brown', role: 'Assistant Leader' },
- ],
- },
- { id: '1-2', name: 'Troop B', leaderName: 'Jane Doe', troopLeaders: [] },
- ],
- },
- {
- id: '2',
- name: 'Southern Council',
- location: 'South Region',
- troopUnits: [{ id: '2-1', name: 'Troop C', leaderName: 'Mike Johnson', troopLeaders: [] }],
- },
- ]);
+ const [councils, setCouncils] = useState<Council[]>([]);
 
  const [expandedCouncils, setExpandedCouncils] = useState<Set<string>>(new Set(['1']));
  const [expandedTroops, setExpandedTroops] = useState<Set<string>>(new Set());
@@ -283,17 +259,7 @@ export default function CouncilsPage() {
  setShowAddCouncil(false);
  } catch (error) {
  console.error('Failed to create council:', error);
- // Fallback to local-only creation
- const newCouncil: Council = {
- id: Date.now().toString(),
- name: newCouncilName,
- location: newCouncilLocation,
- troopUnits: [],
- };
- setCouncils([...councils, newCouncil]);
- setNewCouncilName('');
- setNewCouncilLocation('');
- setShowAddCouncil(false);
+ alert('Failed to create council. Please try again.');
  }
  }
  };
@@ -335,26 +301,8 @@ export default function CouncilsPage() {
  );
  } catch (error) {
  console.error('Failed to create troop:', error);
- // Fallback to local-only
- setCouncils(
- councils.map((council) => {
- if (council.id === councilId) {
- return {
- ...council,
- troopUnits: [
- ...council.troopUnits,
- {
- id: `${councilId}-${Date.now()}`,
- name: newTroopName,
- leaderName: newTroopLeader,
- troopLeaders: [],
- },
- ],
- };
- }
- return council;
- })
- );
+ alert('Failed to create troop. Please try again.');
+ return;
  }
  setNewTroopName('');
  setNewTroopLeader('');
@@ -463,19 +411,12 @@ export default function CouncilsPage() {
  };
 
  return (
- <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
- <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+ <PageLayout title="Councils & Troops" currentPath="/councils">
  {/* Header */}
- <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
+ <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.lg }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
- <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, padding: themeSpace.sm }}>
- <Icon name="back" size={24} />
- </button>
  <div>
- <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0, marginBottom: themeSpace.xs }}>Councils & Troops</h1>
  <p style={{ margin: 0, color: themeColors.gray600, fontSize: '13px' }}>Manage councils, troop units, and troop leaders</p>
- </div>
  </div>
  <div style={{ fontSize: '13px', color: themeColors.gray600 }}>
  Showing {startIndex + 1}-{Math.min(endIndex, filteredCouncils.length)} of {filteredCouncils.length} councils
@@ -590,8 +531,6 @@ export default function CouncilsPage() {
  </div>
  </div>
 
- {/* Content */}
- <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
  {/* Add Council Button */}
  <button
  onClick={() => setShowAddCouncil(!showAddCouncil)}
@@ -1208,9 +1147,7 @@ export default function CouncilsPage() {
  </button>
  </div>
  )}
- </div>
- </div>
- </div>
+ </PageLayout>
  );
 }
 
