@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import PageLayout from '../components/PageLayout';
 
 const themeColors = {
  white: '#ffffff',
@@ -228,10 +229,11 @@ export default function MerchantsPage() {
 
  try {
  const merchantData = {
- business_name: newMerchantName,
+ businessName: newMerchantName,
  category: newBusinessType,
- email: newEmail,
- phone_number: newPhone,
+ contactName: newContactName,
+ contactEmail: newEmail,
+ contactPhone: newPhone,
  description: newBusinessAddress,
  };
 
@@ -250,10 +252,10 @@ export default function MerchantsPage() {
  if (newMerchant) {
  const mappedMerchant = {
  id: newMerchant.id,
- name: newMerchant.business_name || newMerchantName,
- contactName: newContactName,
- email: newMerchant.email || newEmail,
- phone: newMerchant.phone_number || newPhone,
+ name: newMerchant.businessName || newMerchantName,
+ contactName: newMerchant.contactName || newContactName,
+ email: newMerchant.contactEmail || newEmail,
+ phone: newMerchant.contactPhone || newPhone,
  businessType: newMerchant.category || newBusinessType,
  isSingleLocation: newIsSingleLocation,
  locations: [],
@@ -316,25 +318,18 @@ export default function MerchantsPage() {
  if (status === 'loading') return null;
 
  return (
- <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
- <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
- <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
+ <PageLayout title="Merchants" currentPath="/merchants">
+ <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
- <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600 }}>
- <Icon name="back" size={20} />
- </button>
- <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Merchants</h1>
- </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
  <span style={{ fontSize: '13px', color: themeColors.gray600 }}>
  Showing {filteredItems.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length}
  </span>
+ </div>
  <button onClick={() => setShowAddForm(true)} style={{ background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
  <Icon name="add" size={18} color={themeColors.white} />
  Add Merchant
  </button>
- </div>
  </div>
 
  {/* Search and Filters */}
@@ -445,7 +440,6 @@ export default function MerchantsPage() {
  </div>
  </div>
 
- <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
  {error && <div style={{ backgroundColor: '#fee2e2', border: `1px solid ${themeColors.error500}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.error500 }}>{error}</div>}
 
  {loading ? (
@@ -633,7 +627,6 @@ export default function MerchantsPage() {
  )}
  </>
  )}
- </div>
 
  {showAddForm && (
  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, overflowY: 'auto', padding: `${themeSpace.xl} 0` }}>
@@ -958,7 +951,6 @@ export default function MerchantsPage() {
  </div>
  </div>
  )}
- </div>
- </div>
+ </PageLayout>
  );
 }

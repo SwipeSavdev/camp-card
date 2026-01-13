@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import PageLayout from '../components/PageLayout';
 
 const themeColors = {
  white: '#ffffff',
@@ -106,18 +107,11 @@ export default function SubscriptionsPage() {
  ];
 
  return (
- <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
- <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+ <PageLayout title="Subscriptions" currentPath="/subscriptions">
  {/* Header */}
- <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
+ <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md, marginBottom: themeSpace.lg }}>
- <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600 }}>
- <Icon name="back" size={20} />
- </button>
- <div>
- <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Subscriptions</h1>
- <p style={{ fontSize: '13px', color: themeColors.gray600, margin: `${themeSpace.xs} 0 0 0` }}>Subscription levels, terms, and performance metrics</p>
- </div>
+ <p style={{ fontSize: '13px', color: themeColors.gray600, margin: 0 }}>Subscription levels, terms, and performance metrics</p>
  </div>
 
  <select
@@ -308,7 +302,6 @@ export default function SubscriptionsPage() {
  </div>
  </div>
  </div>
- </div>
- </div>
+ </PageLayout>
  );
 }

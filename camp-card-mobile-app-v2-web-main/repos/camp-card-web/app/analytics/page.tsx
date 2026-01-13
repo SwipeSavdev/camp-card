@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import PageLayout from '../components/PageLayout';
 import {
   LineChart,
   Line,
@@ -484,15 +485,8 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md, marginBottom: themeSpace.lg }}>
-            <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600 }}>
-              <Icon name="back" size={20} />
-            </button>
-            <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Analytics Dashboard</h1>
-          </div>
+    <PageLayout title="Analytics Dashboard" currentPath="/analytics">
+        <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: themeSpace.lg }}>
             <p style={{ margin: 0, color: themeColors.gray600, fontSize: '14px' }}>Interactive charts and customizable metrics</p>
             <div style={{ display: 'flex', gap: themeSpace.md }}>
@@ -547,8 +541,7 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
-          {visibleWidgets.length === 0 ? (
+        {visibleWidgets.length === 0 ? (
             <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `2px dashed ${themeColors.gray200}`, padding: themeSpace.xl, textAlign: 'center' }}>
               <Icon name="chart" size={48} color={themeColors.gray200} />
               <p style={{ fontSize: '18px', fontWeight: '600', color: themeColors.text, marginTop: themeSpace.lg, marginBottom: themeSpace.sm }}>No widgets selected</p>
@@ -610,8 +603,6 @@ export default function AnalyticsPage() {
               })}
             </div>
           )}
-        </div>
-      </div>
 
       {detailsModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setDetailsModal(null)}>
@@ -679,6 +670,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }

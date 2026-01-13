@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import PageLayout from '../components/PageLayout';
 
 const themeColors = {
  white: '#ffffff',
@@ -120,21 +121,14 @@ export default function ConfigPage() {
  if (!session) return null;
 
  return (
- <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+ <PageLayout title="Mobile App Modules" currentPath="/config">
  {/* Header */}
- <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
- <button
- onClick={() => router.push('/dashboard')}
- style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, marginBottom: themeSpace.md, fontSize: '16px' }}
- >
- <Icon name="back" size={20} />
- </button>
- <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0, marginBottom: themeSpace.sm }}>Mobile App Modules</h1>
+ <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
  <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0 }}>Enable or disable features in the mobile application</p>
  </div>
 
  {/* Content */}
- <div style={{ padding: themeSpace.xl, maxWidth: '1200px', margin: '0 auto' }}>
+ <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
  {saved && (
  <div style={{ backgroundColor: themeColors.success50, border: `1px solid ${themeColors.success600}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.success600 }}>
  Modules configuration saved successfully!
@@ -227,6 +221,6 @@ export default function ConfigPage() {
  Save Modules Configuration
  </button>
  </div>
- </div>
+ </PageLayout>
  );
 }

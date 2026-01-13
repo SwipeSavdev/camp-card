@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import PageLayout from '../components/PageLayout';
 
 const themeColors = {
  white: '#ffffff',
@@ -86,19 +87,11 @@ export default function SettingsPage() {
  if (!session) return null;
 
  return (
- <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
- <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+ <PageLayout title="Settings" currentPath="/settings">
  {/* Header */}
- <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
- <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, marginBottom: themeSpace.md }}>
- <Icon name="back" size={20} />
- </button>
- <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Settings</h1>
- <p style={{ fontSize: '14px', color: themeColors.gray600, margin: '8px 0 0 0' }}>Manage your platform configuration and preferences</p>
+ <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
+ <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0 }}>Manage your platform configuration and preferences</p>
  </div>
-
- {/* Content */}
- <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
  {saved && (
  <div style={{ backgroundColor: themeColors.success50, border: `1px solid ${themeColors.success600}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.success600 }}>
  Settings saved successfully!
@@ -389,8 +382,6 @@ export default function SettingsPage() {
  )}
  </div>
  </div>
- </div>
- </div>
- </div>
+ </PageLayout>
  );
 }

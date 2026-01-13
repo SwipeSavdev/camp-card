@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Image from 'next/image';
 
 const themeColors = {
  white: '#ffffff',
@@ -170,6 +169,13 @@ const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?
  <path d="M12 4.5v15M8 8h8M8 12h8M10 16h4" />
  </svg>
  ),
+ menu: (
+ <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+ <line x1="3" y1="12" x2="21" y2="12" />
+ <line x1="3" y1="6" x2="21" y2="6" />
+ <line x1="3" y1="18" x2="21" y2="18" />
+ </svg>
+ ),
  };
  return icons[name] || null;
 };
@@ -188,35 +194,29 @@ export default function Dashboard() {
 
  return (
  <div style={{ display: 'flex', minHeight: '100vh' }}>
- {/* Sidebar */}
+ {/* Collapsible Sidebar */}
  <div
  style={{
- width: sidebarOpen ? '260px' : '80px',
+ width: sidebarOpen ? '260px' : '70px',
  backgroundColor: themeColors.primary900,
  color: themeColors.white,
  display: 'flex',
  flexDirection: 'column',
  transition: 'width 300ms ease',
  overflow: 'hidden',
+ flexShrink: 0,
  }}
  >
  {/* Logo */}
- <div style={{ padding: themeSpace.lg, display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
- <Image
- src="/assets/images/appicon_cropped.png"
- alt="Camp Card Logo"
- width={120}
- height={120}
- style={{
- borderRadius: themeRadius.sm,
- flexShrink: 0,
- }}
- />
- {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: '600' }}>Camp Card</span>}
+ <div style={{ padding: themeSpace.lg, display: 'flex', alignItems: 'center', gap: themeSpace.md, borderBottom: `1px solid ${themeColors.primary800}` }}>
+ <div style={{ width: '36px', height: '36px', backgroundColor: themeColors.primary600, borderRadius: themeRadius.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+ <span style={{ fontWeight: '700', fontSize: '16px' }}>CC</span>
+ </div>
+ {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>Camp Card</span>}
  </div>
 
  {/* Navigation */}
- <div style={{ flex: 1, overflow: 'auto', paddingTop: themeSpace.lg }}>
+ <div style={{ flex: 1, overflow: 'auto', paddingTop: themeSpace.md }}>
  {[
  { name: 'dashboard', label: 'Dashboard', href: '/dashboard' },
  { name: 'users', label: 'Users', href: '/users' },
@@ -228,9 +228,11 @@ export default function Dashboard() {
  { name: 'brain', label: 'AI Marketing', href: '/ai-marketing' },
  { name: 'creditCard', label: 'Subscriptions', href: '/subscriptions' },
  { name: 'settings', label: 'Settings', href: '/settings' }
- ].map((item, idx) => (
+ ].map((item) => {
+ const isActive = item.href === '/dashboard';
+ return (
  <div
- key={idx}
+ key={item.href}
  onClick={() => router.push(item.href)}
  style={{
  padding: `${themeSpace.md}`,
@@ -238,29 +240,26 @@ export default function Dashboard() {
  alignItems: 'center',
  gap: themeSpace.md,
  cursor: 'pointer',
- color: themeColors.primary100,
+ color: isActive ? themeColors.white : themeColors.primary100,
  fontSize: '14px',
  transition: 'all 200ms',
- borderLeft: idx === 0 ? `3px solid ${themeColors.primary300}` : '3px solid transparent',
- backgroundColor: idx === 0 ? themeColors.primary800 : 'transparent',
+ borderLeft: isActive ? `3px solid ${themeColors.primary300}` : '3px solid transparent',
+ backgroundColor: isActive ? themeColors.primary800 : 'transparent',
  }}
  onMouseEnter={(e) => {
- if (idx !== 0) {
- e.currentTarget.style.backgroundColor = themeColors.primary800;
- }
+ if (!isActive) e.currentTarget.style.backgroundColor = themeColors.primary800;
  }}
  onMouseLeave={(e) => {
- if (idx !== 0) {
- e.currentTarget.style.backgroundColor = 'transparent';
- }
+ if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
  }}
  >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px' }}>
  <Icon name={item.name} size={18} color="currentColor" />
  </div>
- {sidebarOpen && <span>{item.label}</span>}
+ {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
  </div>
- ))}
+ );
+ })}
  </div>
 
  {/* Bottom Navigation */}
@@ -268,10 +267,10 @@ export default function Dashboard() {
  {[
  { name: 'notifications', label: 'Notifications', href: '/notifications' },
  { name: 'health', label: 'Health', href: '/health' },
- { name: 'settings', label: 'Config', href: '/config' }
- ].map((item, idx) => (
+ { name: 'config', label: 'Config', href: '/config' }
+ ].map((item) => (
  <div
- key={idx}
+ key={item.href}
  onClick={() => router.push(item.href)}
  style={{
  padding: themeSpace.md,
@@ -281,21 +280,17 @@ export default function Dashboard() {
  cursor: 'pointer',
  color: themeColors.primary100,
  fontSize: '13px',
- marginBottom: themeSpace.sm,
+ marginBottom: themeSpace.xs,
  borderRadius: '4px',
  transition: 'all 200ms'
  }}
- onMouseEnter={(e) => {
- e.currentTarget.style.backgroundColor = themeColors.primary800;
- }}
- onMouseLeave={(e) => {
- e.currentTarget.style.backgroundColor = 'transparent';
- }}
+ onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColors.primary800; }}
+ onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
  >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px' }}>
  <Icon name={item.name} size={18} color="currentColor" />
  </div>
- {sidebarOpen && <span>{item.label}</span>}
+ {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
  </div>
  ))}
  <div
@@ -308,15 +303,15 @@ export default function Dashboard() {
  cursor: 'pointer',
  color: themeColors.primary100,
  fontSize: '13px',
- marginTop: themeSpace.lg,
+ marginTop: themeSpace.md,
  borderTop: `1px solid ${themeColors.primary800}`,
  paddingTop: themeSpace.lg,
  }}
  >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px' }}>
  <Icon name="logout" size={18} color="currentColor" />
  </div>
- {sidebarOpen && <span>Logout</span>}
+ {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>Logout</span>}
  </div>
  </div>
  </div>
@@ -335,20 +330,24 @@ export default function Dashboard() {
  boxShadow: themeShadow.xs,
  }}
  >
+ <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
  <button
  onClick={() => setSidebarOpen(!sidebarOpen)}
  style={{
  background: 'none',
  border: 'none',
- fontSize: '24px',
  cursor: 'pointer',
  color: themeColors.primary600,
  padding: themeSpace.sm,
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
  }}
  >
- 
+ <Icon name="menu" size={20} />
  </button>
  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: themeColors.text }}>Dashboard</h2>
+ </div>
  <div
  onClick={() => router.push('/profile')}
  style={{

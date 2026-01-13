@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import PageLayout from '../components/PageLayout';
 
 const themeColors = {
  white: '#ffffff',
@@ -137,19 +138,14 @@ export default function HealthPage() {
  const errorCount = health.filter(h => h.status === 'error').length;
 
  return (
- <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
- <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+ <PageLayout title="System Health" currentPath="/health">
  {/* Header */}
- <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
- <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, marginBottom: themeSpace.md }}>
- <Icon name="back" size={20} />
- </button>
- <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0, marginBottom: themeSpace.sm }}>System Health</h1>
+ <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
  <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0 }}>Monitor platform infrastructure and service status</p>
  </div>
 
  {/* Content */}
- <div style={{ padding: themeSpace.xl, maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+ <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
  {/* Summary Cards */}
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: themeSpace.lg, marginBottom: themeSpace.xl }}>
  <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, padding: themeSpace.lg, boxShadow: themeShadow.sm }}>
@@ -263,7 +259,6 @@ export default function HealthPage() {
  </div>
  </div>
  </div>
- </div>
- </div>
+ </PageLayout>
  );
 }

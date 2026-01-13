@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { api } from '@/lib/api';
+import PageLayout from '../components/PageLayout';
 import {
   AreaChart,
   Area,
@@ -486,24 +487,15 @@ export default function AIMarketingPage() {
   if (!session) return null;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <PageLayout title="AI Marketing" currentPath="/ai-marketing">
         {/* Header */}
-        <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
+        <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
-              <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600 }}>
-                <Icon name="back" size={20} />
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
-                <div style={{ padding: themeSpace.sm, backgroundColor: themeColors.purple50, borderRadius: themeRadius.md }}>
-                  <Icon name="brain" size={24} color={themeColors.purple600} />
-                </div>
-                <div>
-                  <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>AI Marketing</h1>
-                  <p style={{ fontSize: '13px', color: themeColors.gray500, margin: 0 }}>Automated customer engagement & behavioral targeting</p>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
+              <div style={{ padding: themeSpace.sm, backgroundColor: themeColors.purple50, borderRadius: themeRadius.md }}>
+                <Icon name="brain" size={24} color={themeColors.purple600} />
               </div>
+              <p style={{ fontSize: '13px', color: themeColors.gray500, margin: 0 }}>Automated customer engagement & behavioral targeting</p>
             </div>
             {activeTab === 'campaigns' && (
               <button
@@ -565,8 +557,6 @@ export default function AIMarketingPage() {
           </div>
         </div>
 
-        {/* Content */}
-        <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
           {/* Campaigns Tab */}
           {activeTab === 'campaigns' && (
             <div>
@@ -989,7 +979,6 @@ export default function AIMarketingPage() {
               </div>
             </div>
           )}
-        </div>
 
         {/* Create Campaign Modal */}
         {showCreateForm && (
@@ -1262,7 +1251,6 @@ export default function AIMarketingPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </PageLayout>
   );
 }
