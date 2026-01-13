@@ -188,14 +188,27 @@ export default function CouncilsPage() {
  const troopCouncilId = troop.councilId?.toString();
  return troopCouncilId === councilId || troop.council === council.name;
  })
- .map((troop: any) => ({
+ .map((troop: any) => {
+ // Find troop leaders assigned to this troop
+ const assignedLeaders = troopLeaders.filter(
+ (leader: any) => leader.troopId?.toString() === troop.id?.toString()
+ ).map((leader: any) => ({
+ id: `${troop.id}-${leader.id}`,
+ name: leader.name || `${leader.firstName} ${leader.lastName}`,
+ role: 'Senior Leader',
+ email: leader.email,
+ userId: leader.id,
+ }));
+
+ return {
  id: troop.id?.toString() || troop.uuid,
  name: troop.troopName || troop.name || `Troop ${troop.troopNumber}`,
  troopNumber: troop.troopNumber,
  leaderName: troop.charterOrganization || troop.scoutmasterName || 'Scout Leader',
  scouts: troop.totalScouts || 0,
- troopLeaders: [],
- })),
+ troopLeaders: assignedLeaders,
+ };
+ }),
  }));
 
  setCouncils(councilsArray);
@@ -310,11 +323,18 @@ export default function CouncilsPage() {
  }
  };
 
- const addTroopLeader = (councilId: string, troopId: string) => {
+ const addTroopLeader = async (councilId: string, troopId: string) => {
  if (!selectedTroopLeader) {
  console.warn('No troop leader selected');
  return;
  }
+
+ try {
+ // Assign the leader to the troop via API
+ await api.updateUser(selectedTroopLeader.id, {
+ ...selectedTroopLeader,
+ troopId: parseInt(troopId, 10) || troopId,
+ }, session);
 
  // Create assignment with existing leader
  const newLeaderAssignment = {
@@ -352,6 +372,10 @@ export default function CouncilsPage() {
  setShowAddLeader(null);
  setNewLeaderName('');
  setNewLeaderRole('');
+ } catch (error) {
+ console.error('Failed to assign leader to troop:', error);
+ alert('Failed to assign leader to troop. Please try again.');
+ }
  };
 
  const deleteCouncil = async (councilId: string) => {
