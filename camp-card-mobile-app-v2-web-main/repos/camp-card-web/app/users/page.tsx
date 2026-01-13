@@ -709,10 +709,6 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
  <span style={{ fontSize: '13px', color: themeColors.gray600, marginRight: themeSpace.sm }}>
  Showing {filteredItems.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length}
  </span>
- <button onClick={downloadTemplate} style={{ background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center' }} title="Download import template">
- <Icon name="file" size={16} color={themeColors.gray600} />
- Template
- </button>
  <button onClick={() => setShowImportModal(true)} style={{ background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center' }}>
  <Icon name="upload" size={16} color={themeColors.gray600} />
  Import
