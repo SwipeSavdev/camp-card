@@ -27,7 +27,7 @@ const handler = NextAuth({
               email: credentials.email,
               password: credentials.password,
             }),
-            signal: AbortSignal.timeout(10000), // 10 second timeout
+            signal: AbortSignal.timeout(30000), // 30 second timeout
           });
 
           console.log('Auth response status:', response.status);
