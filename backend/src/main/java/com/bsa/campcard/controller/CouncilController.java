@@ -39,7 +39,7 @@ public class CouncilController {
     // ========================================================================
 
     @PostMapping({"/api/v1/councils", "/api/v1/organizations"})
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilResponse> createCouncil(@Valid @RequestBody CouncilRequest request) {
         log.info("POST /councils - Creating council: {}", request.getName());
         CouncilResponse council = councilService.createCouncil(request);
@@ -123,7 +123,7 @@ public class CouncilController {
     // ========================================================================
 
     @PutMapping({"/api/v1/councils/{id}", "/api/v1/organizations/{id}"})
-    @PreAuthorize("hasAnyRole('ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilResponse> updateCouncil(
             @PathVariable Long id,
             @Valid @RequestBody CouncilRequest request) {
@@ -133,7 +133,7 @@ public class CouncilController {
     }
 
     @PatchMapping({"/api/v1/councils/{id}/status", "/api/v1/organizations/{id}/status"})
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
     public ResponseEntity<CouncilResponse> updateCouncilStatus(
             @PathVariable Long id,
             @RequestParam String status) {
@@ -147,7 +147,7 @@ public class CouncilController {
     // ========================================================================
 
     @DeleteMapping({"/api/v1/councils/{id}", "/api/v1/organizations/{id}"})
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
     public ResponseEntity<Void> deleteCouncil(@PathVariable Long id) {
         log.info("DELETE /councils/{}", id);
         councilService.deleteCouncil(id);
@@ -159,7 +159,7 @@ public class CouncilController {
     // ========================================================================
 
     @GetMapping({"/api/v1/councils/stats", "/api/v1/organizations/stats"})
-    @PreAuthorize("hasAnyRole('ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilStatsResponse> getCouncilStats() {
         log.info("GET /councils/stats");
         CouncilStatsResponse stats = councilService.getStats();
@@ -167,7 +167,7 @@ public class CouncilController {
     }
 
     @PostMapping("/api/v1/councils/{id}/update-stats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilResponse> updateCouncilStats(@PathVariable Long id) {
         log.info("POST /councils/{}/update-stats", id);
         CouncilResponse council = councilService.updateCouncilStats(id);
