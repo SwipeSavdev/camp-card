@@ -343,7 +343,7 @@ export default function LoginPage() {
  letterSpacing: '0.5px',
  }}
  >
- test@example.com
+ admin@campcard.org
  </p>
  </div>
  <div>
@@ -366,7 +366,7 @@ export default function LoginPage() {
  letterSpacing: '0.5px',
  }}
  >
- password123
+ Test1234
  </p>
  </div>
  </div>
