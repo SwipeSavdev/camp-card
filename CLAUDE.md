@@ -212,12 +212,14 @@ sudo docker build -t campcard-backend:latest .
 sudo docker stop campcard-backend && sudo docker rm campcard-backend
 sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010 \
   -e SPRING_PROFILES_ACTIVE=aws \
-  -e DB_HOST=database-3.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
+  -e DB_HOST=camp-card-db.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
   -e DB_PORT=5432 -e DB_NAME=campcard \
-  -e DB_USERNAME=campcard_app -e DB_PASSWORD=<password> \
-  -e JWT_SECRET='<jwt-secret>' \
+  -e DB_USERNAME=campcard_app -e DB_PASSWORD=CampCardApp2024Secure \
+  -e JWT_SECRET='bsa-camp-card-super-secret-jwt-key-2025-that-is-very-long-and-secure' \
   -e JWT_EXPIRATION=86400000 \
   -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
+  -e REDIS_PASSWORD=campcard123 \
+  -e REDIS_SSL=false \
   --network campcard_campcard-network campcard-backend:latest
 
 # Frontend deployment
@@ -307,10 +309,10 @@ The backend container requires specific environment variables for Redis:
 ```bash
 sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010 \
   -e SPRING_PROFILES_ACTIVE=aws \
-  -e DB_HOST=database-3.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
+  -e DB_HOST=camp-card-db.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
   -e DB_PORT=5432 -e DB_NAME=campcard \
-  -e DB_USERNAME=campcard_app -e DB_PASSWORD=<db-password> \
-  -e JWT_SECRET='<jwt-secret>' \
+  -e DB_USERNAME=campcard_app -e DB_PASSWORD=CampCardApp2024Secure \
+  -e JWT_SECRET='bsa-camp-card-super-secret-jwt-key-2025-that-is-very-long-and-secure' \
   -e JWT_EXPIRATION=86400000 \
   -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
   -e REDIS_PASSWORD=campcard123 \
@@ -319,6 +321,15 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
 ```
 
 **Important**: `REDIS_SSL=false` is required because the local Redis container on EC2 doesn't use TLS (the AWS profile defaults to SSL enabled).
+
+### RDS Database Details (Updated January 2026)
+
+- **Endpoint**: `camp-card-db.cn00u2kgkr3j.us-east-2.rds.amazonaws.com`
+- **Port**: `5432`
+- **Database**: `campcard`
+- **Schema**: `campcard`
+- **App User**: `campcard_app` / `CampCardApp2024Secure`
+- **Master User**: `postgres` (password in AWS)
 
 ### Test Credentials
 
