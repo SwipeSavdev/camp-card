@@ -273,7 +273,7 @@ export default function CouncilsPage() {
  troopName: newTroopName,
  councilId: parseInt(councilId, 10) || councilId,
  charterOrganization: newTroopLeader,
- troopType: 'BOY_TROOP',
+ troopType: 'SCOUTS_BSA',
  status: 'ACTIVE'
  };
 
