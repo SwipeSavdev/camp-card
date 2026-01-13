@@ -359,7 +359,7 @@ export default function CouncilsPage() {
  return {
  ...council,
  troopUnits: council.troopUnits.map((troop) => {
- if (troop.id === troopId) {
+ if (troop.uuid === troopId || troop.id === troopId) {
  return {
  ...troop,
  troopLeaders: [...troop.troopLeaders, newLeaderAssignment],
