@@ -37,7 +37,7 @@ public class QRCodeController {
     }
 
     @GetMapping("/users/{userId}/qr-code")
-    @PreAuthorize("hasAnyRole('COUNCIL_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('COUNCIL_ADMIN', 'NATIONAL_ADMIN')")
     @Operation(summary = "Get user's QR code by ID", description = "Admin endpoint to retrieve any user's QR code")
     public ResponseEntity<QRCodeResponse> getUserQRCode(@PathVariable UUID userId) {
         log.info("Generating QR code for user: {}", userId);

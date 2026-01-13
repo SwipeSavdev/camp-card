@@ -47,7 +47,7 @@ public class NotificationController {
     }
     
     @PostMapping("/send")
-    @PreAuthorize("hasAnyRole('COUNCIL_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('COUNCIL_ADMIN', 'NATIONAL_ADMIN')")
     @Operation(summary = "Send notification", description = "Send push notification to specific users")
     public ResponseEntity<Void> sendNotification(@Valid @RequestBody NotificationRequest request) {
         log.info("Sending notification to {} users", request.getUserIds().size());

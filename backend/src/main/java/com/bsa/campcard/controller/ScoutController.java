@@ -99,7 +99,7 @@ public class ScoutController {
     }
     
     @PostMapping("/{id}/record-sale")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTMASTER', 'SCOUT')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER', 'SCOUT')")
     public ResponseEntity<Void> recordSale(
             @PathVariable Long id,
             @RequestParam BigDecimal amount,
@@ -109,7 +109,7 @@ public class ScoutController {
     }
     
     @PatchMapping("/{id}/rank")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTMASTER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
     public ResponseEntity<Void> updateScoutRank(
             @PathVariable Long id,
             @RequestParam String rank) {
@@ -118,7 +118,7 @@ public class ScoutController {
     }
     
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SCOUTMASTER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
     public ResponseEntity<Void> updateScoutStatus(
             @PathVariable Long id,
             @RequestParam String status) {
@@ -127,7 +127,7 @@ public class ScoutController {
     }
     
     @PostMapping("/{id}/transfer")
-    @PreAuthorize("hasAnyRole('ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<Void> transferScout(
             @PathVariable Long id,
             @RequestParam Long newTroopId) {
@@ -136,14 +136,14 @@ public class ScoutController {
     }
     
     @PostMapping("/mark-top-sellers")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
     public ResponseEntity<Void> markTopSellers(@RequestParam int topCount) {
         scoutService.markTopSellers(topCount);
         return ResponseEntity.ok().build();
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<Void> deleteScout(@PathVariable Long id) {
         scoutService.deleteScout(id);
         return ResponseEntity.ok().build();

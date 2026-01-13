@@ -36,7 +36,7 @@ public class PaymentController {
     }
     
     @PostMapping("/refund")
-    @PreAuthorize("hasAnyRole('MERCHANT', 'COUNCIL_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     @Operation(summary = "Process a refund", description = "Refund a previous transaction")
     public ResponseEntity<PaymentResponse> refund(@Valid @RequestBody RefundRequest request) {
         log.info("Received refund request for transaction: {}", request.getTransactionId());

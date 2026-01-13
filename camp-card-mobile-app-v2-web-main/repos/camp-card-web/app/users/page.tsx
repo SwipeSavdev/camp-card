@@ -81,7 +81,7 @@ const bottomNavItems = [
  { name: 'config', label: 'Config', href: '/config' },
 ];
 
-type UserRole = 'super_admin' | 'system_admin' | 'admin' | 'council' | 'troop_leader' | 'scout' | 'customer' | 'national_admin' | 'council_admin';
+type UserRole = 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'TROOP_LEADER' | 'PARENT' | 'SCOUT';
 
 interface User {
  id: string;
@@ -102,7 +102,7 @@ export default function UsersPage() {
  const [newUserName, setNewUserName] = useState('');
  const [newUserEmail, setNewUserEmail] = useState('');
  const [newUserStatus, setNewUserStatus] = useState<'active' | 'inactive'>('active');
- const [newUserRole, setNewUserRole] = useState<UserRole>('scout');
+ const [newUserRole, setNewUserRole] = useState<UserRole>('SCOUT');
  const [troopLeaderSearchTerm, setTroopLeaderSearchTerm] = useState('');
  const [showAddTroopLeaderForm, setShowAddTroopLeaderForm] = useState(false);
  const [newTroopLeaderName, setNewTroopLeaderName] = useState('');
@@ -114,7 +114,7 @@ export default function UsersPage() {
  const [editUserName, setEditUserName] = useState('');
  const [editUserEmail, setEditUserEmail] = useState('');
  const [editUserStatus, setEditUserStatus] = useState<'active' | 'inactive'>('active');
- const [editUserRole, setEditUserRole] = useState<UserRole>('scout');
+ const [editUserRole, setEditUserRole] = useState<UserRole>('SCOUT');
 
  // Filter state
  const [roleFilter, setRoleFilter] = useState('');
@@ -128,15 +128,11 @@ export default function UsersPage() {
  const [sidebarOpen, setSidebarOpen] = useState(true);
 
  const roleOptions = [
- { value: 'national_admin', label: 'National Admin' },
- { value: 'council_admin', label: 'Council Admin' },
- { value: 'super_admin', label: 'Super Admin' },
- { value: 'system_admin', label: 'System Admin' },
- { value: 'admin', label: 'Admin' },
- { value: 'council', label: 'Council' },
- { value: 'troop_leader', label: 'Troop Leader' },
- { value: 'scout', label: 'Scout' },
- { value: 'customer', label: 'Customer' },
+ { value: 'NATIONAL_ADMIN', label: 'National Admin' },
+ { value: 'COUNCIL_ADMIN', label: 'Council Admin' },
+ { value: 'TROOP_LEADER', label: 'Troop Leader' },
+ { value: 'PARENT', label: 'Parent' },
+ { value: 'SCOUT', label: 'Scout' },
  ];
 
  useEffect(() => {
@@ -156,7 +152,7 @@ export default function UsersPage() {
  name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
  email: u.email,
  status: u.status || (u.isActive === false ? 'inactive' : 'active'),
- role: u.role ? u.role.toLowerCase() : 'scout',
+ role: u.role || 'SCOUT',
  }));
  setItems(mappedUsers);
  } catch (err) {
@@ -183,7 +179,7 @@ export default function UsersPage() {
  setEditUserName(user.name || '');
  setEditUserEmail(user.email || '');
  setEditUserStatus(user.status || 'active');
- setEditUserRole(user.role || 'scout');
+ setEditUserRole(user.role || 'SCOUT');
  setShowEditForm(true);
  };
 
@@ -203,7 +199,7 @@ export default function UsersPage() {
  firstName,
  lastName,
  isActive: editUserStatus === 'active',
- role: editUserRole.toUpperCase(),
+ role: editUserRole,
  };
 
  console.log('[PAGE] Updating user:', editingUser.id, updateData);
@@ -258,7 +254,7 @@ export default function UsersPage() {
  email: newUserEmail,
  password: tempPassword,
  isActive: newUserStatus === 'active',
- role: newUserRole.toUpperCase(),
+ role: newUserRole,
  };
 
  console.log('[PAGE] Submitting user data:', userData);

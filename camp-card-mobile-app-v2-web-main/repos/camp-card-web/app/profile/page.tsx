@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
+import { api } from '@/lib/api';
 
 const themeColors = {
  white: '#ffffff',
@@ -97,10 +98,36 @@ export default function ProfilePage() {
  }
  };
 
- const handleSave = () => {
- setSaved(true);
- setIsEditing(false);
- setTimeout(() => setSaved(false), 3000);
+ const handleSave = async () => {
+ try {
+   const userId = (session?.user as any)?.id;
+   if (!userId) {
+     console.error('No user ID found in session');
+     return;
+   }
+
+   // Split name into firstName and lastName
+   const nameParts = profile.name.trim().split(' ');
+   const firstName = nameParts[0];
+   const lastName = nameParts.slice(1).join(' ') || '';
+
+   const updateData = {
+     firstName,
+     lastName,
+     phoneNumber: profile.phone,
+   };
+
+   console.log('[PROFILE] Saving profile update:', updateData);
+   await api.updateUser(userId, updateData, session);
+   console.log('[PROFILE] Profile updated successfully');
+
+   setSaved(true);
+   setIsEditing(false);
+   setTimeout(() => setSaved(false), 3000);
+ } catch (error) {
+   console.error('[PROFILE] Failed to save profile:', error);
+   alert('Failed to save profile. Please try again.');
+ }
  };
 
  const handleLogout = () => {
