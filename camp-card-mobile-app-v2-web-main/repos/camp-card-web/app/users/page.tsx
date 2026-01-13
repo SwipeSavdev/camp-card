@@ -405,46 +405,182 @@ export default function UsersPage() {
    document.body.removeChild(link);
  };
 
- // Download CSV template with instructions
+ // Download Excel template with two sheets (Instructions + Data)
  const downloadTemplate = () => {
-   const instructions = [
-     '# USER IMPORT TEMPLATE - INSTRUCTIONS',
-     '# =====================================',
-     '# 1. Delete these instruction lines (lines starting with #) before importing',
-     '# 2. Keep the header row (Name,Email,Role,Status)',
-     '# 3. Fill in user data starting from row 2',
-     '# ',
-     '# FIELD REQUIREMENTS:',
-     '# - Name: Full name (First Last). Required.',
-     '# - Email: Valid email address. Required. Must be unique.',
-     '# - Role: Must be one of: NATIONAL_ADMIN, COUNCIL_ADMIN, TROOP_LEADER, PARENT, SCOUT',
-     '# - Status: Must be either: active or inactive',
-     '# ',
-     '# EXAMPLE DATA (delete these example rows before importing):',
-     '# John Smith,john.smith@example.com,TROOP_LEADER,active',
-     '# Jane Doe,jane.doe@example.com,PARENT,active',
-     '# ',
-     '# NOTES:',
-     '# - A temporary password will be generated for each new user',
-     '# - Users will need to reset their password on first login',
-     '# - Duplicate emails will be skipped during import',
-     '#',
-   ].join('\n');
+   // Create Excel XML (SpreadsheetML format - works without external libraries)
+   const excelContent = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Header">
+   <Font ss:Bold="1" ss:Size="12"/>
+   <Interior ss:Color="#4472C4" ss:Pattern="Solid"/>
+   <Font ss:Color="#FFFFFF" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="SectionHeader">
+   <Font ss:Bold="1" ss:Size="11" ss:Color="#1F4E79"/>
+  </Style>
+  <Style ss:ID="Bold">
+   <Font ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="Code">
+   <Font ss:FontName="Consolas" ss:Size="10"/>
+   <Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="DataHeader">
+   <Font ss:Bold="1" ss:Size="11"/>
+   <Interior ss:Color="#4472C4" ss:Pattern="Solid"/>
+   <Font ss:Color="#FFFFFF" ss:Bold="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="Example">
+   <Font ss:Color="#666666" ss:Italic="1"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Instructions">
+  <Table ss:DefaultColumnWidth="150">
+   <Column ss:Width="600"/>
+   <Row>
+    <Cell ss:StyleID="SectionHeader"><Data ss:Type="String">USER IMPORT TEMPLATE - INSTRUCTIONS</Data></Cell>
+   </Row>
+   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+   <Row>
+    <Cell ss:StyleID="Bold"><Data ss:Type="String">HOW TO USE THIS TEMPLATE:</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">1. Go to the "Import Data" sheet (tab at bottom)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">2. Fill in user information starting from row 2 (below the headers)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">3. Save the file as CSV format (File → Save As → CSV)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">4. Upload the CSV file using the Import button in the Users page</Data></Cell>
+   </Row>
+   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+   <Row>
+    <Cell ss:StyleID="Bold"><Data ss:Type="String">FIELD REQUIREMENTS:</Data></Cell>
+   </Row>
+   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+   <Row>
+    <Cell ss:StyleID="Bold"><Data ss:Type="String">Name (Required)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Full name of the user (First Last)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Example: John Smith</Data></Cell>
+   </Row>
+   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+   <Row>
+    <Cell ss:StyleID="Bold"><Data ss:Type="String">Email (Required)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Valid email address</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Must be unique (no duplicates)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Example: john.smith@example.com</Data></Cell>
+   </Row>
+   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+   <Row>
+    <Cell ss:StyleID="Bold"><Data ss:Type="String">Role (Required)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Must be one of the following exact values:</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="Code"><Data ss:Type="String">     NATIONAL_ADMIN</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="Code"><Data ss:Type="String">     COUNCIL_ADMIN</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="Code"><Data ss:Type="String">     TROOP_LEADER</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="Code"><Data ss:Type="String">     PARENT</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="Code"><Data ss:Type="String">     SCOUT</Data></Cell>
+   </Row>
+   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+   <Row>
+    <Cell ss:StyleID="Bold"><Data ss:Type="String">Status (Required)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Must be one of:</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="Code"><Data ss:Type="String">     active</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="Code"><Data ss:Type="String">     inactive</Data></Cell>
+   </Row>
+   <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+   <Row>
+    <Cell ss:StyleID="Bold"><Data ss:Type="String">IMPORTANT NOTES:</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • A temporary password will be generated for each new user</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Users will need to reset their password on first login</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Duplicate emails will be skipped during import</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">   • Delete the example rows before importing your data</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+ <Worksheet ss:Name="Import Data">
+  <Table ss:DefaultColumnWidth="150">
+   <Column ss:Width="180"/>
+   <Column ss:Width="250"/>
+   <Column ss:Width="150"/>
+   <Column ss:Width="100"/>
+   <Row>
+    <Cell ss:StyleID="DataHeader"><Data ss:Type="String">Name</Data></Cell>
+    <Cell ss:StyleID="DataHeader"><Data ss:Type="String">Email</Data></Cell>
+    <Cell ss:StyleID="DataHeader"><Data ss:Type="String">Role</Data></Cell>
+    <Cell ss:StyleID="DataHeader"><Data ss:Type="String">Status</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Example">
+    <Cell><Data ss:Type="String">John Smith</Data></Cell>
+    <Cell><Data ss:Type="String">john.smith@example.com</Data></Cell>
+    <Cell><Data ss:Type="String">TROOP_LEADER</Data></Cell>
+    <Cell><Data ss:Type="String">active</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Example">
+    <Cell><Data ss:Type="String">Jane Doe</Data></Cell>
+    <Cell><Data ss:Type="String">jane.doe@example.com</Data></Cell>
+    <Cell><Data ss:Type="String">PARENT</Data></Cell>
+    <Cell><Data ss:Type="String">active</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Example">
+    <Cell><Data ss:Type="String">Bob Johnson</Data></Cell>
+    <Cell><Data ss:Type="String">bob.johnson@example.com</Data></Cell>
+    <Cell><Data ss:Type="String">SCOUT</Data></Cell>
+    <Cell><Data ss:Type="String">active</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>`;
 
-   const headers = 'Name,Email,Role,Status';
-   const exampleData = [
-     'John Smith,john.smith@example.com,TROOP_LEADER,active',
-     'Jane Doe,jane.doe@example.com,PARENT,active',
-     'Bob Johnson,bob.johnson@example.com,SCOUT,active',
-   ].join('\n');
-
-   const csvContent = `${instructions}\n${headers}\n${exampleData}`;
-
-   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+   const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
    const link = document.createElement('a');
    const url = URL.createObjectURL(blob);
    link.setAttribute('href', url);
-   link.setAttribute('download', 'user_import_template.csv');
+   link.setAttribute('download', 'user_import_template.xls');
    link.style.visibility = 'hidden';
    document.body.appendChild(link);
    link.click();
@@ -1307,11 +1443,12 @@ export default function UsersPage() {
  {/* Instructions */}
  <div style={{ backgroundColor: themeColors.info50, border: `1px solid ${themeColors.info600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.lg }}>
  <p style={{ margin: 0, fontSize: '13px', color: themeColors.gray600, lineHeight: '1.5' }}>
- <strong>Instructions:</strong> Upload a CSV file with columns: Name, Email, Role, Status.<br />
- Valid roles: NATIONAL_ADMIN, COUNCIL_ADMIN, TROOP_LEADER, PARENT, SCOUT<br />
- Valid status values: active, inactive<br />
+ <strong>Instructions:</strong><br />
+ 1. Download the Excel template (has Instructions and Import Data tabs)<br />
+ 2. Fill in user data in the "Import Data" sheet<br />
+ 3. Save as CSV and upload here<br />
  <button onClick={downloadTemplate} style={{ background: 'none', border: 'none', color: themeColors.primary600, cursor: 'pointer', padding: 0, fontSize: '13px', textDecoration: 'underline', marginTop: themeSpace.xs }}>
- Download template with instructions
+ Download Excel template
  </button>
  </p>
  </div>
