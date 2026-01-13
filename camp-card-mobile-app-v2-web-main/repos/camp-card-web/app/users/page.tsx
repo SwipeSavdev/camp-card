@@ -310,7 +310,7 @@ export default function UsersPage() {
  setCurrentPage(1);
  }, [searchTerm, roleFilter, statusFilter, itemsPerPage]);
 
- const troopLeaders = (Array.isArray(items) ? items : []).filter(item => item.role === 'troop_leader');
+ const troopLeaders = (Array.isArray(items) ? items : []).filter(item => item.role === 'TROOP_LEADER');
 
  const filteredTroopLeaders = troopLeaders.filter(leader =>
  leader.name?.toLowerCase().includes(troopLeaderSearchTerm.toLowerCase()) ||
@@ -350,7 +350,7 @@ export default function UsersPage() {
  id: newTroopLeader.id || String(Math.floor(Math.random() * 10000)),
  name: `${newTroopLeader.firstName || firstName} ${newTroopLeader.lastName || lastName}`.trim(),
  email: newTroopLeader.email || newTroopLeaderEmail,
- role: 'troop_leader' as UserRole,
+ role: 'TROOP_LEADER' as UserRole,
  status: 'active' as 'active' | 'inactive',
  };
  setItems([...items, leader]);
