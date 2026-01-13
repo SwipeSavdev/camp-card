@@ -148,9 +148,11 @@ export default function UsersPage() {
  ];
 
  useEffect(() => {
- // Load data on mount, don't redirect if unauthenticated
+ // Wait for session to be authenticated before loading data
+ if (status === 'authenticated' && session) {
  fetchData();
- }, []);
+ }
+ }, [status, session]);
 
  const fetchData = async () => {
  try {
@@ -583,8 +585,17 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
    }
  };
 
- if (status === 'loading') return null;
- if (!session) return null;
+ if (status === 'loading' || !session) {
+ return (
+ <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50, alignItems: 'center', justifyContent: 'center' }}>
+ <div style={{ textAlign: 'center' }}>
+ <div style={{ width: '40px', height: '40px', border: `3px solid ${themeColors.gray200}`, borderTopColor: themeColors.primary600, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+ <p style={{ color: themeColors.gray600, fontSize: '14px' }}>Loading...</p>
+ <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+ </div>
+ </div>
+ );
+ }
 
  return (
  <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
