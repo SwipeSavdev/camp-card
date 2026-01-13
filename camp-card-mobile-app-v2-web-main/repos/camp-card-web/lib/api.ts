@@ -26,8 +26,13 @@ async function apiCall<T>(
  Object.assign(headers, options.headers as Record<string, string>);
  }
 
- if (session?.user && 'accessToken' in session.user) {
- headers.Authorization = `Bearer ${(session.user as any).accessToken}`;
+ // Get accessToken from session - check multiple possible locations
+ const accessToken = (session?.user as any)?.accessToken || (session as any)?.accessToken;
+ if (accessToken) {
+ headers.Authorization = `Bearer ${accessToken}`;
+ console.log('[API] Using access token for request to:', endpoint);
+ } else {
+ console.log('[API] No access token found in session for:', endpoint, 'Session keys:', session ? Object.keys(session) : 'null');
  }
 
  try {
