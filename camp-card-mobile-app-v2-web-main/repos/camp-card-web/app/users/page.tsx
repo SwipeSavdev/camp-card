@@ -225,7 +225,7 @@ export default function UsersPage() {
  setEditUserName('');
  setEditUserEmail('');
  setEditUserStatus('active');
- setEditUserRole('scout');
+ setEditUserRole('SCOUT');
  setError(null);
  } catch (err) {
  setError('Failed to update user: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -279,7 +279,7 @@ export default function UsersPage() {
  setNewUserName('');
  setNewUserEmail('');
  setNewUserStatus('active');
- setNewUserRole('scout');
+ setNewUserRole('SCOUT');
  setShowAddForm(false);
  setError(null);
  } catch (err) {
@@ -867,7 +867,7 @@ export default function UsersPage() {
  setNewUserName('');
  setNewUserEmail('');
  setNewUserStatus('active');
- setNewUserRole('scout');
+ setNewUserRole('SCOUT');
  setError(null);
  }}
  style={{
@@ -1003,7 +1003,7 @@ export default function UsersPage() {
  setEditUserName('');
  setEditUserEmail('');
  setEditUserStatus('active');
- setEditUserRole('scout');
+ setEditUserRole('SCOUT');
  setError(null);
  }}
  style={{
