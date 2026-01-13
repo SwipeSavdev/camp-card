@@ -37,6 +37,10 @@ const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rg
 const Icon = ({ name, size = 18, color = 'currentColor', ...props }: { name: string; size?: number; color?: string; [key: string]: any }) => {
  const icons: { [key: string]: JSX.Element } = {
  add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
+ download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
+ upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
+ file: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>,
+ x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
  edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
  delete: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>,
  search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>,
@@ -126,6 +130,14 @@ export default function UsersPage() {
 
  // Sidebar state
  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+ // Import/Export state
+ const [showImportModal, setShowImportModal] = useState(false);
+ const [importFile, setImportFile] = useState<File | null>(null);
+ const [importPreview, setImportPreview] = useState<any[]>([]);
+ const [importing, setImporting] = useState(false);
+ const [importErrors, setImportErrors] = useState<string[]>([]);
+ const [importSuccess, setImportSuccess] = useState<number>(0);
 
  const roleOptions = [
  { value: 'NATIONAL_ADMIN', label: 'National Admin' },
@@ -369,6 +381,236 @@ export default function UsersPage() {
  }
  };
 
+ // Export users to CSV
+ const exportUsers = () => {
+   const headers = ['Name', 'Email', 'Role', 'Status'];
+   const csvContent = [
+     headers.join(','),
+     ...items.map(user => [
+       `"${user.name.replace(/"/g, '""')}"`,
+       `"${user.email.replace(/"/g, '""')}"`,
+       user.role,
+       user.status
+     ].join(','))
+   ].join('\n');
+
+   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+   const link = document.createElement('a');
+   const url = URL.createObjectURL(blob);
+   link.setAttribute('href', url);
+   link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+   link.style.visibility = 'hidden';
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+ };
+
+ // Download CSV template with instructions
+ const downloadTemplate = () => {
+   const instructions = [
+     '# USER IMPORT TEMPLATE - INSTRUCTIONS',
+     '# =====================================',
+     '# 1. Delete these instruction lines (lines starting with #) before importing',
+     '# 2. Keep the header row (Name,Email,Role,Status)',
+     '# 3. Fill in user data starting from row 2',
+     '# ',
+     '# FIELD REQUIREMENTS:',
+     '# - Name: Full name (First Last). Required.',
+     '# - Email: Valid email address. Required. Must be unique.',
+     '# - Role: Must be one of: NATIONAL_ADMIN, COUNCIL_ADMIN, TROOP_LEADER, PARENT, SCOUT',
+     '# - Status: Must be either: active or inactive',
+     '# ',
+     '# EXAMPLE DATA (delete these example rows before importing):',
+     '# John Smith,john.smith@example.com,TROOP_LEADER,active',
+     '# Jane Doe,jane.doe@example.com,PARENT,active',
+     '# ',
+     '# NOTES:',
+     '# - A temporary password will be generated for each new user',
+     '# - Users will need to reset their password on first login',
+     '# - Duplicate emails will be skipped during import',
+     '#',
+   ].join('\n');
+
+   const headers = 'Name,Email,Role,Status';
+   const exampleData = [
+     'John Smith,john.smith@example.com,TROOP_LEADER,active',
+     'Jane Doe,jane.doe@example.com,PARENT,active',
+     'Bob Johnson,bob.johnson@example.com,SCOUT,active',
+   ].join('\n');
+
+   const csvContent = `${instructions}\n${headers}\n${exampleData}`;
+
+   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+   const link = document.createElement('a');
+   const url = URL.createObjectURL(blob);
+   link.setAttribute('href', url);
+   link.setAttribute('download', 'user_import_template.csv');
+   link.style.visibility = 'hidden';
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+ };
+
+ // Handle file selection for import
+ const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const file = e.target.files?.[0];
+   if (!file) return;
+
+   setImportFile(file);
+   setImportErrors([]);
+   setImportSuccess(0);
+
+   const reader = new FileReader();
+   reader.onload = (event) => {
+     const text = event.target?.result as string;
+     const lines = text.split('\n')
+       .filter(line => line.trim() && !line.trim().startsWith('#')); // Skip empty lines and comments
+
+     if (lines.length < 2) {
+       setImportErrors(['File must contain a header row and at least one data row']);
+       setImportPreview([]);
+       return;
+     }
+
+     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+     const requiredHeaders = ['name', 'email', 'role', 'status'];
+     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+
+     if (missingHeaders.length > 0) {
+       setImportErrors([`Missing required columns: ${missingHeaders.join(', ')}`]);
+       setImportPreview([]);
+       return;
+     }
+
+     const nameIdx = headers.indexOf('name');
+     const emailIdx = headers.indexOf('email');
+     const roleIdx = headers.indexOf('role');
+     const statusIdx = headers.indexOf('status');
+
+     const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER', 'PARENT', 'SCOUT'];
+     const validStatuses = ['active', 'inactive'];
+     const preview: any[] = [];
+     const errors: string[] = [];
+
+     for (let i = 1; i < lines.length; i++) {
+       const line = lines[i].trim();
+       if (!line) continue;
+
+       // Parse CSV line (handle quoted values)
+       const values: string[] = [];
+       let current = '';
+       let inQuotes = false;
+       for (const char of line) {
+         if (char === '"') {
+           inQuotes = !inQuotes;
+         } else if (char === ',' && !inQuotes) {
+           values.push(current.trim());
+           current = '';
+         } else {
+           current += char;
+         }
+       }
+       values.push(current.trim());
+
+       const name = values[nameIdx]?.replace(/^"|"$/g, '');
+       const email = values[emailIdx]?.replace(/^"|"$/g, '');
+       const role = values[roleIdx]?.toUpperCase();
+       const status = values[statusIdx]?.toLowerCase();
+
+       const rowErrors: string[] = [];
+       if (!name) rowErrors.push('Name is required');
+       if (!email) rowErrors.push('Email is required');
+       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) rowErrors.push('Invalid email format');
+       if (!validRoles.includes(role)) rowErrors.push(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+       if (!validStatuses.includes(status)) rowErrors.push(`Invalid status. Must be: active or inactive`);
+
+       if (rowErrors.length > 0) {
+         errors.push(`Row ${i + 1}: ${rowErrors.join('; ')}`);
+       }
+
+       preview.push({
+         row: i + 1,
+         name,
+         email,
+         role,
+         status,
+         valid: rowErrors.length === 0,
+         errors: rowErrors,
+       });
+     }
+
+     setImportPreview(preview);
+     setImportErrors(errors);
+   };
+   reader.readAsText(file);
+ };
+
+ // Process import
+ const processImport = async () => {
+   const validRows = importPreview.filter(row => row.valid);
+   if (validRows.length === 0) {
+     setImportErrors(['No valid rows to import']);
+     return;
+   }
+
+   setImporting(true);
+   setImportErrors([]);
+   setImportSuccess(0);
+
+   const errors: string[] = [];
+   let successCount = 0;
+   const newUsers: User[] = [];
+
+   for (const row of validRows) {
+     try {
+       const nameParts = row.name.trim().split(' ');
+       const firstName = nameParts[0];
+       const lastName = nameParts.slice(1).join(' ') || '';
+       const tempPassword = 'TempPass' + Math.random().toString(36).slice(-8) + '!';
+
+       const userData = {
+         firstName,
+         lastName,
+         email: row.email,
+         password: tempPassword,
+         isActive: row.status === 'active',
+         role: row.role,
+       };
+
+       const newUser = await api.createUser(userData, session);
+
+       if (newUser) {
+         newUsers.push({
+           id: newUser.id || String(Math.floor(Math.random() * 10000)),
+           name: `${newUser.firstName || firstName} ${newUser.lastName || lastName}`.trim(),
+           email: newUser.email || row.email,
+           role: newUser.role || row.role,
+           status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
+         });
+         successCount++;
+       }
+     } catch (err) {
+       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+       errors.push(`Row ${row.row} (${row.email}): ${errorMsg}`);
+     }
+   }
+
+   setItems([...items, ...newUsers]);
+   setImportSuccess(successCount);
+   setImportErrors(errors);
+   setImporting(false);
+
+   if (successCount > 0 && errors.length === 0) {
+     setTimeout(() => {
+       setShowImportModal(false);
+       setImportFile(null);
+       setImportPreview([]);
+       setImportErrors([]);
+       setImportSuccess(0);
+     }, 2000);
+   }
+ };
+
  if (status === 'loading') return null;
  if (!session) return null;
 
@@ -491,10 +733,22 @@ export default function UsersPage() {
  </button>
  <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Users</h1>
  </div>
- <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
- <span style={{ fontSize: '13px', color: themeColors.gray600 }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
+ <span style={{ fontSize: '13px', color: themeColors.gray600, marginRight: themeSpace.sm }}>
  Showing {filteredItems.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length}
  </span>
+ <button onClick={downloadTemplate} style={{ background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center' }} title="Download import template">
+ <Icon name="file" size={16} color={themeColors.gray600} />
+ Template
+ </button>
+ <button onClick={() => setShowImportModal(true)} style={{ background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center' }}>
+ <Icon name="upload" size={16} color={themeColors.gray600} />
+ Import
+ </button>
+ <button onClick={exportUsers} style={{ background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center' }}>
+ <Icon name="download" size={16} color={themeColors.gray600} />
+ Export
+ </button>
  <button onClick={() => setShowAddForm(true)} style={{ background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
  <Icon name="add" size={18} color={themeColors.white} />
  Add User
@@ -1033,6 +1287,153 @@ export default function UsersPage() {
  }}
  >
  Save Changes
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* Import Modal */}
+ {showImportModal && (
+ <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+ <div style={{ background: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '700px', maxWidth: '90vw', maxHeight: '85vh', overflow: 'auto', boxShadow: themeShadow.md }}>
+ <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
+ <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: themeColors.text }}>Import Users</h2>
+ <button onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }}>
+ <Icon name="x" size={20} color={themeColors.gray500} />
+ </button>
+ </div>
+
+ {/* Instructions */}
+ <div style={{ backgroundColor: themeColors.info50, border: `1px solid ${themeColors.info600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.lg }}>
+ <p style={{ margin: 0, fontSize: '13px', color: themeColors.gray600, lineHeight: '1.5' }}>
+ <strong>Instructions:</strong> Upload a CSV file with columns: Name, Email, Role, Status.<br />
+ Valid roles: NATIONAL_ADMIN, COUNCIL_ADMIN, TROOP_LEADER, PARENT, SCOUT<br />
+ Valid status values: active, inactive<br />
+ <button onClick={downloadTemplate} style={{ background: 'none', border: 'none', color: themeColors.primary600, cursor: 'pointer', padding: 0, fontSize: '13px', textDecoration: 'underline', marginTop: themeSpace.xs }}>
+ Download template with instructions
+ </button>
+ </p>
+ </div>
+
+ {/* File Upload */}
+ <div style={{ marginBottom: themeSpace.lg }}>
+ <label style={{ display: 'block', marginBottom: themeSpace.sm, fontSize: '14px', fontWeight: '500', color: themeColors.text }}>
+ Select CSV File
+ </label>
+ <input
+ type="file"
+ accept=".csv"
+ onChange={handleFileSelect}
+ style={{
+ width: '100%',
+ padding: themeSpace.md,
+ border: `2px dashed ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ }}
+ />
+ </div>
+
+ {/* Success Message */}
+ {importSuccess > 0 && (
+ <div style={{ backgroundColor: themeColors.success50, border: `1px solid ${themeColors.success600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md }}>
+ <p style={{ margin: 0, fontSize: '14px', color: themeColors.success600 }}>
+ Successfully imported {importSuccess} user{importSuccess !== 1 ? 's' : ''}!
+ </p>
+ </div>
+ )}
+
+ {/* Error Messages */}
+ {importErrors.length > 0 && (
+ <div style={{ backgroundColor: themeColors.warning50, border: `1px solid ${themeColors.warning600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md, maxHeight: '150px', overflow: 'auto' }}>
+ <p style={{ margin: 0, marginBottom: themeSpace.sm, fontSize: '14px', fontWeight: '600', color: themeColors.warning600 }}>
+ Validation Errors:
+ </p>
+ {importErrors.map((err, idx) => (
+ <p key={idx} style={{ margin: 0, fontSize: '13px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>
+ {err}
+ </p>
+ ))}
+ </div>
+ )}
+
+ {/* Preview Table */}
+ {importPreview.length > 0 && (
+ <div style={{ marginBottom: themeSpace.lg }}>
+ <h3 style={{ fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
+ Preview ({importPreview.filter(r => r.valid).length} valid of {importPreview.length} rows)
+ </h3>
+ <div style={{ maxHeight: '250px', overflow: 'auto', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm }}>
+ <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+ <thead>
+ <tr style={{ backgroundColor: themeColors.gray50, position: 'sticky', top: 0 }}>
+ <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Row</th>
+ <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Name</th>
+ <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Email</th>
+ <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Role</th>
+ <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Status</th>
+ <th style={{ padding: themeSpace.sm, textAlign: 'center', borderBottom: `1px solid ${themeColors.gray200}` }}>Valid</th>
+ </tr>
+ </thead>
+ <tbody>
+ {importPreview.map((row, idx) => (
+ <tr key={idx} style={{ backgroundColor: row.valid ? themeColors.white : themeColors.error400 + '20' }}>
+ <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.row}</td>
+ <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.name}</td>
+ <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.email}</td>
+ <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.role}</td>
+ <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.status}</td>
+ <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}`, textAlign: 'center' }}>
+ {row.valid ? (
+ <span style={{ color: themeColors.success600 }}>✓</span>
+ ) : (
+ <span style={{ color: themeColors.error500 }} title={row.errors.join(', ')}>✗</span>
+ )}
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ )}
+
+ {/* Action Buttons */}
+ <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ background: themeColors.white,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ color: themeColors.gray600,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={processImport}
+ disabled={importing || importPreview.filter(r => r.valid).length === 0}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ background: importing || importPreview.filter(r => r.valid).length === 0 ? themeColors.gray200 : themeColors.primary600,
+ color: importing || importPreview.filter(r => r.valid).length === 0 ? themeColors.gray500 : themeColors.white,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: importing || importPreview.filter(r => r.valid).length === 0 ? 'not-allowed' : 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ display: 'flex',
+ alignItems: 'center',
+ gap: themeSpace.sm,
+ }}
+ >
+ {importing ? 'Importing...' : `Import ${importPreview.filter(r => r.valid).length} Users`}
  </button>
  </div>
  </div>
