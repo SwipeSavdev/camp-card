@@ -180,3 +180,187 @@ Implements FR-045 for troop leaders to generate one-time claim links.
 
 Closes #123
 ```
+
+## AWS Deployment
+
+### EC2 Server Details
+- **IP Address**: 18.190.69.205
+- **SSH User**: ubuntu
+- **SSH Key**: `~/.ssh/campcard-ec2`
+- **Domain**: https://bsa.swipesavvy.com
+
+### Docker Containers on EC2
+| Container | Image | Ports | Network |
+|-----------|-------|-------|---------|
+| campcard-backend | campcard-backend:latest | 7010 | campcard_campcard-network |
+| campcard-web | campcard-web:latest | 7020 | campcard_campcard-network |
+| campcard-mobile | ghcr.io/swipesavdev/camp-card/mobile:latest | 8081, 19000-19002 | campcard_campcard-network |
+| campcard-redis | redis:7-alpine | 6379 | campcard_campcard-network |
+| campcard-kafka | confluentinc/cp-kafka:7.5.0 | 9092 | campcard_campcard-network |
+| campcard-zookeeper | confluentinc/cp-zookeeper:7.5.0 | 2181 | campcard_campcard-network |
+
+### Deployment Commands
+
+```bash
+# SSH to EC2
+ssh -i ~/.ssh/campcard-ec2 ubuntu@18.190.69.205
+
+# Backend deployment
+cd /home/ec2-user/camp-card/backend
+sudo git pull origin main
+sudo docker build -t campcard-backend:latest .
+sudo docker stop campcard-backend && sudo docker rm campcard-backend
+sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010 \
+  -e SPRING_PROFILES_ACTIVE=aws \
+  -e DB_HOST=database-3.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
+  -e DB_PORT=5432 -e DB_NAME=campcard \
+  -e DB_USERNAME=campcard_app -e DB_PASSWORD=<password> \
+  -e JWT_SECRET='<jwt-secret>' \
+  -e JWT_EXPIRATION=86400000 \
+  -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
+  --network campcard_campcard-network campcard-backend:latest
+
+# Frontend deployment
+cd /home/ec2-user/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
+sudo git pull origin main
+sudo docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://bsa.swipesavvy.com/api/v1 -t campcard-web:latest .
+sudo docker stop campcard-web && sudo docker rm campcard-web
+sudo docker run -d --name campcard-web --restart unless-stopped -p 7020:7020 \
+  -e NEXTAUTH_URL=https://bsa.swipesavvy.com \
+  -e NEXTAUTH_SECRET='<nextauth-secret>' \
+  -e NEXT_PUBLIC_API_URL=https://bsa.swipesavvy.com/api/v1 \
+  --network campcard_campcard-network campcard-web:latest
+
+# Check container status
+sudo docker ps -a
+
+# View logs
+sudo docker logs --tail 50 campcard-backend
+sudo docker logs --tail 50 campcard-web
+
+# Clean up disk space
+sudo docker system prune -a --volumes -f
+```
+
+### Expo Go Mobile Testing
+- **Tunnel URL**: Check with `sudo docker logs campcard-mobile | grep "Tunnel URL"`
+- The mobile container runs Expo in tunnel mode for testing via Expo Go app
+
+## User Roles (IMPORTANT)
+
+The backend `UserRole` enum defines exactly 5 valid roles:
+
+```java
+public enum UserRole {
+    NATIONAL_ADMIN,
+    COUNCIL_ADMIN,
+    TROOP_LEADER,
+    PARENT,
+    SCOUT
+}
+```
+
+**All role references must use these exact uppercase values.** The frontend must match:
+- Type definition: `type UserRole = 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'TROOP_LEADER' | 'PARENT' | 'SCOUT'`
+- Default values: `useState<UserRole>('SCOUT')`
+- Comparisons: `item.role === 'TROOP_LEADER'`
+
+Backend `@PreAuthorize` annotations must also use these exact role names with `ROLE_` prefix:
+- `@PreAuthorize("hasRole('NATIONAL_ADMIN')")`
+- `@PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")`
+
+## Recent Fixes (January 2026)
+
+### API Integration Fix - Role Mismatch Resolution
+
+**Problem**: Users could not create Users, councils, merchants, offers, or save profile edits. The root cause was a mismatch between frontend role values and backend UserRole enum.
+
+**Files Modified**:
+
+1. **Frontend - Users Page** (`camp-card-mobile-app-v2-web-main/repos/camp-card-web/app/users/page.tsx`)
+   - Changed `UserRole` type to use uppercase values
+   - Updated `roleOptions` array to use uppercase values
+   - Fixed all `setEditUserRole()` and `setNewUserRole()` calls to use `'SCOUT'`
+   - Fixed troop leader filter: `item.role === 'TROOP_LEADER'`
+
+2. **Frontend - Profile Page** (`camp-card-mobile-app-v2-web-main/repos/camp-card-web/app/profile/page.tsx`)
+   - Added `import { api } from '@/lib/api'`
+   - Modified `handleSave` to call `api.updateUser()` instead of just setting local state
+
+3. **Backend Controllers** (all use valid role names now):
+   - `MerchantController.java`: ADMIN → NATIONAL_ADMIN, MERCHANT → NATIONAL_ADMIN/COUNCIL_ADMIN
+   - `OfferController.java`: ADMIN → NATIONAL_ADMIN, MERCHANT → NATIONAL_ADMIN/COUNCIL_ADMIN
+   - `ScoutController.java`: ADMIN → NATIONAL_ADMIN, SCOUTMASTER → TROOP_LEADER
+   - `NotificationController.java`: SUPER_ADMIN → NATIONAL_ADMIN
+   - `PaymentController.java`: SUPER_ADMIN → NATIONAL_ADMIN
+   - `QRCodeController.java`: SUPER_ADMIN → NATIONAL_ADMIN
+
+**Commits**:
+- `0c59056` - fix: Use uppercase role constants consistently throughout Users page
+- `917e5f0` - fix: Use uppercase SCOUT role in setters to match UserRole type
+- `3f2fc7c` - fix: Align backend role names with UserRole enum and fix frontend API integration
+
+### Backend Container Configuration (January 2026)
+
+The backend container requires specific environment variables for Redis:
+
+```bash
+sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010 \
+  -e SPRING_PROFILES_ACTIVE=aws \
+  -e DB_HOST=database-3.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
+  -e DB_PORT=5432 -e DB_NAME=campcard \
+  -e DB_USERNAME=campcard_app -e DB_PASSWORD=<db-password> \
+  -e JWT_SECRET='<jwt-secret>' \
+  -e JWT_EXPIRATION=86400000 \
+  -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
+  -e REDIS_PASSWORD=campcard123 \
+  -e REDIS_SSL=false \
+  --network campcard_campcard-network campcard-backend:latest
+```
+
+**Important**: `REDIS_SSL=false` is required because the local Redis container on EC2 doesn't use TLS (the AWS profile defaults to SSL enabled).
+
+### Test Credentials
+
+- **Admin User**: `admin@campcard.org` / `Test1234` (role: NATIONAL_ADMIN)
+- **Test User**: `test@campcard.org` / `Test1234` (role: SCOUT)
+
+### Password Hashing Notes
+
+- Backend uses `BCryptPasswordEncoder` with strength 12
+- Password hashes must start with `$2a$12$` (Java BCrypt format)
+- Python bcrypt generates `$2b$` which is compatible but different prefix
+- To create a valid hash, register a new user and copy the password_hash from the database
+
+### JWT Token Expiration Fix (January 2026)
+
+**Problem**: Council/Troop creation failed with "Failed to create council" error after ~15 minutes of being logged in. Backend logs showed: `Invalid JWT token: JWT expired`.
+
+**Root Cause**:
+- Backend JWT expiration was 15 minutes (900000ms)
+- NextAuth session was 24 hours
+- Frontend had no token refresh mechanism
+
+**Solution**:
+1. **Backend** (`application-aws.yml`): Changed JWT expiration from 15 minutes to 24 hours
+   ```yaml
+   security:
+     jwt:
+       expiration: ${JWT_EXPIRATION:86400000}  # 24 hours
+   ```
+
+2. **Frontend** (`app/api/auth/[...nextauth]/route.ts`): Added automatic token refresh
+   - Added `refreshAccessToken()` helper function
+   - Updated `jwt` callback to track `accessTokenExpires` and call refresh when needed
+   - Updated `session` callback to pass refresh errors to client
+
+**Files Modified**:
+- `backend/src/main/resources/application-aws.yml` - JWT expiration from 900000 to 86400000
+- `camp-card-web/app/api/auth/[...nextauth]/route.ts` - Added token refresh logic
+
+### Expo Go Mobile Testing
+
+The mobile container runs Expo in tunnel mode:
+- **Current Tunnel URL**: `https://easl_4o-anonymous-8081.exp.direct`
+- Check for current URL: `sudo docker logs campcard-mobile | grep "Tunnel URL"`
+- Install Expo Go on your phone and enter the tunnel URL to test the app
