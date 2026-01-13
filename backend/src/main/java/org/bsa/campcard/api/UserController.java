@@ -40,7 +40,7 @@ public class UserController {
         @ApiResponse(responseCode = "403", description = "Access denied", content = @Content)
     })
     @GetMapping
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<Page<UserResponse>> getAllUsers(
         @PageableDefault(size = 20) Pageable pageable
     ) {

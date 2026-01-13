@@ -63,8 +63,11 @@ export default function UsersPage() {
  const [error, setError] = useState<string | null>(null);
  const [searchTerm, setSearchTerm] = useState('');
  const [showAddForm, setShowAddForm] = useState(false);
+ const [showEditForm, setShowEditForm] = useState(false);
+ const [editingUser, setEditingUser] = useState<User | null>(null);
  const [newUserName, setNewUserName] = useState('');
  const [newUserEmail, setNewUserEmail] = useState('');
+ const [newUserPassword, setNewUserPassword] = useState('');
  const [newUserStatus, setNewUserStatus] = useState<'active' | 'inactive'>('active');
  const [newUserRole, setNewUserRole] = useState<UserRole>('scout');
  const [troopLeaderSearchTerm, setTroopLeaderSearchTerm] = useState('');
@@ -83,19 +86,28 @@ export default function UsersPage() {
  ];
 
  useEffect(() => {
- // Load data on mount, don't redirect if unauthenticated
+ // Only fetch data when session is authenticated
+ if (status === 'authenticated' && session) {
  fetchData();
- }, []);
+ }
+ }, [status, session]);
 
  const fetchData = async () => {
  try {
  setLoading(true);
  setError(null);
+ console.log('[USERS PAGE] Fetching users with session:', session?.user?.email);
  const data = await api.getUsers(session);
+ console.log('[USERS PAGE] Users fetched:', data);
  setItems(data.content || data || []);
- } catch (err) {
- setError('Failed to load users');
- console.error(err);
+ } catch (err: any) {
+ const errorMsg = err?.status === 403 
+ ? 'Access denied. Please ensure you are logged in with proper credentials.' 
+ : err?.status === 401
+ ? 'Authentication failed. Please log in again.'
+ : 'Failed to load users from database. ' + (err?.message || 'Unknown error');
+ setError(errorMsg);
+ console.error('[USERS PAGE] Error fetching users:', err);
  } finally {
  setLoading(false);
  }
@@ -112,8 +124,8 @@ export default function UsersPage() {
  };
 
  const addUser = async () => {
- if (!newUserName.trim() || !newUserEmail.trim()) {
- setError('Name and email are required');
+ if (!newUserName.trim() || !newUserEmail.trim() || !newUserPassword.trim()) {
+ setError('Name, email, and password are required');
  return;
  }
 
@@ -123,12 +135,23 @@ export default function UsersPage() {
  const firstName = nameParts[0];
  const lastName = nameParts.slice(1).join(' ') || '';
 
+ // Map frontend role to backend enum
+ const roleMapping: Record<string, string> = {
+ 'super_admin': 'NATIONAL_ADMIN',
+ 'system_admin': 'NATIONAL_ADMIN',
+ 'admin': 'NATIONAL_ADMIN',
+ 'council': 'COUNCIL_ADMIN',
+ 'troop_leader': 'TROOP_LEADER',
+ 'scout': 'SCOUT',
+ 'customer': 'PARENT',
+ };
+
  const userData = {
  firstName: firstName,
  lastName: lastName,
  email: newUserEmail,
- isActive: newUserStatus === 'active',
- role: newUserRole,
+ password: newUserPassword,
+ role: roleMapping[newUserRole] || 'SCOUT',
  };
 
  console.log('[PAGE] Submitting user data:', userData);
@@ -152,12 +175,93 @@ export default function UsersPage() {
  // Reset form
  setNewUserName('');
  setNewUserEmail('');
+ setNewUserPassword('');
  setNewUserStatus('active');
  setNewUserRole('scout');
  setShowAddForm(false);
  setError(null);
  } catch (err) {
  setError('Failed to create user: ' + (err instanceof Error ? err.message : 'Unknown error'));
+ console.error('[PAGE] Error:', err);
+ }
+ };
+
+ const handleEdit = (user: User) => {
+ setEditingUser(user);
+ setNewUserName(user.name);
+ setNewUserEmail(user.email);
+ setNewUserStatus(user.status);
+ setNewUserRole(user.role);
+ setShowEditForm(true);
+ };
+
+ const updateUser = async () => {
+ if (!editingUser) return;
+ 
+ if (!newUserName.trim() || !newUserEmail.trim()) {
+ setError('Name and email are required');
+ return;
+ }
+
+ try {
+ // Split name into firstName and lastName
+ const nameParts = newUserName.trim().split(' ');
+ const firstName = nameParts[0];
+ const lastName = nameParts.slice(1).join(' ') || '';
+
+ // Map frontend role to backend enum
+ const roleMapping: Record<string, string> = {
+ 'super_admin': 'NATIONAL_ADMIN',
+ 'system_admin': 'NATIONAL_ADMIN',
+ 'admin': 'NATIONAL_ADMIN',
+ 'council': 'COUNCIL_ADMIN',
+ 'troop_leader': 'TROOP_LEADER',
+ 'scout': 'SCOUT',
+ 'customer': 'PARENT',
+ };
+
+ const userData: any = {
+ firstName: firstName,
+ lastName: lastName,
+ email: newUserEmail,
+ role: roleMapping[newUserRole] || 'SCOUT',
+ isActive: newUserStatus === 'active',
+ };
+
+ // Only include password if it was provided
+ if (newUserPassword.trim()) {
+ userData.password = newUserPassword;
+ }
+
+ console.log('[PAGE] Updating user:', editingUser.id, userData);
+ const updatedUser = await api.updateUser(editingUser.id, userData, session);
+ console.log('[PAGE] User updated successfully:', updatedUser);
+
+ // Update local state
+ setItems(items.map(item => {
+ if (item.id === editingUser.id) {
+ return {
+ id: item.id,
+ name: `${firstName} ${lastName}`.trim(),
+ email: newUserEmail,
+ role: newUserRole,
+ status: newUserStatus,
+ };
+ }
+ return item;
+ }));
+
+ // Reset form
+ setNewUserName('');
+ setNewUserEmail('');
+ setNewUserPassword('');
+ setNewUserStatus('active');
+ setNewUserRole('scout');
+ setEditingUser(null);
+ setShowEditForm(false);
+ setError(null);
+ } catch (err) {
+ setError('Failed to update user: ' + (err instanceof Error ? err.message : 'Unknown error'));
  console.error('[PAGE] Error:', err);
  }
  };
@@ -296,7 +400,7 @@ export default function UsersPage() {
  </td>
  <td style={{ padding: themeSpace.lg, textAlign: 'center' }}>
  <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
- <button style={{ background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <button onClick={() => handleEdit(item)} style={{ background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
  <Icon name="edit" size={16} color={themeColors.info600} />
  </button>
  <button onClick={() => handleDelete(item.id)} style={{ background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -343,6 +447,24 @@ export default function UsersPage() {
  value={newUserEmail}
  onChange={(e) => setNewUserEmail(e.target.value)}
  placeholder="Enter email address"
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Password</label>
+ <input
+ type="password"
+ value={newUserPassword}
+ onChange={(e) => setNewUserPassword(e.target.value)}
+ placeholder="Enter password"
  style={{
  width: '100%',
  padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -406,6 +528,7 @@ export default function UsersPage() {
  setShowAddForm(false);
  setNewUserName('');
  setNewUserEmail('');
+ setNewUserPassword('');
  setNewUserStatus('active');
  setNewUserRole('scout');
  setError(null);
@@ -437,6 +560,157 @@ export default function UsersPage() {
  }}
  >
  Create User
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {showEditForm && editingUser && (
+ <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+ <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '500px', boxShadow: themeShadow.md }}>
+ <h2 style={{ fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0 }}>Edit User</h2>
+
+ <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl }}>
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Name</label>
+ <input
+ type="text"
+ value={newUserName}
+ onChange={(e) => setNewUserName(e.target.value)}
+ placeholder="Enter user name"
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Email</label>
+ <input
+ type="email"
+ value={newUserEmail}
+ onChange={(e) => setNewUserEmail(e.target.value)}
+ placeholder="Enter email address"
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Password (leave blank to keep current)</label>
+ <input
+ type="password"
+ value={newUserPassword}
+ onChange={(e) => setNewUserPassword(e.target.value)}
+ placeholder="Enter new password (optional)"
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ }}
+ />
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Status</label>
+ <select
+ value={newUserStatus}
+ onChange={(e) => setNewUserStatus(e.target.value as 'active' | 'inactive')}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ <option value="active">Active</option>
+ <option value="inactive">Inactive</option>
+ </select>
+ </div>
+
+ <div>
+ <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Role</label>
+ <select
+ value={newUserRole}
+ onChange={(e) => setNewUserRole(e.target.value as UserRole)}
+ style={{
+ width: '100%',
+ padding: `${themeSpace.sm} ${themeSpace.md}`,
+ border: `1px solid ${themeColors.gray200}`,
+ borderRadius: themeRadius.sm,
+ fontSize: '14px',
+ boxSizing: 'border-box',
+ backgroundColor: themeColors.white,
+ cursor: 'pointer',
+ }}
+ >
+ {roleOptions.map((role) => (
+ <option key={role.value} value={role.value}>
+ {role.label}
+ </option>
+ ))}
+ </select>
+ </div>
+ </div>
+
+ <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+ <button
+ onClick={() => {
+ setShowEditForm(false);
+ setEditingUser(null);
+ setNewUserName('');
+ setNewUserEmail('');
+ setNewUserPassword('');
+ setNewUserStatus('active');
+ setNewUserRole('scout');
+ setError(null);
+ }}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ border: `1px solid ${themeColors.gray200}`,
+ backgroundColor: themeColors.white,
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ color: themeColors.gray600,
+ }}
+ >
+ Cancel
+ </button>
+ <button
+ onClick={updateUser}
+ style={{
+ padding: `${themeSpace.sm} ${themeSpace.lg}`,
+ background: themeColors.primary600,
+ color: themeColors.white,
+ border: 'none',
+ borderRadius: themeRadius.sm,
+ cursor: 'pointer',
+ fontSize: '14px',
+ fontWeight: '500',
+ }}
+ >
+ Update User
  </button>
  </div>
  </div>

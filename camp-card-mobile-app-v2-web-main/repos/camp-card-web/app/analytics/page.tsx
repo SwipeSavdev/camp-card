@@ -95,34 +95,36 @@ const availableMetrics: AvailableMetric[] = [
 ];
 
 const mockData: Record<string, any> = {
- total_users: { value: 12450, change: 8.5 },
- active_users: { value: 8932, change: 12.3 },
- new_users: { value: 2156, change: 15.8 },
- user_growth: { value: '8.5%', change: 2.1 },
- total_merchants: { value: 487, change: 5.2 },
- active_merchants: { value: 412, change: 3.8 },
- merchant_onboarding: { value: 23, change: 18.5 },
- total_offers: { value: 1243, change: 12.5 },
- active_offers: { value: 892, change: 9.2 },
- offer_redemptions: { value: 45230, change: 21.3 },
- redemption_rate: { value: '34.5%', change: 5.8 },
- total_cards: { value: 89245, change: 6.3 },
- active_cards: { value: 76543, change: 8.9 },
- cards_redeemed: { value: 12702, change: 16.2 },
- total_subscriptions: { value: 8932, change: 12.3 },
- active_subscriptions: { value: 7654, change: 9.8 },
- monthly_plans: { value: 3421, change: 15.2 },
- annual_plans: { value: 4233, change: 8.1 },
- churn_rate: { value: '2.1%', change: -0.8 },
- retention_rate: { value: '97.9%', change: 0.8 },
- mrr: { value: '$47,829', change: 14.2 },
- arr: { value: '$573,948', change: 18.5 },
- total_revenue: { value: '$245,678', change: 14.2 },
- revenue_trend: { value: '$18,935/day', change: 8.5 },
- avg_transaction: { value: '$124.56', change: 3.2 },
- transaction_volume: { value: 5421, change: 19.8 },
- failed_transactions: { value: 23, change: -45.2 },
- system_uptime: { value: '99.98%', change: 0.02 },
+ // Note: This is temporary mock data for demonstration purposes.
+ // TODO: Replace with real API calls to /api/analytics endpoints when backend is ready
+ total_users: { value: 0, change: 0 },
+ active_users: { value: 0, change: 0 },
+ new_users: { value: 0, change: 0 },
+ user_growth: { value: '0%', change: 0 },
+ total_merchants: { value: 0, change: 0 },
+ active_merchants: { value: 0, change: 0 },
+ merchant_onboarding: { value: 0, change: 0 },
+ total_offers: { value: 0, change: 0 },
+ active_offers: { value: 0, change: 0 },
+ offer_redemptions: { value: 0, change: 0 },
+ redemption_rate: { value: '0%', change: 0 },
+ total_cards: { value: 0, change: 0 },
+ active_cards: { value: 0, change: 0 },
+ cards_redeemed: { value: 0, change: 0 },
+ total_subscriptions: { value: 0, change: 0 },
+ active_subscriptions: { value: 0, change: 0 },
+ monthly_plans: { value: 0, change: 0 },
+ annual_plans: { value: 0, change: 0 },
+ churn_rate: { value: '0%', change: 0 },
+ retention_rate: { value: '0%', change: 0 },
+ mrr: { value: '$0', change: 0 },
+ arr: { value: '$0', change: 0 },
+ total_revenue: { value: '$0', change: 0 },
+ revenue_trend: { value: '$0/day', change: 0 },
+ avg_transaction: { value: '$0', change: 0 },
+ transaction_volume: { value: 0, change: 0 },
+ failed_transactions: { value: 0, change: 0 },
+ system_uptime: { value: '0%', change: 0 },
 };
 
 const defaultWidgets: Widget[] = [
@@ -244,6 +246,16 @@ export default function AnalyticsPage() {
  </button>
  <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Analytics Dashboard</h1>
  </div>
+ 
+ {/* Note about backend API */}
+ <div style={{ backgroundColor: themeColors.warning50, border: `1px solid ${themeColors.warning600}`, borderRadius: themeRadius.sm, padding: themeSpace.lg, marginBottom: themeSpace.lg }}>
+ <p style={{ margin: 0, color: themeColors.text, fontSize: '13px', fontWeight: '500' }}>
+ <strong>Note:</strong> Analytics metrics are currently showing placeholder values. 
+ Real-time analytics data requires backend API endpoints for /api/analytics to be implemented.
+ Once available, this dashboard will display live metrics from your database.
+ </p>
+ </div>
+ 
  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: themeSpace.lg }}>
  <p style={{ margin: 0, color: themeColors.gray600, fontSize: '14px' }}>Customizable metrics and insights</p>
  <div style={{ display: 'flex', gap: themeSpace.md }}>

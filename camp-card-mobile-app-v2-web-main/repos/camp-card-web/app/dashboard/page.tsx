@@ -2,8 +2,9 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { api } from '@/lib/api';
 
 const themeColors = {
  white: '#ffffff',
@@ -164,6 +165,23 @@ const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?
  <circle cx="12.5" cy="12.5" r="3.5" />
  </svg>
  ),
+ menu: (
+ <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+ <line x1="3" y1="6" x2="21" y2="6" />
+ <line x1="3" y1="12" x2="21" y2="12" />
+ <line x1="3" y1="18" x2="21" y2="18" />
+ </svg>
+ ),
+ chevronLeft: (
+ <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+ <polyline points="15 18 9 12 15 6" />
+ </svg>
+ ),
+ chevronRight: (
+ <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+ <polyline points="9 18 15 12 9 6" />
+ </svg>
+ ),
  };
  return icons[name] || null;
 };
@@ -172,6 +190,42 @@ export default function Dashboard() {
  const { data: session, status } = useSession();
  const router = useRouter();
  const [sidebarOpen, setSidebarOpen] = useState(true);
+ const [stats, setStats] = useState({
+ activeUsers: '0',
+ merchants: '0',
+ offers: '0',
+ redemptions: '0'
+ });
+ const [loading, setLoading] = useState(true);
+
+ useEffect(() => {
+ if (status === 'authenticated' && session) {
+ fetchStats();
+ }
+ }, [status, session]);
+
+ const fetchStats = async () => {
+ try {
+ setLoading(true);
+ // Fetch real data from APIs
+ const [usersData, merchantsData, offersData] = await Promise.all([
+ api.getUsers(session).catch(() => ({ content: [] })),
+ api.getMerchants(session).catch(() => ({ content: [] })),
+ api.getOffers(session).catch(() => ({ content: [] }))
+ ]);
+
+ setStats({
+ activeUsers: String((usersData?.content || []).length || 0),
+ merchants: String((merchantsData?.content || merchantsData?.merchants || []).length || 0),
+ offers: String((offersData?.content || offersData?.data || []).length || 0),
+ redemptions: '0' // TODO: Add redemptions API when available
+ });
+ } catch (err) {
+ console.error('Failed to fetch dashboard stats:', err);
+ } finally {
+ setLoading(false);
+ }
+ };
 
  if (status === 'loading') return null;
  if (status === 'unauthenticated') {
@@ -192,21 +246,55 @@ export default function Dashboard() {
  flexDirection: 'column',
  transition: 'width 300ms ease',
  overflow: 'hidden',
+ position: 'relative',
  }}
  >
+ {/* Collapse/Expand Toggle Button - Positioned on the edge */}
+ <div
+ onClick={() => setSidebarOpen(!sidebarOpen)}
+ style={{
+ position: 'absolute',
+ top: '24px',
+ right: '-12px',
+ width: '24px',
+ height: '24px',
+ borderRadius: '50%',
+ backgroundColor: themeColors.white,
+ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
+ cursor: 'pointer',
+ zIndex: 10,
+ transition: 'all 200ms ease',
+ border: `2px solid ${themeColors.primary900}`,
+ }}
+ onMouseEnter={(e) => {
+ e.currentTarget.style.transform = 'scale(1.1)';
+ e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+ }}
+ onMouseLeave={(e) => {
+ e.currentTarget.style.transform = 'scale(1)';
+ e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
+ }}
+ title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+ >
+ <Icon name={sidebarOpen ? "chevronLeft" : "chevronRight"} size={14} color={themeColors.primary600} />
+ </div>
+
  {/* Logo */}
- <div style={{ padding: themeSpace.lg, display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
+ <div style={{ padding: themeSpace.lg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
  <Image
  src="/assets/images/appicon_cropped.png"
  alt="Camp Card Logo"
- width={120}
- height={120}
+ width={sidebarOpen ? 120 : 40}
+ height={sidebarOpen ? 120 : 40}
  style={{
  borderRadius: themeRadius.sm,
  flexShrink: 0,
+ transition: 'all 300ms ease',
  }}
  />
- {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: '600' }}>Camp Card</span>}
  </div>
 
  {/* Navigation */}
@@ -226,10 +314,11 @@ export default function Dashboard() {
  key={idx}
  onClick={() => router.push(item.href)}
  style={{
- padding: `${themeSpace.md}`,
+ padding: sidebarOpen ? `${themeSpace.md} ${themeSpace.lg}` : `${themeSpace.md}`,
  display: 'flex',
  alignItems: 'center',
- gap: themeSpace.md,
+ justifyContent: sidebarOpen ? 'flex-start' : 'center',
+ gap: sidebarOpen ? themeSpace.md : '0',
  cursor: 'pointer',
  color: themeColors.primary100,
  fontSize: '14px',
@@ -248,9 +337,7 @@ export default function Dashboard() {
  }
  }}
  >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
  <Icon name={item.name} size={18} color="currentColor" />
- </div>
  {sidebarOpen && <span>{item.label}</span>}
  </div>
  ))}
@@ -267,10 +354,11 @@ export default function Dashboard() {
  key={idx}
  onClick={() => router.push(item.href)}
  style={{
- padding: themeSpace.md,
+ padding: sidebarOpen ? `${themeSpace.md} ${themeSpace.lg}` : `${themeSpace.md}`,
  display: 'flex',
  alignItems: 'center',
- gap: themeSpace.md,
+ justifyContent: sidebarOpen ? 'flex-start' : 'center',
+ gap: sidebarOpen ? themeSpace.md : '0',
  cursor: 'pointer',
  color: themeColors.primary100,
  fontSize: '13px',
@@ -285,19 +373,18 @@ export default function Dashboard() {
  e.currentTarget.style.backgroundColor = 'transparent';
  }}
  >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
  <Icon name={item.name} size={18} color="currentColor" />
- </div>
  {sidebarOpen && <span>{item.label}</span>}
  </div>
  ))}
  <div
  onClick={() => router.push('/login')}
  style={{
- padding: themeSpace.md,
+ padding: sidebarOpen ? `${themeSpace.md} ${themeSpace.lg}` : `${themeSpace.md}`,
  display: 'flex',
  alignItems: 'center',
- gap: themeSpace.md,
+ justifyContent: sidebarOpen ? 'flex-start' : 'center',
+ gap: sidebarOpen ? themeSpace.md : '0',
  cursor: 'pointer',
  color: themeColors.primary100,
  fontSize: '13px',
@@ -306,9 +393,7 @@ export default function Dashboard() {
  paddingTop: themeSpace.lg,
  }}
  >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
  <Icon name="logout" size={18} color="currentColor" />
- </div>
  {sidebarOpen && <span>Logout</span>}
  </div>
  </div>
@@ -323,28 +408,18 @@ export default function Dashboard() {
  backgroundColor: themeColors.white,
  borderBottom: `1px solid ${themeColors.gray200}`,
  display: 'flex',
- justifyContent: 'space-between',
+ justifyContent: 'center',
  alignItems: 'center',
  boxShadow: themeShadow.xs,
+ position: 'relative',
  }}
  >
- <button
- onClick={() => setSidebarOpen(!sidebarOpen)}
- style={{
- background: 'none',
- border: 'none',
- fontSize: '24px',
- cursor: 'pointer',
- color: themeColors.primary600,
- padding: themeSpace.sm,
- }}
- >
- 
- </button>
  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: themeColors.text }}>Dashboard</h2>
  <div
  onClick={() => router.push('/profile')}
  style={{
+ position: 'absolute',
+ right: themeSpace.xl,
  width: '40px',
  height: '40px',
  borderRadius: '50%',
@@ -379,7 +454,12 @@ export default function Dashboard() {
  marginBottom: themeSpace['3xl'],
  }}
  >
- {[{ label: 'Active Users', value: '12,847', trend: '+12%', color: themeColors.primary50, icon: 'users' }, { label: 'Merchants', value: '384', trend: '+8%', color: themeColors.warning50, icon: 'merchants' }, { label: 'Live Offers', value: '1,563', trend: '+24%', color: themeColors.info50, icon: 'offers' }, { label: 'Redemptions', value: '4,207', trend: '+15%', color: themeColors.success50, icon: 'cards' }].map((stat, idx) => (
+ {[
+ { label: 'Active Users', value: loading ? '...' : stats.activeUsers, trend: '+12%', color: themeColors.primary50, icon: 'users' },
+ { label: 'Merchants', value: loading ? '...' : stats.merchants, trend: '+8%', color: themeColors.warning50, icon: 'merchants' },
+ { label: 'Live Offers', value: loading ? '...' : stats.offers, trend: '+24%', color: themeColors.info50, icon: 'offers' },
+ { label: 'Redemptions', value: loading ? '...' : stats.redemptions, trend: '+15%', color: themeColors.success50, icon: 'cards' }
+ ].map((stat, idx) => (
  <div
  key={idx}
  style={{

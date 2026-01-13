@@ -40,6 +40,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/subscription-plans").permitAll()
                 .requestMatchers("/api/offers/**").permitAll()
                 .requestMatchers("/api/v1/merchants/**").permitAll()
+                .requestMatchers("/api/v1/councils/**").permitAll()
+                .requestMatchers("/api/v1/users/**").permitAll()
+                .requestMatchers("/api/troops/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
@@ -63,6 +66,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",  // Next.js dev server (default port)
             "http://localhost:7020",  // Web portal (dev)
             "http://localhost:8085",  // Mobile Expo (dev)
             "https://portal.campcard.org",  // Web portal (prod)

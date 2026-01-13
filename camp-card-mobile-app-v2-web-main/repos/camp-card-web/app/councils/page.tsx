@@ -137,26 +137,33 @@ export default function CouncilsPage() {
  const [selectedTroopLeader, setSelectedTroopLeader] = useState<any | null>(null);
 
  useEffect(() => {
- // Load councils, troops, and troop leaders data
+ // Only fetch data when session is authenticated
+ if (status === 'authenticated' && session) {
  loadData();
- }, []);
+ }
+ }, [status, session]);
 
  const loadData = async () => {
  try {
+ console.log('[COUNCILS PAGE] Loading data...');
  const councilData = await api.getOrganizations(session);
  const troopsData = await api.getTroops(session);
  const usersData = await api.getUsers(session);
 
+ console.log('[COUNCILS PAGE] Council data:', councilData);
+ console.log('[COUNCILS PAGE] Troops data:', troopsData);
+ console.log('[COUNCILS PAGE] Users data:', usersData);
+
  // Filter for existing troop leaders
  const troopLeaders = (usersData.content || usersData || []).filter(
- (user: any) => user.role === 'TROOP_LEADER'
+ (user: any) => user.role === 'troop_leader' || user.role === 'TROOP_LEADER'
  );
  setAvailableTroopLeaders(troopLeaders);
 
  const councilsArray = (councilData.content || councilData || []).map((council: any) => ({
  id: council.id,
  name: council.name,
- location: `${council.city}, ${council.state}`,
+ location: `${council.city || ''}, ${council.state || ''}`,
  troopUnits: (troopsData.content || troopsData || [])
  .filter((troop: any) => troop.council === council.name || troop.councilId === council.id)
  .map((troop: any) => ({
@@ -168,8 +175,14 @@ export default function CouncilsPage() {
  }));
 
  setCouncils(councilsArray);
- } catch (err) {
- console.error('Failed to load councils and troops:', err);
+ } catch (err: any) {
+ const errorMsg = err?.status === 403 
+ ? 'Access denied. Please ensure you are logged in with proper credentials.' 
+ : err?.status === 401
+ ? 'Authentication failed. Please log in again.'
+ : 'Failed to load data: ' + (err?.message || 'Unknown error');
+ console.error('[COUNCILS PAGE] Error loading data:', err);
+ alert(errorMsg);
  }
  };
 
@@ -195,45 +208,68 @@ export default function CouncilsPage() {
  setExpandedTroops(newExpanded);
  };
 
- const addCouncil = () => {
- if (newCouncilName && newCouncilLocation) {
- const newCouncil: Council = {
- id: Date.now().toString(),
+ const addCouncil = async () => {
+ if (!newCouncilName || !newCouncilLocation) {
+ alert('Please enter both council name and location');
+ return;
+ }
+
+ try {
+ console.log('[COUNCILS PAGE] Creating new council...');
+ // Parse location into city and state
+ const locationParts = newCouncilLocation.split(',').map(s => s.trim());
+ const city = locationParts[0] || newCouncilLocation;
+ const state = locationParts[1] || '';
+
+ const councilData = {
  name: newCouncilName,
- location: newCouncilLocation,
- troopUnits: [],
+ city: city,
+ state: state,
  };
- setCouncils([...councils, newCouncil]);
+
+ await api.createOrganization(councilData, session);
+ console.log('[COUNCILS PAGE] Council created successfully');
+
+ // Reload data from backend
+ await loadData();
+
+ // Reset form
  setNewCouncilName('');
  setNewCouncilLocation('');
  setShowAddCouncil(false);
+ } catch (err: any) {
+ console.error('[COUNCILS PAGE] Error creating council:', err);
+ alert('Failed to create council: ' + (err?.message || 'Unknown error'));
  }
  };
 
- const addTroopUnit = (councilId: string) => {
- if (newTroopName && newTroopLeader) {
- setCouncils(
- councils.map((council) => {
- if (council.id === councilId) {
- return {
- ...council,
- troopUnits: [
- ...council.troopUnits,
- {
- id: `${councilId}-${Date.now()}`,
- name: newTroopName,
- leaderName: newTroopLeader,
- troopLeaders: [],
- },
- ],
- };
+ const addTroopUnit = async (councilId: string) => {
+ if (!newTroopName || !newTroopLeader) {
+ alert('Please enter both troop name and leader name');
+ return;
  }
- return council;
- })
- );
+
+ try {
+ console.log('[COUNCILS PAGE] Creating new troop...');
+ const troopData = {
+ name: newTroopName,
+ councilId: councilId,
+ leaderName: newTroopLeader,
+ };
+
+ await api.createTroop(troopData, session);
+ console.log('[COUNCILS PAGE] Troop created successfully');
+
+ // Reload data from backend
+ await loadData();
+
+ // Reset form
  setNewTroopName('');
  setNewTroopLeader('');
  setShowAddTroop(null);
+ } catch (err: any) {
+ console.error('[COUNCILS PAGE] Error creating troop:', err);
+ alert('Failed to create troop: ' + (err?.message || 'Unknown error'));
  }
  };
 

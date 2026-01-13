@@ -70,8 +70,8 @@ public class Merchant {
     
     private LocalDateTime approvedAt;
     
-    @Column(columnDefinition = "UUID")
-    private UUID approvedBy; // Admin user ID
+    // Admin user ID who approved (stores UUID as string for compatibility)
+    private UUID approvedBy;
     
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;

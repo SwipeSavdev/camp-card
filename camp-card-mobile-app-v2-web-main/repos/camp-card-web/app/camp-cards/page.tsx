@@ -56,9 +56,11 @@ export default function CampCardsPage() {
  const [methodFilter, setMethodFilter] = useState<string>('all');
 
  useEffect(() => {
- // Load data on mount, don't redirect if unauthenticated
+ // Only fetch data when session is authenticated
+ if (status === 'authenticated' && session) {
  fetchData();
- }, []);
+ }
+ }, [status, session]);
 
  const fetchData = async () => {
  try {

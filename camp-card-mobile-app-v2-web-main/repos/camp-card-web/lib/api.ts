@@ -2,6 +2,7 @@ import { Session } from 'next-auth';
 import { mockUsers, mockCouncils, mockTroops, mockMerchants, mockOffers, mockCards } from './mockData';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7010/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:7010';
 
 export class ApiError extends Error {
  constructor(
@@ -17,6 +18,7 @@ async function apiCall<T>(
  endpoint: string,
  options: RequestInit = {},
  session?: Session | null,
+ baseUrl: string = API_BASE_URL,
 ): Promise<T> {
  const headers: Record<string, string> = {
  'Content-Type': 'application/json',
@@ -27,14 +29,18 @@ async function apiCall<T>(
  }
 
  if (session?.user && 'accessToken' in session.user) {
- headers.Authorization = `Bearer ${(session.user as any).accessToken}`;
+ const token = (session.user as any).accessToken;
+ console.log('[API] Adding auth token:', token ? `${token.substring(0, 20)}...` : 'null');
+ headers.Authorization = `Bearer ${token}`;
+ } else {
+ console.warn('[API] No session or accessToken found. Session:', session);
  }
 
  try {
  const controller = new AbortController();
  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
- const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+ const response = await fetch(`${baseUrl}${endpoint}`, {
  ...options,
  headers,
  signal: controller.signal,
@@ -56,15 +62,34 @@ async function apiCall<T>(
 export const api = {
  // ============ USERS ============
  getUsers: async (session?: Session | null) => {
- try {
  const result = await apiCall<any>('/users', {}, session);
- return {
- content: result.content || result.users || result || []
+ const users = result.content || result.users || result || [];
+
+ // Map backend role to frontend role
+ const roleMapping: Record<string, string> = {
+ 'NATIONAL_ADMIN': 'super_admin',
+ 'SYSTEM_ADMIN': 'system_admin',
+ 'COUNCIL_ADMIN': 'council',
+ 'TROOP_LEADER': 'troop_leader',
+ 'SCOUT': 'scout',
+ 'PARENT': 'customer',
  };
- } catch (error) {
- console.error('Failed to fetch users:', error);
- return mockUsers;
- }
+
+ // Transform backend response to include 'name' field and map role
+ const transformedUsers = Array.isArray(users) ? users.map((user: any) => ({
+ id: user.id,
+ name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+ email: user.email,
+ role: roleMapping[user.role] || 'scout',
+ status: user.isActive ? 'active' : 'inactive',
+ firstName: user.firstName,
+ lastName: user.lastName,
+ isActive: user.isActive,
+ })) : [];
+
+ return {
+ content: transformedUsers
+ };
  },
 
  getUserById: async (id: string, session?: Session | null) => {
@@ -78,128 +103,95 @@ export const api = {
 
  createUser: async (data: any, session?: Session | null) => {
  try {
- return await apiCall<any>('/users', {
+ console.log('[API] createUser request:', data);
+ const result = await apiCall<any>('/users', {
  method: 'POST',
  body: JSON.stringify(data),
  }, session);
+ console.log('[API] createUser response:', result);
+ return result;
  } catch (error) {
- console.error('Failed to create user:', error);
- // Fallback: Create mock user
- const newUser = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newUser;
+ console.error('[API] Failed to create user:', error);
+ // Re-throw the error instead of silently falling back to mock data
+ throw error;
  }
  },
 
  updateUser: async (id: string, data: any, session?: Session | null) => {
- try {
- return await apiCall<any>(`/users/${id}`, {
+ console.log('[API] updateUser request:', id, data);
+ const result = await apiCall<any>(`/users/${id}`, {
  method: 'PUT',
  body: JSON.stringify(data),
  }, session);
- } catch (error) {
- console.error('Failed to update user:', error);
- // Fallback: Return updated user
- return { id, ...data };
- }
+ console.log('[API] updateUser response:', result);
+ return result;
  },
 
  deleteUser: async (id: string, session?: Session | null) => {
- try {
- return await apiCall<any>(`/users/${id}`, {
+ console.log('[API] deleteUser request:', id);
+ const result = await apiCall<any>(`/users/${id}`, {
  method: 'DELETE',
  }, session);
- } catch (error) {
- console.error('Failed to delete user:', error);
- // Fallback: Return success
- return { id, deleted: true };
- }
+ console.log('[API] deleteUser response:', result);
+ return result;
  },
 
  // ============ ORGANIZATIONS ============
  getOrganizations: async (session?: Session | null) => {
- try {
- const result = await apiCall<any>('/organizations', {}, session);
+ console.log('[API] Fetching councils from /api/v1/councils');
+ const result = await apiCall<any>('/councils', {}, session);
+ console.log('[API] Councils response:', result);
  return {
- content: result.content || result.organizations || result || []
+ content: result.content || result.councils || result || []
  };
- } catch (error) {
- console.error('Failed to fetch organizations:', error);
- return mockCouncils;
- }
  },
 
  getOrganizationById: async (id: string, session?: Session | null) => {
- try {
- return await apiCall<any>(`/organizations/${id}`, {}, session);
- } catch (error) {
- console.error('Failed to fetch organization:', error);
- return null;
- }
+ return await apiCall<any>(`/councils/${id}`, {}, session);
  },
 
  createOrganization: async (data: any, session?: Session | null) => {
- try {
- return await apiCall<any>('/organizations', {
+ console.log('[API] Creating council:', data);
+ const result = await apiCall<any>('/councils', {
  method: 'POST',
  body: JSON.stringify(data),
  }, session);
- } catch (error) {
- console.error('Failed to create organization:', error);
- // Fallback: Create mock organization
- const newOrg = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newOrg;
- }
+ console.log('[API] Council created:', result);
+ return result;
  },
 
  updateOrganization: async (id: string, data: any, session?: Session | null) => {
- try {
- return await apiCall<any>(`/organizations/${id}`, {
+ console.log('[API] Updating council:', id, data);
+ const result = await apiCall<any>(`/councils/${id}`, {
  method: 'PUT',
  body: JSON.stringify(data),
  }, session);
- } catch (error) {
- console.error('Failed to update organization:', error);
- // Fallback: Return updated organization
- return { id, ...data };
- }
+ console.log('[API] Council updated:', result);
+ return result;
  },
 
  deleteOrganization: async (id: string, session?: Session | null) => {
- try {
- return await apiCall<any>(`/organizations/${id}`, {
+ console.log('[API] Deleting council:', id);
+ const result = await apiCall<any>(`/councils/${id}`, {
  method: 'DELETE',
  }, session);
- } catch (error) {
- console.error('Failed to delete organization:', error);
- // Fallback: Return success
- return { id, deleted: true };
- }
+ console.log('[API] Organization deleted:', result);
+ return result;
  },
 
  // ============ TROOPS ============
  getTroops: async (session?: Session | null) => {
- try {
- const result = await apiCall<any>('/troops', {}, session);
+ console.log('[API] Fetching troops');
+ const result = await apiCall<any>('/api/troops', {}, session, API_BASE);
+ console.log('[API] Troops response:', result);
  return {
  content: result.content || result.troops || result || []
  };
- } catch (error) {
- console.error('Failed to fetch troops:', error);
- return mockTroops;
- }
  },
 
  getTroopById: async (id: string, session?: Session | null) => {
  try {
- return await apiCall<any>(`/troops/${id}`, {}, session);
+ return await apiCall<any>(`/api/troops/${id}`, {}, session, API_BASE);
  } catch (error) {
  console.error('Failed to fetch troop:', error);
  return null;
@@ -207,51 +199,36 @@ export const api = {
  },
 
  createTroop: async (data: any, session?: Session | null) => {
- try {
- return await apiCall<any>('/troops', {
+ console.log('[API] Creating troop:', data);
+ const result = await apiCall<any>('/api/troops', {
  method: 'POST',
  body: JSON.stringify(data),
- }, session);
- } catch (error) {
- console.error('Failed to create troop:', error);
- // Fallback: Create mock troop
- const newTroop = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newTroop;
- }
+ }, session, API_BASE);
+ console.log('[API] Troop created:', result);
+ return result;
  },
 
  updateTroop: async (id: string, data: any, session?: Session | null) => {
- try {
- return await apiCall<any>(`/troops/${id}`, {
+ console.log('[API] Updating troop:', id, data);
+ const result = await apiCall<any>(`/api/troops/${id}`, {
  method: 'PUT',
  body: JSON.stringify(data),
- }, session);
- } catch (error) {
- console.error('Failed to update troop:', error);
- // Fallback: Return updated troop
- return { id, ...data };
- }
+ }, session, API_BASE);
+ console.log('[API] Troop updated:', result);
+ return result;
  },
 
  deleteTroop: async (id: string, session?: Session | null) => {
- try {
- return await apiCall<any>(`/troops/${id}`, {
+ console.log('[API] Deleting troop:', id);
+ const result = await apiCall<any>(`/api/troops/${id}`, {
  method: 'DELETE',
- }, session);
- } catch (error) {
- console.error('Failed to delete troop:', error);
- // Fallback: Return success
- return { id, deleted: true };
- }
+ }, session, API_BASE);
+ console.log('[API] Troop deleted:', result);
+ return result;
  },
 
  // ============ MERCHANTS ============
  getMerchants: async (session?: Session | null) => {
- try {
  const result = await apiCall<any>('/merchants', {}, session);
  console.log('[API] getMerchants success:', result);
  // Backend returns { merchants: [...], total: N }
@@ -261,11 +238,6 @@ export const api = {
  merchants: merchants,
  content: merchants
  };
- } catch (error) {
- console.error('[API] Failed to fetch merchants, using mock data:', error);
- // Fall back to mock data if backend is unavailable
- return mockMerchants;
- }
  },
 
  getMerchantById: async (id: string, session?: Session | null) => {
@@ -278,7 +250,6 @@ export const api = {
  },
 
  createMerchant: async (data: any, session?: Session | null) => {
- try {
  console.log('[API] createMerchant request:', data);
  const result = await apiCall<any>('/merchants', {
  method: 'POST',
@@ -286,20 +257,9 @@ export const api = {
  }, session);
  console.log('[API] createMerchant response:', result);
  return result;
- } catch (error) {
- console.error('[API] Failed to create merchant:', error);
- // Fallback: Create mock merchant
- const newMerchant = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newMerchant;
- }
  },
 
  updateMerchant: async (id: string, data: any, session?: Session | null) => {
- try {
  console.log('[API] updateMerchant request:', { id, data });
  const result = await apiCall<any>(`/merchants/${id}`, {
  method: 'PUT',
@@ -307,30 +267,18 @@ export const api = {
  }, session);
  console.log('[API] updateMerchant response:', result);
  return result;
- } catch (error) {
- console.error('[API] Failed to update merchant:', error);
- // Fallback: Return updated merchant
- return { id, ...data };
- }
  },
 
  deleteMerchant: async (id: string, session?: Session | null) => {
- try {
  await apiCall<any>(`/merchants/${id}`, {
  method: 'DELETE',
  }, session);
  return { success: true };
- } catch (error) {
- console.error('Failed to delete merchant:', error);
- // Fallback: Return success
- return { success: true, id, deleted: true };
- }
  },
 
  // ============ OFFERS ============
  getOffers: async (session?: Session | null) => {
- try {
- const result = await apiCall<any>('/offers', {}, session);
+ const result = await apiCall<any>('/api/offers', {}, session, API_BASE);
  console.log('[API] getOffers success:', result);
  // Handle both response formats: { data: [...] } from backend and { content: [...] } from mock
  const offers = result.data || result.content || result || [];
@@ -339,16 +287,11 @@ export const api = {
  data: offers,
  content: offers
  };
- } catch (error) {
- console.error('[API] Failed to fetch offers, using mock data:', error);
- // Fall back to mock data if backend is unavailable
- return mockOffers;
- }
  },
 
  getOfferById: async (id: string, session?: Session | null) => {
  try {
- return await apiCall<any>(`/offers/${id}`, {}, session);
+ return await apiCall<any>(`/api/offers/${id}`, {}, session, API_BASE);
  } catch (error) {
  console.error('Failed to fetch offer:', error);
  return null;
@@ -356,71 +299,37 @@ export const api = {
  },
 
  createOffer: async (data: any, session?: Session | null) => {
- try {
- return await apiCall<any>('/offers', {
+ return await apiCall<any>('/api/offers', {
  method: 'POST',
  body: JSON.stringify(data),
- }, session);
- } catch (error) {
- console.error('Failed to create offer:', error);
- // Fallback: Create mock offer
- const newOffer = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newOffer;
- }
+ }, session, API_BASE);
  },
 
  updateOffer: async (id: string, data: any, session?: Session | null) => {
- try {
- return await apiCall<any>(`/offers/${id}`, {
+ return await apiCall<any>(`/api/offers/${id}`, {
  method: 'PUT',
  body: JSON.stringify(data),
- }, session);
- } catch (error) {
- console.error('Failed to update offer:', error);
- // Fallback: Return updated offer
- return { id, ...data };
- }
+ }, session, API_BASE);
  },
 
  deleteOffer: async (id: string, session?: Session | null) => {
- try {
- return await apiCall<any>(`/offers/${id}`, {
+ return await apiCall<any>(`/api/offers/${id}`, {
  method: 'DELETE',
- }, session);
- } catch (error) {
- console.error('Failed to delete offer:', error);
- // Fallback: Return success
- return { id, deleted: true };
- }
+ }, session, API_BASE);
  },
 
  activateOffer: async (id: string, session?: Session | null) => {
- try {
- return await apiCall<any>(`/offers/${id}/activate`, {
+ return await apiCall<any>(`/api/offers/${id}/activate`, {
  method: 'POST',
- }, session);
- } catch (error) {
- console.error('Failed to activate offer:', error);
- // Fallback: Return activated offer
- return { id, activated: true };
- }
+ }, session, API_BASE);
  },
 
  // ============ CAMP CARDS ============
  getCards: async (session?: Session | null) => {
- try {
  const result = await apiCall<any>('/camp-cards', {}, session);
  return {
  content: result.content || result.cards || result || []
  };
- } catch (error) {
- console.error('Failed to fetch cards:', error);
- return mockCards;
- }
  },
 
  getCardById: async (id: string, session?: Session | null) => {
@@ -433,46 +342,23 @@ export const api = {
  },
 
  createCard: async (data: any, session?: Session | null) => {
- try {
  return await apiCall<any>('/camp-cards', {
  method: 'POST',
  body: JSON.stringify(data),
  }, session);
- } catch (error) {
- console.error('Failed to create card:', error);
- // Fallback: Create mock card
- const newCard = {
- id: String(Math.floor(Math.random() * 10000)),
- ...data,
- createdAt: new Date().toISOString().split('T')[0],
- };
- return newCard;
- }
  },
 
  updateCard: async (id: string, data: any, session?: Session | null) => {
- try {
  return await apiCall<any>(`/camp-cards/${id}`, {
  method: 'PUT',
  body: JSON.stringify(data),
  }, session);
- } catch (error) {
- console.error('Failed to update card:', error);
- // Fallback: Return updated card
- return { id, ...data };
- }
  },
 
  deleteCard: async (id: string, session?: Session | null) => {
- try {
  return await apiCall<any>(`/camp-cards/${id}`, {
  method: 'DELETE',
  }, session);
- } catch (error) {
- console.error('Failed to delete card:', error);
- // Fallback: Return success
- return { id, deleted: true };
- }
  },
 
  // ============ CATEGORIES ============

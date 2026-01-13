@@ -38,15 +38,16 @@ const handler = NextAuth({
  if (response.ok) {
  const data = await response.json();
  console.log('Auth successful for user:', data.user?.email);
+ console.log('Backend response:', JSON.stringify(data, null, 2));
 
  // Map backend response to NextAuth user format
  return {
  id: data.user.id,
  email: data.user.email,
- name: data.user.full_name,
+ name: `${data.user.firstName} ${data.user.lastName}`,
  role: data.user.role,
- accessToken: data.access_token,
- refreshToken: data.refresh_token,
+ accessToken: data.accessToken,
+ refreshToken: data.refreshToken,
  };
  }
  } catch (backendError) {

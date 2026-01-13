@@ -101,10 +101,12 @@ export default function OffersPage() {
  const usageTypes = ['one-time', 'reusable'];
 
  useEffect(() => {
- // Load data on mount, don't redirect if unauthenticated
+ // Only fetch data when session is authenticated
+ if (status === 'authenticated' && session) {
  fetchMerchants();
  fetchData();
- }, []);
+ }
+ }, [status, session]);
 
  const fetchMerchants = async () => {
  try {
