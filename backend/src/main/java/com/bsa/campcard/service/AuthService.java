@@ -31,13 +31,24 @@ public class AuthService {
             throw new AuthenticationException("Email already registered");
         }
 
+        // Determine the role - default to PARENT (customer) for mobile signups
+        User.UserRole userRole = User.UserRole.PARENT;
+        if (request.getRole() != null && !request.getRole().isBlank()) {
+            try {
+                userRole = User.UserRole.valueOf(request.getRole().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Invalid role provided, use default
+                log.warn("Invalid role '{}' provided, defaulting to PARENT", request.getRole());
+            }
+        }
+
         User user = User.builder()
                 .email(request.getEmail().toLowerCase())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhone())
-                .role(User.UserRole.SCOUT)
+                .role(userRole)
                 .isActive(true)
                 .emailVerified(false)
                 .emailVerificationToken(UUID.randomUUID().toString())
