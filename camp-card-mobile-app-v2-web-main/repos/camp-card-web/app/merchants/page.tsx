@@ -89,6 +89,7 @@ interface Merchant {
   email: string;
   phone: string;
   businessType: string;
+  status: 'PENDING' | 'APPROVED' | 'INACTIVE' | 'REJECTED';
   isSingleLocation: boolean;
   locations: MerchantLocation[];
 }
@@ -183,6 +184,7 @@ export default function MerchantsPage() {
           email: item.email || item.contactEmail || '',
           phone: item.phone_number || item.phone || item.contactPhone || '',
           businessType: item.category || item.business_type || '',
+          status: item.status || 'PENDING',
           isSingleLocation: item.isSingleLocation !== undefined ? item.isSingleLocation : true,
           locations,
         };
@@ -242,6 +244,21 @@ export default function MerchantsPage() {
       newExpanded.add(merchantId);
     }
     setExpandedMerchants(newExpanded);
+  };
+
+  const toggleMerchantStatus = async (merchant: Merchant) => {
+    const newStatus = merchant.status === 'APPROVED' ? 'INACTIVE' : 'APPROVED';
+    try {
+      console.log('[PAGE] Updating merchant status:', merchant.id, newStatus);
+      await api.updateMerchant(merchant.id, { status: newStatus }, session);
+      console.log('[PAGE] Merchant status updated successfully');
+      // Update local state
+      setItems(items.map((m) => (m.id === merchant.id ? { ...m, status: newStatus } : m)));
+      setError(null);
+    } catch (err: any) {
+      console.error('[PAGE] Status update error:', err);
+      setError(`Failed to update merchant status: ${err?.message || 'Unknown error'}`);
+    }
   };
 
   const addLocation = () => {
@@ -638,6 +655,23 @@ export default function MerchantsPage() {
                  </div>
                  </div>
                   <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
+                   {/* Status Toggle */}
+                   <button
+                     onClick={(e) => { e.stopPropagation(); toggleMerchantStatus(merchant); }}
+                     style={{
+                       padding: `4px ${themeSpace.md}`,
+                       backgroundColor: merchant.status === 'APPROVED' ? themeColors.success50 : themeColors.warning50,
+                       color: merchant.status === 'APPROVED' ? themeColors.success600 : themeColors.warning600,
+                       border: `1px solid ${merchant.status === 'APPROVED' ? themeColors.success200 : '#fed7aa'}`,
+                       borderRadius: themeRadius.sm,
+                       cursor: 'pointer',
+                       fontSize: '12px',
+                       fontWeight: '600',
+                     }}
+                     title={merchant.status === 'APPROVED' ? 'Click to deactivate' : 'Click to approve'}
+                   >
+                     {merchant.status === 'APPROVED' ? '✓ Approved' : merchant.status}
+                   </button>
                    <button
                    onClick={(e) => { e.stopPropagation(); handleEdit(merchant); }}
                    style={{
