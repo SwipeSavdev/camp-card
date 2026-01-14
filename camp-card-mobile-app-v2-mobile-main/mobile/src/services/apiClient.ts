@@ -59,8 +59,14 @@ class ApiClient {
           _retry?: boolean;
         };
 
-        // If 401 and not already retried, try to refresh token
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Skip token refresh for auth endpoints (login, register, forgot-password)
+        const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+          originalRequest.url?.includes('/auth/register') ||
+          originalRequest.url?.includes('/auth/forgot-password') ||
+          originalRequest.url?.includes('/auth/reset-password');
+
+        // If 401 and not already retried, try to refresh token (skip for auth endpoints)
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
           if (this.isRefreshing) {
             // Wait for token refresh to complete
             return new Promise((resolve) => {
