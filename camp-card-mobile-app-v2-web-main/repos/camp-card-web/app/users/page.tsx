@@ -6,1472 +6,1809 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 
 const themeColors = {
- white: '#ffffff',
- gray50: '#f9fafb',
- gray100: '#f3f4f6',
- gray200: '#e5e7eb',
- gray500: '#6b7280',
- gray600: '#4b5563',
- text: '#1f2937',
- primary50: '#eff6ff',
- primary100: '#dbeafe',
- primary300: '#93c5fd',
- primary600: '#2563eb',
- primary800: '#1e40af',
- primary900: '#1e3a8a',
- success50: '#f0fdf4',
- success200: '#bbf7d0',
- success600: '#16a34a',
- warning50: '#fefce8',
- warning600: '#eab308',
- info50: '#f0f9ff',
- info600: '#0284c7',
- error400: '#f87171',
- error500: '#ef4444',
+  white: '#ffffff',
+  gray50: '#f9fafb',
+  gray100: '#f3f4f6',
+  gray200: '#e5e7eb',
+  gray500: '#6b7280',
+  gray600: '#4b5563',
+  text: '#1f2937',
+  primary50: '#eff6ff',
+  primary100: '#dbeafe',
+  primary300: '#93c5fd',
+  primary600: '#2563eb',
+  primary800: '#1e40af',
+  primary900: '#1e3a8a',
+  success50: '#f0fdf4',
+  success200: '#bbf7d0',
+  success600: '#16a34a',
+  warning50: '#fefce8',
+  warning600: '#eab308',
+  info50: '#f0f9ff',
+  info600: '#0284c7',
+  error400: '#f87171',
+  error500: '#ef4444',
 };
 
-const themeSpace = { xs: '3px', sm: '8px', md: '16px', lg: '24px', xl: '32px', '2xl': '40px', '3xl': '48px' };
+const themeSpace = {
+  xs: '3px', sm: '8px', md: '16px', lg: '24px', xl: '32px', '2xl': '40px', '3xl': '48px',
+};
 const themeRadius = { sm: '4px', card: '12px' };
 const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' };
 
-const Icon = ({ name, size = 18, color = 'currentColor', ...props }: { name: string; size?: number; color?: string; [key: string]: any }) => {
- const icons: { [key: string]: JSX.Element } = {
- add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
- download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
- upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
- file: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>,
- x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
- edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
- delete: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>,
- search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>,
- back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
- chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>,
- chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>,
- dashboard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>,
- users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
- organization: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M18 21H3v-2a6 6 0 0 1 6-6h3a6 6 0 0 1 6 6v2" /><circle cx="9" cy="7" r="4" /></svg>,
- merchants: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>,
- offers: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M6 9h12M6 9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9z" /></svg>,
- cards: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>,
- analytics: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="12" y1="2" x2="12" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>,
- brain: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08A2.5 2.5 0 0 0 12 19.5a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 12 4.5" /></svg>,
- creditCard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>,
- settings: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m3.08-3.08l4.24-4.24M19.78 19.78l-4.24-4.24m-3.08-3.08l-4.24-4.24" /></svg>,
- notifications: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>,
- health: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" /><path d="M16.5 9l-5.5 5.5L7.5 12" /></svg>,
- config: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="3" /></svg>,
- logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
- menu: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>,
- };
- return <span {...props}>{icons[name] || null}</span>;
-};
+function Icon({
+  name, size = 18, color = 'currentColor', ...props
+}: { name: string; size?: number; color?: string; [key: string]: any }) {
+  const icons: { [key: string]: JSX.Element } = {
+    add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+         </svg>,
+    download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>,
+    upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>,
+    file: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <polyline points="10 9 9 9 8 9" />
+    </svg>,
+    x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+       </svg>,
+    edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>,
+    delete: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+            </svg>,
+    search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+            </svg>,
+    back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
+    chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>,
+    chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>,
+    dashboard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+               </svg>,
+    users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+           </svg>,
+    organization: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M18 21H3v-2a6 6 0 0 1 6-6h3a6 6 0 0 1 6 6v2" />
+      <circle cx="9" cy="7" r="4" />
+                  </svg>,
+    merchants: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>,
+    offers: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M6 9h12M6 9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9z" /></svg>,
+    cards: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+           </svg>,
+    analytics: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <line x1="12" y1="2" x2="12" y2="22" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+               </svg>,
+    brain: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08A2.5 2.5 0 0 0 12 19.5a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 12 4.5" /></svg>,
+    creditCard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>,
+    settings: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m3.08-3.08l4.24-4.24M19.78 19.78l-4.24-4.24m-3.08-3.08l-4.24-4.24" />
+              </svg>,
+    notifications: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                   </svg>,
+    health: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+      <path d="M16.5 9l-5.5 5.5L7.5 12" />
+            </svg>,
+    config: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="3" /></svg>,
+    logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>,
+    menu: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>,
+  };
+  return <span {...props}>{icons[name] || null}</span>;
+}
 
 const navItems = [
- { name: 'dashboard', label: 'Dashboard', href: '/dashboard' },
- { name: 'users', label: 'Users', href: '/users' },
- { name: 'organization', label: 'Councils', href: '/councils' },
- { name: 'merchants', label: 'Merchants', href: '/merchants' },
- { name: 'offers', label: 'Offers', href: '/offers' },
- { name: 'cards', label: 'Cards', href: '/camp-cards' },
- { name: 'analytics', label: 'Analytics', href: '/analytics' },
- { name: 'brain', label: 'AI Marketing', href: '/ai-marketing' },
- { name: 'creditCard', label: 'Subscriptions', href: '/subscriptions' },
- { name: 'settings', label: 'Settings', href: '/settings' },
+  { name: 'dashboard', label: 'Dashboard', href: '/dashboard' },
+  { name: 'users', label: 'Users', href: '/users' },
+  { name: 'organization', label: 'Councils', href: '/councils' },
+  { name: 'merchants', label: 'Merchants', href: '/merchants' },
+  { name: 'offers', label: 'Offers', href: '/offers' },
+  { name: 'cards', label: 'Cards', href: '/camp-cards' },
+  { name: 'analytics', label: 'Analytics', href: '/analytics' },
+  { name: 'brain', label: 'AI Marketing', href: '/ai-marketing' },
+  { name: 'creditCard', label: 'Subscriptions', href: '/subscriptions' },
+  { name: 'settings', label: 'Settings', href: '/settings' },
 ];
 
 const bottomNavItems = [
- { name: 'notifications', label: 'Notifications', href: '/notifications' },
- { name: 'health', label: 'Health', href: '/health' },
- { name: 'config', label: 'Config', href: '/config' },
+  { name: 'notifications', label: 'Notifications', href: '/notifications' },
+  { name: 'health', label: 'Health', href: '/health' },
+  { name: 'config', label: 'Config', href: '/config' },
 ];
 
 type UserRole = 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'TROOP_LEADER' | 'PARENT' | 'SCOUT';
 
 interface User {
- id: string;
- name: string;
- email: string;
- status: 'active' | 'inactive';
- role: UserRole;
+  id: string;
+  name: string;
+  email: string;
+  status: 'active' | 'inactive';
+  role: UserRole;
 }
 
 export default function UsersPage() {
- const { data: session, status } = useSession();
- const router = useRouter();
- const [items, setItems] = useState<User[]>([]);
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
- const [searchTerm, setSearchTerm] = useState('');
- const [showAddForm, setShowAddForm] = useState(false);
- const [newUserName, setNewUserName] = useState('');
- const [newUserEmail, setNewUserEmail] = useState('');
- const [newUserStatus, setNewUserStatus] = useState<'active' | 'inactive'>('active');
- const [newUserRole, setNewUserRole] = useState<UserRole>('SCOUT');
- const [troopLeaderSearchTerm, setTroopLeaderSearchTerm] = useState('');
- const [showAddTroopLeaderForm, setShowAddTroopLeaderForm] = useState(false);
- const [newTroopLeaderName, setNewTroopLeaderName] = useState('');
- const [newTroopLeaderEmail, setNewTroopLeaderEmail] = useState('');
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [items, setItems] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserStatus, setNewUserStatus] = useState<'active' | 'inactive'>('active');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('SCOUT');
+  const [_troopLeaderSearchTerm, _setTroopLeaderSearchTerm] = useState('');
+  const [_showAddTroopLeaderForm, setShowAddTroopLeaderForm] = useState(false);
+  const [newTroopLeaderName, setNewTroopLeaderName] = useState('');
+  const [newTroopLeaderEmail, setNewTroopLeaderEmail] = useState('');
 
- // Edit user state
- const [showEditForm, setShowEditForm] = useState(false);
- const [editingUser, setEditingUser] = useState<User | null>(null);
- const [editUserName, setEditUserName] = useState('');
- const [editUserEmail, setEditUserEmail] = useState('');
- const [editUserStatus, setEditUserStatus] = useState<'active' | 'inactive'>('active');
- const [editUserRole, setEditUserRole] = useState<UserRole>('SCOUT');
+  // Edit user state
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editUserName, setEditUserName] = useState('');
+  const [editUserEmail, setEditUserEmail] = useState('');
+  const [editUserStatus, setEditUserStatus] = useState<'active' | 'inactive'>('active');
+  const [editUserRole, setEditUserRole] = useState<UserRole>('SCOUT');
 
- // Filter state
- const [roleFilter, setRoleFilter] = useState('');
- const [statusFilter, setStatusFilter] = useState('');
+  // Filter state
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
- // Pagination state
- const [currentPage, setCurrentPage] = useState(1);
- const [itemsPerPage, setItemsPerPage] = useState(10);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
- // Sidebar state
- const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
- // Import/Export state
- const [showImportModal, setShowImportModal] = useState(false);
- const [importFile, setImportFile] = useState<File | null>(null);
- const [importPreview, setImportPreview] = useState<any[]>([]);
- const [importing, setImporting] = useState(false);
- const [importErrors, setImportErrors] = useState<string[]>([]);
- const [importSuccess, setImportSuccess] = useState<number>(0);
+  // Import/Export state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [_importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importSuccess, setImportSuccess] = useState<number>(0);
 
- const roleOptions = [
- { value: 'NATIONAL_ADMIN', label: 'National Admin' },
- { value: 'COUNCIL_ADMIN', label: 'Council Admin' },
- { value: 'TROOP_LEADER', label: 'Troop Leader' },
- { value: 'PARENT', label: 'Parent' },
- { value: 'SCOUT', label: 'Scout' },
- ];
+  const roleOptions = [
+    { value: 'NATIONAL_ADMIN', label: 'National Admin' },
+    { value: 'COUNCIL_ADMIN', label: 'Council Admin' },
+    { value: 'TROOP_LEADER', label: 'Troop Leader' },
+    { value: 'PARENT', label: 'Parent' },
+    { value: 'SCOUT', label: 'Scout' },
+  ];
 
- useEffect(() => {
- // Wait for session to be authenticated before loading data
- if (status === 'authenticated' && session) {
- fetchData();
- }
- }, [status, session]);
+  useEffect(() => {
+    // Wait for session to be authenticated before loading data
+    if (status === 'authenticated' && session) {
+      fetchData();
+    }
+  }, [status, session]);
 
- const fetchData = async () => {
- try {
- setLoading(true);
- setError(null);
- const data = await api.getUsers(session);
- const rawUsers = data.content || data || [];
- // Map API response to frontend User interface
- const mappedUsers = rawUsers.map((u: any) => ({
- id: u.id,
- name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
- email: u.email,
- status: u.status || (u.isActive === false ? 'inactive' : 'active'),
- role: u.role || 'SCOUT',
- }));
- setItems(mappedUsers);
- } catch (err) {
- setError('Failed to load users');
- console.error(err);
- } finally {
- setLoading(false);
- }
- };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await api.getUsers(session);
+      const rawUsers = data.content || data || [];
+      // Map API response to frontend User interface
+      const mappedUsers = rawUsers.map((u: any) => ({
+        id: u.id,
+        name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+        email: u.email,
+        status: u.status || (u.isActive === false ? 'inactive' : 'active'),
+        role: u.role || 'SCOUT',
+      }));
+      setItems(mappedUsers);
+    } catch (err) {
+      setError('Failed to load users');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
- const handleDelete = async (id: string) => {
- if (!confirm('Delete this user?')) return;
- try {
- await api.deleteUser(id, session);
- setItems(items.filter(i => i.id !== id));
- } catch (err) {
- setError('Failed to delete');
- }
- };
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this user?')) return;
+    try {
+      await api.deleteUser(id, session);
+      setItems(items.filter((i) => i.id !== id));
+    } catch (err) {
+      setError('Failed to delete');
+    }
+  };
 
- const handleEdit = (user: User) => {
- console.log('[PAGE] Editing user:', user);
- setEditingUser(user);
- setEditUserName(user.name || '');
- setEditUserEmail(user.email || '');
- setEditUserStatus(user.status || 'active');
- setEditUserRole(user.role || 'SCOUT');
- setShowEditForm(true);
- };
+  const handleEdit = (user: User) => {
+    console.log('[PAGE] Editing user:', user);
+    setEditingUser(user);
+    setEditUserName(user.name || '');
+    setEditUserEmail(user.email || '');
+    setEditUserStatus(user.status || 'active');
+    setEditUserRole(user.role || 'SCOUT');
+    setShowEditForm(true);
+  };
 
- const saveEditUser = async () => {
- if (!editingUser) return;
- if (!editUserName.trim() || !editUserEmail.trim()) {
- setError('Name and email are required');
- return;
- }
+  const saveEditUser = async () => {
+    if (!editingUser) return;
+    if (!editUserName.trim() || !editUserEmail.trim()) {
+      setError('Name and email are required');
+      return;
+    }
 
- try {
- const nameParts = editUserName.trim().split(' ');
- const firstName = nameParts[0];
- const lastName = nameParts.slice(1).join(' ') || '';
+    try {
+      const nameParts = editUserName.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || '';
 
- const updateData = {
- firstName,
- lastName,
- isActive: editUserStatus === 'active',
- role: editUserRole,
- };
+      const updateData = {
+        firstName,
+        lastName,
+        isActive: editUserStatus === 'active',
+        role: editUserRole,
+      };
 
- console.log('[PAGE] Updating user:', editingUser.id, updateData);
- const updatedUser = await api.updateUser(editingUser.id, updateData, session);
- console.log('[PAGE] User updated successfully:', updatedUser);
+      console.log('[PAGE] Updating user:', editingUser.id, updateData);
+      const updatedUser = await api.updateUser(editingUser.id, updateData, session);
+      console.log('[PAGE] User updated successfully:', updatedUser);
 
- // Update local state
- setItems(items.map(item =>
- item.id === editingUser.id
- ? {
- ...item,
- name: editUserName,
- email: editUserEmail,
- status: editUserStatus,
- role: editUserRole,
- }
- : item
- ));
+      // Update local state
+      setItems(items.map((item) => (item.id === editingUser.id
+        ? {
+          ...item,
+          name: editUserName,
+          email: editUserEmail,
+          status: editUserStatus,
+          role: editUserRole,
+        }
+        : item)));
 
- // Reset form
- setShowEditForm(false);
- setEditingUser(null);
- setEditUserName('');
- setEditUserEmail('');
- setEditUserStatus('active');
- setEditUserRole('SCOUT');
- setError(null);
- } catch (err) {
- setError('Failed to update user: ' + (err instanceof Error ? err.message : 'Unknown error'));
- console.error('[PAGE] Error updating user:', err);
- }
- };
+      // Reset form
+      setShowEditForm(false);
+      setEditingUser(null);
+      setEditUserName('');
+      setEditUserEmail('');
+      setEditUserStatus('active');
+      setEditUserRole('SCOUT');
+      setError(null);
+    } catch (err) {
+      setError(`Failed to update user: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('[PAGE] Error updating user:', err);
+    }
+  };
 
- const addUser = async () => {
- if (!newUserName.trim() || !newUserEmail.trim()) {
- setError('Name and email are required');
- return;
- }
+  const addUser = async () => {
+    if (!newUserName.trim() || !newUserEmail.trim()) {
+      setError('Name and email are required');
+      return;
+    }
 
- try {
- // Split name into firstName and lastName
- const nameParts = newUserName.trim().split(' ');
- const firstName = nameParts[0];
- const lastName = nameParts.slice(1).join(' ') || '';
+    try {
+      // Split name into firstName and lastName
+      const nameParts = newUserName.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || '';
 
- // Generate a temporary password for the new user
- const tempPassword = 'TempPass' + Math.random().toString(36).slice(-8) + '!';
+      // Generate a temporary password for the new user
+      const tempPassword = `TempPass${Math.random().toString(36).slice(-8)}!`;
 
- const userData = {
- firstName: firstName,
- lastName: lastName,
- email: newUserEmail,
- password: tempPassword,
- isActive: newUserStatus === 'active',
- role: newUserRole,
- };
+      const userData = {
+        firstName,
+        lastName,
+        email: newUserEmail,
+        password: tempPassword,
+        isActive: newUserStatus === 'active',
+        role: newUserRole,
+      };
 
- console.log('[PAGE] Submitting user data:', userData);
- const newUser = await api.createUser(userData, session);
- console.log('[PAGE] User created successfully:', newUser);
+      console.log('[PAGE] Submitting user data:', userData);
+      const newUser = await api.createUser(userData, session);
+      console.log('[PAGE] User created successfully:', newUser);
 
- // Add to local state immediately
- if (newUser) {
- const user = {
- id: newUser.id || String(Math.floor(Math.random() * 10000)),
- name: `${newUser.firstName || firstName} ${newUser.lastName || lastName}`.trim(),
- email: newUser.email || newUserEmail,
- role: newUser.role || newUserRole,
- status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
- };
- setItems([...items, user]);
- }
+      // Add to local state immediately
+      if (newUser) {
+        const user = {
+          id: newUser.id || String(Math.floor(Math.random() * 10000)),
+          name: `${newUser.firstName || firstName} ${newUser.lastName || lastName}`.trim(),
+          email: newUser.email || newUserEmail,
+          role: newUser.role || newUserRole,
+          status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
+        };
+        setItems([...items, user]);
+      }
 
- // Don't refresh data - keep the optimistically added user
+      // Don't refresh data - keep the optimistically added user
 
- // Reset form
- setNewUserName('');
- setNewUserEmail('');
- setNewUserStatus('active');
- setNewUserRole('SCOUT');
- setShowAddForm(false);
- setError(null);
- } catch (err) {
- setError('Failed to create user: ' + (err instanceof Error ? err.message : 'Unknown error'));
- console.error('[PAGE] Error:', err);
- }
- };
+      // Reset form
+      setNewUserName('');
+      setNewUserEmail('');
+      setNewUserStatus('active');
+      setNewUserRole('SCOUT');
+      setShowAddForm(false);
+      setError(null);
+    } catch (err) {
+      setError(`Failed to create user: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('[PAGE] Error:', err);
+    }
+  };
 
- const filteredItems = (Array.isArray(items) ? items : []).filter(item => {
- const matchesSearch = searchTerm === '' ||
- item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
- item.email?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredItems = (Array.isArray(items) ? items : []).filter((item) => {
+    const matchesSearch = searchTerm === ''
+ || item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+ || item.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
- const matchesRole = roleFilter === '' || item.role === roleFilter;
- const matchesStatus = statusFilter === '' || item.status === statusFilter;
+    const matchesRole = roleFilter === '' || item.role === roleFilter;
+    const matchesStatus = statusFilter === '' || item.status === statusFilter;
 
- return matchesSearch && matchesRole && matchesStatus;
- });
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
- // Pagination calculations
- const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
- const startIndex = (currentPage - 1) * itemsPerPage;
- const endIndex = startIndex + itemsPerPage;
- const paginatedItems = filteredItems.slice(startIndex, endIndex);
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
- // Reset to page 1 when filters change
- useEffect(() => {
- setCurrentPage(1);
- }, [searchTerm, roleFilter, statusFilter, itemsPerPage]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter, itemsPerPage]);
 
- const troopLeaders = (Array.isArray(items) ? items : []).filter(item => item.role === 'TROOP_LEADER');
+  const troopLeaders = (Array.isArray(items) ? items : []).filter((item) => item.role === 'TROOP_LEADER');
 
- const filteredTroopLeaders = troopLeaders.filter(leader =>
- leader.name?.toLowerCase().includes(troopLeaderSearchTerm.toLowerCase()) ||
- leader.email?.toLowerCase().includes(troopLeaderSearchTerm.toLowerCase())
- );
+  const _filteredTroopLeaders = troopLeaders.filter((leader) => leader.name?.toLowerCase().includes(_troopLeaderSearchTerm.toLowerCase())
+ || leader.email?.toLowerCase().includes(_troopLeaderSearchTerm.toLowerCase()));
 
- const addNewTroopLeader = async () => {
- if (!newTroopLeaderName.trim() || !newTroopLeaderEmail.trim()) {
- setError('Name and email are required for troop leader');
- return;
- }
+  const _addNewTroopLeader = async () => {
+    if (!newTroopLeaderName.trim() || !newTroopLeaderEmail.trim()) {
+      setError('Name and email are required for troop leader');
+      return;
+    }
 
- try {
- const nameParts = newTroopLeaderName.trim().split(' ');
- const firstName = nameParts[0];
- const lastName = nameParts.slice(1).join(' ') || '';
+    try {
+      const nameParts = newTroopLeaderName.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || '';
 
- // Generate a temporary password for the new troop leader
- const tempPassword = 'TempPass' + Math.random().toString(36).slice(-8) + '!';
+      // Generate a temporary password for the new troop leader
+      const tempPassword = `TempPass${Math.random().toString(36).slice(-8)}!`;
 
- const userData = {
- firstName: firstName,
- lastName: lastName,
- email: newTroopLeaderEmail,
- password: tempPassword,
- isActive: true,
- role: 'TROOP_LEADER',
- };
+      const userData = {
+        firstName,
+        lastName,
+        email: newTroopLeaderEmail,
+        password: tempPassword,
+        isActive: true,
+        role: 'TROOP_LEADER',
+      };
 
- console.log('[PAGE] Creating new troop leader:', userData);
- const newTroopLeader = await api.createUser(userData, session);
- console.log('[PAGE] Troop leader created successfully:', newTroopLeader);
+      console.log('[PAGE] Creating new troop leader:', userData);
+      const newTroopLeader = await api.createUser(userData, session);
+      console.log('[PAGE] Troop leader created successfully:', newTroopLeader);
 
- // Add to local state immediately
- if (newTroopLeader) {
- const leader = {
- id: newTroopLeader.id || String(Math.floor(Math.random() * 10000)),
- name: `${newTroopLeader.firstName || firstName} ${newTroopLeader.lastName || lastName}`.trim(),
- email: newTroopLeader.email || newTroopLeaderEmail,
- role: 'TROOP_LEADER' as UserRole,
- status: 'active' as 'active' | 'inactive',
- };
- setItems([...items, leader]);
- }
+      // Add to local state immediately
+      if (newTroopLeader) {
+        const leader = {
+          id: newTroopLeader.id || String(Math.floor(Math.random() * 10000)),
+          name: `${newTroopLeader.firstName || firstName} ${newTroopLeader.lastName || lastName}`.trim(),
+          email: newTroopLeader.email || newTroopLeaderEmail,
+          role: 'TROOP_LEADER' as UserRole,
+          status: 'active' as 'active' | 'inactive',
+        };
+        setItems([...items, leader]);
+      }
 
- // Don't refresh data - keep the optimistically added troop leader
+      // Don't refresh data - keep the optimistically added troop leader
 
- // Reset form
- setNewTroopLeaderName('');
- setNewTroopLeaderEmail('');
- setShowAddTroopLeaderForm(false);
- setError(null);
- } catch (err) {
- setError('Failed to create troop leader: ' + (err instanceof Error ? err.message : 'Unknown error'));
- console.error('[PAGE] Error:', err);
- }
- };
+      // Reset form
+      setNewTroopLeaderName('');
+      setNewTroopLeaderEmail('');
+      setShowAddTroopLeaderForm(false);
+      setError(null);
+    } catch (err) {
+      setError(`Failed to create troop leader: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('[PAGE] Error:', err);
+    }
+  };
 
- // Export users to CSV
- const exportUsers = () => {
-   const headers = ['Name', 'Email', 'Role', 'Status'];
-   const csvContent = [
-     headers.join(','),
-     ...items.map(user => [
-       `"${user.name.replace(/"/g, '""')}"`,
-       `"${user.email.replace(/"/g, '""')}"`,
-       user.role,
-       user.status
-     ].join(','))
-   ].join('\n');
+  // Export users to CSV
+  const exportUsers = () => {
+    const headers = ['Name', 'Email', 'Role', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...items.map((user) => [
+        `"${user.name.replace(/"/g, '""')}"`,
+        `"${user.email.replace(/"/g, '""')}"`,
+        user.role,
+        user.status,
+      ].join(',')),
+    ].join('\n');
 
-   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-   const link = document.createElement('a');
-   const url = URL.createObjectURL(blob);
-   link.setAttribute('href', url);
-   link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
-   link.style.visibility = 'hidden';
-   document.body.appendChild(link);
-   link.click();
-   document.body.removeChild(link);
- };
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
- // Download CSV template
- const downloadTemplate = () => {
-   const csvContent = `Name,Email,Role,Status
+  // Download CSV template
+  const downloadTemplate = () => {
+    const csvContent = `Name,Email,Role,Status
 John Smith,john.smith@example.com,TROOP_LEADER,active
 Jane Doe,jane.doe@example.com,PARENT,active
 Bob Johnson,bob.johnson@example.com,SCOUT,active`;
 
-   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-   const link = document.createElement('a');
-   const url = URL.createObjectURL(blob);
-   link.setAttribute('href', url);
-   link.setAttribute('download', 'user_import_template.csv');
-   link.style.visibility = 'hidden';
-   document.body.appendChild(link);
-   link.click();
-   document.body.removeChild(link);
- };
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'user_import_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
- // Handle file selection for import
- const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-   const file = e.target.files?.[0];
-   if (!file) return;
+  // Handle file selection for import
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-   setImportFile(file);
-   setImportErrors([]);
-   setImportSuccess(0);
+    setImportFile(file);
+    setImportErrors([]);
+    setImportSuccess(0);
 
-   const reader = new FileReader();
-   reader.onload = (event) => {
-     const text = event.target?.result as string;
-     const lines = text.split('\n')
-       .filter(line => line.trim() && !line.trim().startsWith('#')); // Skip empty lines and comments
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n')
+        .filter((line) => line.trim() && !line.trim().startsWith('#')); // Skip empty lines and comments
 
-     if (lines.length < 2) {
-       setImportErrors(['File must contain a header row and at least one data row']);
-       setImportPreview([]);
-       return;
-     }
+      if (lines.length < 2) {
+        setImportErrors(['File must contain a header row and at least one data row']);
+        setImportPreview([]);
+        return;
+      }
 
-     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-     const requiredHeaders = ['name', 'email', 'role', 'status'];
-     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+      const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+      const requiredHeaders = ['name', 'email', 'role', 'status'];
+      const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h));
 
-     if (missingHeaders.length > 0) {
-       setImportErrors([`Missing required columns: ${missingHeaders.join(', ')}`]);
-       setImportPreview([]);
-       return;
-     }
+      if (missingHeaders.length > 0) {
+        setImportErrors([`Missing required columns: ${missingHeaders.join(', ')}`]);
+        setImportPreview([]);
+        return;
+      }
 
-     const nameIdx = headers.indexOf('name');
-     const emailIdx = headers.indexOf('email');
-     const roleIdx = headers.indexOf('role');
-     const statusIdx = headers.indexOf('status');
+      const nameIdx = headers.indexOf('name');
+      const emailIdx = headers.indexOf('email');
+      const roleIdx = headers.indexOf('role');
+      const statusIdx = headers.indexOf('status');
 
-     const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER', 'PARENT', 'SCOUT'];
-     const validStatuses = ['active', 'inactive'];
-     const preview: any[] = [];
-     const errors: string[] = [];
+      const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER', 'PARENT', 'SCOUT'];
+      const validStatuses = ['active', 'inactive'];
+      const preview: any[] = [];
+      const errors: string[] = [];
 
-     for (let i = 1; i < lines.length; i++) {
-       const line = lines[i].trim();
-       if (!line) continue;
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
 
-       // Parse CSV line (handle quoted values)
-       const values: string[] = [];
-       let current = '';
-       let inQuotes = false;
-       for (const char of line) {
-         if (char === '"') {
-           inQuotes = !inQuotes;
-         } else if (char === ',' && !inQuotes) {
-           values.push(current.trim());
-           current = '';
-         } else {
-           current += char;
-         }
-       }
-       values.push(current.trim());
+        // Parse CSV line (handle quoted values)
+        const values: string[] = [];
+        let current = '';
+        let inQuotes = false;
+        for (const char of line) {
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        values.push(current.trim());
 
-       const name = values[nameIdx]?.replace(/^"|"$/g, '');
-       const email = values[emailIdx]?.replace(/^"|"$/g, '');
-       const role = values[roleIdx]?.toUpperCase();
-       const status = values[statusIdx]?.toLowerCase();
+        const name = values[nameIdx]?.replace(/^"|"$/g, '');
+        const email = values[emailIdx]?.replace(/^"|"$/g, '');
+        const role = values[roleIdx]?.toUpperCase();
+        const status = values[statusIdx]?.toLowerCase();
 
-       const rowErrors: string[] = [];
-       if (!name) rowErrors.push('Name is required');
-       if (!email) rowErrors.push('Email is required');
-       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) rowErrors.push('Invalid email format');
-       if (!validRoles.includes(role)) rowErrors.push(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
-       if (!validStatuses.includes(status)) rowErrors.push(`Invalid status. Must be: active or inactive`);
+        const rowErrors: string[] = [];
+        if (!name) rowErrors.push('Name is required');
+        if (!email) rowErrors.push('Email is required');
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) rowErrors.push('Invalid email format');
+        if (!validRoles.includes(role)) rowErrors.push(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+        if (!validStatuses.includes(status)) rowErrors.push('Invalid status. Must be: active or inactive');
 
-       if (rowErrors.length > 0) {
-         errors.push(`Row ${i + 1}: ${rowErrors.join('; ')}`);
-       }
+        if (rowErrors.length > 0) {
+          errors.push(`Row ${i + 1}: ${rowErrors.join('; ')}`);
+        }
 
-       preview.push({
-         row: i + 1,
-         name,
-         email,
-         role,
-         status,
-         valid: rowErrors.length === 0,
-         errors: rowErrors,
-       });
-     }
+        preview.push({
+          row: i + 1,
+          name,
+          email,
+          role,
+          status,
+          valid: rowErrors.length === 0,
+          errors: rowErrors,
+        });
+      }
 
-     setImportPreview(preview);
-     setImportErrors(errors);
-   };
-   reader.readAsText(file);
- };
+      setImportPreview(preview);
+      setImportErrors(errors);
+    };
+    reader.readAsText(file);
+  };
 
- // Process import
- const processImport = async () => {
-   const validRows = importPreview.filter(row => row.valid);
-   if (validRows.length === 0) {
-     setImportErrors(['No valid rows to import']);
-     return;
-   }
+  // Process import
+  const processImport = async () => {
+    const validRows = importPreview.filter((row) => row.valid);
+    if (validRows.length === 0) {
+      setImportErrors(['No valid rows to import']);
+      return;
+    }
 
-   setImporting(true);
-   setImportErrors([]);
-   setImportSuccess(0);
+    setImporting(true);
+    setImportErrors([]);
+    setImportSuccess(0);
 
-   const errors: string[] = [];
-   let successCount = 0;
-   const newUsers: User[] = [];
+    const errors: string[] = [];
+    let successCount = 0;
+    const newUsers: User[] = [];
 
-   for (const row of validRows) {
-     try {
-       const nameParts = row.name.trim().split(' ');
-       const firstName = nameParts[0];
-       const lastName = nameParts.slice(1).join(' ') || '';
-       const tempPassword = 'TempPass' + Math.random().toString(36).slice(-8) + '!';
+    for (const row of validRows) {
+      try {
+        const nameParts = row.name.trim().split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ') || '';
+        const tempPassword = `TempPass${Math.random().toString(36).slice(-8)}!`;
 
-       const userData = {
-         firstName,
-         lastName,
-         email: row.email,
-         password: tempPassword,
-         isActive: row.status === 'active',
-         role: row.role,
-       };
+        const userData = {
+          firstName,
+          lastName,
+          email: row.email,
+          password: tempPassword,
+          isActive: row.status === 'active',
+          role: row.role,
+        };
 
-       const newUser = await api.createUser(userData, session);
+        const newUser = await api.createUser(userData, session);
 
-       if (newUser) {
-         newUsers.push({
-           id: newUser.id || String(Math.floor(Math.random() * 10000)),
-           name: `${newUser.firstName || firstName} ${newUser.lastName || lastName}`.trim(),
-           email: newUser.email || row.email,
-           role: newUser.role || row.role,
-           status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
-         });
-         successCount++;
-       }
-     } catch (err) {
-       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-       errors.push(`Row ${row.row} (${row.email}): ${errorMsg}`);
-     }
-   }
+        if (newUser) {
+          newUsers.push({
+            id: newUser.id || String(Math.floor(Math.random() * 10000)),
+            name: `${newUser.firstName || firstName} ${newUser.lastName || lastName}`.trim(),
+            email: newUser.email || row.email,
+            role: newUser.role || row.role,
+            status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
+          });
+          successCount++;
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`Row ${row.row} (${row.email}): ${errorMsg}`);
+      }
+    }
 
-   setItems([...items, ...newUsers]);
-   setImportSuccess(successCount);
-   setImportErrors(errors);
-   setImporting(false);
+    setItems([...items, ...newUsers]);
+    setImportSuccess(successCount);
+    setImportErrors(errors);
+    setImporting(false);
 
-   if (successCount > 0 && errors.length === 0) {
-     setTimeout(() => {
-       setShowImportModal(false);
-       setImportFile(null);
-       setImportPreview([]);
-       setImportErrors([]);
-       setImportSuccess(0);
-     }, 2000);
-   }
- };
+    if (successCount > 0 && errors.length === 0) {
+      setTimeout(() => {
+        setShowImportModal(false);
+        setImportFile(null);
+        setImportPreview([]);
+        setImportErrors([]);
+        setImportSuccess(0);
+      }, 2000);
+    }
+  };
 
- if (status === 'loading' || !session) {
- return (
- <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50, alignItems: 'center', justifyContent: 'center' }}>
- <div style={{ textAlign: 'center' }}>
- <div style={{ width: '40px', height: '40px', border: `3px solid ${themeColors.gray200}`, borderTopColor: themeColors.primary600, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
- <p style={{ color: themeColors.gray600, fontSize: '14px' }}>Loading...</p>
- <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
- </div>
- </div>
- );
- }
+  if (status === 'loading' || !session) {
+    return (
+      <div style={{
+        display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50, alignItems: 'center', justifyContent: 'center',
+      }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '40px', height: '40px', border: `3px solid ${themeColors.gray200}`, borderTopColor: themeColors.primary600, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px',
+          }}
+          />
+          <p style={{ color: themeColors.gray600, fontSize: '14px' }}>Loading...</p>
+          <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
+        </div>
+      </div>
+    );
+  }
 
- return (
- <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
- {/* Collapsible Sidebar */}
- <div
- style={{
- width: sidebarOpen ? '260px' : '70px',
- backgroundColor: themeColors.primary900,
- color: themeColors.white,
- display: 'flex',
- flexDirection: 'column',
- transition: 'width 300ms ease',
- overflow: 'hidden',
- flexShrink: 0,
- }}
- >
- {/* Logo */}
- <div style={{ padding: themeSpace.lg, display: 'flex', alignItems: 'center', gap: themeSpace.md, borderBottom: `1px solid ${themeColors.primary800}` }}>
- <div style={{ width: '36px', height: '36px', backgroundColor: themeColors.primary600, borderRadius: themeRadius.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
- <span style={{ fontWeight: '700', fontSize: '16px' }}>CC</span>
- </div>
- {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>Camp Card</span>}
- </div>
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: themeColors.gray50 }}>
+      {/* Collapsible Sidebar */}
+      <div
+        style={{
+          width: sidebarOpen ? '260px' : '70px',
+          backgroundColor: themeColors.primary900,
+          color: themeColors.white,
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'width 300ms ease',
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
+        {/* Logo */}
+        <div style={{
+          padding: themeSpace.lg, display: 'flex', alignItems: 'center', gap: themeSpace.md, borderBottom: `1px solid ${themeColors.primary800}`,
+        }}
+        >
+          <div style={{
+            width: '36px', height: '36px', backgroundColor: themeColors.primary600, borderRadius: themeRadius.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}
+          >
+            <span style={{ fontWeight: '700', fontSize: '16px' }}>CC</span>
+          </div>
+          {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>Camp Card</span>}
+        </div>
 
- {/* Navigation */}
- <div style={{ flex: 1, overflow: 'auto', paddingTop: themeSpace.md }}>
- {navItems.map((item) => {
- const isActive = item.href === '/users';
- return (
- <div
- key={item.href}
- onClick={() => router.push(item.href)}
- style={{
- padding: `${themeSpace.md}`,
- display: 'flex',
- alignItems: 'center',
- gap: themeSpace.md,
- cursor: 'pointer',
- color: isActive ? themeColors.white : themeColors.primary100,
- fontSize: '14px',
- transition: 'all 200ms',
- borderLeft: isActive ? `3px solid ${themeColors.primary300}` : '3px solid transparent',
- backgroundColor: isActive ? themeColors.primary800 : 'transparent',
- }}
- onMouseEnter={(e) => {
- if (!isActive) e.currentTarget.style.backgroundColor = themeColors.primary800;
- }}
- onMouseLeave={(e) => {
- if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
- }}
- >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px' }}>
- <Icon name={item.name} size={18} color="currentColor" />
- </div>
- {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
- </div>
- );
- })}
- </div>
+        {/* Navigation */}
+        <div style={{ flex: 1, overflow: 'auto', paddingTop: themeSpace.md }}>
+          {navItems.map((item) => {
+            const isActive = item.href === '/users';
+            return (
+              <div
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                style={{
+                  padding: `${themeSpace.md}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: themeSpace.md,
+                  cursor: 'pointer',
+                  color: isActive ? themeColors.white : themeColors.primary100,
+                  fontSize: '14px',
+                  transition: 'all 200ms',
+                  borderLeft: isActive ? `3px solid ${themeColors.primary300}` : '3px solid transparent',
+                  backgroundColor: isActive ? themeColors.primary800 : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.backgroundColor = themeColors.primary800;
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px',
+                }}
+                >
+                  <Icon name={item.name} size={18} color="currentColor" />
+                </div>
+                {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+              </div>
+            );
+          })}
+        </div>
 
- {/* Bottom Navigation */}
- <div style={{ borderTop: `1px solid ${themeColors.primary800}`, padding: themeSpace.md }}>
- {bottomNavItems.map((item) => (
- <div
- key={item.href}
- onClick={() => router.push(item.href)}
- style={{
- padding: themeSpace.md,
- display: 'flex',
- alignItems: 'center',
- gap: themeSpace.md,
- cursor: 'pointer',
- color: themeColors.primary100,
- fontSize: '13px',
- marginBottom: themeSpace.xs,
- borderRadius: '4px',
- transition: 'all 200ms',
- }}
- onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColors.primary800; }}
- onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
- >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px' }}>
- <Icon name={item.name} size={18} color="currentColor" />
- </div>
- {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
- </div>
- ))}
- <div
- onClick={() => router.push('/login')}
- style={{
- padding: themeSpace.md,
- display: 'flex',
- alignItems: 'center',
- gap: themeSpace.md,
- cursor: 'pointer',
- color: themeColors.primary100,
- fontSize: '13px',
- marginTop: themeSpace.md,
- borderTop: `1px solid ${themeColors.primary800}`,
- paddingTop: themeSpace.lg,
- }}
- >
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px' }}>
- <Icon name="logout" size={18} color="currentColor" />
- </div>
- {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>Logout</span>}
- </div>
- </div>
- </div>
+        {/* Bottom Navigation */}
+        <div style={{ borderTop: `1px solid ${themeColors.primary800}`, padding: themeSpace.md }}>
+          {bottomNavItems.map((item) => (
+            <div
+              key={item.href}
+              onClick={() => router.push(item.href)}
+              style={{
+                padding: themeSpace.md,
+                display: 'flex',
+                alignItems: 'center',
+                gap: themeSpace.md,
+                cursor: 'pointer',
+                color: themeColors.primary100,
+                fontSize: '13px',
+                marginBottom: themeSpace.xs,
+                borderRadius: '4px',
+                transition: 'all 200ms',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColors.primary800; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+            >
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px',
+              }}
+              >
+                <Icon name={item.name} size={18} color="currentColor" />
+              </div>
+              {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+            </div>
+          ))}
+          <div
+            onClick={() => router.push('/login')}
+            style={{
+              padding: themeSpace.md,
+              display: 'flex',
+              alignItems: 'center',
+              gap: themeSpace.md,
+              cursor: 'pointer',
+              color: themeColors.primary100,
+              fontSize: '13px',
+              marginTop: themeSpace.md,
+              borderTop: `1px solid ${themeColors.primary800}`,
+              paddingTop: themeSpace.lg,
+            }}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px',
+            }}
+            >
+              <Icon name="logout" size={18} color="currentColor" />
+            </div>
+            {sidebarOpen && <span style={{ whiteSpace: 'nowrap' }}>Logout</span>}
+          </div>
+        </div>
+      </div>
 
- {/* Main Content */}
- <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
- <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs }}>
- <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
- <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, padding: themeSpace.sm }}>
- <Icon name="menu" size={20} />
- </button>
- <h1 style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Users</h1>
- </div>
- <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
- <span style={{ fontSize: '13px', color: themeColors.gray600, marginRight: themeSpace.sm }}>
- Showing {filteredItems.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length}
- </span>
- <button onClick={() => setShowImportModal(true)} style={{ background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center' }}>
- <Icon name="upload" size={16} color={themeColors.gray600} />
- Import
- </button>
- <button onClick={exportUsers} style={{ background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center' }}>
- <Icon name="download" size={16} color={themeColors.gray600} />
- Export
- </button>
- <button onClick={() => setShowAddForm(true)} style={{ background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
- <Icon name="add" size={18} color={themeColors.white} />
- Add User
- </button>
- </div>
- </div>
+      {/* Main Content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{
+          padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs,
+        }}
+        >
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg,
+          }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                style={{
+  background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, padding: themeSpace.sm,
+}}
+              >
+                <Icon name="menu" size={20} />
+              </button>
+              <h1 style={{
+                fontSize: '28px', fontWeight: '700', color: themeColors.text, margin: 0,
+              }}
+              >
+                Users
+</h1>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
+              <span style={{ fontSize: '13px', color: themeColors.gray600, marginRight: themeSpace.sm }}>
+                Showing
+                {' '}
+                {filteredItems.length > 0 ? startIndex + 1 : 0}
+                -
+                {Math.min(endIndex, filteredItems.length)}
+                {' '}
+                of
+                {filteredItems.length}
+              </span>
+              <button
+                onClick={() => setShowImportModal(true)}
+                style={{
+  background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center',
+}}
+              >
+                <Icon name="upload" size={16} color={themeColors.gray600} />
+                Import
+              </button>
+              <button
+                onClick={exportUsers}
+                style={{
+  background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center',
+}}
+              >
+                <Icon name="download" size={16} color={themeColors.gray600} />
+                Export
+              </button>
+              <button
+                onClick={() => setShowAddForm(true)}
+                style={{
+  background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
+}}
+              >
+                <Icon name="add" size={18} color={themeColors.white} />
+                Add User
+              </button>
+            </div>
+          </div>
 
- {/* Search and Filters */}
- <div style={{ display: 'flex', gap: themeSpace.md, flexWrap: 'wrap', alignItems: 'center' }}>
- <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '300px' }}>
- <Icon name="search" size={18} color={themeColors.gray500} style={{ position: 'absolute', left: themeSpace.md, top: '12px' }} />
- <input
- type="text"
- placeholder="Search users..."
- value={searchTerm}
- onChange={(e) => setSearchTerm(e.target.value)}
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md} ${themeSpace.sm} ${themeSpace.xl}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- }}
- />
- </div>
+          {/* Search and Filters */}
+          <div style={{
+            display: 'flex', gap: themeSpace.md, flexWrap: 'wrap', alignItems: 'center',
+          }}
+          >
+            <div style={{
+              position: 'relative', flex: '1', minWidth: '200px', maxWidth: '300px',
+            }}
+            >
+              <Icon name="search" size={18} color={themeColors.gray500} style={{ position: 'absolute', left: themeSpace.md, top: '12px' }} />
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: `${themeSpace.sm} ${themeSpace.md} ${themeSpace.sm} ${themeSpace.xl}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
 
- {/* Role Filter */}
- <select
- value={roleFilter}
- onChange={(e) => setRoleFilter(e.target.value)}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- backgroundColor: themeColors.white,
- cursor: 'pointer',
- minWidth: '140px',
- }}
- >
- <option value="">All Roles</option>
- {roleOptions.map(role => (
- <option key={role.value} value={role.value}>{role.label}</option>
- ))}
- </select>
+            {/* Role Filter */}
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`,
+                border: `1px solid ${themeColors.gray200}`,
+                borderRadius: themeRadius.sm,
+                fontSize: '14px',
+                backgroundColor: themeColors.white,
+                cursor: 'pointer',
+                minWidth: '140px',
+              }}
+            >
+              <option value="">All Roles</option>
+              {roleOptions.map((role) => (
+                <option key={role.value} value={role.value}>{role.label}</option>
+              ))}
+            </select>
 
- {/* Status Filter */}
- <select
- value={statusFilter}
- onChange={(e) => setStatusFilter(e.target.value)}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- backgroundColor: themeColors.white,
- cursor: 'pointer',
- minWidth: '120px',
- }}
- >
- <option value="">All Status</option>
- <option value="active">Active</option>
- <option value="inactive">Inactive</option>
- </select>
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`,
+                border: `1px solid ${themeColors.gray200}`,
+                borderRadius: themeRadius.sm,
+                fontSize: '14px',
+                backgroundColor: themeColors.white,
+                cursor: 'pointer',
+                minWidth: '120px',
+              }}
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
 
- {/* Items Per Page */}
- <select
- value={itemsPerPage}
- onChange={(e) => setItemsPerPage(Number(e.target.value))}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- backgroundColor: themeColors.white,
- cursor: 'pointer',
- }}
- >
- <option value={10}>10 per page</option>
- <option value={25}>25 per page</option>
- <option value={50}>50 per page</option>
- <option value={100}>100 per page</option>
- </select>
+            {/* Items Per Page */}
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`,
+                border: `1px solid ${themeColors.gray200}`,
+                borderRadius: themeRadius.sm,
+                fontSize: '14px',
+                backgroundColor: themeColors.white,
+                cursor: 'pointer',
+              }}
+            >
+              <option value={10}>10 per page</option>
+              <option value={25}>25 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+            </select>
 
- {/* Clear Filters */}
- {(searchTerm || roleFilter || statusFilter) && (
- <button
- onClick={() => {
- setSearchTerm('');
- setRoleFilter('');
- setStatusFilter('');
- }}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- backgroundColor: themeColors.gray100,
- color: themeColors.gray600,
- border: 'none',
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- fontSize: '13px',
- fontWeight: '500',
- }}
- >
- Clear Filters
- </button>
- )}
- </div>
- </div>
+            {/* Clear Filters */}
+            {(searchTerm || roleFilter || statusFilter) && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setRoleFilter('');
+                setStatusFilter('');
+              }}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`,
+                backgroundColor: themeColors.gray100,
+                color: themeColors.gray600,
+                border: 'none',
+                borderRadius: themeRadius.sm,
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500',
+              }}
+            >
+              Clear Filters
+            </button>
+            )}
+          </div>
+        </div>
 
- <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
- {error && <div style={{ backgroundColor: '#fee2e2', border: `1px solid ${themeColors.error500}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.error500 }}>{error}</div>}
+        <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
+          {error && (
+          <div style={{
+            backgroundColor: '#fee2e2', border: `1px solid ${themeColors.error500}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.error500,
+          }}
+          >
+            {error}
+          </div>
+          )}
 
- {loading ? (
- <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
- ) : filteredItems.length === 0 ? (
- <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>
- {items.length === 0 ? 'No users found' : 'No users match your filters'}
- </div>
- ) : (
- <>
- <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, overflow: 'hidden', boxShadow: themeShadow.sm }}>
- <table style={{ width: '100%', borderCollapse: 'collapse' }}>
- <thead>
- <tr style={{ backgroundColor: themeColors.gray50, borderBottom: `1px solid ${themeColors.gray200}` }}>
- <th style={{ textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600 }}>Name</th>
- <th style={{ textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600 }}>Email</th>
- <th style={{ textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600 }}>Role</th>
- <th style={{ textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600 }}>Status</th>
- <th style={{ textAlign: 'center', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600 }}>Actions</th>
- </tr>
- </thead>
- <tbody>
- {paginatedItems.map((item) => (
- <tr key={item.id} style={{ borderBottom: `1px solid ${themeColors.gray200}` }}>
- <td style={{ padding: themeSpace.lg, fontSize: '14px', color: themeColors.text, fontWeight: '500' }}>{item.name}</td>
- <td style={{ padding: themeSpace.lg, fontSize: '14px', color: themeColors.text }}>{item.email}</td>
- <td style={{ padding: themeSpace.lg }}>
- <span style={{ padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: themeColors.primary50, color: themeColors.primary600, borderRadius: themeRadius.sm, fontSize: '12px', fontWeight: '500' }}>
- {roleOptions.find(r => r.value === item.role)?.label || item.role}
- </span>
- </td>
- <td style={{ padding: themeSpace.lg }}>
- <span style={{ padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: item.status === 'active' ? themeColors.success50 : themeColors.gray100, color: item.status === 'active' ? themeColors.success600 : themeColors.gray600, borderRadius: themeRadius.sm, fontSize: '12px', fontWeight: '500' }}>
- {item.status || 'active'}
- </span>
- </td>
- <td style={{ padding: themeSpace.lg, textAlign: 'center' }}>
- <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
- <button onClick={() => handleEdit(item)} style={{ background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <Icon name="edit" size={16} color={themeColors.info600} />
- </button>
- <button onClick={() => handleDelete(item.id)} style={{ background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <Icon name="delete" size={16} color={themeColors.error500} />
- </button>
- </div>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
+          ) : filteredItems.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>
+              {items.length === 0 ? 'No users found' : 'No users match your filters'}
+            </div>
+          ) : (
+            <>
+              <div style={{
+                backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, overflow: 'hidden', boxShadow: themeShadow.sm,
+              }}
+              >
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                   <tr style={{ backgroundColor: themeColors.gray50, borderBottom: `1px solid ${themeColors.gray200}` }}>
+                   <th style={{
+                   textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600,
+                 }}
+                 >
+Name
+                 </th>
+                   <th style={{
+                   textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600,
+                 }}
+                 >
+Email
+                 </th>
+                   <th style={{
+                   textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600,
+                 }}
+                 >
+Role
+                 </th>
+                   <th style={{
+                   textAlign: 'left', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600,
+                 }}
+                 >
+Status
+                 </th>
+                   <th style={{
+                   textAlign: 'center', padding: themeSpace.lg, fontSize: '13px', fontWeight: '600', color: themeColors.gray600,
+                 }}
+                 >
+Actions
+                 </th>
+                 </tr>
+                 </thead>
+                  <tbody>
+                   {paginatedItems.map((item) => (
+                   <tr key={item.id} style={{ borderBottom: `1px solid ${themeColors.gray200}` }}>
+                   <td style={{
+                   padding: themeSpace.lg, fontSize: '14px', color: themeColors.text, fontWeight: '500',
+                 }}
+                 >
+                   {item.name}
+                 </td>
+                   <td style={{ padding: themeSpace.lg, fontSize: '14px', color: themeColors.text }}>{item.email}</td>
+                   <td style={{ padding: themeSpace.lg }}>
+                   <span style={{
+                   padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: themeColors.primary50, color: themeColors.primary600, borderRadius: themeRadius.sm, fontSize: '12px', fontWeight: '500',
+                 }}
+                 >
+                   {roleOptions.find((r) => r.value === item.role)?.label || item.role}
+                 </span>
+                 </td>
+                   <td style={{ padding: themeSpace.lg }}>
+                   <span style={{
+                   padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: item.status === 'active' ? themeColors.success50 : themeColors.gray100, color: item.status === 'active' ? themeColors.success600 : themeColors.gray600, borderRadius: themeRadius.sm, fontSize: '12px', fontWeight: '500',
+                 }}
+                 >
+                   {item.status || 'active'}
+                 </span>
+                 </td>
+                   <td style={{ padding: themeSpace.lg, textAlign: 'center' }}>
+                   <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
+                   <button
+                     onClick={() => handleEdit(item)} style={{
+                     background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   }}
+                   >
+                     <Icon name="edit" size={16} color={themeColors.info600} />
+                   </button>
+                   <button
+                     onClick={() => handleDelete(item.id)} style={{
+                     background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   }}
+                   >
+                     <Icon name="delete" size={16} color={themeColors.error500} />
+                   </button>
+                 </div>
+                 </td>
+                 </tr>
+                 ))}
+                 </tbody>
+                </table>
+              </div>
 
- {/* Pagination Controls */}
- {totalPages > 1 && (
- <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: themeSpace.sm, marginTop: themeSpace.xl, padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.card, boxShadow: themeShadow.xs }}>
- <button
- onClick={() => setCurrentPage(1)}
- disabled={currentPage === 1}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
- color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
- border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
- borderRadius: themeRadius.sm,
- cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
- fontSize: '13px',
- fontWeight: '500',
- }}
- >
- First
- </button>
- <button
- onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
- disabled={currentPage === 1}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
- color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
- border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
- borderRadius: themeRadius.sm,
- cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
- fontSize: '13px',
- fontWeight: '500',
- display: 'flex',
- alignItems: 'center',
- gap: themeSpace.xs,
- }}
- >
- <Icon name="chevronLeft" size={16} /> Prev
- </button>
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+              <div style={{
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: themeSpace.sm, marginTop: themeSpace.xl, padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.card, boxShadow: themeShadow.xs,
+              }}
+              >
+                <button
+                 onClick={() => setCurrentPage(1)}
+                 disabled={currentPage === 1}
+                 style={{
+                 padding: `${themeSpace.sm} ${themeSpace.md}`,
+                 backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+                 color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+                 border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
+                 borderRadius: themeRadius.sm,
+                 cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                 fontSize: '13px',
+                 fontWeight: '500',
+               }}
+               >
+         First
+               </button>
+                <button
+                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                 disabled={currentPage === 1}
+                 style={{
+                 padding: `${themeSpace.sm} ${themeSpace.md}`,
+                 backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+                 color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+                 border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
+                 borderRadius: themeRadius.sm,
+                 cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                 fontSize: '13px',
+                 fontWeight: '500',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: themeSpace.xs,
+               }}
+               >
+                 <Icon name="chevronLeft" size={16} />
+                 {' '}
+                 Prev
+       </button>
 
- <div style={{ display: 'flex', gap: themeSpace.xs }}>
- {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
- let pageNum;
- if (totalPages <= 5) {
- pageNum = i + 1;
- } else if (currentPage <= 3) {
- pageNum = i + 1;
- } else if (currentPage >= totalPages - 2) {
- pageNum = totalPages - 4 + i;
- } else {
- pageNum = currentPage - 2 + i;
- }
- return (
- <button
- key={pageNum}
- onClick={() => setCurrentPage(pageNum)}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- backgroundColor: currentPage === pageNum ? themeColors.primary600 : themeColors.white,
- color: currentPage === pageNum ? themeColors.white : themeColors.text,
- border: `1px solid ${currentPage === pageNum ? themeColors.primary600 : themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- fontSize: '13px',
- fontWeight: currentPage === pageNum ? '600' : '500',
- minWidth: '36px',
- }}
- >
- {pageNum}
- </button>
- );
- })}
- </div>
+                <div style={{ display: 'flex', gap: themeSpace.xs }}>
+                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                 let pageNum;
+                 if (totalPages <= 5) {
+                   pageNum = i + 1;
+                 } else if (currentPage <= 3) {
+                   pageNum = i + 1;
+                 } else if (currentPage >= totalPages - 2) {
+                   pageNum = totalPages - 4 + i;
+                 } else {
+                   pageNum = currentPage - 2 + i;
+                 }
+                 return (
+                 <button
+                 key={pageNum}
+                 onClick={() => setCurrentPage(pageNum)}
+                 style={{
+                 padding: `${themeSpace.sm} ${themeSpace.md}`,
+                 backgroundColor: currentPage === pageNum ? themeColors.primary600 : themeColors.white,
+                 color: currentPage === pageNum ? themeColors.white : themeColors.text,
+                 border: `1px solid ${currentPage === pageNum ? themeColors.primary600 : themeColors.gray200}`,
+                 borderRadius: themeRadius.sm,
+                 cursor: 'pointer',
+                 fontSize: '13px',
+                 fontWeight: currentPage === pageNum ? '600' : '500',
+                 minWidth: '36px',
+               }}
+               >
+                 {pageNum}
+               </button>
+                 );
+               })}
+               </div>
 
- <button
- onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
- disabled={currentPage === totalPages}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
- color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
- border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
- borderRadius: themeRadius.sm,
- cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
- fontSize: '13px',
- fontWeight: '500',
- display: 'flex',
- alignItems: 'center',
- gap: themeSpace.xs,
- }}
- >
- Next <Icon name="chevronRight" size={16} />
- </button>
- <button
- onClick={() => setCurrentPage(totalPages)}
- disabled={currentPage === totalPages}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
- color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
- border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
- borderRadius: themeRadius.sm,
- cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
- fontSize: '13px',
- fontWeight: '500',
- }}
- >
- Last
- </button>
- </div>
- )}
- </>
- )}
- </div>
+                <button
+                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                 disabled={currentPage === totalPages}
+                 style={{
+                 padding: `${themeSpace.sm} ${themeSpace.md}`,
+                 backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+                 color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+                 border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
+                 borderRadius: themeRadius.sm,
+                 cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                 fontSize: '13px',
+                 fontWeight: '500',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: themeSpace.xs,
+               }}
+               >
+         Next
+                 {' '}
+                 <Icon name="chevronRight" size={16} />
+               </button>
+                <button
+                 onClick={() => setCurrentPage(totalPages)}
+                 disabled={currentPage === totalPages}
+                 style={{
+                 padding: `${themeSpace.sm} ${themeSpace.md}`,
+                 backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+                 color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+                 border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
+                 borderRadius: themeRadius.sm,
+                 cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                 fontSize: '13px',
+                 fontWeight: '500',
+               }}
+               >
+         Last
+               </button>
+              </div>
+              )}
+            </>
+          )}
+        </div>
 
- {showAddForm && (
- <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
- <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '500px', boxShadow: themeShadow.md }}>
- <h2 style={{ fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0 }}>Add New User</h2>
+        {showAddForm && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+        }}
+        >
+          <div style={{
+            backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '500px', boxShadow: themeShadow.md,
+          }}
+          >
+            <h2 style={{
+              fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0,
+            }}
+            >
+              Add New User
+            </h2>
 
- <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl }}>
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Name</label>
- <input
- type="text"
- value={newUserName}
- onChange={(e) => setNewUserName(e.target.value)}
- placeholder="Enter user name"
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- }}
- />
- </div>
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl,
+            }}
+            >
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Name
+                </label>
+                <input
+                  type="text"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  placeholder="Enter user name"
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                 }}
+                />
+              </div>
 
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Email</label>
- <input
- type="email"
- value={newUserEmail}
- onChange={(e) => setNewUserEmail(e.target.value)}
- placeholder="Enter email address"
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- }}
- />
- </div>
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Email
+                </label>
+                <input
+                  type="email"
+                  value={newUserEmail}
+                  onChange={(e) => setNewUserEmail(e.target.value)}
+                  placeholder="Enter email address"
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                 }}
+                />
+              </div>
 
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Status</label>
- <select
- value={newUserStatus}
- onChange={(e) => setNewUserStatus(e.target.value as 'active' | 'inactive')}
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- backgroundColor: themeColors.white,
- cursor: 'pointer',
- }}
- >
- <option value="active">Active</option>
- <option value="inactive">Inactive</option>
- </select>
- </div>
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Status
+                </label>
+                <select
+                  value={newUserStatus}
+                  onChange={(e) => setNewUserStatus(e.target.value as 'active' | 'inactive')}
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                   backgroundColor: themeColors.white,
+                   cursor: 'pointer',
+                 }}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
 
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Role</label>
- <select
- value={newUserRole}
- onChange={(e) => setNewUserRole(e.target.value as UserRole)}
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- backgroundColor: themeColors.white,
- cursor: 'pointer',
- }}
- >
- {roleOptions.map((role) => (
- <option key={role.value} value={role.value}>
- {role.label}
- </option>
- ))}
- </select>
- </div>
- </div>
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Role
+                </label>
+                <select
+                  value={newUserRole}
+                  onChange={(e) => setNewUserRole(e.target.value as UserRole)}
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                   backgroundColor: themeColors.white,
+                   cursor: 'pointer',
+                 }}
+                >
+                  {roleOptions.map((role) => (
+                   <option key={role.value} value={role.value}>
+                   {role.label}
+                 </option>
+                 ))}
+                </select>
+              </div>
+            </div>
 
- <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
- <button
- onClick={() => {
- setShowAddForm(false);
- setNewUserName('');
- setNewUserEmail('');
- setNewUserStatus('active');
- setNewUserRole('SCOUT');
- setError(null);
- }}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.lg}`,
- border: `1px solid ${themeColors.gray200}`,
- backgroundColor: themeColors.white,
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- fontSize: '14px',
- fontWeight: '500',
- color: themeColors.gray600,
- }}
- >
- Cancel
- </button>
- <button
- onClick={addUser}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.lg}`,
- background: themeColors.primary600,
- color: themeColors.white,
- border: 'none',
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- fontSize: '14px',
- fontWeight: '500',
- }}
- >
- Create User
- </button>
- </div>
- </div>
- </div>
- )}
+            <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowAddForm(false);
+                  setNewUserName('');
+                  setNewUserEmail('');
+                  setNewUserStatus('active');
+                  setNewUserRole('SCOUT');
+                  setError(null);
+                }}
+                style={{
+                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  backgroundColor: themeColors.white,
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: themeColors.gray600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addUser}
+                style={{
+                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  background: themeColors.primary600,
+                  color: themeColors.white,
+                  border: 'none',
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                }}
+              >
+                Create User
+              </button>
+            </div>
+          </div>
+        </div>
+        )}
 
- {showEditForm && editingUser && (
- <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
- <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '500px', boxShadow: themeShadow.md }}>
- <h2 style={{ fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0 }}>Edit User</h2>
+        {showEditForm && editingUser && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+        }}
+        >
+          <div style={{
+            backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '500px', boxShadow: themeShadow.md,
+          }}
+          >
+            <h2 style={{
+              fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0,
+            }}
+            >
+              Edit User
+            </h2>
 
- <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl }}>
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Name</label>
- <input
- type="text"
- value={editUserName}
- onChange={(e) => setEditUserName(e.target.value)}
- placeholder="Enter user name"
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- }}
- />
- </div>
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl,
+            }}
+            >
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Name
+                </label>
+                <input
+                  type="text"
+                  value={editUserName}
+                  onChange={(e) => setEditUserName(e.target.value)}
+                  placeholder="Enter user name"
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                 }}
+                />
+              </div>
 
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Email</label>
- <input
- type="email"
- value={editUserEmail}
- onChange={(e) => setEditUserEmail(e.target.value)}
- placeholder="Enter email address"
- disabled
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- backgroundColor: themeColors.gray100,
- cursor: 'not-allowed',
- }}
- />
- <span style={{ fontSize: '11px', color: themeColors.gray500 }}>Email cannot be changed</span>
- </div>
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Email
+                </label>
+                <input
+                  type="email"
+                  value={editUserEmail}
+                  onChange={(e) => setEditUserEmail(e.target.value)}
+                  placeholder="Enter email address"
+                  disabled
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                   backgroundColor: themeColors.gray100,
+                   cursor: 'not-allowed',
+                 }}
+                />
+                <span style={{ fontSize: '11px', color: themeColors.gray500 }}>Email cannot be changed</span>
+              </div>
 
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Status</label>
- <select
- value={editUserStatus}
- onChange={(e) => setEditUserStatus(e.target.value as 'active' | 'inactive')}
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- backgroundColor: themeColors.white,
- cursor: 'pointer',
- }}
- >
- <option value="active">Active</option>
- <option value="inactive">Inactive</option>
- </select>
- </div>
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Status
+                </label>
+                <select
+                  value={editUserStatus}
+                  onChange={(e) => setEditUserStatus(e.target.value as 'active' | 'inactive')}
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                   backgroundColor: themeColors.white,
+                   cursor: 'pointer',
+                 }}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
 
- <div>
- <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm }}>Role</label>
- <select
- value={editUserRole}
- onChange={(e) => setEditUserRole(e.target.value as UserRole)}
- style={{
- width: '100%',
- padding: `${themeSpace.sm} ${themeSpace.md}`,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- fontSize: '14px',
- boxSizing: 'border-box',
- backgroundColor: themeColors.white,
- cursor: 'pointer',
- }}
- >
- {roleOptions.map((role) => (
- <option key={role.value} value={role.value}>
- {role.label}
- </option>
- ))}
- </select>
- </div>
- </div>
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+Role
+                </label>
+                <select
+                  value={editUserRole}
+                  onChange={(e) => setEditUserRole(e.target.value as UserRole)}
+                  style={{
+                   width: '100%',
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   border: `1px solid ${themeColors.gray200}`,
+                   borderRadius: themeRadius.sm,
+                   fontSize: '14px',
+                   boxSizing: 'border-box',
+                   backgroundColor: themeColors.white,
+                   cursor: 'pointer',
+                 }}
+                >
+                  {roleOptions.map((role) => (
+                   <option key={role.value} value={role.value}>
+                   {role.label}
+                 </option>
+                 ))}
+                </select>
+              </div>
+            </div>
 
- <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
- <button
- onClick={() => {
- setShowEditForm(false);
- setEditingUser(null);
- setEditUserName('');
- setEditUserEmail('');
- setEditUserStatus('active');
- setEditUserRole('SCOUT');
- setError(null);
- }}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.lg}`,
- border: `1px solid ${themeColors.gray200}`,
- backgroundColor: themeColors.white,
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- fontSize: '14px',
- fontWeight: '500',
- color: themeColors.gray600,
- }}
- >
- Cancel
- </button>
- <button
- onClick={saveEditUser}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.lg}`,
- background: themeColors.primary600,
- color: themeColors.white,
- border: 'none',
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- fontSize: '14px',
- fontWeight: '500',
- }}
- >
- Save Changes
- </button>
- </div>
- </div>
- </div>
- )}
+            <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowEditForm(false);
+                  setEditingUser(null);
+                  setEditUserName('');
+                  setEditUserEmail('');
+                  setEditUserStatus('active');
+                  setEditUserRole('SCOUT');
+                  setError(null);
+                }}
+                style={{
+                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  backgroundColor: themeColors.white,
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: themeColors.gray600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEditUser}
+                style={{
+                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  background: themeColors.primary600,
+                  color: themeColors.white,
+                  border: 'none',
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                }}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+        )}
 
- {/* Import Modal */}
- {showImportModal && (
- <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
- <div style={{ background: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '700px', maxWidth: '90vw', maxHeight: '85vh', overflow: 'auto', boxShadow: themeShadow.md }}>
- <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
- <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: themeColors.text }}>Import Users</h2>
- <button onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }}>
- <Icon name="x" size={20} color={themeColors.gray500} />
- </button>
- </div>
+        {/* Import Modal */}
+        {showImportModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}
+        >
+          <div style={{
+            background: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '700px', maxWidth: '90vw', maxHeight: '85vh', overflow: 'auto', boxShadow: themeShadow.md,
+          }}
+          >
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg,
+            }}
+            >
+              <h2 style={{
+                margin: 0, fontSize: '20px', fontWeight: '600', color: themeColors.text,
+              }}
+              >
+                Import Users
+              </h2>
+              <button
+                onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
+                }}
+              >
+                <Icon name="x" size={20} color={themeColors.gray500} />
+              </button>
+            </div>
 
- {/* Instructions Tab */}
- <div style={{ marginBottom: themeSpace.lg }}>
- <div style={{ display: 'flex', borderBottom: `1px solid ${themeColors.gray200}`, marginBottom: themeSpace.md }}>
- <button
-   onClick={() => {}}
-   style={{
-     padding: `${themeSpace.sm} ${themeSpace.md}`,
-     background: themeColors.primary50,
-     border: 'none',
-     borderBottom: `2px solid ${themeColors.primary600}`,
-     cursor: 'pointer',
-     fontSize: '13px',
-     fontWeight: '600',
-     color: themeColors.primary600,
-   }}
- >
-   Instructions
- </button>
- <button
-   onClick={downloadTemplate}
-   style={{
-     padding: `${themeSpace.sm} ${themeSpace.md}`,
-     background: 'none',
-     border: 'none',
-     borderBottom: `2px solid transparent`,
-     cursor: 'pointer',
-     fontSize: '13px',
-     fontWeight: '500',
-     color: themeColors.gray600,
-     display: 'flex',
-     alignItems: 'center',
-     gap: themeSpace.xs,
-   }}
- >
-   <Icon name="download" size={14} color={themeColors.gray600} />
-   Download Template
- </button>
- </div>
+            {/* Instructions Tab */}
+            <div style={{ marginBottom: themeSpace.lg }}>
+              <div style={{ display: 'flex', borderBottom: `1px solid ${themeColors.gray200}`, marginBottom: themeSpace.md }}>
+                <button
+                  onClick={() => {}}
+                  style={{
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   background: themeColors.primary50,
+                   border: 'none',
+                   borderBottom: `2px solid ${themeColors.primary600}`,
+                   cursor: 'pointer',
+                   fontSize: '13px',
+                   fontWeight: '600',
+                   color: themeColors.primary600,
+                 }}
+                >
+           Instructions
+                </button>
+                <button
+                  onClick={downloadTemplate}
+                  style={{
+                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   background: 'none',
+                   border: 'none',
+                   borderBottom: '2px solid transparent',
+                   cursor: 'pointer',
+                   fontSize: '13px',
+                   fontWeight: '500',
+                   color: themeColors.gray600,
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: themeSpace.xs,
+                 }}
+                >
+                  <Icon name="download" size={14} color={themeColors.gray600} />
+                  Download Template
+         </button>
+              </div>
 
- <div style={{ backgroundColor: themeColors.gray50, borderRadius: themeRadius.sm, padding: themeSpace.md, fontSize: '13px', color: themeColors.gray600, lineHeight: '1.6' }}>
- <p style={{ margin: 0, marginBottom: themeSpace.sm }}><strong>How to import users:</strong></p>
- <ol style={{ margin: 0, paddingLeft: themeSpace.lg, marginBottom: themeSpace.md }}>
-   <li>Click "Download Template" above to get the CSV file</li>
-   <li>Open the file in Excel or Google Sheets</li>
-   <li>Delete the example rows and add your user data</li>
-   <li>Save the file (keep it as CSV format)</li>
-   <li>Upload the file below</li>
- </ol>
+              <div style={{
+                backgroundColor: themeColors.gray50, borderRadius: themeRadius.sm, padding: themeSpace.md, fontSize: '13px', color: themeColors.gray600, lineHeight: '1.6',
+              }}
+              >
+                <p style={{ margin: 0, marginBottom: themeSpace.sm }}><strong>How to import users:</strong></p>
+                <ol style={{ margin: 0, paddingLeft: themeSpace.lg, marginBottom: themeSpace.md }}>
+                  <li>Click "Download Template" above to get the CSV file</li>
+                  <li>Open the file in Excel or Google Sheets</li>
+                  <li>Delete the example rows and add your user data</li>
+                  <li>Save the file (keep it as CSV format)</li>
+                  <li>Upload the file below</li>
+                </ol>
 
- <p style={{ margin: 0, marginBottom: themeSpace.xs }}><strong>Required columns:</strong></p>
- <table style={{ width: '100%', fontSize: '12px', marginBottom: themeSpace.md }}>
-   <tbody>
-     <tr><td style={{ padding: '4px 8px', background: themeColors.white }}><strong>Name</strong></td><td style={{ padding: '4px 8px', background: themeColors.white }}>Full name (e.g., John Smith)</td></tr>
-     <tr><td style={{ padding: '4px 8px' }}><strong>Email</strong></td><td style={{ padding: '4px 8px' }}>Valid email address (must be unique)</td></tr>
-     <tr><td style={{ padding: '4px 8px', background: themeColors.white }}><strong>Role</strong></td><td style={{ padding: '4px 8px', background: themeColors.white }}>NATIONAL_ADMIN, COUNCIL_ADMIN, TROOP_LEADER, PARENT, or SCOUT</td></tr>
-     <tr><td style={{ padding: '4px 8px' }}><strong>Status</strong></td><td style={{ padding: '4px 8px' }}>active or inactive</td></tr>
-   </tbody>
- </table>
+                <p style={{ margin: 0, marginBottom: themeSpace.xs }}><strong>Required columns:</strong></p>
+                <table style={{ width: '100%', fontSize: '12px', marginBottom: themeSpace.md }}>
+                  <tbody>
+                   <tr>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>Name</strong></td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>Full name (e.g., John Smith)</td>
+                 </tr>
+                   <tr>
+                   <td style={{ padding: '4px 8px' }}><strong>Email</strong></td>
+                   <td style={{ padding: '4px 8px' }}>Valid email address (must be unique)</td>
+                 </tr>
+                   <tr>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>Role</strong></td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>NATIONAL_ADMIN, COUNCIL_ADMIN, TROOP_LEADER, PARENT, or SCOUT</td>
+                 </tr>
+                   <tr>
+                   <td style={{ padding: '4px 8px' }}><strong>Status</strong></td>
+                   <td style={{ padding: '4px 8px' }}>active or inactive</td>
+                 </tr>
+                 </tbody>
+                </table>
 
- <p style={{ margin: 0, fontSize: '12px', color: themeColors.gray500 }}>
-   <em>Note: A temporary password will be generated for each user. They will need to reset it on first login.</em>
- </p>
- </div>
- </div>
+                <p style={{ margin: 0, fontSize: '12px', color: themeColors.gray500 }}>
+                  <em>Note: A temporary password will be generated for each user. They will need to reset it on first login.</em>
+                </p>
+              </div>
+            </div>
 
- {/* File Upload */}
- <div style={{ marginBottom: themeSpace.lg }}>
- <label style={{ display: 'block', marginBottom: themeSpace.sm, fontSize: '14px', fontWeight: '500', color: themeColors.text }}>
- Select CSV File
- </label>
- <input
- type="file"
- accept=".csv"
- onChange={handleFileSelect}
- style={{
- width: '100%',
- padding: themeSpace.md,
- border: `2px dashed ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- }}
- />
- </div>
+            {/* File Upload */}
+            <div style={{ marginBottom: themeSpace.lg }}>
+              <label style={{
+                display: 'block', marginBottom: themeSpace.sm, fontSize: '14px', fontWeight: '500', color: themeColors.text,
+              }}
+              >
+                Select CSV File
+              </label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                style={{
+                  width: '100%',
+                  padding: themeSpace.md,
+                  border: `2px dashed ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
 
- {/* Success Message */}
- {importSuccess > 0 && (
- <div style={{ backgroundColor: themeColors.success50, border: `1px solid ${themeColors.success600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md }}>
- <p style={{ margin: 0, fontSize: '14px', color: themeColors.success600 }}>
- Successfully imported {importSuccess} user{importSuccess !== 1 ? 's' : ''}!
- </p>
- </div>
- )}
+            {/* Success Message */}
+            {importSuccess > 0 && (
+            <div style={{
+              backgroundColor: themeColors.success50, border: `1px solid ${themeColors.success600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md,
+            }}
+            >
+              <p style={{ margin: 0, fontSize: '14px', color: themeColors.success600 }}>
+                Successfully imported
+         {' '}
+                {importSuccess}
+                {' '}
+                user
+         {importSuccess !== 1 ? 's' : ''}
+                !
+       </p>
+            </div>
+            )}
 
- {/* Error Messages */}
- {importErrors.length > 0 && (
- <div style={{ backgroundColor: themeColors.warning50, border: `1px solid ${themeColors.warning600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md, maxHeight: '150px', overflow: 'auto' }}>
- <p style={{ margin: 0, marginBottom: themeSpace.sm, fontSize: '14px', fontWeight: '600', color: themeColors.warning600 }}>
- Validation Errors:
- </p>
- {importErrors.map((err, idx) => (
- <p key={idx} style={{ margin: 0, fontSize: '13px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>
- {err}
- </p>
- ))}
- </div>
- )}
+            {/* Error Messages */}
+            {importErrors.length > 0 && (
+            <div style={{
+              backgroundColor: themeColors.warning50, border: `1px solid ${themeColors.warning600}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md, maxHeight: '150px', overflow: 'auto',
+            }}
+            >
+              <p style={{
+                margin: 0, marginBottom: themeSpace.sm, fontSize: '14px', fontWeight: '600', color: themeColors.warning600,
+              }}
+              >
+         Validation Errors:
+              </p>
+              {importErrors.map((err, idx) => (
+                <p
+                 key={idx}
+                 style={{
+                 margin: 0, fontSize: '13px', color: themeColors.gray600, marginBottom: themeSpace.xs,
+               }}
+               >
+                 {err}
+               </p>
+              ))}
+            </div>
+            )}
 
- {/* Preview Table */}
- {importPreview.length > 0 && (
- <div style={{ marginBottom: themeSpace.lg }}>
- <h3 style={{ fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
- Preview ({importPreview.filter(r => r.valid).length} valid of {importPreview.length} rows)
- </h3>
- <div style={{ maxHeight: '250px', overflow: 'auto', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm }}>
- <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
- <thead>
- <tr style={{ backgroundColor: themeColors.gray50, position: 'sticky', top: 0 }}>
- <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Row</th>
- <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Name</th>
- <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Email</th>
- <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Role</th>
- <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Status</th>
- <th style={{ padding: themeSpace.sm, textAlign: 'center', borderBottom: `1px solid ${themeColors.gray200}` }}>Valid</th>
- </tr>
- </thead>
- <tbody>
- {importPreview.map((row, idx) => (
- <tr key={idx} style={{ backgroundColor: row.valid ? themeColors.white : themeColors.error400 + '20' }}>
- <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.row}</td>
- <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.name}</td>
- <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.email}</td>
- <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.role}</td>
- <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.status}</td>
- <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}`, textAlign: 'center' }}>
- {row.valid ? (
- <span style={{ color: themeColors.success600 }}>✓</span>
- ) : (
- <span style={{ color: themeColors.error500 }} title={row.errors.join(', ')}>✗</span>
- )}
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- )}
+            {/* Preview Table */}
+            {importPreview.length > 0 && (
+            <div style={{ marginBottom: themeSpace.lg }}>
+              <h3 style={{
+                fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm,
+              }}
+              >
+         Preview (
+                {importPreview.filter((r) => r.valid).length}
+                {' '}
+                valid of
+         {importPreview.length}
+                {' '}
+                rows)
+       </h3>
+              <div style={{
+                maxHeight: '250px', overflow: 'auto', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm,
+              }}
+              >
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                 <thead>
+                 <tr style={{ backgroundColor: themeColors.gray50, position: 'sticky', top: 0 }}>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Row</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Name</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Email</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Role</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Status</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'center', borderBottom: `1px solid ${themeColors.gray200}` }}>Valid</th>
+               </tr>
+               </thead>
+                 <tbody>
+                 {importPreview.map((row, idx) => (
+                 <tr key={idx} style={{ backgroundColor: row.valid ? themeColors.white : `${themeColors.error400}20` }}>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.row}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.name}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.email}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.role}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.status}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}`, textAlign: 'center' }}>
+                   {row.valid ? (
+                   <span style={{ color: themeColors.success600 }}>✓</span>
+                 ) : (
+                 <span style={{ color: themeColors.error500 }} title={row.errors.join(', ')}>✗</span>
+                 )}
+                 </td>
+               </tr>
+               ))}
+               </tbody>
+               </table>
+              </div>
+            </div>
+            )}
 
- {/* Action Buttons */}
- <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
- <button
- onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.lg}`,
- background: themeColors.white,
- border: `1px solid ${themeColors.gray200}`,
- borderRadius: themeRadius.sm,
- cursor: 'pointer',
- fontSize: '14px',
- fontWeight: '500',
- color: themeColors.gray600,
- }}
- >
- Cancel
- </button>
- <button
- onClick={processImport}
- disabled={importing || importPreview.filter(r => r.valid).length === 0}
- style={{
- padding: `${themeSpace.sm} ${themeSpace.lg}`,
- background: importing || importPreview.filter(r => r.valid).length === 0 ? themeColors.gray200 : themeColors.primary600,
- color: importing || importPreview.filter(r => r.valid).length === 0 ? themeColors.gray500 : themeColors.white,
- border: 'none',
- borderRadius: themeRadius.sm,
- cursor: importing || importPreview.filter(r => r.valid).length === 0 ? 'not-allowed' : 'pointer',
- fontSize: '14px',
- fontWeight: '500',
- display: 'flex',
- alignItems: 'center',
- gap: themeSpace.sm,
- }}
- >
- {importing ? 'Importing...' : `Import ${importPreview.filter(r => r.valid).length} Users`}
- </button>
- </div>
- </div>
- </div>
- )}
- </div>
- </div>
- );
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }}
+                style={{
+                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  background: themeColors.white,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: themeColors.gray600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={processImport}
+                disabled={importing || importPreview.filter((r) => r.valid).length === 0}
+                style={{
+                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  background: importing || importPreview.filter((r) => r.valid).length === 0 ? themeColors.gray200 : themeColors.primary600,
+                  color: importing || importPreview.filter((r) => r.valid).length === 0 ? themeColors.gray500 : themeColors.white,
+                  border: 'none',
+                  borderRadius: themeRadius.sm,
+                  cursor: importing || importPreview.filter((r) => r.valid).length === 0 ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: themeSpace.sm,
+                }}
+              >
+                {importing ? 'Importing...' : `Import ${importPreview.filter((r) => r.valid).length} Users`}
+              </button>
+            </div>
+          </div>
+        </div>
+        )}
+      </div>
+    </div>
+  );
 }

@@ -6,23 +6,23 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
- title: 'BSA Camp Card Portal',
- description: 'Admin portal for BSA Camp Card platform',
- icons: {
- icon: '/favicon.ico',
- },
+  title: 'BSA Camp Card Portal',
+  description: 'Admin portal for BSA Camp Card platform',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
- children,
+  children,
 }: {
- children: React.ReactNode;
+  children: React.ReactNode;
 }) {
- return (
- <html lang="en">
- <body className={inter.className}>
- <Providers>{children}</Providers>
- </body>
- </html>
- );
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
 }

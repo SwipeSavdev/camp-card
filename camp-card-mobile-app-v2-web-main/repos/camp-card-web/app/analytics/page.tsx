@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import PageLayout from '../components/PageLayout';
 import {
   LineChart,
   Line,
@@ -18,9 +17,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
+import PageLayout from '../components/PageLayout';
 
 const themeColors = {
   white: '#ffffff',
@@ -57,23 +56,47 @@ const CHART_COLORS = [
   themeColors.primary300,
 ];
 
-const themeSpace = { xs: '3px', sm: '8px', md: '16px', lg: '24px', xl: '32px', '2xl': '40px', '3xl': '48px' };
+const themeSpace = {
+  xs: '3px', sm: '8px', md: '16px', lg: '24px', xl: '32px', '2xl': '40px', '3xl': '48px',
+};
 const themeRadius = { sm: '4px', card: '12px' };
 const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' };
 
-const Icon = ({ name, size = 18, color = 'currentColor' }: { name: string; size?: number; color?: string }) => {
+function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
   const icons: Record<string, JSX.Element> = {
     back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
-    chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="12" y1="2" x2="12" y2="22" /><path d="M17 5H9.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H17" /></svg>,
-    plus: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
-    x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
-    settings: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24" /></svg>,
-    download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
-    eye: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>,
-    checkCircle: <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>,
+    chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <line x1="12" y1="2" x2="12" y2="22" />
+      <path d="M17 5H9.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H17" />
+           </svg>,
+    plus: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>,
+    x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+       </svg>,
+    settings: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24" />
+              </svg>,
+    download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>,
+    eye: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+         </svg>,
+    checkCircle: <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="2">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+                 </svg>,
   };
   return icons[name] || null;
-};
+}
 
 interface Widget {
   id: string;
@@ -92,36 +115,96 @@ interface AvailableMetric {
 }
 
 const availableMetrics: AvailableMetric[] = [
-  { id: 'total_users', name: 'Total Users', category: 'Users', chartType: 'metric' },
-  { id: 'active_users', name: 'Active Users', category: 'Users', chartType: 'metric' },
-  { id: 'new_users', name: 'New Users (30d)', category: 'Users', chartType: 'metric' },
-  { id: 'user_growth', name: 'User Growth %', category: 'Users', chartType: 'metric' },
-  { id: 'user_trend', name: 'User Trend', category: 'Users', chartType: 'line' },
-  { id: 'total_merchants', name: 'Total Merchants', category: 'Merchants', chartType: 'metric' },
-  { id: 'active_merchants', name: 'Active Merchants', category: 'Merchants', chartType: 'metric' },
-  { id: 'merchant_onboarding', name: 'Merchants Onboarded', category: 'Merchants', chartType: 'bar' },
-  { id: 'total_offers', name: 'Total Offers', category: 'Offers', chartType: 'metric' },
-  { id: 'active_offers', name: 'Active Offers', category: 'Offers', chartType: 'metric' },
-  { id: 'offer_redemptions', name: 'Offer Redemptions', category: 'Offers', chartType: 'area' },
-  { id: 'redemption_rate', name: 'Redemption Rate %', category: 'Offers', chartType: 'metric' },
-  { id: 'offer_distribution', name: 'Offer Distribution', category: 'Offers', chartType: 'pie' },
-  { id: 'total_cards', name: 'Total Cards Issued', category: 'Cards', chartType: 'metric' },
-  { id: 'active_cards', name: 'Active Cards', category: 'Cards', chartType: 'metric' },
-  { id: 'cards_redeemed', name: 'Cards Redeemed', category: 'Cards', chartType: 'bar' },
-  { id: 'total_subscriptions', name: 'Total Subscriptions', category: 'Subscriptions', chartType: 'metric' },
-  { id: 'active_subscriptions', name: 'Active Subscriptions', category: 'Subscriptions', chartType: 'metric' },
-  { id: 'subscription_trend', name: 'Subscription Trend', category: 'Subscriptions', chartType: 'area' },
-  { id: 'plan_distribution', name: 'Plan Distribution', category: 'Subscriptions', chartType: 'pie' },
-  { id: 'churn_rate', name: 'Churn Rate %', category: 'Subscriptions', chartType: 'metric' },
-  { id: 'retention_rate', name: 'Retention Rate %', category: 'Subscriptions', chartType: 'metric' },
-  { id: 'mrr', name: 'MRR (Monthly Recurring Revenue)', category: 'Revenue', chartType: 'metric' },
-  { id: 'arr', name: 'ARR (Annual Recurring Revenue)', category: 'Revenue', chartType: 'metric' },
-  { id: 'total_revenue', name: 'Total Revenue', category: 'Revenue', chartType: 'metric' },
-  { id: 'revenue_trend', name: 'Revenue Trend', category: 'Revenue', chartType: 'area' },
-  { id: 'avg_transaction', name: 'Avg Transaction Value', category: 'Revenue', chartType: 'metric' },
-  { id: 'transaction_volume', name: 'Transaction Volume', category: 'Transactions', chartType: 'bar' },
-  { id: 'failed_transactions', name: 'Failed Transactions', category: 'Transactions', chartType: 'metric' },
-  { id: 'system_uptime', name: 'System Uptime %', category: 'System', chartType: 'metric' },
+  {
+    id: 'total_users', name: 'Total Users', category: 'Users', chartType: 'metric',
+  },
+  {
+    id: 'active_users', name: 'Active Users', category: 'Users', chartType: 'metric',
+  },
+  {
+    id: 'new_users', name: 'New Users (30d)', category: 'Users', chartType: 'metric',
+  },
+  {
+    id: 'user_growth', name: 'User Growth %', category: 'Users', chartType: 'metric',
+  },
+  {
+    id: 'user_trend', name: 'User Trend', category: 'Users', chartType: 'line',
+  },
+  {
+    id: 'total_merchants', name: 'Total Merchants', category: 'Merchants', chartType: 'metric',
+  },
+  {
+    id: 'active_merchants', name: 'Active Merchants', category: 'Merchants', chartType: 'metric',
+  },
+  {
+    id: 'merchant_onboarding', name: 'Merchants Onboarded', category: 'Merchants', chartType: 'bar',
+  },
+  {
+    id: 'total_offers', name: 'Total Offers', category: 'Offers', chartType: 'metric',
+  },
+  {
+    id: 'active_offers', name: 'Active Offers', category: 'Offers', chartType: 'metric',
+  },
+  {
+    id: 'offer_redemptions', name: 'Offer Redemptions', category: 'Offers', chartType: 'area',
+  },
+  {
+    id: 'redemption_rate', name: 'Redemption Rate %', category: 'Offers', chartType: 'metric',
+  },
+  {
+    id: 'offer_distribution', name: 'Offer Distribution', category: 'Offers', chartType: 'pie',
+  },
+  {
+    id: 'total_cards', name: 'Total Cards Issued', category: 'Cards', chartType: 'metric',
+  },
+  {
+    id: 'active_cards', name: 'Active Cards', category: 'Cards', chartType: 'metric',
+  },
+  {
+    id: 'cards_redeemed', name: 'Cards Redeemed', category: 'Cards', chartType: 'bar',
+  },
+  {
+    id: 'total_subscriptions', name: 'Total Subscriptions', category: 'Subscriptions', chartType: 'metric',
+  },
+  {
+    id: 'active_subscriptions', name: 'Active Subscriptions', category: 'Subscriptions', chartType: 'metric',
+  },
+  {
+    id: 'subscription_trend', name: 'Subscription Trend', category: 'Subscriptions', chartType: 'area',
+  },
+  {
+    id: 'plan_distribution', name: 'Plan Distribution', category: 'Subscriptions', chartType: 'pie',
+  },
+  {
+    id: 'churn_rate', name: 'Churn Rate %', category: 'Subscriptions', chartType: 'metric',
+  },
+  {
+    id: 'retention_rate', name: 'Retention Rate %', category: 'Subscriptions', chartType: 'metric',
+  },
+  {
+    id: 'mrr', name: 'MRR (Monthly Recurring Revenue)', category: 'Revenue', chartType: 'metric',
+  },
+  {
+    id: 'arr', name: 'ARR (Annual Recurring Revenue)', category: 'Revenue', chartType: 'metric',
+  },
+  {
+    id: 'total_revenue', name: 'Total Revenue', category: 'Revenue', chartType: 'metric',
+  },
+  {
+    id: 'revenue_trend', name: 'Revenue Trend', category: 'Revenue', chartType: 'area',
+  },
+  {
+    id: 'avg_transaction', name: 'Avg Transaction Value', category: 'Revenue', chartType: 'metric',
+  },
+  {
+    id: 'transaction_volume', name: 'Transaction Volume', category: 'Transactions', chartType: 'bar',
+  },
+  {
+    id: 'failed_transactions', name: 'Failed Transactions', category: 'Transactions', chartType: 'metric',
+  },
+  {
+    id: 'system_uptime', name: 'System Uptime %', category: 'System', chartType: 'metric',
+  },
 ];
 
 // Generate time series data for charts
@@ -216,12 +299,24 @@ const mockData: Record<string, any> = {
 };
 
 const defaultWidgets: Widget[] = [
-  { id: '1', type: 'metric', title: 'Total Users', metric: 'total_users', visible: true, order: 1 },
-  { id: '2', type: 'metric', title: 'Active Merchants', metric: 'active_merchants', visible: true, order: 2 },
-  { id: '3', type: 'area', title: 'Revenue Trend', metric: 'revenue_trend', visible: true, order: 3 },
-  { id: '4', type: 'bar', title: 'Transaction Volume', metric: 'transaction_volume', visible: true, order: 4 },
-  { id: '5', type: 'line', title: 'User Trend', metric: 'user_trend', visible: true, order: 5 },
-  { id: '6', type: 'pie', title: 'Offer Distribution', metric: 'offer_distribution', visible: true, order: 6 },
+  {
+    id: '1', type: 'metric', title: 'Total Users', metric: 'total_users', visible: true, order: 1,
+  },
+  {
+    id: '2', type: 'metric', title: 'Active Merchants', metric: 'active_merchants', visible: true, order: 2,
+  },
+  {
+    id: '3', type: 'area', title: 'Revenue Trend', metric: 'revenue_trend', visible: true, order: 3,
+  },
+  {
+    id: '4', type: 'bar', title: 'Transaction Volume', metric: 'transaction_volume', visible: true, order: 4,
+  },
+  {
+    id: '5', type: 'line', title: 'User Trend', metric: 'user_trend', visible: true, order: 5,
+  },
+  {
+    id: '6', type: 'pie', title: 'Offer Distribution', metric: 'offer_distribution', visible: true, order: 6,
+  },
 ];
 
 const getMetricColor = (change: number) => {
@@ -231,7 +326,7 @@ const getMetricColor = (change: number) => {
   return themeColors.warning600;
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
       <div style={{
@@ -240,18 +335,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         borderRadius: themeRadius.sm,
         padding: themeSpace.sm,
         boxShadow: themeShadow.md,
-      }}>
+      }}
+      >
         <p style={{ margin: 0, fontWeight: '600', color: themeColors.text }}>{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} style={{ margin: '4px 0 0 0', color: entry.color, fontSize: '14px' }}>
-            {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
+            {entry.name}
+            :
+            {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
           </p>
         ))}
       </div>
     );
   }
   return null;
-};
+}
 
 export default function AnalyticsPage() {
   const { data: session, status } = useSession();
@@ -277,14 +375,14 @@ export default function AnalyticsPage() {
       title: metric.name,
       metric: metric.id,
       visible: true,
-      order: Math.max(...widgets.map(w => w.order), 0) + 1,
+      order: Math.max(...widgets.map((w) => w.order), 0) + 1,
     };
     setWidgets([...widgets, newWidget]);
   };
 
   const handleRemoveWidget = (id: string) => {
-    setWidgets(widgets.filter(w => w.id !== id));
-    setSelectedWidgets(prev => {
+    setWidgets(widgets.filter((w) => w.id !== id));
+    setSelectedWidgets((prev) => {
       const newSet = new Set(prev);
       newSet.delete(id);
       return newSet;
@@ -299,7 +397,7 @@ export default function AnalyticsPage() {
   };
 
   const handleSelectWidget = (id: string) => {
-    setSelectedWidgets(prev => {
+    setSelectedWidgets((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -340,8 +438,8 @@ export default function AnalyticsPage() {
   const handleExportSelected = () => {
     if (selectedWidgets.size === 0) return;
     const selectedData = visibleWidgets
-      .filter(w => selectedWidgets.has(w.id))
-      .map(w => `${w.title},${getMetricData(w.metric).value}`)
+      .filter((w) => selectedWidgets.has(w.id))
+      .map((w) => `${w.title},${getMetricData(w.metric).value}`)
       .join('\n');
     const csv = `Metric,Value\n${selectedData}`;
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -353,7 +451,7 @@ export default function AnalyticsPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const visibleWidgets = widgets.filter(w => w.visible).sort((a, b) => a.order - b.order);
+  const visibleWidgets = widgets.filter((w) => w.visible).sort((a, b) => a.order - b.order);
   const getMetricData = (metricId: string) => mockData[metricId] || { value: 0, change: 0 };
 
   const renderChart = (widget: Widget) => {
@@ -455,11 +553,30 @@ export default function AnalyticsPage() {
         const isPositive = data.change >= 0;
         return (
           <>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', marginBottom: themeSpace.md }}>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: themeColors.primary600, marginBottom: themeSpace.sm }}>{data.value}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.xs, fontSize: '13px', fontWeight: '600', color: getMetricColor(data.change) }}>
-                <span>{isPositive ? '↑' : '↓'} {Math.abs(data.change)}%</span>
-                <span style={{ color: themeColors.gray600, fontWeight: '500' }}>vs {dateRange}</span>
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', marginBottom: themeSpace.md,
+            }}
+            >
+              <div style={{
+                fontSize: '32px', fontWeight: '700', color: themeColors.primary600, marginBottom: themeSpace.sm,
+              }}
+              >
+                {data.value}
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: themeSpace.xs, fontSize: '13px', fontWeight: '600', color: getMetricColor(data.change),
+              }}
+              >
+                <span>
+                  {isPositive ? '↑' : '↓'}
+                  {' '}
+                  {Math.abs(data.change)}
+                  %
+                </span>
+                <span style={{ color: themeColors.gray600, fontWeight: '500' }}>
+                  vs
+                  {dateRange}
+                </span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={60}>
@@ -486,147 +603,336 @@ export default function AnalyticsPage() {
 
   return (
     <PageLayout title="Analytics Dashboard" currentPath="/analytics">
-        <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: themeSpace.lg }}>
-            <p style={{ margin: 0, color: themeColors.gray600, fontSize: '14px' }}>Interactive charts and customizable metrics</p>
-            <div style={{ display: 'flex', gap: themeSpace.md }}>
-              {selectedWidgets.size > 0 && (
-                <button onClick={handleExportSelected} style={{ padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.success600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
-                  <Icon name="download" size={16} />
-                  Export ({selectedWidgets.size})
-                </button>
-              )}
-              <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} style={{ padding: `${themeSpace.sm} ${themeSpace.md}`, border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, fontSize: '14px', backgroundColor: themeColors.white, cursor: 'pointer' }}>
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="90d">Last 90 days</option>
-                <option value="1y">Last year</option>
-              </select>
-              <button onClick={() => setEditMode(!editMode)} style={{ padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: editMode ? themeColors.primary600 : themeColors.white, color: editMode ? themeColors.white : themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
-                <Icon name="settings" size={16} />
-                {editMode ? 'Done' : 'Customize'}
-              </button>
-              <button onClick={() => setShowWidgetSelector(!showWidgetSelector)} style={{ padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
-                <Icon name="plus" size={16} />
-                Add Widget
-              </button>
-            </div>
+      <div style={{
+        padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card,
+      }}
+      >
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: themeSpace.lg,
+        }}
+        >
+          <p style={{ margin: 0, color: themeColors.gray600, fontSize: '14px' }}>Interactive charts and customizable metrics</p>
+          <div style={{ display: 'flex', gap: themeSpace.md }}>
+            {selectedWidgets.size > 0 && (
+            <button
+              onClick={handleExportSelected}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.success600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm,
+              }}
+            >
+              <Icon name="download" size={16} />
+              Export (
+              {selectedWidgets.size}
+              )
+            </button>
+            )}
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`, border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, fontSize: '14px', backgroundColor: themeColors.white, cursor: 'pointer',
+              }}
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="1y">Last year</option>
+            </select>
+            <button
+              onClick={() => setEditMode(!editMode)}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: editMode ? themeColors.primary600 : themeColors.white, color: editMode ? themeColors.white : themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm,
+              }}
+            >
+              <Icon name="settings" size={16} />
+              {editMode ? 'Done' : 'Customize'}
+            </button>
+            <button
+              onClick={() => setShowWidgetSelector(!showWidgetSelector)}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm,
+              }}
+            >
+              <Icon name="plus" size={16} />
+              Add Widget
+            </button>
           </div>
         </div>
+      </div>
 
-        {showWidgetSelector && (
-          <div style={{ padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, maxHeight: '400px', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: themeColors.text }}>Available Metrics</h2>
-              <button onClick={() => setShowWidgetSelector(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600 }}>
-                <Icon name="x" size={20} />
+      {showWidgetSelector && (
+      <div style={{
+        padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, maxHeight: '400px', overflowY: 'auto',
+      }}
+      >
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg,
+        }}
+        >
+          <h2 style={{
+            margin: 0, fontSize: '18px', fontWeight: '700', color: themeColors.text,
+          }}
+          >
+            Available Metrics
+          </h2>
+          <button
+            onClick={() => setShowWidgetSelector(false)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600,
+            }}
+          >
+            <Icon name="x" size={20} />
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: themeSpace.md }}>
+          {availableMetrics.map((metric) => {
+            const isAdded = widgets.some((w) => w.metric === metric.id);
+            const chartTypeLabel = metric.chartType === 'metric' ? 'KPI' : metric.chartType.charAt(0).toUpperCase() + metric.chartType.slice(1);
+            return (
+              <button
+                key={metric.id}
+                onClick={() => !isAdded && handleAddWidget(metric)}
+                disabled={isAdded}
+                style={{
+                  padding: themeSpace.md, backgroundColor: isAdded ? themeColors.gray100 : themeColors.white, border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.card, cursor: isAdded ? 'default' : 'pointer', textAlign: 'left', opacity: isAdded ? 0.5 : 1,
+                }}
+              >
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.xs,
+                }}
+                >
+                  <p style={{
+                    margin: 0, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase',
+                  }}
+                  >
+                    {metric.category}
+                  </p>
+                  <span style={{
+                    fontSize: '10px', fontWeight: '600', color: themeColors.primary600, backgroundColor: themeColors.primary50, padding: '2px 6px', borderRadius: '4px',
+                  }}
+                  >
+                    {chartTypeLabel}
+                  </span>
+                </div>
+                <p style={{
+                  margin: 0, fontSize: '14px', fontWeight: '600', color: themeColors.text,
+                }}
+                >
+                  {metric.name}
+                </p>
+                {isAdded && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: themeColors.success600 }}>✓ Added</p>}
               </button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: themeSpace.md }}>
-              {availableMetrics.map((metric) => {
-                const isAdded = widgets.some(w => w.metric === metric.id);
-                const chartTypeLabel = metric.chartType === 'metric' ? 'KPI' : metric.chartType.charAt(0).toUpperCase() + metric.chartType.slice(1);
-                return (
-                  <button key={metric.id} onClick={() => !isAdded && handleAddWidget(metric)} disabled={isAdded} style={{ padding: themeSpace.md, backgroundColor: isAdded ? themeColors.gray100 : themeColors.white, border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.card, cursor: isAdded ? 'default' : 'pointer', textAlign: 'left', opacity: isAdded ? 0.5 : 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.xs }}>
-                      <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase' }}>{metric.category}</p>
-                      <span style={{ fontSize: '10px', fontWeight: '600', color: themeColors.primary600, backgroundColor: themeColors.primary50, padding: '2px 6px', borderRadius: '4px' }}>{chartTypeLabel}</span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: themeColors.text }}>{metric.name}</p>
-                    {isAdded && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: themeColors.success600 }}>✓ Added</p>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+            );
+          })}
+        </div>
+      </div>
+      )}
 
-        {visibleWidgets.length === 0 ? (
-            <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `2px dashed ${themeColors.gray200}`, padding: themeSpace.xl, textAlign: 'center' }}>
-              <Icon name="chart" size={48} color={themeColors.gray200} />
-              <p style={{ fontSize: '18px', fontWeight: '600', color: themeColors.text, marginTop: themeSpace.lg, marginBottom: themeSpace.sm }}>No widgets selected</p>
-              <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0, marginBottom: themeSpace.lg }}>Click "Add Widget" to start building your dashboard</p>
-              <button onClick={() => setShowWidgetSelector(true)} style={{ padding: `${themeSpace.sm} ${themeSpace.lg}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600' }}>Add Your First Widget</button>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: themeSpace.lg }}>
-              {visibleWidgets.map((widget, idx) => {
-                const isSelected = selectedWidgets.has(widget.id);
-                const isChartWidget = widget.type !== 'metric';
-                return (
-                  <div
-                    key={widget.id}
-                    onClick={() => !editMode && handleSelectWidget(widget.id)}
+      {visibleWidgets.length === 0 ? (
+        <div style={{
+          backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `2px dashed ${themeColors.gray200}`, padding: themeSpace.xl, textAlign: 'center',
+        }}
+        >
+          <Icon name="chart" size={48} color={themeColors.gray200} />
+          <p style={{
+            fontSize: '18px', fontWeight: '600', color: themeColors.text, marginTop: themeSpace.lg, marginBottom: themeSpace.sm,
+          }}
+          >
+            No widgets selected
+          </p>
+          <p style={{
+            fontSize: '14px', color: themeColors.gray600, margin: 0, marginBottom: themeSpace.lg,
+          }}
+          >
+            Click "Add Widget" to start building your dashboard
+          </p>
+          <button
+            onClick={() => setShowWidgetSelector(true)}
+            style={{
+              padding: `${themeSpace.sm} ${themeSpace.lg}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600',
+            }}
+          >
+            Add Your First Widget
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: themeSpace.lg }}>
+          {visibleWidgets.map((widget, idx) => {
+            const isSelected = selectedWidgets.has(widget.id);
+            const isChartWidget = widget.type !== 'metric';
+            return (
+              <div
+                key={widget.id}
+                onClick={() => !editMode && handleSelectWidget(widget.id)}
+                style={{
+                  backgroundColor: isSelected ? `${themeColors.primary600}08` : themeColors.white,
+                  borderRadius: themeRadius.card,
+                  border: isSelected ? `2px solid ${themeColors.primary600}` : `1px solid ${themeColors.gray200}`,
+                  padding: themeSpace.lg,
+                  boxShadow: themeShadow.sm,
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  cursor: editMode ? 'default' : 'pointer',
+                  gridColumn: isChartWidget ? 'span 1' : 'span 1',
+                }}
+              >
+                {!editMode && isSelected && (
+                  <div style={{
+                    position: 'absolute', top: themeSpace.md, right: themeSpace.md, color: themeColors.primary600,
+                  }}
+                  >
+                    <Icon name="checkCircle" size={20} />
+                  </div>
+                )}
+                {editMode && (
+                  <div style={{
+                    display: 'flex', gap: themeSpace.sm, position: 'absolute', top: themeSpace.md, right: themeSpace.md,
+                  }}
+                  >
+                    {idx > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleReorderWidgets(idx, idx - 1); }}
+                      style={{
+                            background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
+                          }}
+                      title="Move up"
+                    >
+                      <Icon name="chart" size={16} color={themeColors.primary600} />
+                    </button>
+                    )}
+                    {idx < visibleWidgets.length - 1 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleReorderWidgets(idx, idx + 1); }}
+                      style={{
+                            background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
+                          }}
+                      title="Move down"
+                    >
+                      <Icon name="chart" size={16} color={themeColors.primary600} />
+                    </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRemoveWidget(widget.id); }}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs, color: themeColors.error500,
+                      }}
+                    >
+                      <Icon name="x" size={16} />
+                    </button>
+                  </div>
+                )}
+                <div style={{ marginBottom: themeSpace.md }}>
+                  <h3 style={{
+                    margin: 0, fontSize: '16px', fontWeight: '700', color: themeColors.text, paddingRight: editMode ? '100px' : 0,
+                  }}
+                  >
+                    {widget.title}
+                  </h3>
+                </div>
+
+                {renderChart(widget)}
+
+                <div style={{
+                  display: 'flex', gap: themeSpace.sm, paddingTop: themeSpace.md, borderTop: `1px solid ${themeColors.gray200}`, marginTop: 'auto',
+                }}
+                >
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleShowDetails(widget); }}
                     style={{
-                      backgroundColor: isSelected ? `${themeColors.primary600}08` : themeColors.white,
-                      borderRadius: themeRadius.card,
-                      border: isSelected ? `2px solid ${themeColors.primary600}` : `1px solid ${themeColors.gray200}`,
-                      padding: themeSpace.lg,
-                      boxShadow: themeShadow.sm,
-                      position: 'relative',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      cursor: editMode ? 'default' : 'pointer',
-                      gridColumn: isChartWidget ? 'span 1' : 'span 1',
+                      flex: 1, padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: 'transparent', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
                     }}
                   >
-                    {!editMode && isSelected && (
-                      <div style={{ position: 'absolute', top: themeSpace.md, right: themeSpace.md, color: themeColors.primary600 }}>
-                        <Icon name="checkCircle" size={20} />
-                      </div>
-                    )}
-                    {editMode && (
-                      <div style={{ display: 'flex', gap: themeSpace.sm, position: 'absolute', top: themeSpace.md, right: themeSpace.md }}>
-                        {idx > 0 && <button onClick={(e) => { e.stopPropagation(); handleReorderWidgets(idx, idx - 1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Move up"><Icon name="chart" size={16} color={themeColors.primary600} /></button>}
-                        {idx < visibleWidgets.length - 1 && <button onClick={(e) => { e.stopPropagation(); handleReorderWidgets(idx, idx + 1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }} title="Move down"><Icon name="chart" size={16} color={themeColors.primary600} /></button>}
-                        <button onClick={(e) => { e.stopPropagation(); handleRemoveWidget(widget.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs, color: themeColors.error500 }}><Icon name="x" size={16} /></button>
-                      </div>
-                    )}
-                    <div style={{ marginBottom: themeSpace.md }}>
-                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: themeColors.text, paddingRight: editMode ? '100px' : 0 }}>{widget.title}</h3>
-                    </div>
-
-                    {renderChart(widget)}
-
-                    <div style={{ display: 'flex', gap: themeSpace.sm, paddingTop: themeSpace.md, borderTop: `1px solid ${themeColors.gray200}`, marginTop: 'auto' }}>
-                      <button onClick={(e) => { e.stopPropagation(); handleShowDetails(widget); }} style={{ flex: 1, padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: 'transparent', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                        <Icon name="eye" size={14} />
-                        Details
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); handleExport(widget); }} style={{ flex: 1, padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: 'transparent', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                        <Icon name="download" size={14} />
-                        Export
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                    <Icon name="eye" size={14} />
+                    Details
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleExport(widget); }}
+                    style={{
+                      flex: 1, padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: 'transparent', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    }}
+                  >
+                    <Icon name="download" size={14} />
+                    Export
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {detailsModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setDetailsModal(null)}>
-          <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, maxWidth: '600px', width: '90%', boxShadow: themeShadow.md }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.lg }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: themeColors.text }}>Metric Details</h2>
-              <button onClick={() => setDetailsModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600 }}>
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          }}
+          onClick={() => setDetailsModal(null)}
+        >
+          <div
+            style={{
+              backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, maxWidth: '600px', width: '90%', boxShadow: themeShadow.md,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.lg,
+            }}
+            >
+              <h2 style={{
+                margin: 0, fontSize: '20px', fontWeight: '700', color: themeColors.text,
+              }}
+              >
+                Metric Details
+              </h2>
+              <button
+                onClick={() => setDetailsModal(null)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600,
+                }}
+              >
                 <Icon name="x" size={20} />
               </button>
             </div>
 
             <div style={{ marginBottom: themeSpace.lg }}>
-              <p style={{ margin: '0 0 ' + themeSpace.xs + ' 0', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase' }}>Metric Name</p>
-              <p style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: themeColors.text }}>{detailsModal.widget.title}</p>
+              <p style={{
+                margin: `0 0 ${themeSpace.xs} 0`, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase',
+              }}
+              >
+                Metric Name
+              </p>
+              <p style={{
+                margin: 0, fontSize: '18px', fontWeight: '700', color: themeColors.text,
+              }}
+              >
+                {detailsModal.widget.title}
+              </p>
             </div>
 
             <div style={{ marginBottom: themeSpace.lg }}>
-              <p style={{ margin: '0 0 ' + themeSpace.xs + ' 0', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase' }}>Current Value</p>
-              <p style={{ margin: 0, fontSize: '36px', fontWeight: '700', color: themeColors.primary600 }}>{detailsModal.data.value}</p>
+              <p style={{
+                margin: `0 0 ${themeSpace.xs} 0`, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase',
+              }}
+              >
+                Current Value
+              </p>
+              <p style={{
+                margin: 0, fontSize: '36px', fontWeight: '700', color: themeColors.primary600,
+              }}
+              >
+                {detailsModal.data.value}
+              </p>
             </div>
 
             {mockChartData[detailsModal.widget.metric] && (
               <div style={{ marginBottom: themeSpace.lg }}>
-                <p style={{ margin: '0 0 ' + themeSpace.md + ' 0', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase' }}>Trend</p>
+                <p style={{
+                  margin: `0 0 ${themeSpace.md} 0`, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase',
+                }}
+                >
+                  Trend
+                </p>
                 <ResponsiveContainer width="100%" height={150}>
                   <AreaChart data={mockChartData[detailsModal.widget.metric]}>
                     <defs>
@@ -645,25 +951,59 @@ export default function AnalyticsPage() {
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: themeSpace.md, marginBottom: themeSpace.lg }}>
+            <div style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: themeSpace.md, marginBottom: themeSpace.lg,
+            }}
+            >
               <div>
-                <p style={{ margin: '0 0 ' + themeSpace.xs + ' 0', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase' }}>Change</p>
-                <p style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: getMetricColor(detailsModal.data.change) }}>
-                  {detailsModal.data.change >= 0 ? '↑' : '↓'} {Math.abs(detailsModal.data.change)}%
+                <p style={{
+                  margin: `0 0 ${themeSpace.xs} 0`, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase',
+                }}
+                >
+                  Change
+                </p>
+                <p style={{
+                  margin: 0, fontSize: '18px', fontWeight: '700', color: getMetricColor(detailsModal.data.change),
+                }}
+                >
+                  {detailsModal.data.change >= 0 ? '↑' : '↓'}
+                  {' '}
+                  {Math.abs(detailsModal.data.change)}
+                  %
                 </p>
               </div>
               <div>
-                <p style={{ margin: '0 0 ' + themeSpace.xs + ' 0', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase' }}>Period</p>
-                <p style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: themeColors.text }}>{dateRange}</p>
+                <p style={{
+                  margin: `0 0 ${themeSpace.xs} 0`, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase',
+                }}
+                >
+                  Period
+                </p>
+                <p style={{
+                  margin: 0, fontSize: '18px', fontWeight: '700', color: themeColors.text,
+                }}
+                >
+                  {dateRange}
+                </p>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: themeSpace.md }}>
-              <button onClick={() => { handleExport(detailsModal.widget); setDetailsModal(null); }} style={{ flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: themeSpace.sm }}>
+              <button
+                onClick={() => { handleExport(detailsModal.widget); setDetailsModal(null); }}
+                style={{
+                  flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: themeSpace.sm,
+                }}
+              >
                 <Icon name="download" size={16} />
                 Export Data
               </button>
-              <button onClick={() => setDetailsModal(null)} style={{ flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: 'transparent', color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}>
+              <button
+                onClick={() => setDetailsModal(null)}
+                style={{
+                  flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: 'transparent', color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px',
+                }}
+              >
                 Close
               </button>
             </div>
