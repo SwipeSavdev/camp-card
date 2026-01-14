@@ -258,10 +258,18 @@ export default function MerchantsPage() {
       // Parse the address into components for the location
       // Expected format: "123 Main St, City, ST 12345" or just use as street address
       const parseAddress = (address: string) => {
+        if (!address || typeof address !== 'string') {
+          return {
+            streetAddress: '',
+            city: 'Unknown',
+            state: 'XX',
+            zipCode: '00000'
+          };
+        }
         const parts = address.split(',').map(p => p.trim());
-        if (parts.length >= 3) {
-          const streetAddress = parts[0];
-          const city = parts[1];
+        if (parts.length >= 3 && parts[2]) {
+          const streetAddress = parts[0] || '';
+          const city = parts[1] || '';
           const stateZip = parts[2].split(' ');
           const state = stateZip[0] || '';
           const zipCode = stateZip[1] || '';
