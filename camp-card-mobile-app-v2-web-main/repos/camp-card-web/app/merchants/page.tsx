@@ -377,13 +377,14 @@ export default function MerchantsPage() {
 
         // Add the new merchant to the local state immediately
         if (newMerchant) {
-          const mappedMerchant = {
+          const mappedMerchant: Merchant = {
             id: newMerchant.id,
             name: newMerchant.businessName || newMerchantName,
             contactName: newMerchant.contactName || newContactName,
             email: newMerchant.contactEmail || newEmail,
             phone: newMerchant.contactPhone || newPhone,
             businessType: newMerchant.category || newBusinessType,
+            status: newMerchant.status || 'PENDING',
             isSingleLocation: newIsSingleLocation,
             locations: newMerchant.locations || [],
           };
