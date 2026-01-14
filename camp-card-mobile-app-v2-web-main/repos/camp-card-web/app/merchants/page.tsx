@@ -75,7 +75,10 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
 interface MerchantLocation {
   id: string;
   name: string;
-  address: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zipCode: string;
   isHQ: boolean;
 }
 
@@ -107,12 +110,20 @@ export default function MerchantsPage() {
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newBusinessType, setNewBusinessType] = useState('');
-  const [newBusinessAddress, setNewBusinessAddress] = useState('');
+  // Separate address fields for HQ
+  const [newStreetAddress, setNewStreetAddress] = useState('');
+  const [newCity, setNewCity] = useState('');
+  const [newState, setNewState] = useState('');
+  const [newZipCode, setNewZipCode] = useState('');
   const [newIsSingleLocation, setNewIsSingleLocation] = useState(true);
   const [newLocations, setNewLocations] = useState<MerchantLocation[]>([]);
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocationName, setNewLocationName] = useState('');
-  const [newLocationAddress, setNewLocationAddress] = useState('');
+  // Separate address fields for additional locations
+  const [newLocationStreet, setNewLocationStreet] = useState('');
+  const [newLocationCity, setNewLocationCity] = useState('');
+  const [newLocationState, setNewLocationState] = useState('');
+  const [newLocationZip, setNewLocationZip] = useState('');
 
   // Filter state
   const [businessTypeFilter, setBusinessTypeFilter] = useState('');
@@ -151,18 +162,26 @@ export default function MerchantsPage() {
 
       // Map backend fields to frontend interface
       const merchants = merchantsArray.map((item: any) => {
-        // Handle locations - if it's a number (from mock data), convert to empty array
+        // Handle locations - map backend location fields to frontend interface
         let locations: MerchantLocation[] = [];
         if (Array.isArray(item.locations)) {
-          locations = item.locations;
+          locations = item.locations.map((loc: any) => ({
+            id: loc.id || loc.uuid || '',
+            name: loc.locationName || loc.name || '',
+            streetAddress: loc.streetAddress || loc.street_address || '',
+            city: loc.city || '',
+            state: loc.state || '',
+            zipCode: loc.zipCode || loc.zip_code || '',
+            isHQ: loc.primaryLocation || loc.primary_location || false,
+          }));
         }
 
         return {
           id: item.id,
-          name: item.name || item.business_name || '',
+          name: item.name || item.business_name || item.businessName || '',
           contactName: item.contactName || item.contact_name || '',
-          email: item.email || '',
-          phone: item.phone_number || item.phone || '',
+          email: item.email || item.contactEmail || '',
+          phone: item.phone_number || item.phone || item.contactPhone || '',
           businessType: item.category || item.business_type || '',
           isSingleLocation: item.isSingleLocation !== undefined ? item.isSingleLocation : true,
           locations,
@@ -204,7 +223,12 @@ export default function MerchantsPage() {
     setNewEmail(merchant.email);
     setNewPhone(merchant.phone);
     setNewBusinessType(merchant.businessType);
-    setNewBusinessAddress(merchant.locations?.[0]?.address || '');
+    // Populate address fields from first location
+    const firstLoc = merchant.locations?.[0];
+    setNewStreetAddress(firstLoc?.streetAddress || '');
+    setNewCity(firstLoc?.city || '');
+    setNewState(firstLoc?.state || '');
+    setNewZipCode(firstLoc?.zipCode || '');
     setNewLocations(merchant.locations || []);
     setEditingId(merchant.id);
     setShowAddForm(true);
@@ -221,21 +245,27 @@ export default function MerchantsPage() {
   };
 
   const addLocation = () => {
-    if (!newLocationName.trim() || !newLocationAddress.trim()) {
-      setError('Location name and address are required');
+    if (!newLocationName.trim() || !newLocationStreet.trim() || !newLocationCity.trim() || !newLocationState.trim() || !newLocationZip.trim()) {
+      setError('Location name and all address fields are required');
       return;
     }
 
     const location: MerchantLocation = {
       id: Date.now().toString(),
       name: newLocationName,
-      address: newLocationAddress,
+      streetAddress: newLocationStreet,
+      city: newLocationCity,
+      state: newLocationState,
+      zipCode: newLocationZip,
       isHQ: newLocations.length === 0,
     };
 
     setNewLocations([...newLocations, location]);
     setNewLocationName('');
-    setNewLocationAddress('');
+    setNewLocationStreet('');
+    setNewLocationCity('');
+    setNewLocationState('');
+    setNewLocationZip('');
     setShowAddLocation(false);
   };
 
@@ -244,8 +274,14 @@ export default function MerchantsPage() {
   };
 
   const addMerchant = async () => {
-    if (!newMerchantName.trim() || !newContactName.trim() || !newEmail.trim() || !newPhone.trim() || !newBusinessType.trim() || !newBusinessAddress.trim()) {
-      setError('All fields are required');
+    if (!newMerchantName.trim() || !newContactName.trim() || !newEmail.trim() || !newPhone.trim() || !newBusinessType.trim()) {
+      setError('Business name, contact name, email, phone, and business type are required');
+      return;
+    }
+
+    // Check HQ address fields for single location
+    if (newIsSingleLocation && (!newStreetAddress.trim() || !newCity.trim() || !newState.trim() || !newZipCode.trim())) {
+      setError('All HQ address fields are required');
       return;
     }
 
@@ -255,47 +291,24 @@ export default function MerchantsPage() {
     }
 
     try {
-      // Parse the address into components for the location
-      // Expected format: "123 Main St, City, ST 12345" or just use as street address
-      const parseAddress = (address: string) => {
-        if (!address || typeof address !== 'string') {
-          return {
-            streetAddress: '',
-            city: 'Unknown',
-            state: 'XX',
-            zipCode: '00000'
-          };
-        }
-        const parts = address.split(',').map(p => p.trim());
-        if (parts.length >= 3 && parts[2]) {
-          const streetAddress = parts[0] || '';
-          const city = parts[1] || '';
-          const stateZip = parts[2].split(' ');
-          const state = stateZip[0] || '';
-          const zipCode = stateZip[1] || '';
-          return { streetAddress, city, state, zipCode };
-        }
-        // If not parseable, use defaults
-        return {
-          streetAddress: address,
-          city: 'Unknown',
-          state: 'XX',
-          zipCode: '00000'
-        };
-      };
-
-      // Build primary location from the first location or the business address
+      // Build primary location from the first location or the HQ address fields
       const primaryLocationData = newLocations.length > 0
         ? {
             locationName: newLocations[0].name,
-            ...parseAddress(newLocations[0].address),
+            streetAddress: newLocations[0].streetAddress,
+            city: newLocations[0].city,
+            state: newLocations[0].state,
+            zipCode: newLocations[0].zipCode,
             primaryLocation: true,
             phone: newPhone,
           }
         : newIsSingleLocation
         ? {
             locationName: newMerchantName + ' - Main',
-            ...parseAddress(newBusinessAddress),
+            streetAddress: newStreetAddress,
+            city: newCity,
+            state: newState,
+            zipCode: newZipCode,
             primaryLocation: true,
             phone: newPhone,
           }
@@ -307,7 +320,7 @@ export default function MerchantsPage() {
         contactName: newContactName,
         contactEmail: newEmail,
         contactPhone: newPhone,
-        description: newBusinessAddress,
+        description: `${newStreetAddress}, ${newCity}, ${newState} ${newZipCode}`,
         primaryLocation: primaryLocationData,
         termsAccepted: true,
       };
@@ -329,7 +342,10 @@ export default function MerchantsPage() {
             const loc = newLocations[i];
             const locData = {
               locationName: loc.name,
-              ...parseAddress(loc.address),
+              streetAddress: loc.streetAddress,
+              city: loc.city,
+              state: loc.state,
+              zipCode: loc.zipCode,
               primaryLocation: false,
               phone: newPhone,
             };
@@ -368,7 +384,10 @@ export default function MerchantsPage() {
       setNewEmail('');
       setNewPhone('');
       setNewBusinessType('');
-      setNewBusinessAddress('');
+      setNewStreetAddress('');
+      setNewCity('');
+      setNewState('');
+      setNewZipCode('');
       setNewIsSingleLocation(true);
       setNewLocations([]);
       setShowAddForm(false);
@@ -666,7 +685,7 @@ export default function MerchantsPage() {
                    {location.name}
                  </div>
                    <div style={{ fontSize: '13px', color: themeColors.gray600 }}>
-                   {location.address}
+                   {location.streetAddress ? `${location.streetAddress}, ${location.city}, ${location.state} ${location.zipCode}` : 'No address'}
                  </div>
                  </div>
                  </div>
@@ -952,9 +971,9 @@ export default function MerchantsPage() {
               </label>
               <input
                 type="text"
-                value={newBusinessAddress}
-                onChange={(e) => setNewBusinessAddress(e.target.value)}
-                placeholder="Enter business address"
+                value={newStreetAddress}
+                onChange={(e) => setNewStreetAddress(e.target.value)}
+                placeholder="Street Address"
                 style={{
                   width: '100%',
                   padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -962,8 +981,56 @@ export default function MerchantsPage() {
                   borderRadius: themeRadius.sm,
                   fontSize: '14px',
                   boxSizing: 'border-box',
+                  marginBottom: themeSpace.sm,
                 }}
               />
+              <div style={{ display: 'flex', gap: themeSpace.sm }}>
+                <input
+                  type="text"
+                  value={newCity}
+                  onChange={(e) => setNewCity(e.target.value)}
+                  placeholder="City"
+                  style={{
+                    flex: 2,
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    border: `1px solid ${themeColors.gray200}`,
+                    borderRadius: themeRadius.sm,
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <input
+                  type="text"
+                  value={newState}
+                  onChange={(e) => setNewState(e.target.value)}
+                  placeholder="State"
+                  maxLength={2}
+                  style={{
+                    flex: 1,
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    border: `1px solid ${themeColors.gray200}`,
+                    borderRadius: themeRadius.sm,
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                    textTransform: 'uppercase',
+                  }}
+                />
+                <input
+                  type="text"
+                  value={newZipCode}
+                  onChange={(e) => setNewZipCode(e.target.value)}
+                  placeholder="ZIP Code"
+                  maxLength={10}
+                  style={{
+                    flex: 1,
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    border: `1px solid ${themeColors.gray200}`,
+                    borderRadius: themeRadius.sm,
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
@@ -1054,15 +1121,62 @@ export default function MerchantsPage() {
                  fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'block', marginBottom: themeSpace.xs,
                }}
                >
-           Location Address
+           Street Address
                </label>
                <input
                  type="text"
-                 value={newLocationAddress}
-                 onChange={(e) => setNewLocationAddress(e.target.value)}
-                 placeholder="Enter location address"
+                 value={newLocationStreet}
+                 onChange={(e) => setNewLocationStreet(e.target.value)}
+                 placeholder="Street Address"
                  style={{
                  width: '100%',
+                 padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                 border: `1px solid ${themeColors.gray200}`,
+                 borderRadius: themeRadius.sm,
+                 fontSize: '13px',
+                 boxSizing: 'border-box',
+               }}
+               />
+             </div>
+               <div style={{ display: 'flex', gap: themeSpace.sm }}>
+               <input
+                 type="text"
+                 value={newLocationCity}
+                 onChange={(e) => setNewLocationCity(e.target.value)}
+                 placeholder="City"
+                 style={{
+                 flex: 2,
+                 padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                 border: `1px solid ${themeColors.gray200}`,
+                 borderRadius: themeRadius.sm,
+                 fontSize: '13px',
+                 boxSizing: 'border-box',
+               }}
+               />
+               <input
+                 type="text"
+                 value={newLocationState}
+                 onChange={(e) => setNewLocationState(e.target.value)}
+                 placeholder="State"
+                 maxLength={2}
+                 style={{
+                 flex: 1,
+                 padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                 border: `1px solid ${themeColors.gray200}`,
+                 borderRadius: themeRadius.sm,
+                 fontSize: '13px',
+                 boxSizing: 'border-box',
+                 textTransform: 'uppercase',
+               }}
+               />
+               <input
+                 type="text"
+                 value={newLocationZip}
+                 onChange={(e) => setNewLocationZip(e.target.value)}
+                 placeholder="ZIP"
+                 maxLength={10}
+                 style={{
+                 flex: 1,
                  padding: `${themeSpace.xs} ${themeSpace.sm}`,
                  border: `1px solid ${themeColors.gray200}`,
                  borderRadius: themeRadius.sm,
@@ -1094,7 +1208,10 @@ export default function MerchantsPage() {
                  onClick={() => {
                  setShowAddLocation(false);
                  setNewLocationName('');
-                 setNewLocationAddress('');
+                 setNewLocationStreet('');
+                 setNewLocationCity('');
+                 setNewLocationState('');
+                 setNewLocationZip('');
                }}
                  style={{
                  flex: 1,
@@ -1129,7 +1246,7 @@ export default function MerchantsPage() {
                  {location.name}
                </div>
                  <div style={{ fontSize: '11px', color: themeColors.gray600 }}>
-                 {location.address}
+                 {`${location.streetAddress}, ${location.city}, ${location.state} ${location.zipCode}`}
                </div>
                </div>
                <button
