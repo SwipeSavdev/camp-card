@@ -1,41 +1,39 @@
 -- V012: Seed Sample Merchants and Offers for Production
 -- This creates initial test data for the mobile app
--- Schema: campcard
-
-SET search_path TO campcard;
+-- Works with both local (public schema) and AWS (campcard schema)
 
 -- ============================================================================
 -- SEED COUNCIL (required for merchants and subscription_plans)
 -- ============================================================================
 INSERT INTO councils (id, uuid, council_number, name, short_name, region, street_address, city, state, zip_code, phone, email, website_url, logo_url, scout_executive_name, scout_executive_email, total_troops, total_scouts, total_sales, cards_sold, status, created_at, updated_at)
 VALUES
-(1, gen_random_uuid(), '100', 'Sample Council', 'SC100', 'Northeast', '123 Scout Way', 'New York', 'NY', '10001', '555-0000', 'admin@campcard.org', 'https://campcard.org', NULL, 'Admin User', 'admin@campcard.org', 0, 0, 0.00, 0, 'ACTIVE', NOW(), NOW())
+(1, gen_random_uuid(), '100', 'Sample Council', 'SC100', 'NORTHEAST', '123 Scout Way', 'New York', 'NY', '10001', '555-0000', 'admin@campcard.org', 'https://campcard.org', NULL, 'Admin User', 'admin@campcard.org', 0, 0, 0.00, 0, 'ACTIVE', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
-SELECT setval('campcard.councils_id_seq', COALESCE((SELECT MAX(id) FROM campcard.councils), 1));
+SELECT setval('councils_id_seq', COALESCE((SELECT MAX(id) FROM councils), 1));
 
 -- ============================================================================
--- MERCHANTS (with council_id = 1)
+-- MERCHANTS
 -- ============================================================================
-INSERT INTO merchants (id, uuid, council_id, business_name, dba_name, description, category, tax_id, contact_name, contact_email, contact_phone, website_url, logo_url, status, terms_accepted, total_offers, active_offers, total_redemptions, created_at, updated_at)
+INSERT INTO merchants (id, uuid, business_name, dba_name, description, category, tax_id, business_email, contact_phone, website_url, logo_url, status, terms_accepted, total_offers, active_offers, total_redemptions, created_at, updated_at)
 VALUES
 -- Restaurants
-(1, gen_random_uuid(), 1, 'Pizza Palace', 'Pizza Palace LLC', 'Family-owned pizzeria serving authentic Italian pizza since 1985. Fresh ingredients, homemade dough daily.', 'RESTAURANTS', '12-3456789', 'Tony Romano', 'info@pizzapalace.com', '555-0101', 'https://pizzapalace.com', 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
-(2, gen_random_uuid(), 1, 'Burger Barn', 'Burger Barn Inc', 'Gourmet burgers made from locally sourced, grass-fed beef. Over 20 specialty burger options.', 'RESTAURANTS', '23-4567890', 'Mike Johnson', 'hello@burgerbarn.com', '555-0102', 'https://burgerbarn.com', 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
-(3, gen_random_uuid(), 1, 'Taco Town', 'Taco Town Express', 'Authentic Mexican cuisine with a modern twist. Fresh tacos, burritos, and quesadillas made to order.', 'RESTAURANTS', '34-5678901', 'Maria Garcia', 'contact@tacotown.com', '555-0103', 'https://tacotown.com', 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
+(1, gen_random_uuid(), 'Pizza Palace', 'Pizza Palace LLC', 'Family-owned pizzeria serving authentic Italian pizza since 1985. Fresh ingredients, homemade dough daily.', 'RESTAURANTS', '12-3456789', 'info@pizzapalace.com', '555-0101', 'https://pizzapalace.com', 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
+(2, gen_random_uuid(), 'Burger Barn', 'Burger Barn Inc', 'Gourmet burgers made from locally sourced, grass-fed beef. Over 20 specialty burger options.', 'RESTAURANTS', '23-4567890', 'hello@burgerbarn.com', '555-0102', 'https://burgerbarn.com', 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
+(3, gen_random_uuid(), 'Taco Town', 'Taco Town Express', 'Authentic Mexican cuisine with a modern twist. Fresh tacos, burritos, and quesadillas made to order.', 'RESTAURANTS', '34-5678901', 'contact@tacotown.com', '555-0103', 'https://tacotown.com', 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
 -- Retail
-(4, gen_random_uuid(), 1, 'Sports Galaxy', 'Sports Galaxy Stores', 'Your one-stop shop for all sporting goods. Equipment, apparel, and accessories for every sport.', 'RETAIL', '45-6789012', 'John Smith', 'sales@sportsgalaxy.com', '555-0201', 'https://sportsgalaxy.com', 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
-(5, gen_random_uuid(), 1, 'Book Haven', 'Book Haven LLC', 'Independent bookstore with over 50,000 titles. New releases, classics, and rare finds.', 'RETAIL', '56-7890123', 'Sarah Wilson', 'books@bookhaven.com', '555-0202', 'https://bookhaven.com', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
+(4, gen_random_uuid(), 'Sports Galaxy', 'Sports Galaxy Stores', 'Your one-stop shop for all sporting goods. Equipment, apparel, and accessories for every sport.', 'RETAIL', '45-6789012', 'sales@sportsgalaxy.com', '555-0201', 'https://sportsgalaxy.com', 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
+(5, gen_random_uuid(), 'Book Haven', 'Book Haven LLC', 'Independent bookstore with over 50,000 titles. New releases, classics, and rare finds.', 'RETAIL', '56-7890123', 'books@bookhaven.com', '555-0202', 'https://bookhaven.com', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
 -- Entertainment
-(6, gen_random_uuid(), 1, 'Fun Zone Arcade', 'Fun Zone Entertainment', 'Family entertainment center with arcade games, mini-golf, go-karts, and laser tag.', 'ENTERTAINMENT', '67-8901234', 'Dave Brown', 'play@funzone.com', '555-0301', 'https://funzone.com', 'https://images.unsplash.com/photo-1511882150382-421056c89033?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
-(7, gen_random_uuid(), 1, 'Cinema Plus', 'Cinema Plus Theaters', 'Premium movie experience with IMAX, 4DX, and luxury recliners. Fresh popcorn and gourmet concessions.', 'ENTERTAINMENT', '78-9012345', 'Lisa Chen', 'movies@cinemaplus.com', '555-0302', 'https://cinemaplus.com', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
+(6, gen_random_uuid(), 'Fun Zone Arcade', 'Fun Zone Entertainment', 'Family entertainment center with arcade games, mini-golf, go-karts, and laser tag.', 'ENTERTAINMENT', '67-8901234', 'play@funzone.com', '555-0301', 'https://funzone.com', 'https://images.unsplash.com/photo-1511882150382-421056c89033?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW()),
+(7, gen_random_uuid(), 'Cinema Plus', 'Cinema Plus Theaters', 'Premium movie experience with IMAX, 4DX, and luxury recliners. Fresh popcorn and gourmet concessions.', 'ENTERTAINMENT', '78-9012345', 'movies@cinemaplus.com', '555-0302', 'https://cinemaplus.com', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
 -- Services
-(8, gen_random_uuid(), 1, 'Quick Oil Change', 'Quick Oil Change Inc', '10-minute oil changes with quality synthetic oils. Full vehicle inspection included.', 'AUTOMOTIVE', '89-0123456', 'Bob Miller', 'service@quickoil.com', '555-0401', 'https://quickoil.com', 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
-(9, gen_random_uuid(), 1, 'Outdoor Adventures', 'Outdoor Adventures Co', 'Camping gear, hiking equipment, and outdoor apparel. Expert staff and gear rentals available.', 'RETAIL', '90-1234567', 'Amy Taylor', 'info@outdooradv.com', '555-0501', 'https://outdooradv.com', 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW())
+(8, gen_random_uuid(), 'Quick Oil Change', 'Quick Oil Change Inc', '10-minute oil changes with quality synthetic oils. Full vehicle inspection included.', 'AUTOMOTIVE', '89-0123456', 'service@quickoil.com', '555-0401', 'https://quickoil.com', 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200', 'APPROVED', true, 1, 1, 0, NOW(), NOW()),
+(9, gen_random_uuid(), 'Outdoor Adventures', 'Outdoor Adventures Co', 'Camping gear, hiking equipment, and outdoor apparel. Expert staff and gear rentals available.', 'RETAIL', '90-1234567', 'info@outdooradv.com', '555-0501', 'https://outdooradv.com', 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=200', 'APPROVED', true, 2, 2, 0, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequence
-SELECT setval('campcard.merchants_id_seq', COALESCE((SELECT MAX(id) FROM campcard.merchants), 1));
+SELECT setval('merchants_id_seq', COALESCE((SELECT MAX(id) FROM merchants), 1));
 
 -- ============================================================================
 -- MERCHANT LOCATIONS
@@ -84,7 +82,7 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequence
-SELECT setval('campcard.offers_id_seq', COALESCE((SELECT MAX(id) FROM campcard.offers), 1));
+SELECT setval('offers_id_seq', COALESCE((SELECT MAX(id) FROM offers), 1));
 
 -- Update merchant offer counts
 UPDATE merchants SET
@@ -92,15 +90,15 @@ UPDATE merchants SET
     active_offers = (SELECT COUNT(*) FROM offers WHERE offers.merchant_id = merchants.id AND offers.status = 'ACTIVE');
 
 -- ============================================================================
--- SUBSCRIPTION PLANS (with council_id = 1)
+-- SUBSCRIPTION PLANS
 -- ============================================================================
-INSERT INTO subscription_plans (id, uuid, council_id, name, description, price_cents, currency, billing_interval, trial_days, status, features, created_at, updated_at)
+INSERT INTO subscription_plans (id, uuid, name, description, price, billing_period, features, max_offers, max_redemptions_per_month, includes_analytics, includes_api_access, is_active, display_order, created_at, updated_at)
 VALUES
-(1, gen_random_uuid(), 1, 'Scout Basic', 'Perfect for individual Scouts. Access to all local offers.', 1000, 'USD', 'monthly', 7, 'active', ARRAY['Access to local offers', 'QR code redemption', '20 redemptions per month', 'Mobile app access'], NOW(), NOW()),
-(2, gen_random_uuid(), 1, 'Scout Premium', 'Best value for active Scouts. Unlimited redemptions.', 2500, 'USD', 'monthly', 14, 'active', ARRAY['Access to all offers nationwide', 'Unlimited redemptions', 'Exclusive premium offers', 'Priority support'], NOW(), NOW()),
-(3, gen_random_uuid(), 1, 'Family Pack', 'Cover the whole family! Up to 5 family members.', 4500, 'USD', 'monthly', 14, 'active', ARRAY['Up to 5 family members', 'Access to all offers', 'Unlimited redemptions', 'Family features'], NOW(), NOW()),
-(4, gen_random_uuid(), 1, 'Troop Bundle', 'Special pricing for Scout troops.', 0, 'USD', 'yearly', 30, 'inactive', ARRAY['Custom pricing for troops', 'Bulk discounts', 'Troop dashboard', 'Fundraising tracking'], NOW(), NOW())
+(1, gen_random_uuid(), 'Scout Basic', 'Perfect for individual Scouts. Access to all local offers.', 10.00, 'MONTHLY', '["Access to local offers", "QR code redemption", "20 redemptions per month", "Mobile app access"]', 10, 20, false, false, true, 1, NOW(), NOW()),
+(2, gen_random_uuid(), 'Scout Premium', 'Best value for active Scouts. Unlimited redemptions.', 25.00, 'MONTHLY', '["Access to all offers nationwide", "Unlimited redemptions", "Exclusive premium offers", "Priority support"]', NULL, NULL, true, false, true, 2, NOW(), NOW()),
+(3, gen_random_uuid(), 'Family Pack', 'Cover the whole family! Up to 5 family members.', 45.00, 'MONTHLY', '["Up to 5 family members", "Access to all offers", "Unlimited redemptions", "Family features"]', NULL, NULL, true, false, true, 3, NOW(), NOW()),
+(4, gen_random_uuid(), 'Troop Bundle', 'Special pricing for Scout troops.', 0.00, 'ANNUAL', '["Custom pricing for troops", "Bulk discounts", "Troop dashboard", "Fundraising tracking"]', NULL, NULL, true, true, false, 4, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequence
-SELECT setval('campcard.subscription_plans_id_seq', COALESCE((SELECT MAX(id) FROM campcard.subscription_plans), 1));
+SELECT setval('subscription_plans_id_seq', COALESCE((SELECT MAX(id) FROM subscription_plans), 1));
