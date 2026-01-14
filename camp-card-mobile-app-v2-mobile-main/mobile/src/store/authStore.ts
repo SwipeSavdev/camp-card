@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
 import { apiClient } from '../services/apiClient';
+import { API_BASE_URL } from '../config/constants';
 
 interface User {
   id: string;
@@ -13,6 +14,8 @@ interface User {
   role: 'SCOUT' | 'PARENT' | 'TROOP_LEADER' | 'COUNCIL_ADMIN' | 'NATIONAL_ADMIN';
   councilId?: string;
   troopId?: string;
+  subscriptionStatus?: 'active' | 'inactive' | 'expired' | 'none';
+  subscriptionExpiresAt?: string;
 }
 
 interface AuthState {
@@ -32,9 +35,9 @@ interface AuthState {
   devBypass: () => void;
 }
 
-// DEV MODE: Only enable in development builds via __DEV__ flag
-// SECURITY: Never set to true in production builds
-const DEV_BYPASS_AUTH = __DEV__ && false; // Set second value to true only for local testing
+// DEV MODE: Always start with login screen for testing
+// Set to true to clear auth state on every app reload
+const DEV_ALWAYS_SHOW_LOGIN = __DEV__ && true;
 
 const DEV_MOCK_USER: User = {
   id: 'dev-user-123',
@@ -67,14 +70,25 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
 
       initialize: async () => {
-        // DEV MODE: Auto-authenticate with mock user
-        if (DEV_BYPASS_AUTH) {
-          console.log('🔓 DEV MODE: Bypassing authentication');
+        // DEV MODE: Always clear auth state to show login screen
+        if (DEV_ALWAYS_SHOW_LOGIN) {
+          console.log('🔓 DEV MODE: Clearing auth state for testing');
+          console.log('📡 API URL:', API_BASE_URL);
+
+          // Clear all stored auth data
+          try {
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            await AsyncStorage.removeItem('auth-storage');
+          } catch (e) {
+            console.log('Error clearing auth storage:', e);
+          }
+
           set({
-            user: DEV_MOCK_USER,
-            accessToken: 'dev-token',
-            refreshToken: 'dev-refresh-token',
-            isAuthenticated: true,
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
           });
           return;
         }
@@ -113,11 +127,16 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
+        console.log('🔐 Attempting login for:', email);
+        console.log('📡 API URL:', API_BASE_URL);
+
         try {
           const response = await apiClient.post('/api/v1/auth/login', {
             email,
             password,
           });
+
+          console.log('✅ Login successful:', response.data.user?.email);
 
           const { user, accessToken, refreshToken } = response.data;
 
@@ -132,13 +151,18 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error) {
+        } catch (error: any) {
+          console.error('❌ Login failed:', error.message);
+          console.error('❌ Error details:', error.response?.data || error);
+          console.error('❌ Request URL:', `${API_BASE_URL}/api/v1/auth/login`);
           set({ isLoading: false });
           throw error;
         }
       },
 
       logout: async () => {
+        console.log('🚪 Logging out...');
+
         // First, immediately set isAuthenticated to false to trigger navigation
         set({
           isAuthenticated: false,

@@ -65,7 +65,7 @@ export function useLocation(options: UseLocationOptions = {}) {
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === 'ios') {
       const auth = await Geolocation.requestAuthorization('whenInUse');
-      const granted = auth === 'granted' || auth === 'whenInUse';
+      const granted = auth === 'granted';
       setState(prev => ({
         ...prev,
         permissionStatus: granted ? 'granted' : 'denied',

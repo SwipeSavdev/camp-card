@@ -14,13 +14,19 @@ import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import OffersScreen from '../screens/offers/OffersScreen';
 import OfferDetailScreen from '../screens/offers/OfferDetailScreen';
-import ScanScreen from '../screens/scan/ScanScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 // Scout Screens
 import ScoutDashboardScreen from '../screens/scout/ScoutDashboardScreen';
 import SubscriptionScreen from '../screens/scout/SubscriptionScreen';
 import ReferralScreen from '../screens/scout/ReferralScreen';
+
+// Troop Leader Screens
+import TroopLeaderDashboardScreen from '../screens/troopLeader/TroopLeaderDashboardScreen';
+import ManageScoutsScreen from '../screens/troopLeader/ManageScoutsScreen';
+import TroopStatsScreen from '../screens/troopLeader/TroopStatsScreen';
+import InviteScoutsScreen from '../screens/troopLeader/InviteScoutsScreen';
+import SelectScoutForSubscriptionScreen from '../screens/troopLeader/SelectScoutForSubscriptionScreen';
 
 // Additional Screens
 import MerchantsScreen from '../screens/MerchantsScreen';
@@ -30,18 +36,9 @@ import RedemptionSuccessScreen from '../screens/RedemptionSuccessScreen';
 import ShareOfferScreen from '../screens/ShareOfferScreen';
 import QRScannerScreen from '../screens/QRScannerScreen';
 
-export type RootStackParamList = {
-  Auth: undefined;
-  Main: undefined;
-  Merchants: undefined;
-  MerchantDetail: { merchantId: number };
-  Notifications: undefined;
-  RedemptionSuccess: { redemption: any; offer: any };
-  ShareOffer: { offer: any };
-  QRScanner: undefined;
-  Subscription: undefined;
-  Referral: undefined;
-};
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -49,34 +46,99 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
 };
 
-export type MainTabParamList = {
-  Home: undefined;
-  Offers: undefined;
-  Scan: undefined;
-  Scout: undefined;
-  Profile: undefined;
-};
-
 export type OffersStackParamList = {
   OffersList: undefined;
   OfferDetail: { offerId: string };
 };
 
-const RootStack = createNativeStackNavigator<RootStackParamList>();
+// Scout Types
+export type ScoutTabParamList = {
+  Home: undefined;
+  MyCards: undefined;
+  Profile: undefined;
+};
+
+export type ScoutStackParamList = {
+  ScoutTabs: undefined;
+  Merchants: undefined;
+  MerchantDetail: { merchantId: number };
+  Notifications: undefined;
+  Subscription: undefined;
+  Referral: undefined;
+  ViewOffers: undefined;
+  OfferDetail: { offerId: number };
+  QRScanner: undefined;
+  ShareOffer: { offer: any };
+  RedemptionSuccess: { redemption: any; offer: any };
+};
+
+// Troop Leader Types
+export type TroopLeaderTabParamList = {
+  Home: undefined;
+  Offers: undefined;
+  Dashboard: undefined;
+  Scouts: undefined;
+  Profile: undefined;
+};
+
+export type TroopLeaderStackParamList = {
+  TroopLeaderTabs: undefined;
+  Merchants: undefined;
+  MerchantDetail: { merchantId: number };
+  Notifications: undefined;
+  ManageScouts: undefined;
+  TroopStats: undefined;
+  InviteScouts: undefined;
+  Subscription: undefined;
+  SelectScoutForSubscription: { planId: string };
+  QRScanner: undefined;
+  ShareOffer: { offer: any };
+  RedemptionSuccess: { redemption: any; offer: any };
+};
+
+// Customer/Parent Types
+export type CustomerTabParamList = {
+  Home: undefined;
+  Offers: undefined;
+  Merchants: undefined;
+  Profile: undefined;
+};
+
+export type CustomerStackParamList = {
+  CustomerTabs: undefined;
+  MerchantDetail: { merchantId: number };
+  Notifications: undefined;
+  QRScanner: undefined;
+  ShareOffer: { offer: any };
+  RedemptionSuccess: { redemption: any; offer: any };
+};
+
+// ============================================================================
+// CREATE NAVIGATORS
+// ============================================================================
+
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const MainTab = createBottomTabNavigator<MainTabParamList>();
 const OffersStack = createNativeStackNavigator<OffersStackParamList>();
 
-/**
- * Auth Navigator - Login, Signup, Forgot Password
- */
+// Scout navigators
+const ScoutTab = createBottomTabNavigator<ScoutTabParamList>();
+const ScoutStack = createNativeStackNavigator<ScoutStackParamList>();
+
+// Troop Leader navigators
+const TroopLeaderTab = createBottomTabNavigator<TroopLeaderTabParamList>();
+const TroopLeaderStack = createNativeStackNavigator<TroopLeaderStackParamList>();
+
+// Customer/Parent navigators
+const CustomerTab = createBottomTabNavigator<CustomerTabParamList>();
+const CustomerStack = createNativeStackNavigator<CustomerStackParamList>();
+
+// ============================================================================
+// SHARED NAVIGATORS
+// ============================================================================
+
 function AuthNavigator() {
   return (
-    <AuthStack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+    <AuthStack.Navigator id="AuthStack" screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Signup" component={SignupScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
@@ -84,12 +146,9 @@ function AuthNavigator() {
   );
 }
 
-/**
- * Offers Stack Navigator - Offers List & Detail
- */
 function OffersNavigator() {
   return (
-    <OffersStack.Navigator>
+    <OffersStack.Navigator id="OffersStack">
       <OffersStack.Screen
         name="OffersList"
         component={OffersScreen}
@@ -104,115 +163,208 @@ function OffersNavigator() {
   );
 }
 
-/**
- * Main Tab Navigator - Bottom tabs
- */
-function MainNavigator() {
+// ============================================================================
+// SCOUT NAVIGATION (Red Theme)
+// Tabs: Home, My Cards, Profile
+// Scouts have view-only access to offers via My Cards screen
+// ============================================================================
+
+function ScoutTabNavigator() {
   return (
-    <MainTab.Navigator
-      screenOptions={({ route }: any) => ({
-        tabBarIcon: ({ focused, color, size }: any) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Offers') {
-            iconName = focused ? 'pricetag' : 'pricetag-outline';
-          } else if (route.name === 'Scan') {
-            iconName = focused ? 'qr-code' : 'qr-code-outline';
-          } else if (route.name === 'Scout') {
-            iconName = focused ? 'ribbon' : 'ribbon-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else {
-            iconName = 'ellipse';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
+    <ScoutTab.Navigator
+      id="ScoutTabs"
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
+            Home: focused ? 'home' : 'home-outline',
+            MyCards: focused ? 'card' : 'card-outline',
+            Profile: focused ? 'person' : 'person-outline',
+          };
+          return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#CE1126', // BSA Red
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}
     >
-      <MainTab.Screen name="Home" component={HomeScreen} />
-      <MainTab.Screen name="Offers" component={OffersNavigator} />
-      <MainTab.Screen
-        name="Scan"
-        component={ScanScreen}
-        options={{ tabBarLabel: 'Scan QR' }}
-      />
-      <MainTab.Screen
-        name="Scout"
-        component={ScoutDashboardScreen}
-        options={{ tabBarLabel: 'My Cards' }}
-      />
-      <MainTab.Screen name="Profile" component={ProfileScreen} />
-    </MainTab.Navigator>
+      <ScoutTab.Screen name="Home" component={HomeScreen} />
+      <ScoutTab.Screen name="MyCards" component={ScoutDashboardScreen} options={{ tabBarLabel: 'My Cards' }} />
+      <ScoutTab.Screen name="Profile" component={ProfileScreen} />
+    </ScoutTab.Navigator>
   );
 }
 
-/**
- * Root Navigator - Handles Auth vs Main flow
- */
-export default function RootNavigator() {
-  const { isAuthenticated } = useAuthStore();
+function ScoutMainNavigator() {
+  return (
+    <ScoutStack.Navigator id="ScoutMain" screenOptions={{ headerShown: false }}>
+      <ScoutStack.Screen name="ScoutTabs" component={ScoutTabNavigator} />
+      <ScoutStack.Group screenOptions={{ presentation: 'modal' }}>
+        <ScoutStack.Screen name="Merchants" component={MerchantsScreen} options={{ headerShown: true, title: 'All Merchants' }} />
+        <ScoutStack.Screen name="MerchantDetail" component={MerchantDetailScreen} options={{ headerShown: true, title: 'Merchant Details' }} />
+        <ScoutStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
+        <ScoutStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
+        <ScoutStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: true, title: 'Referrals' }} />
+        <ScoutStack.Screen name="ViewOffers" component={OffersScreen} options={{ headerShown: true, title: 'Available Offers' }} />
+        <ScoutStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
+      </ScoutStack.Group>
+      <ScoutStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
+        <ScoutStack.Screen name="QRScanner" component={QRScannerScreen} options={{ headerShown: true, title: 'My QR Code' }} />
+        <ScoutStack.Screen name="ShareOffer" component={ShareOfferScreen} options={{ headerShown: true, title: 'Share Offer' }} />
+        <ScoutStack.Screen name="RedemptionSuccess" component={RedemptionSuccessScreen} options={{ headerShown: false }} />
+      </ScoutStack.Group>
+    </ScoutStack.Navigator>
+  );
+}
+
+// ============================================================================
+// TROOP LEADER NAVIGATION (Blue Theme)
+// Tabs: Home, Offers (only if subscribed), Troop Dashboard, Scouts, Profile
+// ============================================================================
+
+function TroopLeaderTabNavigator() {
+  const { user } = useAuthStore();
+  const hasActiveSubscription = user?.subscriptionStatus === 'active';
+
+  // Debug log in development
+  if (__DEV__) {
+    console.log('TroopLeader subscription check:', {
+      subscriptionStatus: user?.subscriptionStatus,
+      hasActiveSubscription,
+    });
+  }
 
   return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
-        <RootStack.Screen name="Auth" component={AuthNavigator} />
-      ) : (
-        <>
-          <RootStack.Screen name="Main" component={MainNavigator} />
-          {/* Modal Screens - available from anywhere */}
-          <RootStack.Group screenOptions={{ presentation: 'modal' }}>
-            <RootStack.Screen 
-              name="Merchants" 
-              component={MerchantsScreen}
-              options={{ headerShown: true, title: 'All Merchants' }}
-            />
-            <RootStack.Screen 
-              name="MerchantDetail" 
-              component={MerchantDetailScreen}
-              options={{ headerShown: true, title: 'Merchant Details' }}
-            />
-            <RootStack.Screen 
-              name="Notifications" 
-              component={NotificationsScreen}
-              options={{ headerShown: true, title: 'Notifications' }}
-            />
-            <RootStack.Screen 
-              name="Subscription" 
-              component={SubscriptionScreen}
-              options={{ headerShown: true, title: 'Subscription' }}
-            />
-            <RootStack.Screen 
-              name="Referral" 
-              component={ReferralScreen}
-              options={{ headerShown: true, title: 'Referrals' }}
-            />
-          </RootStack.Group>
-          {/* Fullscreen Modal Screens */}
-          <RootStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
-            <RootStack.Screen 
-              name="QRScanner" 
-              component={QRScannerScreen}
-              options={{ headerShown: true, title: 'My QR Code' }}
-            />
-            <RootStack.Screen 
-              name="ShareOffer" 
-              component={ShareOfferScreen}
-              options={{ headerShown: true, title: 'Share Offer' }}
-            />
-            <RootStack.Screen 
-              name="RedemptionSuccess" 
-              component={RedemptionSuccessScreen}
-              options={{ headerShown: false }}
-            />
-          </RootStack.Group>
-        </>
+    <TroopLeaderTab.Navigator
+      id="TroopLeaderTabs"
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
+            Home: focused ? 'home' : 'home-outline',
+            Offers: focused ? 'pricetag' : 'pricetag-outline',
+            Dashboard: focused ? 'stats-chart' : 'stats-chart-outline',
+            Scouts: focused ? 'people' : 'people-outline',
+            Profile: focused ? 'person' : 'person-outline',
+          };
+          return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#003F87', // BSA Blue
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+      })}
+    >
+      <TroopLeaderTab.Screen name="Home" component={HomeScreen} />
+      {hasActiveSubscription && (
+        <TroopLeaderTab.Screen name="Offers" component={OffersNavigator} />
       )}
-    </RootStack.Navigator>
+      <TroopLeaderTab.Screen name="Dashboard" component={TroopLeaderDashboardScreen} options={{ tabBarLabel: 'Troop' }} />
+      <TroopLeaderTab.Screen name="Scouts" component={ManageScoutsScreen} options={{ tabBarLabel: 'Scouts' }} />
+      <TroopLeaderTab.Screen name="Profile" component={ProfileScreen} />
+    </TroopLeaderTab.Navigator>
   );
+}
+
+function TroopLeaderMainNavigator() {
+  return (
+    <TroopLeaderStack.Navigator id="TroopLeaderMain" screenOptions={{ headerShown: false }}>
+      <TroopLeaderStack.Screen name="TroopLeaderTabs" component={TroopLeaderTabNavigator} />
+      <TroopLeaderStack.Group screenOptions={{ presentation: 'modal' }}>
+        <TroopLeaderStack.Screen name="Merchants" component={MerchantsScreen} options={{ headerShown: true, title: 'All Merchants' }} />
+        <TroopLeaderStack.Screen name="MerchantDetail" component={MerchantDetailScreen} options={{ headerShown: true, title: 'Merchant Details' }} />
+        <TroopLeaderStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
+        <TroopLeaderStack.Screen name="ManageScouts" component={ManageScoutsScreen} options={{ headerShown: true, title: 'Manage Scouts' }} />
+        <TroopLeaderStack.Screen name="TroopStats" component={TroopStatsScreen} options={{ headerShown: true, title: 'Troop Statistics' }} />
+        <TroopLeaderStack.Screen name="InviteScouts" component={InviteScoutsScreen} options={{ headerShown: true, title: 'Invite Scouts' }} />
+        <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
+        <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
+      </TroopLeaderStack.Group>
+      <TroopLeaderStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
+        <TroopLeaderStack.Screen name="QRScanner" component={QRScannerScreen} options={{ headerShown: true, title: 'My QR Code' }} />
+        <TroopLeaderStack.Screen name="ShareOffer" component={ShareOfferScreen} options={{ headerShown: true, title: 'Share Offer' }} />
+        <TroopLeaderStack.Screen name="RedemptionSuccess" component={RedemptionSuccessScreen} options={{ headerShown: false }} />
+      </TroopLeaderStack.Group>
+    </TroopLeaderStack.Navigator>
+  );
+}
+
+// ============================================================================
+// CUSTOMER/PARENT NAVIGATION (Gold Theme)
+// Tabs: Home, Offers, Merchants, Profile
+// Simpler navigation - no scout management features
+// ============================================================================
+
+function CustomerTabNavigator() {
+  return (
+    <CustomerTab.Navigator
+      id="CustomerTabs"
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
+            Home: focused ? 'home' : 'home-outline',
+            Offers: focused ? 'pricetag' : 'pricetag-outline',
+            Merchants: focused ? 'storefront' : 'storefront-outline',
+            Profile: focused ? 'person' : 'person-outline',
+          };
+          return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#FFD700', // Gold
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+      })}
+    >
+      <CustomerTab.Screen name="Home" component={HomeScreen} />
+      <CustomerTab.Screen name="Offers" component={OffersNavigator} />
+      <CustomerTab.Screen name="Merchants" component={MerchantsScreen} options={{ tabBarLabel: 'Merchants' }} />
+      <CustomerTab.Screen name="Profile" component={ProfileScreen} />
+    </CustomerTab.Navigator>
+  );
+}
+
+function CustomerMainNavigator() {
+  return (
+    <CustomerStack.Navigator id="CustomerMain" screenOptions={{ headerShown: false }}>
+      <CustomerStack.Screen name="CustomerTabs" component={CustomerTabNavigator} />
+      <CustomerStack.Group screenOptions={{ presentation: 'modal' }}>
+        <CustomerStack.Screen name="MerchantDetail" component={MerchantDetailScreen} options={{ headerShown: true, title: 'Merchant Details' }} />
+        <CustomerStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
+      </CustomerStack.Group>
+      <CustomerStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
+        <CustomerStack.Screen name="QRScanner" component={QRScannerScreen} options={{ headerShown: true, title: 'My QR Code' }} />
+        <CustomerStack.Screen name="ShareOffer" component={ShareOfferScreen} options={{ headerShown: true, title: 'Share Offer' }} />
+        <CustomerStack.Screen name="RedemptionSuccess" component={RedemptionSuccessScreen} options={{ headerShown: false }} />
+      </CustomerStack.Group>
+    </CustomerStack.Navigator>
+  );
+}
+
+// ============================================================================
+// ROOT NAVIGATOR - RBAC Entry Point
+// ============================================================================
+
+export default function RootNavigator() {
+  const { isAuthenticated, user } = useAuthStore();
+  const userRole = user?.role;
+
+  // Not authenticated - show login/signup
+  if (!isAuthenticated) {
+    return <AuthNavigator />;
+  }
+
+  // Role-based navigation
+  switch (userRole) {
+    case 'TROOP_LEADER':
+      // Blue theme - Troop management features
+      return <TroopLeaderMainNavigator />;
+
+    case 'SCOUT':
+      // Red theme - Scout features (cards, subscriptions, referrals)
+      return <ScoutMainNavigator />;
+
+    case 'PARENT':
+      // Gold theme - Customer/Parent features (browse offers, merchants)
+      return <CustomerMainNavigator />;
+
+    default:
+      // Default to customer view for unknown roles
+      return <CustomerMainNavigator />;
+  }
 }

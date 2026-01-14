@@ -10,8 +10,11 @@ import {
   Switch
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
+import { useAuthStore } from '../../store/authStore';
+import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
 
 interface SubscriptionPlan {
   id: number;
@@ -40,12 +43,18 @@ interface Subscription {
   totalSavings: number;
 }
 
+type TroopLeaderNavProp = NativeStackNavigationProp<TroopLeaderStackParamList>;
+
 export default function SubscriptionScreen() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
-  const navigation = useNavigation();
+  const navigation = useNavigation<TroopLeaderNavProp>();
+  const { user } = useAuthStore();
+
+  // Check if user is a Troop Leader - they need to select a scout before subscribing
+  const isTroopLeader = user?.role === 'TROOP_LEADER';
 
   useEffect(() => {
     loadSubscriptionData();
@@ -75,6 +84,13 @@ export default function SubscriptionScreen() {
   };
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
+    // Troop Leaders must select a scout before subscribing
+    if (isTroopLeader) {
+      navigation.navigate('SelectScoutForSubscription', { planId: plan.uuid });
+      return;
+    }
+
+    // For Scouts and Parents, proceed directly to subscription
     Alert.alert(
       'Confirm Subscription',
       `Subscribe to ${plan.name} for $${(plan.priceCents / 100).toFixed(2)}/${plan.billingInterval.toLowerCase()}?`,
@@ -85,9 +101,9 @@ export default function SubscriptionScreen() {
           onPress: async () => {
             try {
               setLoading(true);
-              
+
               // In production, this would integrate with Stripe
-              const response = await apiClient.post('/subscriptions', {
+              await apiClient.post('/subscriptions', {
                 plan_id: plan.id,
                 payment_method: {
                   type: 'STRIPE',

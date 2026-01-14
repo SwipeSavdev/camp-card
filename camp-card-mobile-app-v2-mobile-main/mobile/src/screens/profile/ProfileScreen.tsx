@@ -14,32 +14,41 @@ export default function ProfileScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigation = useNavigation<RootNavigation>();
 
-  const menuItems = [
+  // Filter menu items based on user role (Troop Leaders don't have QR codes or referrals)
+  const allMenuItems = [
     {
       icon: 'card-outline',
       title: 'Subscription',
       subtitle: 'Manage your subscription',
       onPress: () => navigation.navigate('Subscription'),
+      showFor: ['SCOUT', 'PARENT', 'TROOP_LEADER'],
     },
     {
       icon: 'people-outline',
       title: 'Referrals',
       subtitle: 'Share and earn rewards',
       onPress: () => navigation.navigate('Referral'),
+      showFor: ['SCOUT', 'PARENT'], // Not for Troop Leaders
     },
     {
       icon: 'qr-code-outline',
       title: 'My QR Code',
       subtitle: 'Show your unique code',
       onPress: () => navigation.navigate('QRScanner'),
+      showFor: ['SCOUT', 'PARENT'], // Not for Troop Leaders
     },
     {
       icon: 'notifications-outline',
       title: 'Notifications',
       subtitle: 'Manage notifications',
       onPress: () => navigation.navigate('Notifications'),
+      showFor: ['SCOUT', 'PARENT', 'TROOP_LEADER'],
     },
   ];
+
+  const menuItems = allMenuItems.filter(item =>
+    item.showFor.includes(user?.role || 'SCOUT')
+  );
 
   return (
     <SafeAreaView style={styles.container}>

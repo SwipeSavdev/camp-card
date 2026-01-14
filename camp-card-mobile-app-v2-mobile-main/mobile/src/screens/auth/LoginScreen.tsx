@@ -40,10 +40,27 @@ export default function LoginScreen() {
     try {
       await login(email.trim(), password);
     } catch (error: any) {
-      Alert.alert(
-        'Login Failed',
-        error.response?.data?.message || 'Invalid email or password'
-      );
+      // Provide more specific error messages for debugging
+      let errorMessage = 'Invalid email or password';
+
+      if (error.response?.data?.message) {
+        // Server returned an error message
+        errorMessage = error.response.data.message;
+      } else if (error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
+        // Network error - can't reach the server
+        errorMessage = 'Cannot connect to server. Please check your network connection.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      console.log('Login error details:', {
+        code: error.code,
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+
+      Alert.alert('Login Failed', errorMessage);
     }
   };
 
