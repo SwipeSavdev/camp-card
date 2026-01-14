@@ -51,7 +51,23 @@ async function apiCall<T>(
       throw new ApiError(response.status, `API Error: ${response.status}`);
     }
 
-    return await response.json();
+    // Handle 204 No Content responses (common for DELETE operations)
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return {} as T;
+    }
+
+    // Try to parse JSON, but handle empty responses gracefully
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      // If JSON parsing fails, return empty object
+      return {} as T;
+    }
   } catch (error) {
     // If the request fails (timeout, network error, etc), throw to trigger fallback
     throw error;
@@ -343,6 +359,44 @@ export const api = {
       return { success: true };
     } catch (error) {
       console.error('Failed to delete merchant:', error);
+      throw error;
+    }
+  },
+
+  // ============ MERCHANT LOCATIONS ============
+  createMerchantLocation: async (merchantId: string, data: any, session?: Session | null) => {
+    try {
+      console.log('[API] createMerchantLocation request:', { merchantId, data });
+      const result = await apiCall<any>(`/merchants/${merchantId}/locations`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }, session);
+      console.log('[API] createMerchantLocation response:', result);
+      return result;
+    } catch (error) {
+      console.error('[API] Failed to create merchant location:', error);
+      throw error;
+    }
+  },
+
+  getMerchantLocations: async (merchantId: string, session?: Session | null) => {
+    try {
+      const result = await apiCall<any>(`/merchants/${merchantId}/locations`, {}, session);
+      return result.locations || result.content || result || [];
+    } catch (error) {
+      console.error('Failed to fetch merchant locations:', error);
+      return [];
+    }
+  },
+
+  deleteMerchantLocation: async (merchantId: string, locationId: string, session?: Session | null) => {
+    try {
+      await apiCall<any>(`/merchants/${merchantId}/locations/${locationId}`, {
+        method: 'DELETE',
+      }, session);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to delete merchant location:', error);
       throw error;
     }
   },

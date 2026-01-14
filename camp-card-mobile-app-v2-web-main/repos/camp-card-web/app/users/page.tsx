@@ -258,10 +258,19 @@ export default function UsersPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this user?')) return;
     try {
+      console.log('[PAGE] Deleting user:', id);
       await api.deleteUser(id, session);
+      console.log('[PAGE] User deleted successfully');
       setItems(items.filter((i) => i.id !== id));
-    } catch (err) {
-      setError('Failed to delete');
+      setError(null);
+    } catch (err: any) {
+      console.error('[PAGE] Delete error:', err);
+      const errorMsg = err?.status === 403
+        ? 'Permission denied. Only National Admins can delete users.'
+        : err?.status === 404
+        ? 'User not found.'
+        : `Failed to delete user: ${err?.message || 'Unknown error'}`;
+      setError(errorMsg);
     }
   };
 

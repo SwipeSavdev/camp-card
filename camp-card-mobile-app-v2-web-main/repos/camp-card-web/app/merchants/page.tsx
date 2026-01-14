@@ -181,11 +181,19 @@ export default function MerchantsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this merchant?')) return;
     try {
+      console.log('[PAGE] Deleting merchant:', id);
       await api.deleteMerchant(id, session);
+      console.log('[PAGE] Merchant deleted successfully');
       setItems(items.filter((i) => i.id !== id));
       setError(null);
-    } catch (err) {
-      setError('Failed to delete');
+    } catch (err: any) {
+      console.error('[PAGE] Delete error:', err);
+      const errorMsg = err?.status === 403
+        ? 'Permission denied. Only National Admins can delete merchants.'
+        : err?.status === 404
+        ? 'Merchant not found.'
+        : `Failed to delete merchant: ${err?.message || 'Unknown error'}`;
+      setError(errorMsg);
     }
   };
 
@@ -247,6 +255,44 @@ export default function MerchantsPage() {
     }
 
     try {
+      // Parse the address into components for the location
+      // Expected format: "123 Main St, City, ST 12345" or just use as street address
+      const parseAddress = (address: string) => {
+        const parts = address.split(',').map(p => p.trim());
+        if (parts.length >= 3) {
+          const streetAddress = parts[0];
+          const city = parts[1];
+          const stateZip = parts[2].split(' ');
+          const state = stateZip[0] || '';
+          const zipCode = stateZip[1] || '';
+          return { streetAddress, city, state, zipCode };
+        }
+        // If not parseable, use defaults
+        return {
+          streetAddress: address,
+          city: 'Unknown',
+          state: 'XX',
+          zipCode: '00000'
+        };
+      };
+
+      // Build primary location from the first location or the business address
+      const primaryLocationData = newLocations.length > 0
+        ? {
+            locationName: newLocations[0].name,
+            ...parseAddress(newLocations[0].address),
+            primaryLocation: true,
+            phone: newPhone,
+          }
+        : newIsSingleLocation
+        ? {
+            locationName: newMerchantName + ' - Main',
+            ...parseAddress(newBusinessAddress),
+            primaryLocation: true,
+            phone: newPhone,
+          }
+        : null;
+
       const merchantData = {
         businessName: newMerchantName,
         category: newBusinessType,
@@ -254,6 +300,7 @@ export default function MerchantsPage() {
         contactEmail: newEmail,
         contactPhone: newPhone,
         description: newBusinessAddress,
+        primaryLocation: primaryLocationData,
       };
 
       console.log('[PAGE] Submitting merchant data:', merchantData);
@@ -267,6 +314,25 @@ export default function MerchantsPage() {
         const newMerchant = await api.createMerchant(merchantData, session);
         console.log('[PAGE] Create response:', newMerchant);
 
+        // Add additional locations if any (beyond the primary)
+        if (newMerchant && newLocations.length > 1) {
+          for (let i = 1; i < newLocations.length; i++) {
+            const loc = newLocations[i];
+            const locData = {
+              locationName: loc.name,
+              ...parseAddress(loc.address),
+              primaryLocation: false,
+              phone: newPhone,
+            };
+            try {
+              await api.createMerchantLocation(newMerchant.id, locData, session);
+              console.log(`[PAGE] Created additional location: ${loc.name}`);
+            } catch (locErr) {
+              console.error(`[PAGE] Failed to create location ${loc.name}:`, locErr);
+            }
+          }
+        }
+
         // Add the new merchant to the local state immediately
         if (newMerchant) {
           const mappedMerchant = {
@@ -277,7 +343,7 @@ export default function MerchantsPage() {
             phone: newMerchant.contactPhone || newPhone,
             businessType: newMerchant.category || newBusinessType,
             isSingleLocation: newIsSingleLocation,
-            locations: [],
+            locations: newMerchant.locations || [],
           };
           setItems([...items, mappedMerchant]);
           console.log('[PAGE] Merchant added to local state');
