@@ -62,7 +62,7 @@ export default function SignupScreen() {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phone: phone ? phone.trim() : undefined,
-        role: 'SCOUT' as const, // Default role
+        role: 'PARENT' as const, // Default to customer role for mobile signups
       };
 
       await signup(signupData);
