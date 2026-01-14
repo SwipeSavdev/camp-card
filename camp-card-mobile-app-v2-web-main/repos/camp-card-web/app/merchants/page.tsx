@@ -992,6 +992,7 @@ export default function MerchantsPage() {
              Additional Locations
                </h4>
                 <button
+                 type="button"
                  onClick={() => setShowAddLocation(!showAddLocation)}
                  style={{
                  background: themeColors.info600,
@@ -1064,6 +1065,7 @@ export default function MerchantsPage() {
              </div>
                <div style={{ display: 'flex', gap: themeSpace.sm }}>
                <button
+                 type="button"
                  onClick={addLocation}
                  style={{
                  flex: 1,
@@ -1080,6 +1082,7 @@ export default function MerchantsPage() {
            Add
                </button>
                <button
+                 type="button"
                  onClick={() => {
                  setShowAddLocation(false);
                  setNewLocationName('');
@@ -1122,6 +1125,7 @@ export default function MerchantsPage() {
                </div>
                </div>
                <button
+                 type="button"
                  onClick={() => deleteLocation(location.id)}
                  style={{
                  background: 'none',
