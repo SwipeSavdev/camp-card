@@ -20,6 +20,8 @@ async function apiCall<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
   };
 
   if (options.headers && typeof options.headers === 'object' && !(options.headers instanceof Headers)) {
@@ -35,14 +37,21 @@ async function apiCall<T>(
     console.log('[API] No access token found in session for:', endpoint, 'Session keys:', session ? Object.keys(session) : 'null');
   }
 
+  // Add cache-busting query parameter for GET requests
+  const cacheBuster = `_t=${Date.now()}`;
+  const urlWithCacheBuster = endpoint.includes('?')
+    ? `${endpoint}&${cacheBuster}`
+    : `${endpoint}?${cacheBuster}`;
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${urlWithCacheBuster}`, {
       ...options,
       headers,
       signal: controller.signal,
+      cache: 'no-store',
     });
 
     clearTimeout(timeoutId);
