@@ -87,6 +87,7 @@ interface OfferItem {
   merchantName: string;
   discountType: string;
   discountAmount: string;
+  minimumSpend?: string;
   useType: 'one-time' | 'reusable';
   image?: string;
   barcode?: string;
@@ -127,6 +128,8 @@ export default function OffersPage() {
   const [newOfferDescription, setNewOfferDescription] = useState('');
   const [newDiscountType, setNewDiscountType] = useState('');
   const [newDiscountAmount, setNewDiscountAmount] = useState('');
+  const [newMinSpend, setNewMinSpend] = useState('');
+  const [newMinSpendType, setNewMinSpendType] = useState<'$' | '%'>('$');
   const [newUseType, setNewUseType] = useState<'one-time' | 'reusable'>('reusable');
   const [newImage, setNewImage] = useState<string | null>(null);
   const [newImageName, setNewImageName] = useState('');
@@ -134,7 +137,7 @@ export default function OffersPage() {
   const [tempOffers, setTempOffers] = useState<OfferItem[]>([]);
   const [showAddMultiple, setShowAddMultiple] = useState(false);
 
-  const discountTypes = ['$', '%', 'BOGO', 'Free Item', 'Points', 'Buy One Get'];
+  const discountTypes = ['$', '%', 'BOGO', 'Free Item', 'Points', 'Buy One Get', '$ off when $ spent', '% off when $ spent'];
   const usageTypes = ['one-time', 'reusable'];
 
   useEffect(() => {
@@ -280,6 +283,7 @@ export default function OffersPage() {
         merchantName: merchants.find((m) => m.id === newMerchantId)?.name || '',
         discountType: newDiscountType,
         discountAmount: newDiscountAmount,
+        minimumSpend: newMinSpend || undefined,
         useType: newUseType,
         image: newImage || undefined,
         barcode: newImage || undefined,
@@ -298,6 +302,11 @@ export default function OffersPage() {
         if (newLocationId) {
           offerData.merchantLocationId = newLocationId;
           offerData.locationSpecific = true;
+        }
+
+        // Add minimum spend threshold for "X off when Y spent" discount types
+        if ((newDiscountType === '$ off when $ spent' || newDiscountType === '% off when $ spent') && newMinSpend) {
+          offerData.minimumSpend = parseFloat(newMinSpend) || 0;
         }
 
         console.log('[PAGE] Creating offer:', offerData);
@@ -360,6 +369,7 @@ export default function OffersPage() {
         setNewOfferDescription('');
         setNewDiscountType('');
         setNewDiscountAmount('');
+        setNewMinSpend('');
         setNewUseType('reusable');
         setNewImage(null);
         setNewImageName('');
@@ -385,13 +395,17 @@ export default function OffersPage() {
       const createdOffers: any[] = [];
       // Submit each offer to the API
       for (const offer of tempOffers) {
-        const offerData = {
+        const offerData: any = {
           merchantId: newMerchantId,
           title: offer.name,
           description: offer.description,
           discountType: offer.discountType,
           discountValue: parseFloat(offer.discountAmount) || 0,
         };
+        // Add minimum spend threshold for "X off when Y spent" discount types
+        if ((offer.discountType === '$ off when $ spent' || offer.discountType === '% off when $ spent') && offer.minimumSpend) {
+          offerData.minimumSpend = parseFloat(offer.minimumSpend) || 0;
+        }
         console.log('[PAGE] Creating offer:', offerData);
         const createdOffer = await api.createOffer(offerData, session);
         createdOffers.push(createdOffer);
@@ -454,6 +468,8 @@ export default function OffersPage() {
     setNewOfferDescription('');
     setNewDiscountType('');
     setNewDiscountAmount('');
+    setNewMinSpend('');
+    setNewMinSpendType('$');
     setNewUseType('reusable');
     setNewImage(null);
     setNewImageName('');
@@ -1154,6 +1170,34 @@ Discount Amount
                  />
                  </div>
                 </div>
+
+                {(newDiscountType === '$ off when $ spent' || newDiscountType === '% off when $ spent') && (
+                <div>
+                  <label style={{
+                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                  }}
+                  >
+                    Minimum Spend Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={newMinSpend}
+                    onChange={(e) => setNewMinSpend(e.target.value)}
+                    placeholder="e.g., 50, 100, etc"
+                    style={{
+                      width: '100%',
+                      padding: `${themeSpace.sm} ${themeSpace.md}`,
+                      border: `1px solid ${themeColors.gray200}`,
+                      borderRadius: themeRadius.sm,
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <p style={{ fontSize: '12px', color: themeColors.gray500, marginTop: themeSpace.xs }}>
+                    Customer must spend at least this amount to receive the discount
+                  </p>
+                </div>
+                )}
 
                 <div>
                   <label style={{
