@@ -375,3 +375,81 @@ The mobile container runs Expo in tunnel mode:
 - **Current Tunnel URL**: `https://easl_4o-anonymous-8081.exp.direct`
 - Check for current URL: `sudo docker logs campcard-mobile | grep "Tunnel URL"`
 - Install Expo Go on your phone and enter the tunnel URL to test the app
+
+### Mobile App Role-Based Navigation (January 2026)
+
+The mobile app implements role-based access control (RBAC) with different navigation structures for each user role.
+
+#### User Roles and Navigation
+
+| Role | Theme | Bottom Tabs | Features |
+|------|-------|-------------|----------|
+| **SCOUT** | Red (#CE1126) | Home, My Cards, Profile | QR code for affiliate tracking, view-only offers, referrals |
+| **TROOP_LEADER** | Blue (#003F87) | Home, Offers*, Troop, Scouts, Profile | Troop management, scout metrics, conditional offers access |
+| **PARENT** | Gold (#FFD700) | Home, Offers, Merchants, Profile | Browse offers, view merchants |
+
+*Offers tab only visible for Troop Leaders with `subscriptionStatus === 'active'`
+
+#### Key Navigation Files
+
+- **RootNavigator.tsx** (`mobile/src/navigation/RootNavigator.tsx`)
+  - Entry point that routes to role-specific navigators
+  - `ScoutMainNavigator`, `TroopLeaderMainNavigator`, `CustomerMainNavigator`
+  - Conditional tab rendering based on subscription status
+
+- **Navigation Types** (`mobile/src/types/navigation.ts`)
+  - `ScoutStackParamList`, `ScoutTabParamList`
+  - `TroopLeaderStackParamList`, `TroopLeaderTabParamList`
+  - `CustomerStackParamList`, `CustomerTabParamList`
+
+#### Troop Leader Screens
+
+| Screen | File | Description |
+|--------|------|-------------|
+| TroopLeaderDashboard | `screens/troopLeader/TroopLeaderDashboardScreen.tsx` | Troop metrics and fundraising progress |
+| ManageScouts | `screens/troopLeader/ManageScoutsScreen.tsx` | Add/remove/view scouts in troop |
+| TroopStats | `screens/troopLeader/TroopStatsScreen.tsx` | Detailed troop statistics |
+| InviteScouts | `screens/troopLeader/InviteScoutsScreen.tsx` | Send invitations to scouts |
+| SelectScoutForSubscription | `screens/troopLeader/SelectScoutForSubscriptionScreen.tsx` | Select scout before subscription checkout |
+
+#### Scout Screens
+
+| Screen | File | Description |
+|--------|------|-------------|
+| ScoutDashboard | `screens/scout/ScoutDashboardScreen.tsx` | My Cards with QR code and affiliate stats (FR-16, FR-18, FR-19) |
+| Subscription | `screens/scout/SubscriptionScreen.tsx` | Manage subscription plans |
+| Referral | `screens/scout/ReferralScreen.tsx` | Referral tracking and sharing |
+
+#### Subscription-Based Access Control
+
+Troop Leaders have conditional access to the Offers tab based on their subscription status:
+
+```typescript
+// In TroopLeaderTabNavigator
+const { user } = useAuthStore();
+const hasActiveSubscription = user?.subscriptionStatus === 'active';
+
+// Offers tab only shown if subscriptionStatus === 'active'
+{hasActiveSubscription && (
+  <TroopLeaderTab.Screen name="Offers" component={OffersNavigator} />
+)}
+```
+
+The `subscriptionStatus` field must be returned by the backend `/api/v1/auth/login` or `/api/v1/auth/me` endpoints.
+
+#### Profile Menu Items by Role
+
+| Menu Item | Scout | Parent | Troop Leader |
+|-----------|-------|--------|--------------|
+| Subscription | ✓ | ✓ | ✓ |
+| Referrals | ✓ | ✓ | ✗ |
+| My QR Code | ✓ | ✓ | ✗ |
+| Notifications | ✓ | ✓ | ✓ |
+
+#### Test Credentials for Mobile
+
+- **Scout**: Create via web portal with role `SCOUT`
+- **Troop Leader**: Create via web portal with role `TROOP_LEADER`
+- **Parent**: Create via web portal with role `PARENT`
+
+Use the web admin portal (`/users` page) to create test users with specific roles.
