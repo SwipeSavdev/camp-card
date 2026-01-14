@@ -1283,12 +1283,18 @@ export default function MerchantsPage() {
                 setNewEmail('');
                 setNewPhone('');
                 setNewBusinessType('');
-                setNewBusinessAddress('');
+                setNewStreetAddress('');
+                setNewCity('');
+                setNewState('');
+                setNewZipCode('');
                 setNewIsSingleLocation(true);
                 setNewLocations([]);
                 setShowAddLocation(false);
                 setNewLocationName('');
-                setNewLocationAddress('');
+                setNewLocationStreet('');
+                setNewLocationCity('');
+                setNewLocationState('');
+                setNewLocationZip('');
                 setEditingId(null);
                 setError(null);
               }}
