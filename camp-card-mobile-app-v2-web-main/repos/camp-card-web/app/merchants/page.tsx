@@ -301,6 +301,7 @@ export default function MerchantsPage() {
         contactPhone: newPhone,
         description: newBusinessAddress,
         primaryLocation: primaryLocationData,
+        termsAccepted: true,
       };
 
       console.log('[PAGE] Submitting merchant data:', merchantData);
