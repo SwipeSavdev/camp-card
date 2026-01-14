@@ -121,6 +121,8 @@ export default function OffersPage() {
 
   // Form states
   const [newMerchantId, setNewMerchantId] = useState('');
+  const [newLocationId, setNewLocationId] = useState('');
+  const [merchantLocations, setMerchantLocations] = useState<any[]>([]);
   const [newOfferName, setNewOfferName] = useState('');
   const [newOfferDescription, setNewOfferDescription] = useState('');
   const [newDiscountType, setNewDiscountType] = useState('');
@@ -147,6 +149,23 @@ export default function OffersPage() {
       setMerchants(data.content || data || []);
     } catch (err) {
       console.error('Failed to load merchants', err);
+    }
+  };
+
+  const handleMerchantChange = (merchantId: string) => {
+    setNewMerchantId(merchantId);
+    setNewLocationId(''); // Reset location when merchant changes
+
+    if (merchantId) {
+      // Find the selected merchant and get its locations
+      const selectedMerchant = merchants.find((m: any) => String(m.id) === String(merchantId));
+      if (selectedMerchant && selectedMerchant.locations) {
+        setMerchantLocations(selectedMerchant.locations);
+      } else {
+        setMerchantLocations([]);
+      }
+    } else {
+      setMerchantLocations([]);
     }
   };
 
@@ -267,13 +286,19 @@ export default function OffersPage() {
       };
 
       if (!multipleOffers) {
-        const offerData = {
+        const offerData: any = {
           merchantId: newMerchantId,
           title: newOfferName,
           description: newOfferDescription,
           discountType: newDiscountType,
           discountValue: parseFloat(newDiscountAmount) || 0,
         };
+
+        // Add location if selected
+        if (newLocationId) {
+          offerData.merchantLocationId = newLocationId;
+          offerData.locationSpecific = true;
+        }
 
         console.log('[PAGE] Creating offer:', offerData);
         const createdOffer = await api.createOffer(offerData, session);
@@ -423,6 +448,8 @@ export default function OffersPage() {
 
   const resetForm = () => {
     setNewMerchantId('');
+    setNewLocationId('');
+    setMerchantLocations([]);
     setNewOfferName('');
     setNewOfferDescription('');
     setNewDiscountType('');
@@ -911,7 +938,7 @@ export default function OffersPage() {
               </label>
               <select
                 value={newMerchantId}
-                onChange={(e) => setNewMerchantId(e.target.value)}
+                onChange={(e) => handleMerchantChange(e.target.value)}
                 disabled={tempOffers.length > 0}
                 style={{
                   width: '100%',
@@ -925,13 +952,50 @@ export default function OffersPage() {
                 }}
               >
                 <option value="">Select a merchant</option>
-                {merchants.map((merchant) => (
+                {merchants.map((merchant: any) => (
                   <option key={merchant.id} value={merchant.id}>
-                   {merchant.name}
+                   {merchant.businessName || merchant.name}
                  </option>
                 ))}
               </select>
             </div>
+
+            {newMerchantId && (
+            <div>
+              <label style={{
+                display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+              }}
+              >
+                Location (Optional)
+              </label>
+              <select
+                value={newLocationId}
+                onChange={(e) => setNewLocationId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: `${themeSpace.sm} ${themeSpace.md}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  backgroundColor: themeColors.white,
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="">All Locations</option>
+                {merchantLocations.map((location: any) => (
+                  <option key={location.id || location.uuid} value={location.id || location.uuid}>
+                    {location.locationName || location.name} - {location.city}, {location.state}
+                  </option>
+                ))}
+              </select>
+              {merchantLocations.length === 0 && (
+                <p style={{ fontSize: '12px', color: themeColors.gray500, marginTop: themeSpace.xs }}>
+                  No locations found for this merchant
+                </p>
+              )}
+            </div>
+            )}
 
             {multipleOffers && tempOffers.length > 0 && (
             <div style={{
