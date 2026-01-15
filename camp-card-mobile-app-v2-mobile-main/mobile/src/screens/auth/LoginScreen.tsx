@@ -11,6 +11,8 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +20,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+
+// Add your logo asset (adjust path/filename as needed)
+const COUNCIL_LOGO = require('../../../assets/council_logo.png');
 
 /**
  * Login Screen
@@ -30,6 +35,8 @@ export default function LoginScreen() {
   
   const navigation = useNavigation();
   const { login, isLoading } = useAuthStore();
+  const { width } = useWindowDimensions();
+  const logoSize = Math.min(220, Math.round(width * 0.6));
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -79,7 +86,7 @@ export default function LoginScreen() {
           >
             {/* Logo */}
             <View style={styles.logoContainer}>
-              <Ionicons name="ribbon" size={80} color={COLORS.primary} />
+              <Image source={COUNCIL_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize }]} />
               <Text style={styles.title}>BSA Camp Card</Text>
               <Text style={styles.subtitle}>Sign in to continue</Text>
             </View>
@@ -183,12 +190,17 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
-    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    paddingTop: 32,
+    justifyContent: 'flex-start',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 32,
+  },
+  logoImage: {
+    resizeMode: 'contain',
   },
   title: {
     fontSize: 28,
