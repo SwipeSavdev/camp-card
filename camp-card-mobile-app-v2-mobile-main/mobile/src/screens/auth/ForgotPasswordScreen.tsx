@@ -12,6 +12,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ActivityIndicator,
+  Image,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -20,12 +22,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../services/apiClient';
 import { COLORS } from '../../config/constants';
 
+const COUNCIL_LOGO = require('../../../assets/council_logo.png');
+
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
   const navigation = useNavigation();
+  const { width } = useWindowDimensions();
+  const logoSize = Math.min(180, Math.round(width * 0.5));
 
   const handleResetPassword = async () => {
     if (!email) {
@@ -97,6 +103,7 @@ export default function ForgotPasswordScreen() {
 
             {/* Header */}
             <View style={styles.headerContainer}>
+              <Image source={COUNCIL_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize }]} />
               <View style={styles.iconContainer}>
                 <Ionicons name="lock-open-outline" size={64} color={COLORS.primary} />
               </View>
@@ -290,5 +297,9 @@ const styles = StyleSheet.create({
     color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
+  },
+  logoImage: {
+    resizeMode: 'contain',
+    marginBottom: 16,
   },
 });

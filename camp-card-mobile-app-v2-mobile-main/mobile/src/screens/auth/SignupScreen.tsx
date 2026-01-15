@@ -8,7 +8,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  Image,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+
+// Add your logo asset (adjust path/filename as needed)
+const COUNCIL_LOGO = require('../../../assets/council_logo.png');
 
 export default function SignupScreen() {
   const [firstName, setFirstName] = React.useState('');
@@ -29,6 +33,10 @@ export default function SignupScreen() {
   
   const navigation = useNavigation();
   const { signup, isLoading } = useAuthStore();
+  const { width, height } = useWindowDimensions();
+
+  // Prominent header logo (double the previous size)
+  const headerLogoSize = Math.min(144, Math.max(112, Math.round(width * 0.36)));
 
   const handleSignup = async () => {
     // Validation
@@ -82,27 +90,45 @@ export default function SignupScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* 3 vertical sections: Top (fixed) / Middle (flex) / Bottom (fixed) */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.content}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        // Keep CTA tappable; adjust if you have a header/nav bar on iOS
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
       >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header */}
-          <View style={styles.header}>
+        {/* Top: Header (Back | Logo centered | Spacer) */}
+        <View style={styles.topSection}>
+          <View style={styles.headerRow}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={styles.backButton}
             >
               <Ionicons name="arrow-back" size={24} color={COLORS.text} />
             </TouchableOpacity>
-            <View style={styles.logoContainer}>
-              <Ionicons name="ribbon" size={64} color={COLORS.primary} />
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join BSA Camp Card</Text>
+
+            <View style={styles.headerLogoContainer}>
+              <Image
+                source={COUNCIL_LOGO}
+                style={[
+                  styles.logoImage,
+                  { width: headerLogoSize, height: headerLogoSize },
+                ]}
+              />
             </View>
+
+            <View style={styles.headerRightSpacer} />
+          </View>
+        </View>
+
+        {/* Middle: Header text + Form */}
+        <View style={styles.middleSection}>
+          {/* moved here so it stays visible above the form */}
+          <View style={[styles.headerTextContainer, styles.headerTextAboveForm]}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join BSA Camp Card</Text>
           </View>
 
-          {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Ionicons
@@ -233,26 +259,28 @@ export default function SignupScreen() {
             <Text style={styles.passwordHint}>
               Password must be at least 8 characters
             </Text>
-
-            <TouchableOpacity
-              style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
-              onPress={handleSignup}
-              disabled={isLoading}
-            >
-              <Text style={styles.signupButtonText}>
-                {isLoading ? 'Creating Account...' : 'Create Account'}
-              </Text>
-            </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Footer */}
+        {/* Bottom: CTA always visible */}
+        <View style={styles.bottomSection}>
+          <TouchableOpacity
+            style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
+            onPress={handleSignup}
+            disabled={isLoading}
+          >
+            <Text style={styles.signupButtonText}>
+              {isLoading ? 'Creating Account...' : 'Create Account'}
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -266,34 +294,72 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  header: {
-    paddingTop: 8,
-    paddingHorizontal: 24,
+  topSection: {
+    paddingTop: 4,
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 112, // room for the doubled logo
+  },
+  headerLogoContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerRightSpacer: {
+    width: 88,
+    height: 88,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 88,
+    height: 88,
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 0, // header row shouldn't add vertical push
   },
-  logoContainer: {
+  middleSection: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingTop: 8,
+    paddingBottom: 8,
+    minHeight: 0,
+  },
+  bottomSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    paddingTop: 8,
+  },
+  headerTextContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 6,
+  },
+  headerTextAboveForm: {
+    marginBottom: 12,
+  },
+  logoImage: {
+    resizeMode: 'contain',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginTop: 16,
+    marginTop: 0,
   },
   subtitle: {
     fontSize: 16,
     color: COLORS.textSecondary,
-    marginTop: 8,
+    marginTop: 6,
+    marginBottom: 0,
   },
   form: {
     paddingHorizontal: 24,
-    marginBottom: 24,
+    paddingTop: 0,
+    paddingBottom: 0,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 520,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -302,7 +368,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: 16,
+    marginBottom: 12,
     paddingHorizontal: 16,
   },
   inputIcon: {
@@ -321,7 +387,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: -8,
-    marginBottom: 16,
+    marginBottom: 8,
     marginLeft: 4,
   },
   signupButton: {
@@ -330,7 +396,7 @@ const styles = StyleSheet.create({
     height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 0,
   },
   signupButtonDisabled: {
     opacity: 0.6,
@@ -344,8 +410,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+    marginTop: 12,
   },
   footerText: {
     color: COLORS.textSecondary,

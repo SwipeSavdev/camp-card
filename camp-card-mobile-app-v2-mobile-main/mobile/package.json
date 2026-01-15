@@ -4,9 +4,9 @@
   "description": "BSA Camp Card Mobile App - Digital discount subscription supporting Scout fundraising",
   "main": "index.js",
   "scripts": {
-    "start": "react-native start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "start": "expo start",
+    "android": "expo run-android",
+    "ios": "expo run-ios",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
