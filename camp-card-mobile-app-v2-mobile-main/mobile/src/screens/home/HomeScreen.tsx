@@ -453,20 +453,44 @@ function ScoutDashboard() {
 // CUSTOMER/PARENT DASHBOARD (Default)
 // ============================================================================
 
+interface ParentStats {
+  totalSavings: number;
+  offersRedeemed: number;
+  referralsMade: number;
+  referralChain: number;
+  supportedScout: { name: string; troopNumber: string } | null;
+  recentSavings: number;
+  memberSince: string;
+}
+
 function CustomerDashboard() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
+  const [stats] = useState<ParentStats>({
+    totalSavings: 127.50,
+    offersRedeemed: 15,
+    referralsMade: 3,
+    referralChain: 8,
+    supportedScout: { name: 'Ethan A.', troopNumber: '234' },
+    recentSavings: 12.50,
+    memberSince: 'January 2026',
+  });
+
+  // Generate Parent's unique referral link that tracks back to originating scout
+  const parentId = user?.id || 'parent123';
+  const referralCode = `PR-${parentId.toString().slice(0, 8).toUpperCase()}`;
+  const referralLink = `https://campcard.org/refer/${referralCode}`;
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulated refresh - will be replaced with API call
+    // TODO: Replace with actual API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     setRefreshing(false);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -477,7 +501,7 @@ function CustomerDashboard() {
         <View style={[styles.header, { backgroundColor: '#F59E0B' }]}>
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Hello, {user?.firstName}!</Text>
-            <Text style={styles.roleTag}>Welcome to Camp Card</Text>
+            <Text style={styles.roleTag}>Parent Dashboard</Text>
           </View>
           <TouchableOpacity
             style={styles.notificationButton}
@@ -487,60 +511,160 @@ function CustomerDashboard() {
           </TouchableOpacity>
         </View>
 
+        {/* Savings Overview Card */}
+        <View style={styles.progressCard}>
+          <View style={styles.progressHeader}>
+            <View style={styles.progressTitleRow}>
+              <Ionicons name="wallet" size={24} color={COLORS.success} />
+              <Text style={styles.progressTitle}>Your Savings</Text>
+            </View>
+            {stats.recentSavings > 0 && (
+              <View style={styles.growthBadge}>
+                <Ionicons name="arrow-up" size={14} color={COLORS.success} />
+                <Text style={styles.growthText}>+${stats.recentSavings.toFixed(2)}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.amountContainer}>
+            <Text style={styles.currentAmount}>${stats.totalSavings.toFixed(2)}</Text>
+            <Text style={styles.goalText}>Total Saved with Camp Card</Text>
+          </View>
+
+          {stats.supportedScout && (
+            <View style={styles.topScoutBanner}>
+              <Ionicons name="heart" size={18} color={COLORS.primary} />
+              <Text style={styles.topScoutText}>
+                Supporting <Text style={styles.topScoutName}>{stats.supportedScout.name}</Text> - Troop {stats.supportedScout.troopNumber}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Stats Grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Impact</Text>
+          <View style={styles.metricsGrid}>
+            <View style={styles.metricCard}>
+              <View style={[styles.metricIcon, { backgroundColor: '#E8F5E9' }]}>
+                <Ionicons name="checkmark-done" size={24} color={COLORS.success} />
+              </View>
+              <Text style={styles.metricValue}>{stats.offersRedeemed}</Text>
+              <Text style={styles.metricLabel}>Offers Used</Text>
+            </View>
+
+            <View style={styles.metricCard}>
+              <View style={[styles.metricIcon, { backgroundColor: '#E3F2FD' }]}>
+                <Ionicons name="people" size={24} color={COLORS.secondary} />
+              </View>
+              <Text style={styles.metricValue}>{stats.referralsMade}</Text>
+              <Text style={styles.metricLabel}>Your Referrals</Text>
+            </View>
+
+            <View style={styles.metricCard}>
+              <View style={[styles.metricIcon, { backgroundColor: '#FFF3E0' }]}>
+                <Ionicons name="git-network" size={24} color="#F57C00" />
+              </View>
+              <Text style={styles.metricValue}>{stats.referralChain}</Text>
+              <Text style={styles.metricLabel}>Referral Chain</Text>
+            </View>
+
+            <View style={styles.metricCard}>
+              <View style={[styles.metricIcon, { backgroundColor: '#FCE4EC' }]}>
+                <Ionicons name="calendar" size={24} color={COLORS.primary} />
+              </View>
+              <Text style={[styles.metricValue, { fontSize: 14 }]}>{stats.memberSince}</Text>
+              <Text style={styles.metricLabel}>Member Since</Text>
+            </View>
+          </View>
+        </View>
+
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.actionsGrid}>
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => navigation.navigate('Offers')}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#FFE5E5' }]}>
-                <Ionicons name="pricetag" size={24} color={COLORS.primary} />
-              </View>
-              <Text style={styles.actionLabel}>Browse Offers</Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => navigation.navigate('Merchants')}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#E5F0FF' }]}>
-                <Ionicons name="storefront" size={24} color={COLORS.secondary} />
-              </View>
-              <Text style={styles.actionLabel}>Merchants</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('Offers')}
+          >
+            <View style={[styles.actionRowIcon, { backgroundColor: '#FFE5E5' }]}>
+              <Ionicons name="pricetag" size={24} color={COLORS.primary} />
+            </View>
+            <View style={styles.actionRowContent}>
+              <Text style={styles.actionRowTitle}>Browse Offers</Text>
+              <Text style={styles.actionRowSubtitle}>Find deals at local merchants</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => navigation.navigate('QRScanner')}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#FFF5E5' }]}>
-                <Ionicons name="qr-code" size={24} color={COLORS.accent} />
-              </View>
-              <Text style={styles.actionLabel}>Scan QR</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('Merchants')}
+          >
+            <View style={[styles.actionRowIcon, { backgroundColor: '#E5F0FF' }]}>
+              <Ionicons name="storefront" size={24} color={COLORS.secondary} />
+            </View>
+            <View style={styles.actionRowContent}>
+              <Text style={styles.actionRowTitle}>View Merchants</Text>
+              <Text style={styles.actionRowSubtitle}>See participating businesses nearby</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => navigation.navigate('Profile')}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#E5FFE5' }]}>
-                <Ionicons name="person" size={24} color={COLORS.success} />
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('QRScanner')}
+          >
+            <View style={[styles.actionRowIcon, { backgroundColor: '#FFF5E5' }]}>
+              <Ionicons name="qr-code" size={24} color={COLORS.accent} />
+            </View>
+            <View style={styles.actionRowContent}>
+              <Text style={styles.actionRowTitle}>My QR Code</Text>
+              <Text style={styles.actionRowSubtitle}>Share to support your scout's fundraising</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Referral Chain Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Referral Chain</Text>
+          <View style={styles.tipsCard}>
+            <View style={styles.tipItem}>
+              <View style={[styles.tipNumber, { backgroundColor: COLORS.success }]}>
+                <Ionicons name="person" size={14} color="#fff" />
               </View>
-              <Text style={styles.actionLabel}>My Profile</Text>
-            </TouchableOpacity>
+              <Text style={styles.tipText}>
+                Your referrals earn credit for <Text style={{ fontWeight: 'bold' }}>{stats.supportedScout?.name || 'your scout'}</Text>
+              </Text>
+            </View>
+            <View style={styles.tipItem}>
+              <View style={[styles.tipNumber, { backgroundColor: '#F57C00' }]}>
+                <Ionicons name="git-branch" size={14} color="#fff" />
+              </View>
+              <Text style={styles.tipText}>
+                <Text style={{ fontWeight: 'bold' }}>{stats.referralChain}</Text> people in your referral chain are also supporting scouts
+              </Text>
+            </View>
+            <View style={styles.tipItem}>
+              <View style={[styles.tipNumber, { backgroundColor: COLORS.secondary }]}>
+                <Ionicons name="share-social" size={14} color="#fff" />
+              </View>
+              <Text style={styles.tipText}>
+                Share your QR code to grow your referral chain and maximize impact!
+              </Text>
+            </View>
           </View>
         </View>
 
         {/* Info Banner */}
-        <View style={styles.section}>
+        <View style={[styles.section, { paddingBottom: 32 }]}>
           <View style={styles.infoBanner}>
             <Ionicons name="heart" size={24} color={COLORS.primary} />
             <View style={styles.infoBannerContent}>
               <Text style={styles.infoBannerTitle}>Support Scout Fundraising</Text>
               <Text style={styles.infoBannerText}>
-                Your purchases help local scouts fund their activities and camp experiences!
+                Every offer you redeem and referral you make helps local scouts fund their camp experiences!
               </Text>
             </View>
           </View>

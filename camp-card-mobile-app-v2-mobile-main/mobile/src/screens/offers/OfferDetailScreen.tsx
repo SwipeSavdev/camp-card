@@ -159,10 +159,12 @@ export default function OfferDetailScreen() {
     setIsRedeeming(true);
 
     try {
-      // Call redemption API - POST /api/v1/offers/{offerId}/redeem
-      const response = await apiClient.post(`/api/v1/offers/${offer.id}/redeem`, {
-        method: selectedMethod,
+      // Call redemption API - POST /api/v1/offers/redeem
+      const response = await apiClient.post('/api/v1/offers/redeem', {
         offerId: offer.id,
+        merchantLocationId: offer.merchantId || null,
+        purchaseAmount: null,
+        notes: `Redemption method: ${selectedMethod}`,
       });
 
       // Get updated redemption count from response or increment locally

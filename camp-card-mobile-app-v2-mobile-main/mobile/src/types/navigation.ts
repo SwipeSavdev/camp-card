@@ -132,6 +132,8 @@ export type CustomerStackParamList = {
   MerchantDetail: { merchantId: number };
   OfferDetail: { offerId: number };
   Notifications: undefined;
+  Subscription: undefined;
+  Referral: undefined;
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };

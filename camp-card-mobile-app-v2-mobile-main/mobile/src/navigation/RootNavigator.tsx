@@ -116,6 +116,8 @@ export type CustomerStackParamList = {
   MerchantDetail: { merchantId: number };
   OfferDetail: { offerId: number };
   Notifications: undefined;
+  Subscription: undefined;
+  Referral: undefined;
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
@@ -342,6 +344,8 @@ function CustomerMainNavigator() {
         <CustomerStack.Screen name="MerchantDetail" component={MerchantDetailScreen} options={{ headerShown: true, title: 'Merchant Details' }} />
         <CustomerStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
+        <CustomerStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
+        <CustomerStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
       </CustomerStack.Group>

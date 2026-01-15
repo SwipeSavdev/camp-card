@@ -179,8 +179,8 @@ export const offersApi = {
   searchOffers: (query: string) =>
     apiClient.get('/api/v1/offers', { params: { search: query } }),
 
-  redeemOffer: (offerId: string | number, method: 'show_to_cashier' | 'scan_merchant_code') =>
-    apiClient.post(`/api/v1/offers/${offerId}/redeem`, { method, offerId }),
+  redeemOffer: (offerId: string | number, merchantLocationId?: number | null, purchaseAmount?: number | null, notes?: string) =>
+    apiClient.post('/api/v1/offers/redeem', { offerId, merchantLocationId, purchaseAmount, notes }),
 };
 
 export const subscriptionsApi = {
