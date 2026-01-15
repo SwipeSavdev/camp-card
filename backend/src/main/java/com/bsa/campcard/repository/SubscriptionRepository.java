@@ -36,4 +36,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
            "AND s.cancelAtPeriodEnd = false " +
            "AND s.currentPeriodEnd BETWEEN ?1 AND ?2")
     List<Subscription> findRenewalsInPeriod(LocalDateTime startDate, LocalDateTime endDate);
+
+    boolean existsByCardNumber(String cardNumber);
 }

@@ -41,6 +41,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/offers/**").permitAll()
                 .requestMatchers("/api/v1/merchants/**").permitAll()
                 .requestMatchers("/api/v1/location/**").permitAll()
+                // Public subscription purchase endpoints (Authorize.Net Accept Hosted)
+                .requestMatchers("/api/v1/payments/subscribe/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
