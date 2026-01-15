@@ -9,11 +9,13 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
-  RefreshControl
+  RefreshControl,
+  Platform,
+  PermissionsAndroid
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
+import Geolocation from 'react-native-geolocation-service';
 import { merchantsApi } from '../utils/api';
 
 interface MerchantLocation {
@@ -101,23 +103,45 @@ export default function MerchantsScreen() {
 
   const requestLocationPermission = async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationError('Location permission denied');
-        return;
+      // Request permission based on platform
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'This app needs access to your location to show nearby merchants.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          setLocationError('Location permission denied');
+          return;
+        }
       }
+      // iOS permission is handled automatically by Geolocation.getCurrentPosition
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      setUserLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-      setLocationError(null);
+      Geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          setLocationError(null);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLocationError('Could not get location');
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 10000,
+        }
+      );
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error('Error requesting location permission:', error);
       setLocationError('Could not get location');
     }
   };
