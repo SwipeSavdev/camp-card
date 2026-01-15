@@ -88,6 +88,7 @@ logging:
   level:
     root: INFO
     org.bsa.campcard: INFO
+    com.bsa.campcard.service.PaymentService: DEBUG
     org.springframework.security: WARN
     org.hibernate.SQL: WARN
   file:

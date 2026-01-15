@@ -309,6 +309,10 @@ public class PaymentService {
      */
     public AcceptHostedTokenResponse getAcceptHostedToken(AcceptHostedTokenRequest request) {
         log.info("Generating Accept Hosted token for subscription purchase");
+        log.debug("Using API Login ID: {} (length: {}), Environment: {}",
+            apiLoginId != null ? apiLoginId.substring(0, 4) + "****" : "null",
+            apiLoginId != null ? apiLoginId.length() : 0,
+            environment);
 
         try {
             // Set up merchant authentication
