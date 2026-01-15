@@ -44,10 +44,16 @@ public class OfferResponse {
     private Integer remainingRedemptions;
     
     public static OfferResponse fromEntity(Offer offer) {
+        return fromEntity(offer, null, null);
+    }
+
+    public static OfferResponse fromEntity(Offer offer, String merchantName, String merchantLogoUrl) {
         OfferResponse response = new OfferResponse();
         response.setId(offer.getId());
         response.setUuid(offer.getUuid());
         response.setMerchantId(offer.getMerchantId());
+        response.setMerchantName(merchantName);
+        response.setMerchantLogoUrl(merchantLogoUrl);
         response.setTitle(offer.getTitle());
         response.setDescription(offer.getDescription());
         response.setDiscountType(offer.getDiscountType().name());
@@ -70,12 +76,12 @@ public class OfferResponse {
         response.setMerchantLocationId(offer.getMerchantLocationId());
         response.setCreatedAt(offer.getCreatedAt());
         response.setIsValid(offer.isValid());
-        
+
         if (offer.getUsageLimit() != null) {
             int remaining = offer.getUsageLimit() - offer.getTotalRedemptions();
             response.setRemainingRedemptions(Math.max(0, remaining));
         }
-        
+
         return response;
     }
 }

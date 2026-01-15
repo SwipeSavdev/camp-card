@@ -16,7 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,28 @@ public class OfferService {
     private final OfferRepository offerRepository;
     private final OfferRedemptionRepository redemptionRepository;
     private final MerchantRepository merchantRepository;
+
+    /**
+     * Helper method to enrich an offer with merchant data
+     */
+    private OfferResponse enrichWithMerchant(Offer offer, Map<Long, Merchant> merchantCache) {
+        Merchant merchant = merchantCache.get(offer.getMerchantId());
+        if (merchant != null) {
+            return OfferResponse.fromEntity(offer, merchant.getBusinessName(), merchant.getLogoUrl());
+        }
+        return OfferResponse.fromEntity(offer);
+    }
+
+    /**
+     * Helper method to build merchant cache from a list of offers
+     */
+    private Map<Long, Merchant> buildMerchantCache(List<Offer> offers) {
+        Set<Long> merchantIds = offers.stream()
+            .map(Offer::getMerchantId)
+            .collect(Collectors.toSet());
+        return merchantRepository.findAllById(merchantIds).stream()
+            .collect(Collectors.toMap(Merchant::getId, m -> m));
+    }
     
     @Transactional
     public OfferResponse createOffer(CreateOfferRequest request) {
@@ -64,11 +89,11 @@ public class OfferService {
         offer.setStatus(OfferStatus.ACTIVE);
         
         Offer savedOffer = offerRepository.save(offer);
-        
+
         // Update merchant offer counts
         updateMerchantOfferCounts(merchant.getId());
-        
-        return OfferResponse.fromEntity(savedOffer);
+
+        return OfferResponse.fromEntity(savedOffer, merchant.getBusinessName(), merchant.getLogoUrl());
     }
     
     @Transactional
@@ -91,43 +116,60 @@ public class OfferService {
         if (request.getUsageLimitPerUser() != null) offer.setUsageLimitPerUser(request.getUsageLimitPerUser());
         if (request.getFeatured() != null) offer.setFeatured(request.getFeatured());
         if (request.getScoutExclusive() != null) offer.setScoutExclusive(request.getScoutExclusive());
-        
+
         Offer updatedOffer = offerRepository.save(offer);
+        Merchant merchant = merchantRepository.findById(updatedOffer.getMerchantId()).orElse(null);
+        if (merchant != null) {
+            return OfferResponse.fromEntity(updatedOffer, merchant.getBusinessName(), merchant.getLogoUrl());
+        }
         return OfferResponse.fromEntity(updatedOffer);
     }
     
     public OfferResponse getOffer(Long offerId) {
         Offer offer = offerRepository.findById(offerId)
             .orElseThrow(() -> new IllegalArgumentException("Offer not found"));
+        Merchant merchant = merchantRepository.findById(offer.getMerchantId()).orElse(null);
+        if (merchant != null) {
+            return OfferResponse.fromEntity(offer, merchant.getBusinessName(), merchant.getLogoUrl());
+        }
         return OfferResponse.fromEntity(offer);
     }
-    
+
     public Page<OfferResponse> getActiveOffers(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
-        return offerRepository.findActiveOffers(OfferStatus.ACTIVE, now, pageable)
-            .map(OfferResponse::fromEntity);
+        Page<Offer> offerPage = offerRepository.findActiveOffers(OfferStatus.ACTIVE, now, pageable);
+        Map<Long, Merchant> merchantCache = buildMerchantCache(offerPage.getContent());
+        return offerPage.map(offer -> enrichWithMerchant(offer, merchantCache));
     }
-    
+
     public Page<OfferResponse> getMerchantOffers(Long merchantId, Pageable pageable) {
+        Merchant merchant = merchantRepository.findById(merchantId).orElse(null);
         return offerRepository.findByMerchantId(merchantId, pageable)
-            .map(OfferResponse::fromEntity);
+            .map(offer -> {
+                if (merchant != null) {
+                    return OfferResponse.fromEntity(offer, merchant.getBusinessName(), merchant.getLogoUrl());
+                }
+                return OfferResponse.fromEntity(offer);
+            });
     }
-    
+
     public Page<OfferResponse> getOffersByCategory(String category, Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
-        return offerRepository.findActiveByCategoryAndStatus(category, OfferStatus.ACTIVE, now, pageable)
-            .map(OfferResponse::fromEntity);
+        Page<Offer> offerPage = offerRepository.findActiveByCategoryAndStatus(category, OfferStatus.ACTIVE, now, pageable);
+        Map<Long, Merchant> merchantCache = buildMerchantCache(offerPage.getContent());
+        return offerPage.map(offer -> enrichWithMerchant(offer, merchantCache));
     }
-    
+
     public Page<OfferResponse> getFeaturedOffers(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         List<Offer> offers = offerRepository.findFeaturedOffers(OfferStatus.ACTIVE, now, pageable);
         return Page.empty(); // Convert list to page if needed
     }
-    
+
     public Page<OfferResponse> searchOffers(String search, Pageable pageable) {
-        return offerRepository.searchOffers(search, OfferStatus.ACTIVE, pageable)
-            .map(OfferResponse::fromEntity);
+        Page<Offer> offerPage = offerRepository.searchOffers(search, OfferStatus.ACTIVE, pageable);
+        Map<Long, Merchant> merchantCache = buildMerchantCache(offerPage.getContent());
+        return offerPage.map(offer -> enrichWithMerchant(offer, merchantCache));
     }
     
     @Transactional
