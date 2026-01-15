@@ -126,13 +126,6 @@ export default function MerchantsPage() {
   const [newLocationState, setNewLocationState] = useState('');
   const [newLocationZip, setNewLocationZip] = useState('');
 
-  // Equipment/Device selection states
-  const [selectedManufacturer, setSelectedManufacturer] = useState('');
-  const [selectedModel, setSelectedModel] = useState('');
-  const [deviceSerialNumber, setDeviceSerialNumber] = useState('');
-  const [deviceName, setDeviceName] = useState('');
-  const [selectedDevices, setSelectedDevices] = useState<any[]>([]);
-
   // Filter state
   const [businessTypeFilter, setBusinessTypeFilter] = useState('');
   const [locationCountFilter, setLocationCountFilter] = useState('');
@@ -150,89 +143,6 @@ export default function MerchantsPage() {
     'Education',
     'Other',
   ];
-
-  // Device catalog for equipment selection
-  const DEVICE_CATALOG: Record<string, { models: { model: string; category: string; platform: string; requirements: string[] }[] }> = {
-    Verifone: {
-      models: [
-        { model: 'VX 520', category: 'Countertop Terminal', platform: 'Verix', requirements: ['Register for Verifone Developer Portal', 'Download Verix SDK', 'Obtain test device', 'Configure test environment', 'Complete PCI-DSS certification'] },
-        { model: 'VX 680', category: 'Wireless Terminal', platform: 'Verix', requirements: ['Register for Verifone Developer Portal', 'Download Verix SDK', 'Configure wireless settings', 'Obtain test SIM card', 'Complete EMV L1/L2 certification'] },
-        { model: 'M400', category: 'Multi-Lane Device', platform: 'Engage', requirements: ['Register for Verifone Engage platform', 'Complete merchant boarding', 'Configure Engage Cloud', 'Download device management tools', 'Complete PCI P2PE certification'] },
-        { model: 'E285', category: 'Mobile Terminal', platform: 'Engage', requirements: ['Register for Verifone Engage platform', 'Download mobile SDK', 'Configure Bluetooth pairing', 'Complete mobile certification'] },
-        { model: 'P400', category: 'PIN Pad', platform: 'Verix', requirements: ['Download Verix SDK', 'Configure POS integration', 'Complete PIN entry certification', 'Set up terminal management'] },
-      ],
-    },
-    Ingenico: {
-      models: [
-        { model: 'Desk/5000', category: 'Countertop Terminal', platform: 'Telium TETRA', requirements: ['Register for Ingenico Developer Portal', 'Download Telium TETRA SDK', 'Obtain development device', 'Configure test environment', 'Complete EMV certification'] },
-        { model: 'Move/5000', category: 'Wireless Terminal', platform: 'Telium TETRA', requirements: ['Register for Ingenico Developer Portal', 'Download Telium TETRA SDK', 'Configure wireless connectivity', 'Obtain test SIM for 4G', 'Complete battery/wireless certifications'] },
-        { model: 'Lane/5000', category: 'Multi-Lane Device', platform: 'Telium TETRA', requirements: ['Register for Ingenico Developer Portal', 'Download Telium TETRA SDK', 'Configure POS integration', 'Complete semi-integrated certification', 'Configure device management'] },
-        { model: 'iSC Touch 250', category: 'Customer-Facing Device', platform: 'Telium TETRA', requirements: ['Download integration SDK', 'Configure customer display', 'Complete signature capture setup', 'Set up PIN entry'] },
-      ],
-    },
-    PAX: {
-      models: [
-        { model: 'A920', category: 'Smart Terminal', platform: 'Android', requirements: ['Register for PAX Developer Portal', 'Download PAX Store SDK', 'Set up Android development', 'Configure PAX Store account', 'Complete app certification'] },
-        { model: 'A80', category: 'Countertop Terminal', platform: 'ProlinOS', requirements: ['Register for PAX Developer Portal', 'Download ProlinOS SDK', 'Obtain test terminal', 'Configure development environment', 'Complete EMV L1/L2 certification'] },
-        { model: 'S300', category: 'PIN Pad', platform: 'ProlinOS', requirements: ['Register for PAX Developer Portal', 'Download integration docs', 'Configure POS interface', 'Complete semi-integrated certification', 'Set up terminal management'] },
-        { model: 'A60', category: 'Mobile Terminal', platform: 'Android', requirements: ['Download Android SDK', 'Configure Bluetooth', 'Complete mobile certification', 'Set up cloud management'] },
-      ],
-    },
-    Dejavoo: {
-      models: [
-        { model: 'Z11', category: 'Countertop Terminal', platform: 'Dejavoo OS', requirements: ['Register for Dejavoo Developer Program', 'Download Dejavoo API docs', 'Configure terminal for development', 'Set up test merchant account', 'Complete certification'] },
-        { model: 'QD4', category: 'PIN Pad', platform: 'Dejavoo OS', requirements: ['Register for Dejavoo Developer Program', 'Download integration guide', 'Configure POS interface', 'Complete semi-integrated certification', 'Set up device management'] },
-        { model: 'Z9', category: 'Wireless Terminal', platform: 'Dejavoo OS', requirements: ['Register for Dejavoo Developer Program', 'Configure wireless settings', 'Download mobile SDK', 'Complete wireless certification'] },
-      ],
-    },
-    Valor: {
-      models: [
-        { model: 'VL100', category: 'Countertop Terminal', platform: 'Android', requirements: ['Register for Valor Developer Portal', 'Download Valor SDK', 'Set up Android development', 'Configure test merchant account', 'Complete certification'] },
-        { model: 'VL110', category: 'Wireless Terminal', platform: 'Android', requirements: ['Register for Valor Developer Portal', 'Download Valor SDK', 'Configure wireless settings', 'Obtain test SIM card', 'Complete mobile certification'] },
-        { model: 'VP200', category: 'PIN Pad', platform: 'Android', requirements: ['Download integration docs', 'Configure POS interface', 'Complete PIN certification', 'Set up cloud management'] },
-      ],
-    },
-  };
-
-  const getDeviceModels = (manufacturer: string) => {
-    return DEVICE_CATALOG[manufacturer]?.models || [];
-  };
-
-  const getSelectedDevice = () => {
-    if (!selectedManufacturer || !selectedModel) return null;
-    return DEVICE_CATALOG[selectedManufacturer]?.models.find((m) => m.model === selectedModel) || null;
-  };
-
-  const addDevice = () => {
-    if (!selectedManufacturer || !selectedModel || !deviceSerialNumber.trim()) {
-      setError('Please select manufacturer, model, and enter serial number');
-      return;
-    }
-    const device = getSelectedDevice();
-    if (!device) return;
-
-    const newDevice = {
-      id: Date.now().toString(),
-      manufacturer: selectedManufacturer,
-      model: selectedModel,
-      serialNumber: deviceSerialNumber,
-      deviceName: deviceName || `${selectedManufacturer} ${selectedModel}`,
-      category: device.category,
-      platform: device.platform,
-      requirements: device.requirements,
-    };
-
-    setSelectedDevices([...selectedDevices, newDevice]);
-    setSelectedManufacturer('');
-    setSelectedModel('');
-    setDeviceSerialNumber('');
-    setDeviceName('');
-    setError(null);
-  };
-
-  const removeDevice = (deviceId: string) => {
-    setSelectedDevices(selectedDevices.filter((d) => d.id !== deviceId));
-  };
 
   useEffect(() => {
     // Load data on mount, don't redirect if unauthenticated
@@ -480,38 +390,6 @@ export default function MerchantsPage() {
           };
           setItems([...items, mappedMerchant]);
           console.log('[PAGE] Merchant added to local state');
-
-          // Create devices if any were added
-          if (selectedDevices.length > 0) {
-            let devicesCreated = 0;
-            let devicesFailed = 0;
-            for (const device of selectedDevices) {
-              try {
-                const deviceData = {
-                  merchantId: newMerchant.id,
-                  manufacturer: device.manufacturer,
-                  model: device.model,
-                  serialNumber: device.serialNumber,
-                  deviceName: device.deviceName,
-                  category: device.category,
-                  platform: device.platform,
-                  onboardingChecklist: device.requirements,
-                };
-                await api.createDevice(deviceData, session);
-                devicesCreated++;
-                console.log(`[PAGE] Device created: ${device.manufacturer} ${device.model}`);
-              } catch (deviceErr) {
-                devicesFailed++;
-                console.error(`[PAGE] Failed to create device ${device.serialNumber}:`, deviceErr);
-              }
-            }
-            // Show warning if some devices failed but merchant was created
-            if (devicesFailed > 0 && devicesCreated === 0) {
-              console.warn('[PAGE] All devices failed to create - device API may not be deployed yet');
-            } else if (devicesFailed > 0) {
-              console.warn(`[PAGE] ${devicesFailed} device(s) failed to create`);
-            }
-          }
         }
       }
 
@@ -530,11 +408,6 @@ export default function MerchantsPage() {
       setNewZipCode('');
       setNewIsSingleLocation(true);
       setNewLocations([]);
-      setSelectedManufacturer('');
-      setSelectedModel('');
-      setDeviceSerialNumber('');
-      setDeviceName('');
-      setSelectedDevices([]);
       setShowAddForm(false);
       setEditingId(null);
       setError(null);
@@ -1213,202 +1086,6 @@ export default function MerchantsPage() {
               </label>
             </div>
 
-            {/* Equipment Selection Section */}
-            <div style={{
-              padding: themeSpace.lg, backgroundColor: themeColors.success50, borderRadius: themeRadius.sm, borderLeft: `3px solid ${themeColors.success600}`,
-            }}
-            >
-              <h4 style={{
-                fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.md, margin: 0,
-              }}
-              >
-                Payment Equipment (Optional)
-              </h4>
-              <p style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.md, marginTop: themeSpace.sm }}>
-                Select the payment terminal equipment this merchant will use. Requirements will display when a model is selected.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
-                <div style={{ display: 'flex', gap: themeSpace.md }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'block', marginBottom: themeSpace.xs }}>
-                      Manufacturer
-                    </label>
-                    <select
-                      value={selectedManufacturer}
-                      onChange={(e) => { setSelectedManufacturer(e.target.value); setSelectedModel(''); }}
-                      style={{
-                        width: '100%',
-                        padding: `${themeSpace.xs} ${themeSpace.sm}`,
-                        border: `1px solid ${themeColors.gray200}`,
-                        borderRadius: themeRadius.sm,
-                        fontSize: '13px',
-                        backgroundColor: themeColors.white,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <option value="">Select Manufacturer</option>
-                      {Object.keys(DEVICE_CATALOG).map((mfr) => (
-                        <option key={mfr} value={mfr}>{mfr}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'block', marginBottom: themeSpace.xs }}>
-                      Model
-                    </label>
-                    <select
-                      value={selectedModel}
-                      onChange={(e) => setSelectedModel(e.target.value)}
-                      disabled={!selectedManufacturer}
-                      style={{
-                        width: '100%',
-                        padding: `${themeSpace.xs} ${themeSpace.sm}`,
-                        border: `1px solid ${themeColors.gray200}`,
-                        borderRadius: themeRadius.sm,
-                        fontSize: '13px',
-                        backgroundColor: selectedManufacturer ? themeColors.white : themeColors.gray100,
-                        cursor: selectedManufacturer ? 'pointer' : 'not-allowed',
-                      }}
-                    >
-                      <option value="">Select Model</option>
-                      {getDeviceModels(selectedManufacturer).map((m) => (
-                        <option key={m.model} value={m.model}>{m.model} - {m.category}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Show requirements when model is selected */}
-                {getSelectedDevice() && (
-                  <div style={{
-                    padding: themeSpace.md,
-                    backgroundColor: themeColors.warning50,
-                    borderRadius: themeRadius.sm,
-                    border: `1px solid ${themeColors.warning600}`,
-                  }}
-                  >
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
-                      Onboarding Requirements for {selectedModel}
-                    </div>
-                    <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.sm }}>
-                      Category: {getSelectedDevice()?.category} | Platform: {getSelectedDevice()?.platform}
-                    </div>
-                    <ul style={{ margin: 0, paddingLeft: themeSpace.lg, fontSize: '12px', color: themeColors.gray600 }}>
-                      {getSelectedDevice()?.requirements.map((req, idx) => (
-                        <li key={idx} style={{ marginBottom: themeSpace.xs }}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: themeSpace.md }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'block', marginBottom: themeSpace.xs }}>
-                      Serial Number *
-                    </label>
-                    <input
-                      type="text"
-                      value={deviceSerialNumber}
-                      onChange={(e) => setDeviceSerialNumber(e.target.value)}
-                      placeholder="Device serial number"
-                      style={{
-                        width: '100%',
-                        padding: `${themeSpace.xs} ${themeSpace.sm}`,
-                        border: `1px solid ${themeColors.gray200}`,
-                        borderRadius: themeRadius.sm,
-                        fontSize: '13px',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'block', marginBottom: themeSpace.xs }}>
-                      Device Name (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={deviceName}
-                      onChange={(e) => setDeviceName(e.target.value)}
-                      placeholder="e.g., Front Counter Terminal"
-                      style={{
-                        width: '100%',
-                        padding: `${themeSpace.xs} ${themeSpace.sm}`,
-                        border: `1px solid ${themeColors.gray200}`,
-                        borderRadius: themeRadius.sm,
-                        fontSize: '13px',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={addDevice}
-                  disabled={!selectedManufacturer || !selectedModel || !deviceSerialNumber.trim()}
-                  style={{
-                    padding: `${themeSpace.xs} ${themeSpace.md}`,
-                    background: selectedManufacturer && selectedModel && deviceSerialNumber.trim() ? themeColors.success600 : themeColors.gray300,
-                    color: themeColors.white,
-                    border: 'none',
-                    borderRadius: themeRadius.sm,
-                    cursor: selectedManufacturer && selectedModel && deviceSerialNumber.trim() ? 'pointer' : 'not-allowed',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    alignSelf: 'flex-start',
-                  }}
-                >
-                  + Add Device
-                </button>
-
-                {/* List of added devices */}
-                {selectedDevices.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.sm, marginTop: themeSpace.sm }}>
-                    <div style={{ fontSize: '12px', fontWeight: '600', color: themeColors.text }}>
-                      Added Devices ({selectedDevices.length})
-                    </div>
-                    {selectedDevices.map((device) => (
-                      <div
-                        key={device.id}
-                        style={{
-                          padding: themeSpace.sm,
-                          backgroundColor: themeColors.white,
-                          borderRadius: themeRadius.sm,
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          border: `1px solid ${themeColors.gray200}`,
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: themeColors.text }}>
-                            {device.manufacturer} {device.model}
-                          </div>
-                          <div style={{ fontSize: '11px', color: themeColors.gray600 }}>
-                            SN: {device.serialNumber} | {device.category}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeDevice(device.id)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: themeColors.error500,
-                            cursor: 'pointer',
-                            padding: 0,
-                          }}
-                        >
-                          <Icon name="x" size={16} color={themeColors.error500} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
             {!newIsSingleLocation && (
             <div style={{
               padding: themeSpace.lg, backgroundColor: themeColors.info50, borderRadius: themeRadius.sm, borderLeft: `3px solid ${themeColors.info600}`,
@@ -1653,11 +1330,6 @@ export default function MerchantsPage() {
                 setNewLocationCity('');
                 setNewLocationState('');
                 setNewLocationZip('');
-                setSelectedManufacturer('');
-                setSelectedModel('');
-                setDeviceSerialNumber('');
-                setDeviceName('');
-                setSelectedDevices([]);
                 setEditingId(null);
                 setError(null);
               }}
