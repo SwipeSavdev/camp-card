@@ -250,7 +250,7 @@ export default function MerchantsPage() {
     const newStatus = merchant.status === 'APPROVED' ? 'INACTIVE' : 'APPROVED';
     try {
       console.log('[PAGE] Updating merchant status:', merchant.id, newStatus);
-      await api.updateMerchant(merchant.id, { status: newStatus }, session);
+      await api.updateMerchantStatus(merchant.id, newStatus, session);
       console.log('[PAGE] Merchant status updated successfully');
       // Update local state
       setItems(items.map((m) => (m.id === merchant.id ? { ...m, status: newStatus } : m)));

@@ -360,6 +360,20 @@ export const api = {
     }
   },
 
+  updateMerchantStatus: async (id: string, status: string, session?: Session | null) => {
+    try {
+      console.log('[API] updateMerchantStatus request:', { id, status });
+      const result = await apiCall<any>(`/merchants/${id}/status?status=${status}`, {
+        method: 'PATCH',
+      }, session);
+      console.log('[API] updateMerchantStatus response:', result);
+      return result;
+    } catch (error) {
+      console.error('[API] Failed to update merchant status:', error);
+      throw error;
+    }
+  },
+
   deleteMerchant: async (id: string, session?: Session | null) => {
     try {
       await apiCall<any>(`/merchants/${id}`, {
