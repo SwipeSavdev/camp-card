@@ -885,4 +885,77 @@ export const api = {
       return [];
     }
   },
+
+  // ============ DASHBOARD / ANALYTICS ============
+  getDashboard: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      return null;
+    }
+  },
+
+  getDashboardSummary: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard/summary', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch dashboard summary:', error);
+      return null;
+    }
+  },
+
+  getTroopSales: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard/troop-sales', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch troop sales:', error);
+      return [];
+    }
+  },
+
+  getTroopRecruiting: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard/troop-recruiting', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch troop recruiting:', error);
+      return [];
+    }
+  },
+
+  getScoutSales: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard/scout-sales', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch scout sales:', error);
+      return [];
+    }
+  },
+
+  getScoutReferrals: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard/scout-referrals', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch scout referrals:', error);
+      return [];
+    }
+  },
+
+  getCustomerReferrals: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard/customer-referrals', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch customer referrals:', error);
+      return [];
+    }
+  },
+
+  getSalesTrend: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/dashboard/sales-trend', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch sales trend:', error);
+      return [];
+    }
+  },
 };

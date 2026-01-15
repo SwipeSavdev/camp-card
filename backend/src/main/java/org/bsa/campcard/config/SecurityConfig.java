@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                // WebSocket endpoints
+                .requestMatchers("/ws/**").permitAll()
 
                 // Role-based access
                 .requestMatchers("/api/v1/admin/**").hasRole("NATIONAL_ADMIN")

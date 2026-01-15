@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   LineChart,
   Line,
@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import PageLayout from '../components/PageLayout';
+import { api } from '@/lib/api';
 
 const themeColors = {
   white: '#ffffff',
@@ -470,12 +471,109 @@ export default function AnalyticsPage() {
   const [detailsModal, setDetailsModal] = useState<{ widget: Widget; data: any } | null>(null);
   const [drilldownModal, setDrilldownModal] = useState<{ widget: Widget; data: any[]; selectedItem: any | null } | null>(null);
 
+  // Real-time data states
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Fetch dashboard data from API
+  const fetchDashboardData = useCallback(async () => {
+    if (!session) return;
+    try {
+      const data = await api.getDashboard(session);
+      if (data) {
+        setDashboardData(data);
+        setLastUpdate(new Date());
+        setIsConnected(true);
+        console.log('[Analytics] Dashboard data loaded:', data);
+      }
+    } catch (error) {
+      console.error('[Analytics] Failed to fetch dashboard data:', error);
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session]);
+
+  // Fetch data on mount and set up polling for updates
+  useEffect(() => {
+    if (session) {
+      fetchDashboardData();
+
+      // Set up polling every 30 seconds for real-time updates
+      const pollInterval = setInterval(() => {
+        fetchDashboardData();
+      }, 30000);
+
+      return () => clearInterval(pollInterval);
+    }
+    return undefined;
+  }, [session, fetchDashboardData]);
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
   }, [status, router]);
 
   if (status === 'loading') return null;
   if (!session) return null;
+
+  // Get real data or fall back to mock data
+  const getRealChartData = (metricId: string) => {
+    if (!dashboardData) return mockChartData[metricId] || [];
+
+    switch (metricId) {
+      case 'troop_sales':
+        return dashboardData.troopSales || mockChartData.troop_sales;
+      case 'troop_recruiting':
+        return dashboardData.troopRecruiting || mockChartData.troop_recruiting;
+      case 'scout_sales':
+        return dashboardData.scoutSales || mockChartData.scout_sales;
+      case 'scout_referrals':
+        return dashboardData.scoutReferrals || mockChartData.scout_referrals;
+      case 'customer_referrals':
+        return dashboardData.customerReferrals || mockChartData.customer_referrals;
+      case 'troop_sales_trend':
+        return dashboardData.salesTrend30Days || mockChartData.troop_sales_trend;
+      default:
+        return mockChartData[metricId] || [];
+    }
+  };
+
+  const getRealMetricData = (metricId: string) => {
+    if (!dashboardData) return mockData[metricId] || { value: 0, change: 0 };
+
+    switch (metricId) {
+      case 'total_troops':
+        return { value: dashboardData.totalTroops || 0, change: dashboardData.troopsTrend || 0 };
+      case 'active_scouts':
+        return { value: dashboardData.activeScouts || 0, change: dashboardData.scoutsTrend || 0 };
+      case 'total_referrals':
+        return { value: dashboardData.totalReferrals || 0, change: dashboardData.referralsTrend || 0 };
+      case 'referral_conversion':
+        return { value: `${dashboardData.referralConversionRate || 0}%`, change: 0 };
+      case 'troop_sales':
+        return { value: `$${(dashboardData.totalSales || 0).toLocaleString()}`, change: dashboardData.salesTrend || 0 };
+      case 'troop_recruiting':
+        return { value: dashboardData.activeScouts || 0, change: dashboardData.scoutsTrend || 0 };
+      case 'scout_sales':
+        return { value: `$${(dashboardData.totalSales || 0).toLocaleString()}`, change: dashboardData.salesTrend || 0 };
+      case 'scout_referrals':
+        return { value: dashboardData.successfulReferrals || 0, change: dashboardData.referralsTrend || 0 };
+      case 'customer_referrals':
+        return { value: dashboardData.totalReferrals || 0, change: dashboardData.referralsTrend || 0 };
+      case 'total_merchants':
+        return { value: dashboardData.totalMerchants || 0, change: 0 };
+      case 'active_merchants':
+        return { value: dashboardData.activeMerchants || 0, change: 0 };
+      case 'total_offers':
+        return { value: dashboardData.totalOffers || 0, change: 0 };
+      case 'active_offers':
+        return { value: dashboardData.activeOffers || 0, change: 0 };
+      default:
+        return mockData[metricId] || { value: 0, change: 0 };
+    }
+  };
 
   const handleAddWidget = (metric: AvailableMetric) => {
     const newWidget: Widget = {
@@ -491,7 +589,7 @@ export default function AnalyticsPage() {
   };
 
   const handleDrilldown = (widget: Widget) => {
-    const data = mockChartData[widget.metric] || [];
+    const data = getRealChartData(widget.metric);
     setDrilldownModal({ widget, data, selectedItem: null });
   };
 
@@ -573,10 +671,11 @@ export default function AnalyticsPage() {
   };
 
   const visibleWidgets = widgets.filter((w) => w.visible).sort((a, b) => a.order - b.order);
-  const getMetricData = (metricId: string) => mockData[metricId] || { value: 0, change: 0 };
+  // Use real data helper functions
+  const getMetricData = (metricId: string) => getRealMetricData(metricId);
 
   const renderChart = (widget: Widget) => {
-    const chartData = mockChartData[widget.metric];
+    const chartData = getRealChartData(widget.metric);
     const data = getMetricData(widget.metric);
 
     switch (widget.type) {
@@ -808,7 +907,31 @@ export default function AnalyticsPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: themeSpace.lg,
         }}
         >
-          <p style={{ margin: 0, color: themeColors.gray600, fontSize: '14px' }}>Interactive charts and customizable metrics</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
+            <p style={{ margin: 0, color: themeColors.gray600, fontSize: '14px' }}>
+              {isLoading ? 'Loading data...' : 'Interactive charts and customizable metrics'}
+            </p>
+            {/* Real-time connection status */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', backgroundColor: isConnected ? themeColors.success50 : themeColors.gray100, borderRadius: '12px', fontSize: '12px',
+            }}
+            >
+              <span style={{
+                width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isConnected ? themeColors.success600 : themeColors.gray500,
+              }}
+              />
+              <span style={{ color: isConnected ? themeColors.success600 : themeColors.gray600 }}>
+                {isConnected ? 'Live' : 'Offline'}
+              </span>
+            </div>
+            {lastUpdate && (
+              <span style={{ fontSize: '12px', color: themeColors.gray500 }}>
+                Updated:
+                {' '}
+                {lastUpdate.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: themeSpace.md }}>
             {selectedWidgets.size > 0 && (
             <button

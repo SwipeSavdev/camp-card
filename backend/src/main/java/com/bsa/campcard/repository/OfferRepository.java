@@ -83,4 +83,6 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
     long countExpiredOffers(@Param("now") LocalDateTime now);
     
     List<Offer> findByStatusAndValidUntilBefore(OfferStatus status, LocalDateTime dateTime);
+
+    Long countByStatus(OfferStatus status);
 }
