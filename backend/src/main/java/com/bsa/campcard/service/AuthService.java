@@ -165,6 +165,9 @@ public class AuthService {
         user.setPasswordResetExpiresAt(null);
         userRepository.save(user);
 
+        // Send password changed confirmation
+        emailService.sendPasswordChangedConfirmation(user.getEmail(), user.getFirstName());
+
         log.info("Password reset for: {}", user.getEmail());
     }
 
@@ -181,6 +184,9 @@ public class AuthService {
         user.setEmailVerificationToken(null);
         user.setEmailVerificationExpiresAt(null);
         userRepository.save(user);
+
+        // Send welcome email now that email is verified
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
 
         log.info("Email verified for: {}", user.getEmail());
     }

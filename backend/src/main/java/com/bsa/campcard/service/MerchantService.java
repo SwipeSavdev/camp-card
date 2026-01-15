@@ -23,9 +23,10 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MerchantService {
-    
+
     private final MerchantRepository merchantRepository;
     private final MerchantLocationRepository locationRepository;
+    private final EmailService emailService;
     
     /**
      * Create new merchant application
@@ -66,10 +67,14 @@ public class MerchantService {
         }
         
         log.info("Merchant created with ID: {}", merchant.getId());
-        
-        // TODO: Send notification to admin for approval
-        // TODO: Send confirmation email to merchant
-        
+
+        // Send welcome email to merchant
+        emailService.sendMerchantWelcomeEmail(
+                merchant.getContactEmail(),
+                merchant.getBusinessName(),
+                merchant.getContactName()
+        );
+
         return toMerchantResponse(merchant);
     }
     
@@ -138,18 +143,28 @@ public class MerchantService {
             merchant.setStatus(Merchant.MerchantStatus.APPROVED);
             merchant.setApprovedAt(LocalDateTime.now());
             merchant.setApprovedBy(adminUserId);
-            
+
             log.info("Merchant approved: {}", merchantId);
-            
-            // TODO: Send approval email to merchant
-            // TODO: Send notification with next steps
+
+            // Send approval email to merchant
+            emailService.sendMerchantApprovalEmail(
+                    merchant.getContactEmail(),
+                    merchant.getBusinessName(),
+                    merchant.getContactName()
+            );
         } else if ("REJECT".equalsIgnoreCase(request.getAction())) {
             merchant.setStatus(Merchant.MerchantStatus.REJECTED);
             merchant.setRejectionReason(request.getRejectionReason());
-            
+
             log.info("Merchant rejected: {}", merchantId);
-            
-            // TODO: Send rejection email with reason
+
+            // Send rejection email with reason
+            emailService.sendMerchantRejectionEmail(
+                    merchant.getContactEmail(),
+                    merchant.getBusinessName(),
+                    merchant.getContactName(),
+                    request.getRejectionReason() != null ? request.getRejectionReason() : "Your application did not meet our requirements at this time."
+            );
         } else {
             throw new IllegalArgumentException("Invalid action. Must be APPROVE or REJECT");
         }

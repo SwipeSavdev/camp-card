@@ -1111,6 +1111,493 @@ public class EmailService {
     }
 
     @Async
+    public void sendMerchantRejectionEmail(String to, String businessName, String contactName, String reason) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send merchant rejection email to: {}", to);
+            return;
+        }
+
+        String subject = "Update on Your BSA Camp Card Application";
+
+        String htmlBody = buildEmailTemplate(
+            "Application Update",
+            BSA_NAVY,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Thank you for your interest in joining the BSA Camp Card merchant network with <strong>%s</strong>.</p>
+            <p style="font-size: 16px; color: #333333;">After reviewing your application, we are unable to approve it at this time.</p>
+
+            <div style="background-color: #f8f9fa; border-left: 4px solid %s; padding: 16px 24px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 14px; color: #666666;"><strong>Reason:</strong></p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #333333;">%s</p>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">If you believe this decision was made in error, or if you'd like to provide additional information, please contact our merchant support team.</p>
+
+            """ + buildButton("Contact Support", "mailto:merchants@bsa.swipesavvy.com", BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">We appreciate your interest in supporting Scouts and hope to work with you in the future.</p>
+            """.formatted(contactName, businessName, BSA_NAVY, reason)
+        );
+
+        String textBody = """
+            Application Update
+
+            Hi %s,
+
+            Thank you for your interest in joining the BSA Camp Card merchant network with %s.
+
+            After reviewing your application, we are unable to approve it at this time.
+
+            Reason: %s
+
+            If you believe this decision was made in error, or if you'd like to provide additional information, please contact our merchant support team at merchants@bsa.swipesavvy.com
+
+            We appreciate your interest in supporting Scouts and hope to work with you in the future.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(contactName, businessName, reason);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Merchant rejection email sent to: {}", to);
+    }
+
+    // ========================================================================
+    // INVITATION EMAILS
+    // ========================================================================
+
+    @Async
+    public void sendScoutInvitationEmail(String to, String scoutName, String troopNumber, String inviterName, String inviteToken) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send scout invitation email to: {}", to);
+            return;
+        }
+
+        String subject = "You're Invited to Join BSA Camp Card - Troop " + troopNumber;
+        String inviteUrl = baseUrl + "/join/scout?token=" + inviteToken;
+
+        String htmlBody = buildEmailTemplate(
+            "You're Invited to Join!",
+            BSA_NAVY,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;"><strong>%s</strong> has invited you to join the BSA Camp Card program with <strong>Troop %s</strong>!</p>
+
+            <div style="background: linear-gradient(135deg, %s 0%%, #004494 100%%); border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center;">
+                <span style="font-size: 64px;">⚜️</span>
+                <h2 style="color: white; margin: 16px 0 8px 0;">Join the Adventure!</h2>
+                <p style="color: rgba(255,255,255,0.9); margin: 0;">Start your Camp Card fundraising journey</p>
+            </div>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: %s; margin-top: 0;">As a Scout, you'll be able to:</h3>
+                <ul style="padding-left: 20px; margin: 0; color: #333333;">
+                    <li style="padding: 6px 0;">Get your own referral code to share</li>
+                    <li style="padding: 6px 0;">Track your sales progress</li>
+                    <li style="padding: 6px 0;">Earn recognition for milestones</li>
+                    <li style="padding: 6px 0;">Help your troop reach its fundraising goals</li>
+                </ul>
+            </div>
+
+            """ + buildButton("Accept Invitation", inviteUrl, BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Or copy and paste this link into your browser:</p>
+            <p style="font-size: 12px; color: #999999; word-break: break-all;">%s</p>
+
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #856404;"><strong>This invitation expires in 7 days.</strong></p>
+            </div>
+            """.formatted(scoutName, inviterName, troopNumber, BSA_NAVY, BSA_NAVY, inviteUrl)
+        );
+
+        String textBody = """
+            You're Invited to Join BSA Camp Card!
+
+            Hi %s,
+
+            %s has invited you to join the BSA Camp Card program with Troop %s!
+
+            As a Scout, you'll be able to:
+            - Get your own referral code to share
+            - Track your sales progress
+            - Earn recognition for milestones
+            - Help your troop reach its fundraising goals
+
+            Accept your invitation: %s
+
+            This invitation expires in 7 days.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(scoutName, inviterName, troopNumber, inviteUrl);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Scout invitation email sent to: {}", to);
+    }
+
+    @Async
+    public void sendParentInvitationEmail(String to, String parentName, String scoutName, String troopNumber, String inviteToken) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send parent invitation email to: {}", to);
+            return;
+        }
+
+        String subject = "Join BSA Camp Card to Support " + scoutName;
+        String inviteUrl = baseUrl + "/join/parent?token=" + inviteToken;
+
+        String htmlBody = buildEmailTemplate(
+            "Support Your Scout!",
+            BSA_GOLD,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your Scout, <strong>%s</strong>, is participating in the BSA Camp Card fundraising program with <strong>Troop %s</strong>!</p>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: %s; margin-top: 0;">Why Create a Parent Account?</h3>
+                <table style="width: 100%%;">
+                    <tr>
+                        <td style="padding: 10px 0; vertical-align: top; width: 40px;">
+                            <span style="font-size: 20px;">📊</span>
+                        </td>
+                        <td style="padding: 10px 0;">
+                            <strong>Track Progress</strong><br/>
+                            <span style="color: #666666;">Monitor your Scout's fundraising achievements</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; vertical-align: top;">
+                            <span style="font-size: 20px;">🎫</span>
+                        </td>
+                        <td style="padding: 10px 0;">
+                            <strong>Access Offers</strong><br/>
+                            <span style="color: #666666;">Browse and redeem exclusive merchant discounts</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; vertical-align: top;">
+                            <span style="font-size: 20px;">🔗</span>
+                        </td>
+                        <td style="padding: 10px 0;">
+                            <strong>Share Links</strong><br/>
+                            <span style="color: #666666;">Help spread the word to friends and family</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            """ + buildButton("Create Parent Account", inviteUrl, BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Thank you for supporting Scouting!</p>
+            """.formatted(parentName, scoutName, troopNumber, BSA_NAVY)
+        );
+
+        String textBody = """
+            Support Your Scout with BSA Camp Card!
+
+            Hi %s,
+
+            Your Scout, %s, is participating in the BSA Camp Card fundraising program with Troop %s!
+
+            Why Create a Parent Account?
+            - Track Progress: Monitor your Scout's fundraising achievements
+            - Access Offers: Browse and redeem exclusive merchant discounts
+            - Share Links: Help spread the word to friends and family
+
+            Create your account: %s
+
+            Thank you for supporting Scouting!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(parentName, scoutName, troopNumber, inviteUrl);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Parent invitation email sent to: {}", to);
+    }
+
+    // ========================================================================
+    // ADMIN & COUNCIL EMAILS
+    // ========================================================================
+
+    @Async
+    public void sendCouncilAdminWelcomeEmail(String to, String firstName, String councilName) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send council admin welcome email to: {}", to);
+            return;
+        }
+
+        String subject = "Welcome, " + councilName + " Administrator!";
+
+        String htmlBody = buildEmailTemplate(
+            "Council Admin Access Granted",
+            BSA_NAVY,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">You've been granted administrator access for <strong>%s</strong> in the BSA Camp Card system.</p>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: %s; margin-top: 0;">Your Admin Capabilities:</h3>
+                <table style="width: 100%%;">
+                    <tr>
+                        <td style="padding: 10px 0; vertical-align: top; width: 40px;">
+                            <span style="font-size: 20px;">🏕️</span>
+                        </td>
+                        <td style="padding: 10px 0;">
+                            <strong>Manage Troops</strong><br/>
+                            <span style="color: #666666;">Add, edit, and monitor troops in your council</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; vertical-align: top;">
+                            <span style="font-size: 20px;">🏪</span>
+                        </td>
+                        <td style="padding: 10px 0;">
+                            <strong>Approve Merchants</strong><br/>
+                            <span style="color: #666666;">Review and approve local merchant applications</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; vertical-align: top;">
+                            <span style="font-size: 20px;">📈</span>
+                        </td>
+                        <td style="padding: 10px 0;">
+                            <strong>View Analytics</strong><br/>
+                            <span style="color: #666666;">Access council-wide fundraising reports</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; vertical-align: top;">
+                            <span style="font-size: 20px;">👥</span>
+                        </td>
+                        <td style="padding: 10px 0;">
+                            <strong>Manage Users</strong><br/>
+                            <span style="color: #666666;">Oversee troop leaders and Scout accounts</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            """ + buildButton("Access Admin Dashboard", baseUrl + "/admin/dashboard", BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact national support at support@bsa.swipesavvy.com</p>
+            """.formatted(firstName, councilName, BSA_NAVY)
+        );
+
+        String textBody = """
+            Council Admin Access Granted
+
+            Hi %s,
+
+            You've been granted administrator access for %s in the BSA Camp Card system.
+
+            Your Admin Capabilities:
+            - Manage Troops: Add, edit, and monitor troops in your council
+            - Approve Merchants: Review and approve local merchant applications
+            - View Analytics: Access council-wide fundraising reports
+            - Manage Users: Oversee troop leaders and Scout accounts
+
+            Access your dashboard: %s/admin/dashboard
+
+            Questions? Contact national support at support@bsa.swipesavvy.com
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, councilName, baseUrl);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Council admin welcome email sent to: {}", to);
+    }
+
+    // ========================================================================
+    // NOTIFICATION EMAILS
+    // ========================================================================
+
+    @Async
+    public void sendNewOfferNotification(String to, String firstName, String merchantName, String offerTitle, String discountDescription) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send new offer notification to: {}", to);
+            return;
+        }
+
+        String subject = "New Offer: " + offerTitle + " at " + merchantName;
+
+        String htmlBody = buildEmailTemplate(
+            "New Offer Available!",
+            BSA_GOLD,
+            """
+            <div style="text-align: center; padding: 16px 0;">
+                <span style="font-size: 48px;">🎉</span>
+            </div>
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">A new offer is now available from one of your favorite merchants!</p>
+
+            <div style="background: linear-gradient(135deg, %s 0%%, #e5a912 100%%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+                <p style="margin: 0 0 8px 0; color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">%s</p>
+                <h2 style="margin: 0 0 12px 0; color: white; font-size: 24px;">%s</h2>
+                <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 18px;">%s</p>
+            </div>
+
+            """ + buildButton("View Offer", baseUrl + "/offers", BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px; text-align: center;">Don't miss out - redeem this offer today!</p>
+            """.formatted(firstName, BSA_GOLD, merchantName, offerTitle, discountDescription)
+        );
+
+        String textBody = """
+            New Offer Available!
+
+            Hi %s,
+
+            A new offer is now available from one of your favorite merchants!
+
+            %s
+            %s
+            %s
+
+            View this offer: %s/offers
+
+            Don't miss out - redeem this offer today!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, merchantName, offerTitle, discountDescription, baseUrl);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("New offer notification sent to: {}", to);
+    }
+
+    @Async
+    public void sendWeeklyTroopSummary(String to, String leaderName, String troopNumber,
+                                        int totalSales, int newSubscribers,
+                                        BigDecimal amountRaised, String topScoutName) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send weekly troop summary to: {}", to);
+            return;
+        }
+
+        String subject = "Weekly Summary: Troop " + troopNumber + " Fundraising Update";
+        String formattedAmount = String.format("$%.2f", amountRaised);
+
+        String htmlBody = buildEmailTemplate(
+            "Weekly Troop Summary",
+            BSA_NAVY,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Here's this week's fundraising summary for <strong>Troop %s</strong>:</p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; margin: 24px 0;">
+                <div style="flex: 1; min-width: 120px; background-color: #f8f9fa; border-radius: 12px; padding: 20px; text-align: center;">
+                    <p style="margin: 0 0 8px 0; font-size: 32px; font-weight: bold; color: %s;">%d</p>
+                    <p style="margin: 0; font-size: 14px; color: #666666;">Total Sales</p>
+                </div>
+                <div style="flex: 1; min-width: 120px; background-color: #f8f9fa; border-radius: 12px; padding: 20px; text-align: center;">
+                    <p style="margin: 0 0 8px 0; font-size: 32px; font-weight: bold; color: %s;">%d</p>
+                    <p style="margin: 0; font-size: 14px; color: #666666;">New Subscribers</p>
+                </div>
+                <div style="flex: 1; min-width: 120px; background-color: #d4edda; border-radius: 12px; padding: 20px; text-align: center;">
+                    <p style="margin: 0 0 8px 0; font-size: 32px; font-weight: bold; color: %s;">%s</p>
+                    <p style="margin: 0; font-size: 14px; color: #155724;">Amount Raised</p>
+                </div>
+            </div>
+
+            %s
+
+            """ + buildButton("View Full Report", baseUrl + "/leader/dashboard", BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Keep up the great work!</p>
+            """.formatted(
+                leaderName, troopNumber, BSA_NAVY, totalSales, BSA_NAVY, newSubscribers,
+                SUCCESS_GREEN, formattedAmount,
+                topScoutName != null ? """
+                <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                    <p style="margin: 0; font-size: 14px; color: #856404;">🏆 <strong>Top Scout This Week:</strong> %s</p>
+                </div>
+                """.formatted(topScoutName) : ""
+            )
+        );
+
+        String textBody = """
+            Weekly Troop Summary
+
+            Hi %s,
+
+            Here's this week's fundraising summary for Troop %s:
+
+            - Total Sales: %d
+            - New Subscribers: %d
+            - Amount Raised: %s
+            %s
+
+            View full report: %s/leader/dashboard
+
+            Keep up the great work!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(leaderName, troopNumber, totalSales, newSubscribers, formattedAmount,
+                topScoutName != null ? "\nTop Scout This Week: " + topScoutName : "", baseUrl);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Weekly troop summary sent to: {}", to);
+    }
+
+    @Async
+    public void sendAccountDeactivationNotice(String to, String firstName, String reason) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send account deactivation notice to: {}", to);
+            return;
+        }
+
+        String subject = "Your BSA Camp Card Account Has Been Deactivated";
+
+        String htmlBody = buildEmailTemplate(
+            "Account Deactivated",
+            BSA_RED,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your BSA Camp Card account has been deactivated.</p>
+
+            <div style="background-color: #f8f9fa; border-left: 4px solid %s; padding: 16px 24px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 14px; color: #666666;"><strong>Reason:</strong></p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #333333;">%s</p>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">If you believe this was done in error, or if you have questions, please contact our support team.</p>
+
+            """ + buildButton("Contact Support", "mailto:support@bsa.swipesavvy.com", BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">We're here to help if you need assistance.</p>
+            """.formatted(firstName, BSA_RED, reason)
+        );
+
+        String textBody = """
+            Account Deactivated
+
+            Hi %s,
+
+            Your BSA Camp Card account has been deactivated.
+
+            Reason: %s
+
+            If you believe this was done in error, or if you have questions, please contact our support team at support@bsa.swipesavvy.com
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, reason);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Account deactivation notice sent to: {}", to);
+    }
+
+    @Async
     public void sendMerchantApprovalEmail(String to, String businessName, String contactName) {
         if (!emailEnabled) {
             log.info("Email disabled - would send merchant approval email to: {}", to);
