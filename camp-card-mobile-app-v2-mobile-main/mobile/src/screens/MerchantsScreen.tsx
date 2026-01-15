@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,21 @@ import {
   Image,
   ActivityIndicator,
   TextInput,
-  Alert
+  Alert,
+  RefreshControl
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { apiClient } from '../utils/api';
+import * as Location from 'expo-location';
+import { merchantsApi } from '../utils/api';
+
+interface MerchantLocation {
+  id: number;
+  city: string;
+  state: string;
+  latitude?: number;
+  longitude?: number;
+}
 
 interface Merchant {
   id: number;
@@ -24,10 +34,13 @@ interface Merchant {
   logoUrl?: string;
   activeOffers: number;
   totalRedemptions: number;
-  locations: Array<{
-    city: string;
-    state: string;
-  }>;
+  locations: MerchantLocation[];
+  distance?: number; // Distance in miles from user
+}
+
+interface UserLocation {
+  latitude: number;
+  longitude: number;
 }
 
 const CATEGORIES = [
@@ -40,54 +53,155 @@ const CATEGORIES = [
   { id: 'HEALTH', name: 'Health', icon: 'fitness-outline' },
 ];
 
+// Calculate distance between two coordinates in miles
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Format distance for display
+function formatDistance(distance: number): string {
+  if (distance < 0.1) {
+    return 'Nearby';
+  }
+  if (distance < 1) {
+    return `${(distance * 5280).toFixed(0)} ft`;
+  }
+  return `${distance.toFixed(1)} mi`;
+}
+
 export default function MerchantsScreen() {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [filteredMerchants, setFilteredMerchants] = useState<Merchant[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const navigation = useNavigation();
 
   useEffect(() => {
+    requestLocationPermission();
     loadMerchants();
   }, []);
 
   useEffect(() => {
     filterMerchants();
-  }, [selectedCategory, searchQuery, merchants]);
+  }, [selectedCategory, searchQuery, merchants, userLocation]);
 
-  const loadMerchants = async () => {
+  const requestLocationPermission = async () => {
     try {
-      const response = await apiClient.get('/merchants', {
-        params: {
-          status: 'APPROVED',
-          size: 100
-        }
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationError('Location permission denied');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
       });
-      
-      setMerchants(response.data.content || []);
+
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+      setLocationError(null);
     } catch (error) {
-      console.error('Error loading merchants:', error);
-      Alert.alert('Error', 'Failed to load merchants');
-    } finally {
-      setLoading(false);
+      console.error('Error getting location:', error);
+      setLocationError('Could not get location');
     }
   };
+
+  const loadMerchants = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      const response = await merchantsApi.getMerchants({
+        status: 'APPROVED',
+        size: 100
+      });
+
+      const merchantData = response.data.content || response.data || [];
+      setMerchants(merchantData);
+    } catch (error) {
+      console.error('Error loading merchants:', error);
+      Alert.alert('Error', 'Failed to load merchants. Please try again.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = useCallback(() => {
+    requestLocationPermission();
+    loadMerchants(true);
+  }, []);
 
   const filterMerchants = () => {
     let filtered = [...merchants];
 
+    // Calculate distance for each merchant
+    if (userLocation) {
+      filtered = filtered.map((merchant) => {
+        // Find the closest location for this merchant
+        let minDistance = Infinity;
+        if (merchant.locations && merchant.locations.length > 0) {
+          merchant.locations.forEach((loc) => {
+            if (loc.latitude && loc.longitude) {
+              const dist = calculateDistance(
+                userLocation.latitude,
+                userLocation.longitude,
+                loc.latitude,
+                loc.longitude
+              );
+              if (dist < minDistance) {
+                minDistance = dist;
+              }
+            }
+          });
+        }
+        return {
+          ...merchant,
+          distance: minDistance === Infinity ? undefined : minDistance,
+        };
+      });
+
+      // Sort by distance (closest first), merchants without location go to end
+      filtered.sort((a, b) => {
+        if (a.distance === undefined && b.distance === undefined) return 0;
+        if (a.distance === undefined) return 1;
+        if (b.distance === undefined) return -1;
+        return a.distance - b.distance;
+      });
+    }
+
     // Filter by category
     if (selectedCategory !== 'ALL') {
-      filtered = filtered.filter(m => m.category === selectedCategory);
+      filtered = filtered.filter((m) => m.category === selectedCategory);
     }
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(m =>
-        m.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.dbaName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (m) =>
+          m.businessName.toLowerCase().includes(query) ||
+          m.dbaName?.toLowerCase().includes(query) ||
+          m.description?.toLowerCase().includes(query)
       );
     }
 
@@ -98,11 +212,11 @@ export default function MerchantsScreen() {
     navigation.navigate('MerchantDetail', { merchantId: merchant.id });
   };
 
-  const renderCategory = ({ item }: { item: typeof CATEGORIES[0] }) => (
+  const renderCategory = ({ item }: { item: (typeof CATEGORIES)[0] }) => (
     <TouchableOpacity
       style={[
         styles.categoryButton,
-        selectedCategory === item.id && styles.categoryButtonActive
+        selectedCategory === item.id && styles.categoryButtonActive,
       ]}
       onPress={() => setSelectedCategory(item.id)}
     >
@@ -114,7 +228,7 @@ export default function MerchantsScreen() {
       <Text
         style={[
           styles.categoryText,
-          selectedCategory === item.id && styles.categoryTextActive
+          selectedCategory === item.id && styles.categoryTextActive,
         ]}
       >
         {item.name}
@@ -135,7 +249,7 @@ export default function MerchantsScreen() {
             <Ionicons name="business-outline" size={32} color="#ccc" />
           </View>
         )}
-        
+
         <View style={styles.merchantInfo}>
           <Text style={styles.merchantName} numberOfLines={1}>
             {item.businessName}
@@ -148,7 +262,15 @@ export default function MerchantsScreen() {
           <Text style={styles.merchantCategory}>{item.category}</Text>
         </View>
 
-        <Ionicons name="chevron-forward" size={24} color="#ccc" />
+        <View style={styles.rightSection}>
+          {item.distance !== undefined && (
+            <View style={styles.distanceBadge}>
+              <Ionicons name="navigate" size={12} color="#003f87" />
+              <Text style={styles.distanceText}>{formatDistance(item.distance)}</Text>
+            </View>
+          )}
+          <Ionicons name="chevron-forward" size={24} color="#ccc" />
+        </View>
       </View>
 
       {item.description && (
@@ -182,6 +304,7 @@ export default function MerchantsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#003f87" />
+        <Text style={styles.loadingText}>Loading merchants...</Text>
       </View>
     );
   }
@@ -191,9 +314,19 @@ export default function MerchantsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Merchants</Text>
-        <TouchableOpacity onPress={loadMerchants}>
-          <Ionicons name="refresh-outline" size={24} color="#003f87" />
-        </TouchableOpacity>
+        {userLocation ? (
+          <View style={styles.locationIndicator}>
+            <Ionicons name="location" size={16} color="#4CAF50" />
+            <Text style={styles.locationText}>Near you</Text>
+          </View>
+        ) : locationError ? (
+          <TouchableOpacity onPress={requestLocationPermission}>
+            <View style={styles.locationIndicator}>
+              <Ionicons name="location-outline" size={16} color="#999" />
+              <Text style={styles.locationErrorText}>Enable location</Text>
+            </View>
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {/* Search Bar */}
@@ -222,12 +355,27 @@ export default function MerchantsScreen() {
         contentContainerStyle={styles.categoriesContainer}
       />
 
+      {/* Results count */}
+      <View style={styles.resultsHeader}>
+        <Text style={styles.resultsText}>
+          {filteredMerchants.length} {filteredMerchants.length === 1 ? 'merchant' : 'merchants'}
+        </Text>
+      </View>
+
       {/* Merchants List */}
       <FlatList
         data={filteredMerchants}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderMerchant}
         contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#003f87']}
+            tintColor="#003f87"
+          />
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="business-outline" size={64} color="#ccc" />
@@ -254,6 +402,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -269,6 +422,20 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#003f87',
+  },
+  locationIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  locationErrorText: {
+    fontSize: 12,
+    color: '#999',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -315,6 +482,15 @@ const styles = StyleSheet.create({
   },
   categoryTextActive: {
     color: '#003f87',
+  },
+  resultsHeader: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  resultsText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
   },
   listContainer: {
     paddingHorizontal: 20,
@@ -365,6 +541,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     textTransform: 'capitalize',
+  },
+  rightSection: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  distanceText: {
+    fontSize: 12,
+    color: '#003f87',
+    fontWeight: '600',
   },
   description: {
     fontSize: 14,

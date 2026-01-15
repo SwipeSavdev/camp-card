@@ -8,12 +8,13 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-  Linking
+  Linking,
+  RefreshControl
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
-import { apiClient } from '../utils/api';
+import { merchantsApi } from '../utils/api';
 
 interface MerchantLocation {
   id: number;
@@ -45,33 +46,66 @@ interface Merchant {
   locations: MerchantLocation[];
 }
 
+interface Offer {
+  id: number;
+  title: string;
+  description: string;
+  discountType: string;
+  discountValue: number;
+  category: string;
+  validUntil: string;
+  featured: boolean;
+  imageUrl?: string;
+}
+
 export default function MerchantDetailScreen() {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [merchant, setMerchant] = useState<Merchant | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<MerchantLocation | null>(null);
   const navigation = useNavigation();
   const route = useRoute();
   const { merchantId } = route.params as { merchantId: number };
 
   useEffect(() => {
-    loadMerchant();
+    loadMerchantData();
   }, [merchantId]);
 
-  const loadMerchant = async () => {
+  const loadMerchantData = async (isRefresh = false) => {
     try {
-      const response = await apiClient.get(`/merchants/${merchantId}`);
-      setMerchant(response.data);
-      
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      // Load merchant and offers in parallel
+      const [merchantResponse, offersResponse] = await Promise.all([
+        merchantsApi.getMerchantById(merchantId),
+        merchantsApi.getMerchantOffers(merchantId)
+      ]);
+
+      setMerchant(merchantResponse.data);
+      setOffers(offersResponse.data.content || offersResponse.data || []);
+
       // Set primary location or first location as selected
-      const primaryLoc = response.data.locations?.find((l: MerchantLocation) => l.primaryLocation);
-      setSelectedLocation(primaryLoc || response.data.locations?.[0] || null);
+      const primaryLoc = merchantResponse.data.locations?.find((l: MerchantLocation) => l.primaryLocation);
+      setSelectedLocation(primaryLoc || merchantResponse.data.locations?.[0] || null);
     } catch (error) {
       console.error('Error loading merchant:', error);
       Alert.alert('Error', 'Failed to load merchant details');
-      navigation.goBack();
+      if (!isRefresh) {
+        navigation.goBack();
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    loadMerchantData(true);
   };
 
   const handleCall = () => {
@@ -94,8 +128,33 @@ export default function MerchantDetailScreen() {
     }
   };
 
-  const handleViewOffers = () => {
-    navigation.navigate('Offers', { merchantId: merchant?.id });
+  const handleOfferPress = (offerId: number) => {
+    navigation.navigate('OfferDetail', { offerId });
+  };
+
+  const getDiscountText = (offer: Offer) => {
+    switch (offer.discountType) {
+      case 'PERCENTAGE':
+        return `${offer.discountValue}% OFF`;
+      case 'FIXED_AMOUNT':
+        return `$${offer.discountValue} OFF`;
+      case 'BUY_ONE_GET_ONE':
+        return 'BOGO';
+      case 'FREE_ITEM':
+        return 'FREE ITEM';
+      default:
+        return 'DISCOUNT';
+    }
+  };
+
+  const getDaysRemaining = (validUntil: string) => {
+    const now = new Date();
+    const end = new Date(validUntil);
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return 'Expired';
+    if (diff === 0) return 'Ends today';
+    if (diff === 1) return '1 day left';
+    return `${diff} days left`;
   };
 
   if (loading) {
@@ -123,7 +182,16 @@ export default function MerchantDetailScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#003f87']}
+            tintColor="#003f87"
+          />
+        }
+      >
         {/* Hero Section */}
         <View style={styles.heroSection}>
           {merchant.logoUrl ? (
@@ -143,15 +211,12 @@ export default function MerchantDetailScreen() {
 
         {/* Action Buttons */}
         <View style={styles.actionsContainer}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={handleViewOffers}
-          >
+          <View style={styles.actionButton}>
             <Ionicons name="pricetag" size={24} color="#ce1126" />
             <Text style={styles.actionButtonText}>
-              {merchant.activeOffers} Offers
+              {offers.length} Offers
             </Text>
-          </TouchableOpacity>
+          </View>
 
           {(selectedLocation?.phone || merchant.contactPhone) && (
             <TouchableOpacity 
@@ -189,6 +254,58 @@ export default function MerchantDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>About</Text>
             <Text style={styles.description}>{merchant.description}</Text>
+          </View>
+        )}
+
+        {/* Offers */}
+        {offers.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Available Offers</Text>
+            {offers.map((offer) => (
+              <TouchableOpacity
+                key={offer.id}
+                style={styles.offerCard}
+                onPress={() => handleOfferPress(offer.id)}
+              >
+                <View style={styles.offerHeader}>
+                  <View style={styles.offerInfo}>
+                    <Text style={styles.offerTitle} numberOfLines={1}>{offer.title}</Text>
+                    {offer.description && (
+                      <Text style={styles.offerDescription} numberOfLines={2}>
+                        {offer.description}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountText}>{getDiscountText(offer)}</Text>
+                  </View>
+                </View>
+                <View style={styles.offerFooter}>
+                  <View style={styles.offerMeta}>
+                    <Ionicons name="time-outline" size={14} color="#666" />
+                    <Text style={styles.offerMetaText}>{getDaysRemaining(offer.validUntil)}</Text>
+                  </View>
+                  {offer.featured && (
+                    <View style={styles.featuredBadge}>
+                      <Ionicons name="star" size={12} color="#F59E0B" />
+                      <Text style={styles.featuredText}>Featured</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* No Offers Message */}
+        {offers.length === 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Offers</Text>
+            <View style={styles.noOffersContainer}>
+              <Ionicons name="pricetag-outline" size={48} color="#ccc" />
+              <Text style={styles.noOffersText}>No active offers</Text>
+              <Text style={styles.noOffersSubtext}>Check back soon for new deals!</Text>
+            </View>
           </View>
         )}
 
@@ -454,5 +571,92 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
     textAlign: 'center',
+  },
+  // Offer styles
+  offerCard: {
+    backgroundColor: '#fafafa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  offerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  offerInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  offerTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  offerDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  discountBadge: {
+    backgroundColor: '#ce1126',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  discountText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  offerFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  offerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  offerMetaText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  featuredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    gap: 4,
+  },
+  featuredText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  noOffersContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  noOffersText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 12,
+  },
+  noOffersSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
   },
 });

@@ -190,6 +190,17 @@ export const subscriptionsApi = {
 export const redemptionsApi = {
   redeemCode: (code: string) =>
     apiClient.post('/api/v1/redemptions', { code }),
-  
+
   getRedemptionHistory: () => apiClient.get('/api/v1/redemptions'),
+};
+
+export const merchantsApi = {
+  getMerchants: (params?: { status?: string; category?: string; size?: number }) =>
+    apiClient.get('/api/v1/merchants', { params }),
+
+  getMerchantById: (id: string | number) =>
+    apiClient.get(`/api/v1/merchants/${id}`),
+
+  getMerchantOffers: (merchantId: string | number) =>
+    apiClient.get(`/api/v1/offers/merchant/${merchantId}`),
 };

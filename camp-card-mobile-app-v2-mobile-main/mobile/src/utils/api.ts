@@ -1,1 +1,1 @@
-export { apiClient, authApi, offersApi, subscriptionsApi, redemptionsApi } from '../services/apiClient';
+export { apiClient, authApi, offersApi, subscriptionsApi, redemptionsApi, merchantsApi } from '../services/apiClient';
