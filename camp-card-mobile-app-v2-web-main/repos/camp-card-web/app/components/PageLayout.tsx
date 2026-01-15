@@ -76,6 +76,10 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
       <path d="M16.5 9l-5.5 5.5L7.5 12" />
             </svg>,
     config: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="3" /></svg>,
+    devices: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+      <line x1="12" y1="18" x2="12.01" y2="18" />
+             </svg>,
     logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
@@ -96,6 +100,7 @@ const navItems = [
   { name: 'organization', label: 'Councils', href: '/councils' },
   { name: 'merchants', label: 'Merchants', href: '/merchants' },
   { name: 'offers', label: 'Offers', href: '/offers' },
+  { name: 'devices', label: 'Devices', href: '/devices' },
   { name: 'cards', label: 'Cards', href: '/camp-cards' },
   { name: 'analytics', label: 'Analytics', href: '/analytics' },
   { name: 'brain', label: 'AI Marketing', href: '/ai-marketing' },
