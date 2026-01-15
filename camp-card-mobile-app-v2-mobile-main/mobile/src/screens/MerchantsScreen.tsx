@@ -9,13 +9,11 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
-  RefreshControl,
-  Platform,
-  PermissionsAndroid
+  RefreshControl
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Geolocation from 'react-native-geolocation-service';
+import { useLocation, useDistance } from '../hooks/useLocation';
 import { merchantsApi } from '../utils/api';
 
 interface MerchantLocation {
@@ -40,11 +38,6 @@ interface Merchant {
   distance?: number; // Distance in miles from user
 }
 
-interface UserLocation {
-  latitude: number;
-  longitude: number;
-}
-
 const CATEGORIES = [
   { id: 'ALL', name: 'All', icon: 'grid-outline' },
   { id: 'RESTAURANTS', name: 'Dining', icon: 'restaurant-outline' },
@@ -55,30 +48,15 @@ const CATEGORIES = [
   { id: 'HEALTH', name: 'Health', icon: 'fitness-outline' },
 ];
 
-// Calculate distance between two coordinates in miles
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3959; // Earth's radius in miles
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
 // Format distance for display
-function formatDistance(distance: number): string {
-  if (distance < 0.1) {
+function formatDistanceDisplay(miles: number): string {
+  if (miles < 0.1) {
     return 'Nearby';
   }
-  if (distance < 1) {
-    return `${(distance * 5280).toFixed(0)} ft`;
+  if (miles < 1) {
+    return `${(miles * 5280).toFixed(0)} ft`;
   }
-  return `${distance.toFixed(1)} mi`;
+  return `${miles.toFixed(1)} mi`;
 }
 
 export default function MerchantsScreen() {
@@ -88,63 +66,21 @@ export default function MerchantsScreen() {
   const [filteredMerchants, setFilteredMerchants] = useState<Merchant[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
   const navigation = useNavigation();
 
+  // Use the location hook for device location (uses expo-location under the hood)
+  const location = useLocation({ enableHighAccuracy: false });
+  // Use the distance hook for calculating distances (uses AWS Location Service backend)
+  const { calculateDistance } = useDistance();
+
   useEffect(() => {
-    requestLocationPermission();
+    location.getCurrentPosition();
     loadMerchants();
   }, []);
 
   useEffect(() => {
     filterMerchants();
-  }, [selectedCategory, searchQuery, merchants, userLocation]);
-
-  const requestLocationPermission = async () => {
-    try {
-      // Request permission based on platform
-      if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'This app needs access to your location to show nearby merchants.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          setLocationError('Location permission denied');
-          return;
-        }
-      }
-      // iOS permission is handled automatically by Geolocation.getCurrentPosition
-
-      Geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          setLocationError(null);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          setLocationError('Could not get location');
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 15000,
-          maximumAge: 10000,
-        }
-      );
-    } catch (error) {
-      console.error('Error requesting location permission:', error);
-      setLocationError('Could not get location');
-    }
-  };
+  }, [selectedCategory, searchQuery, merchants, location.latitude, location.longitude]);
 
   const loadMerchants = async (isRefresh = false) => {
     try {
@@ -171,29 +107,29 @@ export default function MerchantsScreen() {
   };
 
   const onRefresh = useCallback(() => {
-    requestLocationPermission();
+    location.getCurrentPosition();
     loadMerchants(true);
   }, []);
 
   const filterMerchants = () => {
     let filtered = [...merchants];
 
-    // Calculate distance for each merchant
-    if (userLocation) {
+    // Calculate distance for each merchant using AWS Location Service
+    if (location.hasLocation && location.latitude && location.longitude) {
       filtered = filtered.map((merchant) => {
         // Find the closest location for this merchant
         let minDistance = Infinity;
         if (merchant.locations && merchant.locations.length > 0) {
           merchant.locations.forEach((loc) => {
             if (loc.latitude && loc.longitude) {
-              const dist = calculateDistance(
-                userLocation.latitude,
-                userLocation.longitude,
+              const distResult = calculateDistance(
+                location.latitude!,
+                location.longitude!,
                 loc.latitude,
                 loc.longitude
               );
-              if (dist < minDistance) {
-                minDistance = dist;
+              if (distResult.miles < minDistance) {
+                minDistance = distResult.miles;
               }
             }
           });
@@ -290,7 +226,7 @@ export default function MerchantsScreen() {
           {item.distance !== undefined && (
             <View style={styles.distanceBadge}>
               <Ionicons name="navigate" size={12} color="#003f87" />
-              <Text style={styles.distanceText}>{formatDistance(item.distance)}</Text>
+              <Text style={styles.distanceText}>{formatDistanceDisplay(item.distance)}</Text>
             </View>
           )}
           <Ionicons name="chevron-forward" size={24} color="#ccc" />
@@ -338,18 +274,23 @@ export default function MerchantsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Merchants</Text>
-        {userLocation ? (
+        {location.hasLocation ? (
           <View style={styles.locationIndicator}>
             <Ionicons name="location" size={16} color="#4CAF50" />
             <Text style={styles.locationText}>Near you</Text>
           </View>
-        ) : locationError ? (
-          <TouchableOpacity onPress={requestLocationPermission}>
+        ) : location.error ? (
+          <TouchableOpacity onPress={() => location.getCurrentPosition()}>
             <View style={styles.locationIndicator}>
               <Ionicons name="location-outline" size={16} color="#999" />
               <Text style={styles.locationErrorText}>Enable location</Text>
             </View>
           </TouchableOpacity>
+        ) : location.loading ? (
+          <View style={styles.locationIndicator}>
+            <ActivityIndicator size="small" color="#003f87" />
+            <Text style={styles.locationErrorText}>Getting location...</Text>
+          </View>
         ) : null}
       </View>
 

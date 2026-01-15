@@ -48,6 +48,7 @@
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.12",
     "expo-device": "~8.0.10",
+    "expo-location": "~18.1.5",
     "expo-notifications": "~0.32.15",
     "expo-print": "~15.0.8",
     "expo-secure-store": "~15.0.8",

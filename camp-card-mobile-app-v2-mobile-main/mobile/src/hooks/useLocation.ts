@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import Geolocation, { GeoPosition, GeoError } from 'react-native-geolocation-service';
-import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
+import * as Location from 'expo-location';
+import { Alert, Linking, Platform } from 'react-native';
 import {
   LocationService,
   GeocodingResult,
@@ -42,11 +42,12 @@ const defaultOptions: UseLocationOptions = {
 };
 
 /**
- * Hook for managing device location with React Native
+ * Hook for managing device location with Expo Location
+ * Uses expo-location for Expo Go compatibility
  */
 export function useLocation(options: UseLocationOptions = {}) {
   const mergedOptions = { ...defaultOptions, ...options };
-  const watchIdRef = useRef<number | null>(null);
+  const watchSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
 
   const [state, setState] = useState<LocationState>({
     latitude: null,
@@ -63,83 +64,43 @@ export function useLocation(options: UseLocationOptions = {}) {
 
   // Request location permission
   const requestPermission = useCallback(async (): Promise<boolean> => {
-    if (Platform.OS === 'ios') {
-      const auth = await Geolocation.requestAuthorization('whenInUse');
-      const granted = auth === 'granted';
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      const isGranted = status === 'granted';
       setState(prev => ({
         ...prev,
-        permissionStatus: granted ? 'granted' : 'denied',
+        permissionStatus: isGranted ? 'granted' : 'denied',
       }));
-      return granted;
+      return isGranted;
+    } catch (err) {
+      console.error('Permission request error:', err);
+      setState(prev => ({
+        ...prev,
+        permissionStatus: 'unavailable',
+      }));
+      return false;
     }
-
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'BSA Camp Card needs access to your location to find nearby merchants.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-
-        const isGranted = granted === PermissionsAndroid.RESULTS.GRANTED;
-        setState(prev => ({
-          ...prev,
-          permissionStatus: isGranted ? 'granted' : 'denied',
-        }));
-        return isGranted;
-      } catch (err) {
-        console.error('Permission request error:', err);
-        return false;
-      }
-    }
-
-    return false;
   }, []);
 
   // Handle location update
-  const handleLocationUpdate = useCallback((position: GeoPosition) => {
+  const handleLocationUpdate = useCallback((location: Location.LocationObject) => {
     setState(prev => ({
       ...prev,
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      accuracy: position.coords.accuracy,
-      altitude: position.coords.altitude,
-      heading: position.coords.heading,
-      speed: position.coords.speed,
-      timestamp: position.timestamp,
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      accuracy: location.coords.accuracy,
+      altitude: location.coords.altitude,
+      heading: location.coords.heading,
+      speed: location.coords.speed,
+      timestamp: location.timestamp,
       loading: false,
       error: null,
     }));
   }, []);
 
   // Handle location error
-  const handleLocationError = useCallback((error: GeoError) => {
-    let errorMessage: string;
-
-    switch (error.code) {
-      case 1:
-        errorMessage = 'Location permission denied';
-        break;
-      case 2:
-        errorMessage = 'Location unavailable';
-        break;
-      case 3:
-        errorMessage = 'Location request timed out';
-        break;
-      case 4:
-        errorMessage = 'Google Play services not available';
-        break;
-      case 5:
-        errorMessage = 'Location settings not satisfied';
-        break;
-      default:
-        errorMessage = `Location error: ${error.message}`;
-    }
+  const handleLocationError = useCallback((error: Error) => {
+    const errorMessage = error.message || 'Location error occurred';
 
     setState(prev => ({
       ...prev,
@@ -164,21 +125,21 @@ export function useLocation(options: UseLocationOptions = {}) {
       return;
     }
 
-    Geolocation.getCurrentPosition(
-      handleLocationUpdate,
-      handleLocationError,
-      {
-        enableHighAccuracy: mergedOptions.enableHighAccuracy,
-        timeout: mergedOptions.timeout,
-        maximumAge: mergedOptions.maximumAge,
-        showLocationDialog: mergedOptions.showLocationDialog,
-      }
-    );
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: mergedOptions.enableHighAccuracy
+          ? Location.Accuracy.High
+          : Location.Accuracy.Balanced,
+      });
+      handleLocationUpdate(location);
+    } catch (error) {
+      handleLocationError(error instanceof Error ? error : new Error('Failed to get location'));
+    }
   }, [requestPermission, handleLocationUpdate, handleLocationError, mergedOptions]);
 
   // Start watching position
   const startWatching = useCallback(async () => {
-    if (watchIdRef.current !== null) {
+    if (watchSubscriptionRef.current !== null) {
       return; // Already watching
     }
 
@@ -191,24 +152,27 @@ export function useLocation(options: UseLocationOptions = {}) {
       return;
     }
 
-    watchIdRef.current = Geolocation.watchPosition(
-      handleLocationUpdate,
-      handleLocationError,
-      {
-        enableHighAccuracy: mergedOptions.enableHighAccuracy,
-        distanceFilter: mergedOptions.distanceFilter,
-        interval: 5000,
-        fastestInterval: 2000,
-        showLocationDialog: mergedOptions.showLocationDialog,
-      }
-    );
+    try {
+      watchSubscriptionRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: mergedOptions.enableHighAccuracy
+            ? Location.Accuracy.High
+            : Location.Accuracy.Balanced,
+          distanceInterval: mergedOptions.distanceFilter,
+          timeInterval: 5000,
+        },
+        handleLocationUpdate
+      );
+    } catch (error) {
+      handleLocationError(error instanceof Error ? error : new Error('Failed to watch position'));
+    }
   }, [requestPermission, handleLocationUpdate, handleLocationError, mergedOptions]);
 
   // Stop watching position
   const stopWatching = useCallback(() => {
-    if (watchIdRef.current !== null) {
-      Geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
+    if (watchSubscriptionRef.current !== null) {
+      watchSubscriptionRef.current.remove();
+      watchSubscriptionRef.current = null;
     }
   }, []);
 
