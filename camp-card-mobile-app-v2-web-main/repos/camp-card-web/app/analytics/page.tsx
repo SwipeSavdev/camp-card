@@ -100,18 +100,20 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
 
 interface Widget {
   id: string;
-  type: 'metric' | 'line' | 'area' | 'bar' | 'pie';
+  type: 'metric' | 'line' | 'area' | 'bar' | 'pie' | 'drilldown';
   title: string;
   metric: string;
   visible: boolean;
   order: number;
+  drilldownType?: 'troop' | 'scout' | 'referral' | 'customer';
 }
 
 interface AvailableMetric {
   id: string;
   name: string;
   category: string;
-  chartType: 'metric' | 'line' | 'area' | 'bar' | 'pie';
+  chartType: 'metric' | 'line' | 'area' | 'bar' | 'pie' | 'drilldown';
+  drilldownType?: 'troop' | 'scout' | 'referral' | 'customer';
 }
 
 const availableMetrics: AvailableMetric[] = [
@@ -205,6 +207,37 @@ const availableMetrics: AvailableMetric[] = [
   {
     id: 'system_uptime', name: 'System Uptime %', category: 'System', chartType: 'metric',
   },
+  // BSA Troop & Scout Reporting
+  {
+    id: 'troop_sales', name: 'Troop Unit Sales', category: 'Troops', chartType: 'drilldown', drilldownType: 'troop',
+  },
+  {
+    id: 'troop_recruiting', name: 'Scout Recruiting by Troop', category: 'Troops', chartType: 'drilldown', drilldownType: 'troop',
+  },
+  {
+    id: 'scout_sales', name: 'Scout Sales (Individual)', category: 'Scouts', chartType: 'drilldown', drilldownType: 'scout',
+  },
+  {
+    id: 'scout_referrals', name: 'Scout Referrals', category: 'Scouts', chartType: 'drilldown', drilldownType: 'referral',
+  },
+  {
+    id: 'customer_referrals', name: 'Customer Referrals', category: 'Referrals', chartType: 'drilldown', drilldownType: 'customer',
+  },
+  {
+    id: 'troop_sales_trend', name: 'Troop Sales Trend', category: 'Troops', chartType: 'area',
+  },
+  {
+    id: 'total_troops', name: 'Total Troops', category: 'Troops', chartType: 'metric',
+  },
+  {
+    id: 'active_scouts', name: 'Active Scouts', category: 'Scouts', chartType: 'metric',
+  },
+  {
+    id: 'total_referrals', name: 'Total Referrals', category: 'Referrals', chartType: 'metric',
+  },
+  {
+    id: 'referral_conversion', name: 'Referral Conversion Rate', category: 'Referrals', chartType: 'metric',
+  },
 ];
 
 // Generate time series data for charts
@@ -227,6 +260,7 @@ const mockChartData: Record<string, any> = {
   offer_redemptions: generateTimeSeriesData(30, 1500, 400),
   subscription_trend: generateTimeSeriesData(30, 8000, 500),
   revenue_trend: generateTimeSeriesData(30, 18000, 3000),
+  troop_sales_trend: generateTimeSeriesData(30, 45000, 8000),
   merchant_onboarding: [
     { name: 'Jan', value: 18 },
     { name: 'Feb', value: 22 },
@@ -265,6 +299,61 @@ const mockChartData: Record<string, any> = {
     { name: 'Annual Basic', value: 2500 },
     { name: 'Annual Pro', value: 1733 },
   ],
+  // Troop Unit Sales Data
+  troop_sales: [
+    { id: 'troop-101', name: 'Troop 101', council: 'Greater Los Angeles', sales: 12450, scouts: 24, avgPerScout: 518.75, trend: 15.2 },
+    { id: 'troop-205', name: 'Troop 205', council: 'San Francisco Bay', sales: 9830, scouts: 18, avgPerScout: 546.11, trend: 8.5 },
+    { id: 'troop-312', name: 'Troop 312', council: 'Denver Area', sales: 8920, scouts: 22, avgPerScout: 405.45, trend: 12.3 },
+    { id: 'troop-418', name: 'Troop 418', council: 'Chicago Suburbs', sales: 7650, scouts: 15, avgPerScout: 510.00, trend: -2.1 },
+    { id: 'troop-523', name: 'Troop 523', council: 'Dallas Metro', sales: 6890, scouts: 20, avgPerScout: 344.50, trend: 22.8 },
+    { id: 'troop-634', name: 'Troop 634', council: 'Seattle Area', sales: 6450, scouts: 16, avgPerScout: 403.13, trend: 5.7 },
+    { id: 'troop-742', name: 'Troop 742', council: 'Phoenix Valley', sales: 5980, scouts: 14, avgPerScout: 427.14, trend: 18.4 },
+    { id: 'troop-856', name: 'Troop 856', council: 'Atlanta Metro', sales: 5420, scouts: 12, avgPerScout: 451.67, trend: 9.2 },
+  ],
+  // Scout Recruiting by Troop
+  troop_recruiting: [
+    { id: 'troop-101', name: 'Troop 101', council: 'Greater Los Angeles', newScouts: 8, totalScouts: 24, recruitingGoal: 10, percentOfGoal: 80, trend: 33.3 },
+    { id: 'troop-205', name: 'Troop 205', council: 'San Francisco Bay', newScouts: 5, totalScouts: 18, recruitingGoal: 6, percentOfGoal: 83.3, trend: 25.0 },
+    { id: 'troop-312', name: 'Troop 312', council: 'Denver Area', newScouts: 7, totalScouts: 22, recruitingGoal: 8, percentOfGoal: 87.5, trend: 16.7 },
+    { id: 'troop-418', name: 'Troop 418', council: 'Chicago Suburbs', newScouts: 3, totalScouts: 15, recruitingGoal: 5, percentOfGoal: 60, trend: -25.0 },
+    { id: 'troop-523', name: 'Troop 523', council: 'Dallas Metro', newScouts: 6, totalScouts: 20, recruitingGoal: 7, percentOfGoal: 85.7, trend: 50.0 },
+    { id: 'troop-634', name: 'Troop 634', council: 'Seattle Area', newScouts: 4, totalScouts: 16, recruitingGoal: 5, percentOfGoal: 80, trend: 0 },
+  ],
+  // Individual Scout Sales Data
+  scout_sales: [
+    { id: 'scout-1', name: 'Michael Johnson', troop: 'Troop 101', sales: 1250, cards: 25, referrals: 8, rank: 'Eagle Scout', trend: 28.5 },
+    { id: 'scout-2', name: 'David Chen', troop: 'Troop 101', sales: 980, cards: 19, referrals: 5, rank: 'Life Scout', trend: 15.2 },
+    { id: 'scout-3', name: 'James Wilson', troop: 'Troop 205', sales: 875, cards: 17, referrals: 6, rank: 'Star Scout', trend: 22.1 },
+    { id: 'scout-4', name: 'Robert Garcia', troop: 'Troop 312', sales: 820, cards: 16, referrals: 4, rank: 'First Class', trend: 8.7 },
+    { id: 'scout-5', name: 'William Brown', troop: 'Troop 101', sales: 750, cards: 15, referrals: 7, rank: 'Eagle Scout', trend: 12.3 },
+    { id: 'scout-6', name: 'Christopher Lee', troop: 'Troop 418', sales: 680, cards: 13, referrals: 3, rank: 'Life Scout', trend: -5.2 },
+    { id: 'scout-7', name: 'Daniel Martinez', troop: 'Troop 523', sales: 645, cards: 12, referrals: 9, rank: 'Star Scout', trend: 35.8 },
+    { id: 'scout-8', name: 'Matthew Taylor', troop: 'Troop 205', sales: 590, cards: 11, referrals: 2, rank: 'Second Class', trend: 18.4 },
+    { id: 'scout-9', name: 'Andrew Anderson', troop: 'Troop 634', sales: 540, cards: 10, referrals: 5, rank: 'First Class', trend: 10.1 },
+    { id: 'scout-10', name: 'Joshua Thomas', troop: 'Troop 742', sales: 485, cards: 9, referrals: 4, rank: 'Tenderfoot', trend: 45.2 },
+  ],
+  // Scout Referrals Data
+  scout_referrals: [
+    { id: 'scout-7', name: 'Daniel Martinez', troop: 'Troop 523', referrals: 9, conversions: 7, revenue: 350, conversionRate: 77.8, trend: 50.0 },
+    { id: 'scout-1', name: 'Michael Johnson', troop: 'Troop 101', referrals: 8, conversions: 6, revenue: 300, conversionRate: 75.0, trend: 33.3 },
+    { id: 'scout-5', name: 'William Brown', troop: 'Troop 101', referrals: 7, conversions: 5, revenue: 250, conversionRate: 71.4, trend: 16.7 },
+    { id: 'scout-3', name: 'James Wilson', troop: 'Troop 205', referrals: 6, conversions: 5, revenue: 250, conversionRate: 83.3, trend: 20.0 },
+    { id: 'scout-2', name: 'David Chen', troop: 'Troop 101', referrals: 5, conversions: 4, revenue: 200, conversionRate: 80.0, trend: 25.0 },
+    { id: 'scout-9', name: 'Andrew Anderson', troop: 'Troop 634', referrals: 5, conversions: 3, revenue: 150, conversionRate: 60.0, trend: 0 },
+    { id: 'scout-4', name: 'Robert Garcia', troop: 'Troop 312', referrals: 4, conversions: 3, revenue: 150, conversionRate: 75.0, trend: -20.0 },
+    { id: 'scout-10', name: 'Joshua Thomas', troop: 'Troop 742', referrals: 4, conversions: 4, revenue: 200, conversionRate: 100.0, trend: 100.0 },
+  ],
+  // Customer Referrals Data
+  customer_referrals: [
+    { id: 'cust-1', name: 'Sarah Miller', email: 's.miller@email.com', referrals: 12, conversions: 9, totalRevenue: 1080, avgOrderValue: 120, lastReferral: '2 days ago', trend: 50.0 },
+    { id: 'cust-2', name: 'Jennifer Davis', email: 'j.davis@email.com', referrals: 10, conversions: 8, totalRevenue: 960, avgOrderValue: 120, lastReferral: '1 week ago', trend: 25.0 },
+    { id: 'cust-3', name: 'Emily Rodriguez', email: 'e.rodriguez@email.com', referrals: 8, conversions: 6, totalRevenue: 720, avgOrderValue: 120, lastReferral: '3 days ago', trend: 33.3 },
+    { id: 'cust-4', name: 'Amanda Thompson', email: 'a.thompson@email.com', referrals: 7, conversions: 5, totalRevenue: 600, avgOrderValue: 120, lastReferral: '5 days ago', trend: 16.7 },
+    { id: 'cust-5', name: 'Jessica White', email: 'j.white@email.com', referrals: 6, conversions: 5, totalRevenue: 600, avgOrderValue: 120, lastReferral: '1 day ago', trend: 20.0 },
+    { id: 'cust-6', name: 'Ashley Harris', email: 'a.harris@email.com', referrals: 5, conversions: 4, totalRevenue: 480, avgOrderValue: 120, lastReferral: '2 weeks ago', trend: 0 },
+    { id: 'cust-7', name: 'Michelle Clark', email: 'm.clark@email.com', referrals: 4, conversions: 3, totalRevenue: 360, avgOrderValue: 120, lastReferral: '4 days ago', trend: -25.0 },
+    { id: 'cust-8', name: 'Stephanie Lewis', email: 's.lewis@email.com', referrals: 3, conversions: 3, totalRevenue: 360, avgOrderValue: 120, lastReferral: '6 days ago', trend: 50.0 },
+  ],
 };
 
 const mockData: Record<string, any> = {
@@ -296,26 +385,45 @@ const mockData: Record<string, any> = {
   transaction_volume: { value: 5421, change: 19.8 },
   failed_transactions: { value: 23, change: -45.2 },
   system_uptime: { value: '99.98%', change: 0.02 },
+  // BSA Troop & Scout Metrics
+  troop_sales: { value: '$63,590', change: 14.8 },
+  troop_recruiting: { value: 33, change: 22.2 },
+  scout_sales: { value: '$7,615', change: 18.5 },
+  scout_referrals: { value: 52, change: 28.4 },
+  customer_referrals: { value: 55, change: 15.6 },
+  troop_sales_trend: { value: '$45,230/mo', change: 12.3 },
+  total_troops: { value: 156, change: 8.2 },
+  active_scouts: { value: 2847, change: 15.4 },
+  total_referrals: { value: 107, change: 21.8 },
+  referral_conversion: { value: '72.4%', change: 5.3 },
 };
 
 const defaultWidgets: Widget[] = [
+  // BSA Troop & Scout Reporting Widgets
   {
-    id: '1', type: 'metric', title: 'Total Users', metric: 'total_users', visible: true, order: 1,
+    id: '1', type: 'drilldown', title: 'Troop Unit Sales', metric: 'troop_sales', visible: true, order: 1, drilldownType: 'troop',
   },
   {
-    id: '2', type: 'metric', title: 'Active Merchants', metric: 'active_merchants', visible: true, order: 2,
+    id: '2', type: 'drilldown', title: 'Scout Recruiting by Troop', metric: 'troop_recruiting', visible: true, order: 2, drilldownType: 'troop',
   },
   {
-    id: '3', type: 'area', title: 'Revenue Trend', metric: 'revenue_trend', visible: true, order: 3,
+    id: '3', type: 'drilldown', title: 'Scout Sales (Individual)', metric: 'scout_sales', visible: true, order: 3, drilldownType: 'scout',
   },
   {
-    id: '4', type: 'bar', title: 'Transaction Volume', metric: 'transaction_volume', visible: true, order: 4,
+    id: '4', type: 'drilldown', title: 'Scout Referrals', metric: 'scout_referrals', visible: true, order: 4, drilldownType: 'referral',
   },
   {
-    id: '5', type: 'line', title: 'User Trend', metric: 'user_trend', visible: true, order: 5,
+    id: '5', type: 'drilldown', title: 'Customer Referrals', metric: 'customer_referrals', visible: true, order: 5, drilldownType: 'customer',
+  },
+  // Summary Metrics
+  {
+    id: '6', type: 'metric', title: 'Total Troops', metric: 'total_troops', visible: true, order: 6,
   },
   {
-    id: '6', type: 'pie', title: 'Offer Distribution', metric: 'offer_distribution', visible: true, order: 6,
+    id: '7', type: 'metric', title: 'Active Scouts', metric: 'active_scouts', visible: true, order: 7,
+  },
+  {
+    id: '8', type: 'area', title: 'Troop Sales Trend', metric: 'troop_sales_trend', visible: true, order: 8,
   },
 ];
 
@@ -360,6 +468,7 @@ export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState('30d');
   const [selectedWidgets, setSelectedWidgets] = useState<Set<string>>(new Set());
   const [detailsModal, setDetailsModal] = useState<{ widget: Widget; data: any } | null>(null);
+  const [drilldownModal, setDrilldownModal] = useState<{ widget: Widget; data: any[]; selectedItem: any | null } | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
@@ -376,8 +485,20 @@ export default function AnalyticsPage() {
       metric: metric.id,
       visible: true,
       order: Math.max(...widgets.map((w) => w.order), 0) + 1,
+      drilldownType: metric.drilldownType,
     };
     setWidgets([...widgets, newWidget]);
+  };
+
+  const handleDrilldown = (widget: Widget) => {
+    const data = mockChartData[widget.metric] || [];
+    setDrilldownModal({ widget, data, selectedItem: null });
+  };
+
+  const handleDrilldownItemClick = (item: any) => {
+    if (drilldownModal) {
+      setDrilldownModal({ ...drilldownModal, selectedItem: item });
+    }
   };
 
   const handleRemoveWidget = (id: string) => {
@@ -547,6 +668,82 @@ export default function AnalyticsPage() {
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
+        );
+
+      case 'drilldown':
+        // Show a preview table with top items and a "View All" button
+        const previewData = (chartData || []).slice(0, 3);
+        const totalItems = (chartData || []).length;
+        const primaryKey = widget.metric === 'troop_sales' ? 'sales'
+          : widget.metric === 'troop_recruiting' ? 'newScouts'
+            : widget.metric === 'scout_sales' ? 'sales'
+              : widget.metric === 'scout_referrals' ? 'referrals'
+                : 'referrals';
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '200px' }}>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {previewData.map((item: any, idx: number) => (
+                <div
+                  key={item.id || idx}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: `${themeSpace.sm} 0`,
+                    borderBottom: idx < previewData.length - 1 ? `1px solid ${themeColors.gray100}` : 'none',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: themeColors.text }}>
+                      {item.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: themeColors.gray600 }}>
+                      {item.troop || item.council || item.email || ''}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: themeColors.primary600 }}>
+                      {primaryKey === 'sales' ? `$${item[primaryKey]?.toLocaleString()}` : item[primaryKey]?.toLocaleString()}
+                    </div>
+                    <div style={{
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      color: item.trend >= 0 ? themeColors.success600 : themeColors.error500,
+                    }}
+                    >
+                      {item.trend >= 0 ? '↑' : '↓'}
+                      {' '}
+                      {Math.abs(item.trend)}
+                      %
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {totalItems > 3 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDrilldown(widget); }}
+                style={{
+                  marginTop: themeSpace.sm,
+                  padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                  backgroundColor: themeColors.primary50,
+                  color: themeColors.primary600,
+                  border: `1px solid ${themeColors.primary600}`,
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                }}
+              >
+                View All
+                {' '}
+                {totalItems}
+                {' '}
+                Items →
+              </button>
+            )}
+          </div>
         );
 
       default:
@@ -1000,6 +1197,373 @@ export default function AnalyticsPage() {
               </button>
               <button
                 onClick={() => setDetailsModal(null)}
+                style={{
+                  flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: 'transparent', color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px',
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drilldown Modal for BSA Reports */}
+      {drilldownModal && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          }}
+          onClick={() => setDrilldownModal(null)}
+        >
+          <div
+            style={{
+              backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, maxWidth: drilldownModal.selectedItem ? '900px' : '700px', width: '95%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: themeShadow.md,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.lg,
+            }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
+                {drilldownModal.selectedItem && (
+                  <button
+                    onClick={() => setDrilldownModal({ ...drilldownModal, selectedItem: null })}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, display: 'flex', alignItems: 'center', gap: themeSpace.xs, fontSize: '14px', fontWeight: '600',
+                    }}
+                  >
+                    <Icon name="back" size={16} />
+                    Back
+                  </button>
+                )}
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: themeColors.text }}>
+                  {drilldownModal.selectedItem ? drilldownModal.selectedItem.name : drilldownModal.widget.title}
+                </h2>
+              </div>
+              <button
+                onClick={() => setDrilldownModal(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600 }}
+              >
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+
+            {/* Detail View for Selected Item */}
+            {drilldownModal.selectedItem ? (
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {/* Troop Sales Detail */}
+                {drilldownModal.widget.metric === 'troop_sales' && (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: themeSpace.md, marginBottom: themeSpace.xl }}>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.primary50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Total Sales</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.primary600 }}>${drilldownModal.selectedItem.sales?.toLocaleString()}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.success50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Active Scouts</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.success600 }}>{drilldownModal.selectedItem.scouts}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.info50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Avg Per Scout</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.info600 }}>${drilldownModal.selectedItem.avgPerScout?.toFixed(2)}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.warning50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Trend</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: drilldownModal.selectedItem.trend >= 0 ? themeColors.success600 : themeColors.error500 }}>
+                          {drilldownModal.selectedItem.trend >= 0 ? '↑' : '↓'} {Math.abs(drilldownModal.selectedItem.trend)}%
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: themeSpace.lg }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: themeSpace.md, color: themeColors.text }}>Scout Sales Breakdown</h3>
+                      <div style={{ border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm }}>
+                        {mockChartData.scout_sales
+                          .filter((s: any) => s.troop === drilldownModal.selectedItem.name)
+                          .map((scout: any, idx: number) => (
+                            <div key={scout.id} style={{ display: 'flex', justifyContent: 'space-between', padding: themeSpace.md, borderBottom: `1px solid ${themeColors.gray100}` }}>
+                              <div>
+                                <div style={{ fontWeight: '600', color: themeColors.text }}>{scout.name}</div>
+                                <div style={{ fontSize: '12px', color: themeColors.gray600 }}>{scout.rank} • {scout.cards} cards sold</div>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontWeight: '700', color: themeColors.primary600 }}>${scout.sales?.toLocaleString()}</div>
+                                <div style={{ fontSize: '12px', color: scout.trend >= 0 ? themeColors.success600 : themeColors.error500 }}>
+                                  {scout.trend >= 0 ? '↑' : '↓'} {Math.abs(scout.trend)}%
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        {mockChartData.scout_sales.filter((s: any) => s.troop === drilldownModal.selectedItem.name).length === 0 && (
+                          <div style={{ padding: themeSpace.lg, textAlign: 'center', color: themeColors.gray600 }}>No scout data available for this troop</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Scout Sales Detail */}
+                {drilldownModal.widget.metric === 'scout_sales' && (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: themeSpace.md, marginBottom: themeSpace.xl }}>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.primary50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Total Sales</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.primary600 }}>${drilldownModal.selectedItem.sales?.toLocaleString()}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.success50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Cards Sold</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.success600 }}>{drilldownModal.selectedItem.cards}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.info50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Referrals</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.info600 }}>{drilldownModal.selectedItem.referrals}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.warning50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Rank</div>
+                        <div style={{ fontSize: '18px', fontWeight: '700', color: themeColors.warning600 }}>{drilldownModal.selectedItem.rank}</div>
+                      </div>
+                    </div>
+                    <div style={{ padding: themeSpace.md, backgroundColor: themeColors.gray50, borderRadius: themeRadius.sm }}>
+                      <div style={{ fontSize: '14px', color: themeColors.gray600 }}>Troop: <span style={{ fontWeight: '600', color: themeColors.text }}>{drilldownModal.selectedItem.troop}</span></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Scout Referrals Detail */}
+                {drilldownModal.widget.metric === 'scout_referrals' && (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: themeSpace.md, marginBottom: themeSpace.xl }}>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.primary50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Total Referrals</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.primary600 }}>{drilldownModal.selectedItem.referrals}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.success50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Conversions</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.success600 }}>{drilldownModal.selectedItem.conversions}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.info50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Revenue</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.info600 }}>${drilldownModal.selectedItem.revenue}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.warning50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Conversion Rate</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.warning600 }}>{drilldownModal.selectedItem.conversionRate}%</div>
+                      </div>
+                    </div>
+                    <div style={{ padding: themeSpace.md, backgroundColor: themeColors.gray50, borderRadius: themeRadius.sm }}>
+                      <div style={{ fontSize: '14px', color: themeColors.gray600 }}>Troop: <span style={{ fontWeight: '600', color: themeColors.text }}>{drilldownModal.selectedItem.troop}</span></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Customer Referrals Detail */}
+                {drilldownModal.widget.metric === 'customer_referrals' && (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: themeSpace.md, marginBottom: themeSpace.xl }}>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.primary50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Total Referrals</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.primary600 }}>{drilldownModal.selectedItem.referrals}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.success50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Conversions</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.success600 }}>{drilldownModal.selectedItem.conversions}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.info50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Total Revenue</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.info600 }}>${drilldownModal.selectedItem.totalRevenue}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.warning50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Avg Order Value</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.warning600 }}>${drilldownModal.selectedItem.avgOrderValue}</div>
+                      </div>
+                    </div>
+                    <div style={{ padding: themeSpace.md, backgroundColor: themeColors.gray50, borderRadius: themeRadius.sm, marginBottom: themeSpace.md }}>
+                      <div style={{ fontSize: '14px', color: themeColors.gray600 }}>Email: <span style={{ fontWeight: '600', color: themeColors.text }}>{drilldownModal.selectedItem.email}</span></div>
+                      <div style={{ fontSize: '14px', color: themeColors.gray600, marginTop: themeSpace.xs }}>Last Referral: <span style={{ fontWeight: '600', color: themeColors.text }}>{drilldownModal.selectedItem.lastReferral}</span></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Troop Recruiting Detail */}
+                {drilldownModal.widget.metric === 'troop_recruiting' && (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: themeSpace.md, marginBottom: themeSpace.xl }}>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.primary50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>New Scouts</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.primary600 }}>{drilldownModal.selectedItem.newScouts}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.success50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Total Scouts</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.success600 }}>{drilldownModal.selectedItem.totalScouts}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.info50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>Goal</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.info600 }}>{drilldownModal.selectedItem.recruitingGoal}</div>
+                      </div>
+                      <div style={{ padding: themeSpace.md, backgroundColor: themeColors.warning50, borderRadius: themeRadius.sm }}>
+                        <div style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.xs }}>% of Goal</div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: drilldownModal.selectedItem.percentOfGoal >= 80 ? themeColors.success600 : themeColors.warning600 }}>{drilldownModal.selectedItem.percentOfGoal}%</div>
+                      </div>
+                    </div>
+                    <div style={{ padding: themeSpace.md, backgroundColor: themeColors.gray50, borderRadius: themeRadius.sm }}>
+                      <div style={{ fontSize: '14px', color: themeColors.gray600 }}>Council: <span style={{ fontWeight: '600', color: themeColors.text }}>{drilldownModal.selectedItem.council}</span></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* List View */
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                <div style={{ border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm }}>
+                  {/* Table Header */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: drilldownModal.widget.metric === 'troop_sales' ? '2fr 1fr 1fr 1fr 80px'
+                      : drilldownModal.widget.metric === 'troop_recruiting' ? '2fr 1fr 1fr 1fr 80px'
+                        : drilldownModal.widget.metric === 'scout_sales' ? '2fr 1fr 1fr 1fr 80px'
+                          : drilldownModal.widget.metric === 'scout_referrals' ? '2fr 1fr 1fr 1fr 80px'
+                            : '2fr 1fr 1fr 1fr 80px',
+                    padding: themeSpace.md,
+                    backgroundColor: themeColors.gray50,
+                    borderBottom: `1px solid ${themeColors.gray200}`,
+                    fontWeight: '600',
+                    fontSize: '12px',
+                    color: themeColors.gray600,
+                    textTransform: 'uppercase',
+                  }}
+                  >
+                    <div>Name</div>
+                    {drilldownModal.widget.metric === 'troop_sales' && (
+                      <>
+                        <div>Sales</div>
+                        <div>Scouts</div>
+                        <div>Avg/Scout</div>
+                      </>
+                    )}
+                    {drilldownModal.widget.metric === 'troop_recruiting' && (
+                      <>
+                        <div>New Scouts</div>
+                        <div>Total</div>
+                        <div>% of Goal</div>
+                      </>
+                    )}
+                    {drilldownModal.widget.metric === 'scout_sales' && (
+                      <>
+                        <div>Sales</div>
+                        <div>Cards</div>
+                        <div>Rank</div>
+                      </>
+                    )}
+                    {drilldownModal.widget.metric === 'scout_referrals' && (
+                      <>
+                        <div>Referrals</div>
+                        <div>Conversions</div>
+                        <div>Rate</div>
+                      </>
+                    )}
+                    {drilldownModal.widget.metric === 'customer_referrals' && (
+                      <>
+                        <div>Referrals</div>
+                        <div>Revenue</div>
+                        <div>Last Active</div>
+                      </>
+                    )}
+                    <div>Trend</div>
+                  </div>
+                  {/* Table Body */}
+                  {drilldownModal.data.map((item: any, idx: number) => (
+                    <div
+                      key={item.id || idx}
+                      onClick={() => handleDrilldownItemClick(item)}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: drilldownModal.widget.metric === 'troop_sales' ? '2fr 1fr 1fr 1fr 80px'
+                          : drilldownModal.widget.metric === 'troop_recruiting' ? '2fr 1fr 1fr 1fr 80px'
+                            : drilldownModal.widget.metric === 'scout_sales' ? '2fr 1fr 1fr 1fr 80px'
+                              : drilldownModal.widget.metric === 'scout_referrals' ? '2fr 1fr 1fr 1fr 80px'
+                                : '2fr 1fr 1fr 1fr 80px',
+                        padding: themeSpace.md,
+                        borderBottom: idx < drilldownModal.data.length - 1 ? `1px solid ${themeColors.gray100}` : 'none',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.15s',
+                        backgroundColor: themeColors.white,
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColors.gray50; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = themeColors.white; }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: '600', color: themeColors.text }}>{item.name}</div>
+                        <div style={{ fontSize: '11px', color: themeColors.gray600 }}>{item.troop || item.council || item.email || ''}</div>
+                      </div>
+                      {drilldownModal.widget.metric === 'troop_sales' && (
+                        <>
+                          <div style={{ fontWeight: '600', color: themeColors.primary600 }}>${item.sales?.toLocaleString()}</div>
+                          <div>{item.scouts}</div>
+                          <div>${item.avgPerScout?.toFixed(2)}</div>
+                        </>
+                      )}
+                      {drilldownModal.widget.metric === 'troop_recruiting' && (
+                        <>
+                          <div style={{ fontWeight: '600', color: themeColors.primary600 }}>{item.newScouts}</div>
+                          <div>{item.totalScouts}</div>
+                          <div style={{ color: item.percentOfGoal >= 80 ? themeColors.success600 : themeColors.warning600 }}>{item.percentOfGoal}%</div>
+                        </>
+                      )}
+                      {drilldownModal.widget.metric === 'scout_sales' && (
+                        <>
+                          <div style={{ fontWeight: '600', color: themeColors.primary600 }}>${item.sales?.toLocaleString()}</div>
+                          <div>{item.cards}</div>
+                          <div style={{ fontSize: '12px' }}>{item.rank}</div>
+                        </>
+                      )}
+                      {drilldownModal.widget.metric === 'scout_referrals' && (
+                        <>
+                          <div style={{ fontWeight: '600', color: themeColors.primary600 }}>{item.referrals}</div>
+                          <div>{item.conversions}</div>
+                          <div>{item.conversionRate}%</div>
+                        </>
+                      )}
+                      {drilldownModal.widget.metric === 'customer_referrals' && (
+                        <>
+                          <div style={{ fontWeight: '600', color: themeColors.primary600 }}>{item.referrals}</div>
+                          <div>${item.totalRevenue}</div>
+                          <div style={{ fontSize: '12px' }}>{item.lastReferral}</div>
+                        </>
+                      )}
+                      <div style={{ color: item.trend >= 0 ? themeColors.success600 : themeColors.error500, fontWeight: '600' }}>
+                        {item.trend >= 0 ? '↑' : '↓'} {Math.abs(item.trend)}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: themeSpace.md, marginTop: themeSpace.lg, borderTop: `1px solid ${themeColors.gray200}`, paddingTop: themeSpace.lg }}>
+              <button
+                onClick={() => {
+                  const chartData = drilldownModal.data;
+                  const headers = Object.keys(chartData[0] || {}).join(',');
+                  const rows = chartData.map((row: any) => Object.values(row).join(',')).join('\n');
+                  const csv = `${headers}\n${rows}`;
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `${drilldownModal.widget.title.replace(/\s+/g, '-')}.csv`;
+                  link.click();
+                  window.URL.revokeObjectURL(url);
+                }}
+                style={{
+                  flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: themeSpace.sm,
+                }}
+              >
+                <Icon name="download" size={16} />
+                Export Report
+              </button>
+              <button
+                onClick={() => setDrilldownModal(null)}
                 style={{
                   flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: 'transparent', color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px',
                 }}
