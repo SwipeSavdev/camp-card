@@ -214,14 +214,12 @@ export default function OffersPage() {
       console.log('Offers count:', offersData.length);
       // If offers are flat objects, transform them to the expected structure
       if (offersData.length > 0 && !offersData[0].items) {
-        console.log('Transforming flat offers to grouped structure...');
         // Group offers by merchant
         const grouped: { [key: string]: any } = {};
         offersData.forEach((offer: any) => {
-          // Handle both API format (merchant object) and legacy format
-          const merchantObj = offer.merchant || {};
-          const merchantName = (typeof merchantObj === 'object' ? merchantObj.business_name : merchantObj) || offer.merchantName || 'Unknown';
-          const merchantId = (typeof merchantObj === 'object' ? merchantObj.id : offer.merchantId) || 'unknown';
+          // Handle both API formats: direct fields (merchantId, merchantName) or nested merchant object
+          const merchantId = offer.merchantId || (offer.merchant && offer.merchant.id) || 'unknown';
+          const merchantName = offer.merchantName || (offer.merchant && offer.merchant.business_name) || 'Unknown';
 
           if (!grouped[merchantId]) {
             grouped[merchantId] = {

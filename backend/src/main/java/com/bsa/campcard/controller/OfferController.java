@@ -67,7 +67,8 @@ public class OfferController {
         } else if (featured) {
             offers = offerService.getFeaturedOffers(pageable);
         } else {
-            offers = offerService.getActiveOffers(pageable);
+            // For admin dashboard, return all offers (not filtered by validity dates)
+            offers = offerService.getAllOffers(pageable);
         }
         
         return ResponseEntity.ok(offers);
