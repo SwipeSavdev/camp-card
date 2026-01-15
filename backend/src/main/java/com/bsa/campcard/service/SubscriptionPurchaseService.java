@@ -102,8 +102,8 @@ public class SubscriptionPurchaseService {
             log.info("Subscription created with ID: {} expires: {}", subscription.getId(), expiresAt);
 
             // Step 5: Generate auth tokens for immediate login
-            String accessToken = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name(), null);
-            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
+            String accessToken = jwtTokenProvider.generateAccessToken(user);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
             // Step 6: Handle referral attribution if provided
             if (request.getReferralCode() != null && !request.getReferralCode().isEmpty()) {
