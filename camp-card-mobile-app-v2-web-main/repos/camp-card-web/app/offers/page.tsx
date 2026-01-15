@@ -260,12 +260,50 @@ export default function OffersPage() {
     }
   };
 
-  const handleDelete = async (merchantId: string) => {
+  const handleDeleteSingleOffer = async (offerId: string, merchantId: string) => {
     if (!confirm('Delete this offer?')) return;
     try {
-      setItems(items.filter((i) => i.merchantId !== merchantId));
+      // Call API to delete the offer
+      await api.deleteOffer(offerId, session);
+
+      // Update local state - remove the offer from the merchant group
+      const updatedItems = items.map((group) => {
+        if (String(group.merchantId) === String(merchantId)) {
+          const updatedOffers = group.items.filter((item) => String(item.id) !== String(offerId));
+          // If no offers left in group, return null to filter it out
+          if (updatedOffers.length === 0) {
+            return null;
+          }
+          return { ...group, items: updatedOffers };
+        }
+        return group;
+      }).filter((group): group is Offer => group !== null);
+
+      setItems(updatedItems);
     } catch (err) {
-      setError('Failed to delete');
+      console.error('Failed to delete offer:', err);
+      setError('Failed to delete offer');
+    }
+  };
+
+  const handleDeleteMerchantOffers = async (merchantId: string) => {
+    const merchantGroup = items.find((g) => String(g.merchantId) === String(merchantId));
+    if (!merchantGroup) return;
+
+    const offerCount = merchantGroup.items.length;
+    if (!confirm(`Delete all ${offerCount} offer${offerCount !== 1 ? 's' : ''} for ${merchantGroup.merchantName}?`)) return;
+
+    try {
+      // Delete all offers in the merchant group via API
+      for (const offer of merchantGroup.items) {
+        await api.deleteOffer(String(offer.id), session);
+      }
+
+      // Update local state - remove the entire merchant group
+      setItems(items.filter((i) => String(i.merchantId) !== String(merchantId)));
+    } catch (err) {
+      console.error('Failed to delete offers:', err);
+      setError('Failed to delete offers');
     }
   };
 
@@ -848,7 +886,7 @@ export default function OffersPage() {
                  </div>
                   <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
                    <button
-                   onClick={(e) => { e.stopPropagation(); handleDelete(offer.merchantId); }}
+                   onClick={(e) => { e.stopPropagation(); handleDeleteMerchantOffers(offer.merchantId); }}
                    style={{
   background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
 }}
@@ -918,6 +956,24 @@ export default function OffersPage() {
                        title="Edit offer"
                      >
                        <Icon name="edit" size={14} color={themeColors.info600} />
+                     </button>
+                     <button
+                       onClick={() => handleDeleteSingleOffer(item.id, offer.merchantId)}
+                       style={{
+                         background: '#fee2e2',
+                         border: 'none',
+                         color: themeColors.error500,
+                         width: '28px',
+                         height: '28px',
+                         borderRadius: themeRadius.sm,
+                         cursor: 'pointer',
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                       }}
+                       title="Delete offer"
+                     >
+                       <Icon name="delete" size={14} color={themeColors.error500} />
                      </button>
                    </div>
                    {item.image && (
