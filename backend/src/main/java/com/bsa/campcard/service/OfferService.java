@@ -41,6 +41,32 @@ public class OfferService {
     }
 
     /**
+     * Helper method to enrich an offer with merchant and user redemption data
+     */
+    private OfferResponse enrichWithMerchantAndUserData(Offer offer, Map<Long, Merchant> merchantCache, Map<Long, Integer> userRedemptionCache) {
+        Merchant merchant = merchantCache.get(offer.getMerchantId());
+        int userRedemptionCount = userRedemptionCache.getOrDefault(offer.getId(), 0);
+        String businessName = merchant != null ? merchant.getBusinessName() : null;
+        String logoUrl = merchant != null ? merchant.getLogoUrl() : null;
+        return OfferResponse.fromEntityWithUserData(offer, businessName, logoUrl, userRedemptionCount);
+    }
+
+    /**
+     * Helper method to build user redemption cache from a list of offers
+     */
+    private Map<Long, Integer> buildUserRedemptionCache(List<Offer> offers, UUID userId) {
+        if (userId == null || offers.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> offerIds = offers.stream().map(Offer::getId).collect(Collectors.toList());
+        List<Object[]> results = redemptionRepository.countUserRedemptionsByOfferIds(userId, offerIds);
+        return results.stream().collect(Collectors.toMap(
+            r -> (Long) r[0],
+            r -> ((Number) r[1]).intValue()
+        ));
+    }
+
+    /**
      * Helper method to build merchant cache from a list of offers
      */
     private Map<Long, Merchant> buildMerchantCache(List<Offer> offers) {
@@ -140,6 +166,18 @@ public class OfferService {
         Page<Offer> offerPage = offerRepository.findActiveOffers(OfferStatus.ACTIVE, now, pageable);
         Map<Long, Merchant> merchantCache = buildMerchantCache(offerPage.getContent());
         return offerPage.map(offer -> enrichWithMerchant(offer, merchantCache));
+    }
+
+    /**
+     * Get active offers with user-specific redemption data
+     * This allows filtering out offers the user has already fully redeemed
+     */
+    public Page<OfferResponse> getActiveOffersForUser(UUID userId, Pageable pageable) {
+        LocalDateTime now = LocalDateTime.now();
+        Page<Offer> offerPage = offerRepository.findActiveOffers(OfferStatus.ACTIVE, now, pageable);
+        Map<Long, Merchant> merchantCache = buildMerchantCache(offerPage.getContent());
+        Map<Long, Integer> userRedemptionCache = buildUserRedemptionCache(offerPage.getContent(), userId);
+        return offerPage.map(offer -> enrichWithMerchantAndUserData(offer, merchantCache, userRedemptionCache));
     }
 
     public Page<OfferResponse> getMerchantOffers(Long merchantId, Pageable pageable) {

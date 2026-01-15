@@ -42,7 +42,11 @@ public class OfferResponse {
     private LocalDateTime createdAt;
     private Boolean isValid;
     private Integer remainingRedemptions;
-    
+
+    // User-specific redemption tracking
+    private Integer userRedemptionCount;
+    private Boolean userHasReachedLimit;
+
     public static OfferResponse fromEntity(Offer offer) {
         return fromEntity(offer, null, null);
     }
@@ -80,6 +84,21 @@ public class OfferResponse {
         if (offer.getUsageLimit() != null) {
             int remaining = offer.getUsageLimit() - offer.getTotalRedemptions();
             response.setRemainingRedemptions(Math.max(0, remaining));
+        }
+
+        return response;
+    }
+
+    public static OfferResponse fromEntityWithUserData(Offer offer, String merchantName, String merchantLogoUrl, int userRedemptionCount) {
+        OfferResponse response = fromEntity(offer, merchantName, merchantLogoUrl);
+        response.setUserRedemptionCount(userRedemptionCount);
+
+        // Determine if user has reached their personal limit for this offer
+        Integer userLimit = offer.getUsageLimitPerUser();
+        if (userLimit != null) {
+            response.setUserHasReachedLimit(userRedemptionCount >= userLimit);
+        } else {
+            response.setUserHasReachedLimit(false);
         }
 
         return response;

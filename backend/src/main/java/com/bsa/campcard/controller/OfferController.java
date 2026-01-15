@@ -77,9 +77,20 @@ public class OfferController {
     public ResponseEntity<Page<OfferResponse>> getActiveOffers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<OfferResponse> offers = offerService.getActiveOffers(pageable);
+        return ResponseEntity.ok(offers);
+    }
+
+    @GetMapping("/active/user/{userId}")
+    public ResponseEntity<Page<OfferResponse>> getActiveOffersForUser(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<OfferResponse> offers = offerService.getActiveOffersForUser(userId, pageable);
         return ResponseEntity.ok(offers);
     }
     

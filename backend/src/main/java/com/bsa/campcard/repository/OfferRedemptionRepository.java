@@ -53,6 +53,12 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
            "WHERE r.merchantId = :merchantId AND r.status = 'COMPLETED'")
     Double sumDiscountByMerchant(@Param("merchantId") Long merchantId);
     
-    List<OfferRedemption> findByStatusAndCreatedAtBefore(RedemptionStatus status, 
+    List<OfferRedemption> findByStatusAndCreatedAtBefore(RedemptionStatus status,
                                                          LocalDateTime dateTime);
+
+    @Query("SELECT r.offerId, COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
+           "AND r.offerId IN :offerIds AND r.status IN ('VERIFIED', 'COMPLETED') " +
+           "GROUP BY r.offerId")
+    List<Object[]> countUserRedemptionsByOfferIds(@Param("userId") UUID userId,
+                                                   @Param("offerIds") List<Long> offerIds);
 }
