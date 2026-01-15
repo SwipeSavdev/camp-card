@@ -169,12 +169,18 @@ export const offersApi = {
 
   getActiveOffers: () => apiClient.get('/api/v1/offers/active'),
 
+  getActiveOffersForUser: (userId: string | number) =>
+    apiClient.get(`/api/v1/offers/active/user/${userId}`),
+
   getFeaturedOffers: () => apiClient.get('/api/v1/offers/featured'),
 
   getOfferById: (id: string | number) => apiClient.get(`/api/v1/offers/${id}`),
 
   searchOffers: (query: string) =>
     apiClient.get('/api/v1/offers', { params: { search: query } }),
+
+  redeemOffer: (offerId: string | number, method: 'show_to_cashier' | 'scan_merchant_code') =>
+    apiClient.post(`/api/v1/offers/${offerId}/redeem`, { method, offerId }),
 };
 
 export const subscriptionsApi = {

@@ -159,22 +159,29 @@ export default function OfferDetailScreen() {
     setIsRedeeming(true);
 
     try {
-      // Call redemption API
-      // POST /api/v1/offers/{offerId}/redeem
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulated API call
+      // Call redemption API - POST /api/v1/offers/{offerId}/redeem
+      const response = await apiClient.post(`/api/v1/offers/${offer.id}/redeem`, {
+        method: selectedMethod,
+        offerId: offer.id,
+      });
 
-      // Update local state
+      // Get updated redemption count from response or increment locally
+      const updatedRedemptionCount = response.data?.userRedemptionCount ?? (offer.userRedemptionCount + 1);
+      const isNowRedeemed = response.data?.isRedeemed ?? (offer.usageType === 'one_time');
+
+      // Update local state with server response
       setOffer({
         ...offer,
-        isRedeemed: offer.usageType === 'one_time' ? true : offer.isRedeemed,
-        userRedemptionCount: offer.userRedemptionCount + 1,
+        isRedeemed: isNowRedeemed,
+        userRedemptionCount: updatedRedemptionCount,
       });
 
       setShowRedemptionModal(false);
       setShowSuccessModal(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Redemption error:', err);
-      Alert.alert('Error', 'Failed to redeem offer. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Failed to redeem offer. Please try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsRedeeming(false);
     }

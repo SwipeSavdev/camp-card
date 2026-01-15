@@ -85,6 +85,7 @@ export type TroopLeaderStackParamList = {
   TroopLeaderTabs: undefined;
   Merchants: undefined;
   MerchantDetail: { merchantId: number };
+  OfferDetail: { offerId: number };
   Notifications: undefined;
   ManageScouts: undefined;
   TroopStats: undefined;
@@ -107,6 +108,7 @@ export type CustomerTabParamList = {
 export type CustomerStackParamList = {
   CustomerTabs: undefined;
   MerchantDetail: { merchantId: number };
+  OfferDetail: { offerId: number };
   Notifications: undefined;
   QRScanner: undefined;
   ShareOffer: { offer: any };
@@ -270,6 +272,7 @@ function TroopLeaderMainNavigator() {
       <TroopLeaderStack.Group screenOptions={{ presentation: 'modal' }}>
         <TroopLeaderStack.Screen name="Merchants" component={MerchantsScreen} options={{ headerShown: true, title: 'All Merchants' }} />
         <TroopLeaderStack.Screen name="MerchantDetail" component={MerchantDetailScreen} options={{ headerShown: true, title: 'Merchant Details' }} />
+        <TroopLeaderStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
         <TroopLeaderStack.Screen name="ManageScouts" component={ManageScoutsScreen} options={{ headerShown: true, title: 'Manage Scouts' }} />
         <TroopLeaderStack.Screen name="TroopStats" component={TroopStatsScreen} options={{ headerShown: true, title: 'Troop Statistics' }} />
@@ -325,6 +328,7 @@ function CustomerMainNavigator() {
       <CustomerStack.Screen name="CustomerTabs" component={CustomerTabNavigator} />
       <CustomerStack.Group screenOptions={{ presentation: 'modal' }}>
         <CustomerStack.Screen name="MerchantDetail" component={MerchantDetailScreen} options={{ headerShown: true, title: 'Merchant Details' }} />
+        <CustomerStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
       </CustomerStack.Group>
       <CustomerStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
