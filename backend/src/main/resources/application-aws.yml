@@ -39,6 +39,7 @@ spring:
     locations: classpath:db/migration
     schemas: campcard
     default-schema: campcard
+    out-of-order: true  # Allow migrations to run out of order
 
   # Redis - ElastiCache (with TLS)
   data:
