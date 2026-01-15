@@ -36,6 +36,7 @@ interface Offer {
   validUntil: string;
   featured: boolean;
   scoutExclusive: boolean;
+  merchantId?: number;
   merchantName?: string;
   merchantLogoUrl?: string;
   merchantAddress?: string;

@@ -66,6 +66,7 @@ export type OffersStackParamList = {
 
 export type ScoutTabParamList = {
   Home: undefined;
+  Wallet: undefined;
   QRCode: undefined;
   Profile: undefined;
 };
@@ -122,6 +123,7 @@ export type TroopLeaderStackParamList = {
 
 export type CustomerTabParamList = {
   Home: undefined;
+  Wallet: undefined;
   Offers: undefined;
   Merchants: undefined;
   Profile: undefined;

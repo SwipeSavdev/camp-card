@@ -37,6 +37,7 @@ import ShareOfferScreen from '../screens/ShareOfferScreen';
 import QRScannerScreen from '../screens/QRScannerScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 import HelpSupportScreen from '../screens/profile/HelpSupportScreen';
+import WalletScreen from '../screens/wallet/WalletScreen';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -56,6 +57,7 @@ export type OffersStackParamList = {
 // Scout Types
 export type ScoutTabParamList = {
   Home: undefined;
+  Wallet: undefined;
   QRCode: undefined;
   Profile: undefined;
 };
@@ -106,6 +108,7 @@ export type TroopLeaderStackParamList = {
 // Customer/Parent Types
 export type CustomerTabParamList = {
   Home: undefined;
+  Wallet: undefined;
   Offers: undefined;
   Merchants: undefined;
   Profile: undefined;
@@ -189,6 +192,7 @@ function ScoutTabNavigator() {
         tabBarIcon: ({ focused, color, size }) => {
           const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
             Home: focused ? 'home' : 'home-outline',
+            Wallet: focused ? 'wallet' : 'wallet-outline',
             QRCode: focused ? 'qr-code' : 'qr-code-outline',
             Profile: focused ? 'person' : 'person-outline',
           };
@@ -200,6 +204,7 @@ function ScoutTabNavigator() {
       })}
     >
       <ScoutTab.Screen name="Home" component={HomeScreen} />
+      <ScoutTab.Screen name="Wallet" component={WalletScreen} options={{ tabBarLabel: 'My Card' }} />
       <ScoutTab.Screen name="QRCode" component={ScoutDashboardScreen} options={{ tabBarLabel: 'QR Code' }} />
       <ScoutTab.Screen name="Profile" component={ProfileScreen} />
     </ScoutTab.Navigator>
@@ -317,6 +322,7 @@ function CustomerTabNavigator() {
         tabBarIcon: ({ focused, color, size }) => {
           const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
             Home: focused ? 'home' : 'home-outline',
+            Wallet: focused ? 'wallet' : 'wallet-outline',
             Offers: focused ? 'pricetag' : 'pricetag-outline',
             Merchants: focused ? 'storefront' : 'storefront-outline',
             Profile: focused ? 'person' : 'person-outline',
@@ -329,6 +335,7 @@ function CustomerTabNavigator() {
       })}
     >
       <CustomerTab.Screen name="Home" component={HomeScreen} />
+      <CustomerTab.Screen name="Wallet" component={WalletScreen} options={{ tabBarLabel: 'My Card' }} />
       <CustomerTab.Screen name="Offers" component={OffersNavigator} />
       <CustomerTab.Screen name="Merchants" component={MerchantsScreen} options={{ tabBarLabel: 'Merchants' }} />
       <CustomerTab.Screen name="Profile" component={ProfileScreen} />
