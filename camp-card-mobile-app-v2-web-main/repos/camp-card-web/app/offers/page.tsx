@@ -216,12 +216,13 @@ export default function OffersPage() {
       if (offersData.length > 0 && !offersData[0].items) {
         console.log('Transforming flat offers to grouped structure...');
         // Group offers by merchant
-        const grouped: { [key: string]: any } = {};
+        const grouped: { [key: string]: Offer } = {};
         offersData.forEach((offer: any) => {
           // Handle both API format (merchant object) and legacy format
           const merchantObj = offer.merchant || {};
           const merchantName = (typeof merchantObj === 'object' ? merchantObj.business_name : merchantObj) || offer.merchantName || 'Unknown';
-          const merchantId = (typeof merchantObj === 'object' ? merchantObj.id : offer.merchantId) || 'unknown';
+          // Always convert merchantId to string for consistent grouping
+          const merchantId = String((typeof merchantObj === 'object' ? merchantObj.id : offer.merchantId) || 'unknown');
 
           if (!grouped[merchantId]) {
             grouped[merchantId] = {
@@ -232,19 +233,16 @@ export default function OffersPage() {
             };
           }
           grouped[merchantId].items.push({
-            id: offer.id,
+            id: String(offer.id),
             name: offer.title || offer.name,
             description: offer.description,
             merchantId,
             merchantName,
-            discountType: offer.discount,
-            discountAmount: offer.value,
+            discountType: offer.discountType || offer.discount,
+            discountAmount: String(offer.discountValue || offer.value || ''),
             useType: (offer.usage_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
-            image: offer.image,
-            barcode: offer.barcode,
-            valid_from: offer.valid_from,
-            valid_until: offer.valid_until,
-            can_redeem: offer.can_redeem,
+            image: offer.imageUrl || offer.image,
+            barcode: offer.imageUrl || offer.barcode,
           });
         });
         offersData = Object.values(grouped);
@@ -346,46 +344,46 @@ export default function OffersPage() {
 
         // Add to local state immediately
         if (createdOffer) {
-          const merchantName = merchants.find((m) => m.id === newMerchantId)?.name || '';
-          const groupKey = newMerchantId;
+          // Use merchantName from API response, fallback to looking up in merchants list
+          const merchantName = createdOffer.merchantName
+            || merchants.find((m) => String(m.id) === String(newMerchantId))?.businessName
+            || merchants.find((m) => String(m.id) === String(newMerchantId))?.name
+            || '';
+          // Normalize merchantId to string for consistent comparison
+          const groupKey = String(createdOffer.merchantId || newMerchantId);
 
-          // Check if merchant group exists
-          const existingGroupIndex = items.findIndex((g) => g.merchantId === groupKey);
+          // Build the new offer item from API response
+          const newOfferItemFromApi: OfferItem = {
+            id: String(createdOffer.id || Date.now()),
+            name: createdOffer.title || newOfferName,
+            description: createdOffer.description || newOfferDescription,
+            merchantId: groupKey,
+            merchantName,
+            discountType: createdOffer.discountType || newDiscountType,
+            discountAmount: String(createdOffer.discountValue || newDiscountAmount),
+            useType: 'reusable',
+            image: createdOffer.imageUrl,
+            barcode: createdOffer.imageUrl,
+          };
+
+          // Check if merchant group exists (compare as strings)
+          const existingGroupIndex = items.findIndex((g) => String(g.merchantId) === groupKey);
 
           if (existingGroupIndex >= 0) {
             // Add to existing merchant group
             const updatedItems = [...items];
-            updatedItems[existingGroupIndex].items.push({
-              id: createdOffer.id || Date.now().toString(),
-              name: createdOffer.name || newOfferName,
-              description: createdOffer.description || newOfferDescription,
-              merchantId: groupKey,
-              merchantName,
-              discountType: createdOffer.discount_type || newDiscountType,
-              discountAmount: createdOffer.discount_amount || newDiscountAmount,
-              useType: (createdOffer.use_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
-              image: createdOffer.image,
-              barcode: createdOffer.barcode,
-            });
+            updatedItems[existingGroupIndex] = {
+              ...updatedItems[existingGroupIndex],
+              items: [...updatedItems[existingGroupIndex].items, newOfferItemFromApi],
+            };
             setItems(updatedItems);
           } else {
             // Create new merchant group
-            const newGroup = {
-              id: newMerchantId,
-              merchantId: newMerchantId,
+            const newGroup: Offer = {
+              id: groupKey,
+              merchantId: groupKey,
               merchantName,
-              items: [{
-                id: createdOffer.id || Date.now().toString(),
-                name: createdOffer.name || newOfferName,
-                description: createdOffer.description || newOfferDescription,
-                merchantId: newMerchantId,
-                merchantName,
-                discountType: createdOffer.discount_type || newDiscountType,
-                discountAmount: createdOffer.discount_amount || newDiscountAmount,
-                useType: (createdOffer.use_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
-                image: createdOffer.image,
-                barcode: createdOffer.barcode,
-              }],
+              items: [newOfferItemFromApi],
             };
             setItems([...items, newGroup]);
           }
@@ -452,35 +450,44 @@ export default function OffersPage() {
 
       // Add all offers to local state immediately
       if (createdOffers.length > 0) {
-        const merchantName = merchants.find((m) => m.id === newMerchantId)?.name || '';
-        const groupKey = newMerchantId;
+        // Use merchantName from first API response, fallback to looking up in merchants list
+        const firstOffer = createdOffers[0];
+        const merchantName = firstOffer?.merchantName
+          || merchants.find((m) => String(m.id) === String(newMerchantId))?.businessName
+          || merchants.find((m) => String(m.id) === String(newMerchantId))?.name
+          || '';
+        // Normalize merchantId to string for consistent comparison
+        const groupKey = String(firstOffer?.merchantId || newMerchantId);
 
-        const mappedOffers = createdOffers.map((offer) => ({
-          id: offer.id || Date.now().toString(),
-          name: offer.name,
+        const mappedOffers: OfferItem[] = createdOffers.map((offer) => ({
+          id: String(offer.id || Date.now()),
+          name: offer.title || offer.name,
           description: offer.description,
           merchantId: groupKey,
           merchantName,
-          discountType: offer.discount_type,
-          discountAmount: offer.discount_amount,
-          useType: (offer.use_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
-          image: offer.image,
-          barcode: offer.barcode,
+          discountType: offer.discountType,
+          discountAmount: String(offer.discountValue),
+          useType: 'reusable' as const,
+          image: offer.imageUrl,
+          barcode: offer.imageUrl,
         }));
 
-        // Check if merchant group exists
-        const existingGroupIndex = items.findIndex((g) => g.merchantId === groupKey);
+        // Check if merchant group exists (compare as strings)
+        const existingGroupIndex = items.findIndex((g) => String(g.merchantId) === groupKey);
 
         if (existingGroupIndex >= 0) {
           // Add to existing merchant group
           const updatedItems = [...items];
-          updatedItems[existingGroupIndex].items.push(...mappedOffers);
+          updatedItems[existingGroupIndex] = {
+            ...updatedItems[existingGroupIndex],
+            items: [...updatedItems[existingGroupIndex].items, ...mappedOffers],
+          };
           setItems(updatedItems);
         } else {
           // Create new merchant group
-          const newGroup = {
-            id: newMerchantId,
-            merchantId: newMerchantId,
+          const newGroup: Offer = {
+            id: groupKey,
+            merchantId: groupKey,
             merchantName,
             items: mappedOffers,
           };
