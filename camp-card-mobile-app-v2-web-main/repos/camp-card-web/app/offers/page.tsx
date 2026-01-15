@@ -140,6 +140,21 @@ export default function OffersPage() {
   const discountTypes = ['$', '%', 'BOGO', 'Free Item', 'Points', 'Buy One Get', '$ off when $ spent', '% off when $ spent'];
   const usageTypes = ['one-time', 'reusable'];
 
+  // Map frontend discount types to backend enum values
+  const mapDiscountType = (frontendType: string): string => {
+    const mapping: Record<string, string> = {
+      '$': 'FIXED_AMOUNT',
+      '%': 'PERCENTAGE',
+      'BOGO': 'BUY_ONE_GET_ONE',
+      'Free Item': 'FREE_ITEM',
+      'Points': 'SPECIAL_PRICE',
+      'Buy One Get': 'BUY_ONE_GET_ONE',
+      '$ off when $ spent': 'FIXED_AMOUNT',
+      '% off when $ spent': 'PERCENTAGE',
+    };
+    return mapping[frontendType] || 'FIXED_AMOUNT';
+  };
+
   useEffect(() => {
     // Load data on mount, don't redirect if unauthenticated
     fetchMerchants();
@@ -290,12 +305,18 @@ export default function OffersPage() {
       };
 
       if (!multipleOffers) {
+        // Set default dates: start now, expire in 1 year
+        const now = new Date();
+        const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
         const offerData: any = {
           merchantId: newMerchantId,
           title: newOfferName,
           description: newOfferDescription,
-          discountType: newDiscountType,
+          discountType: mapDiscountType(newDiscountType),
           discountValue: parseFloat(newDiscountAmount) || 0,
+          validFrom: now.toISOString(),
+          validUntil: oneYearFromNow.toISOString(),
         };
 
         // Add location if selected
@@ -306,7 +327,7 @@ export default function OffersPage() {
 
         // Add minimum spend threshold for "X off when Y spent" discount types
         if ((newDiscountType === '$ off when $ spent' || newDiscountType === '% off when $ spent') && newMinSpend) {
-          offerData.minimumSpend = parseFloat(newMinSpend) || 0;
+          offerData.minPurchaseAmount = parseFloat(newMinSpend) || 0;
         }
 
         console.log('[PAGE] Creating offer:', offerData);
@@ -393,18 +414,24 @@ export default function OffersPage() {
 
     try {
       const createdOffers: any[] = [];
+      // Set default dates: start now, expire in 1 year
+      const now = new Date();
+      const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
       // Submit each offer to the API
       for (const offer of tempOffers) {
         const offerData: any = {
           merchantId: newMerchantId,
           title: offer.name,
           description: offer.description,
-          discountType: offer.discountType,
+          discountType: mapDiscountType(offer.discountType),
           discountValue: parseFloat(offer.discountAmount) || 0,
+          validFrom: now.toISOString(),
+          validUntil: oneYearFromNow.toISOString(),
         };
         // Add minimum spend threshold for "X off when Y spent" discount types
         if ((offer.discountType === '$ off when $ spent' || offer.discountType === '% off when $ spent') && offer.minimumSpend) {
-          offerData.minimumSpend = parseFloat(offer.minimumSpend) || 0;
+          offerData.minPurchaseAmount = parseFloat(offer.minimumSpend) || 0;
         }
         console.log('[PAGE] Creating offer:', offerData);
         const createdOffer = await api.createOffer(offerData, session);
