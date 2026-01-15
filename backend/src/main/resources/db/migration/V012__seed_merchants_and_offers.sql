@@ -89,16 +89,5 @@ UPDATE merchants SET
     total_offers = (SELECT COUNT(*) FROM offers WHERE offers.merchant_id = merchants.id),
     active_offers = (SELECT COUNT(*) FROM offers WHERE offers.merchant_id = merchants.id AND offers.status = 'ACTIVE');
 
--- ============================================================================
--- SUBSCRIPTION PLANS
--- ============================================================================
-INSERT INTO subscription_plans (id, uuid, name, description, price, billing_period, features, max_offers, max_redemptions_per_month, includes_analytics, includes_api_access, is_active, display_order, created_at, updated_at)
-VALUES
-(1, gen_random_uuid(), 'Scout Basic', 'Perfect for individual Scouts. Access to all local offers.', 10.00, 'MONTHLY', '["Access to local offers", "QR code redemption", "20 redemptions per month", "Mobile app access"]', 10, 20, false, false, true, 1, NOW(), NOW()),
-(2, gen_random_uuid(), 'Scout Premium', 'Best value for active Scouts. Unlimited redemptions.', 25.00, 'MONTHLY', '["Access to all offers nationwide", "Unlimited redemptions", "Exclusive premium offers", "Priority support"]', NULL, NULL, true, false, true, 2, NOW(), NOW()),
-(3, gen_random_uuid(), 'Family Pack', 'Cover the whole family! Up to 5 family members.', 45.00, 'MONTHLY', '["Up to 5 family members", "Access to all offers", "Unlimited redemptions", "Family features"]', NULL, NULL, true, false, true, 3, NOW(), NOW()),
-(4, gen_random_uuid(), 'Troop Bundle', 'Special pricing for Scout troops.', 0.00, 'ANNUAL', '["Custom pricing for troops", "Bulk discounts", "Troop dashboard", "Fundraising tracking"]', NULL, NULL, true, true, false, 4, NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
-
--- Reset sequence
-SELECT setval('subscription_plans_id_seq', COALESCE((SELECT MAX(id) FROM subscription_plans), 1));
+-- Note: Subscription plans are seeded separately via SubscriptionPlanService
+-- The schema has changed since this migration was created
