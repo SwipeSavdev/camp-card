@@ -137,6 +137,16 @@ export default function OffersPage() {
   const [tempOffers, setTempOffers] = useState<OfferItem[]>([]);
   const [showAddMultiple, setShowAddMultiple] = useState(false);
 
+  // Edit state
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<OfferItem | null>(null);
+  const [editOfferName, setEditOfferName] = useState('');
+  const [editOfferDescription, setEditOfferDescription] = useState('');
+  const [editDiscountType, setEditDiscountType] = useState('');
+  const [editDiscountAmount, setEditDiscountAmount] = useState('');
+  const [editMinSpend, setEditMinSpend] = useState('');
+  const [editUseType, setEditUseType] = useState<'one-time' | 'reusable'>('reusable');
+
   const discountTypes = ['$', '%', 'BOGO', 'Free Item', 'Points', 'Buy One Get', '$ off when $ spent', '% off when $ spent'];
   const usageTypes = ['one-time', 'reusable'];
 
@@ -506,6 +516,75 @@ export default function OffersPage() {
     setError(null);
   };
 
+  const openEditForm = (offer: OfferItem) => {
+    setEditingOffer(offer);
+    setEditOfferName(offer.name || '');
+    setEditOfferDescription(offer.description || '');
+    setEditDiscountType(offer.discountType || '');
+    setEditDiscountAmount(offer.discountAmount || '');
+    setEditMinSpend(offer.minimumSpend || '');
+    setEditUseType(offer.useType || 'reusable');
+    setShowEditForm(true);
+    setError(null);
+  };
+
+  const handleEditOffer = async () => {
+    if (!editingOffer) return;
+
+    if (!editOfferName.trim() || !editDiscountType || !editDiscountAmount.trim()) {
+      setError('Please fill all required fields');
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
+      const offerData: any = {
+        title: editOfferName,
+        description: editOfferDescription,
+        discountType: mapDiscountType(editDiscountType),
+        discountValue: parseFloat(editDiscountAmount) || 0,
+        validFrom: now.toISOString(),
+        validUntil: oneYearFromNow.toISOString(),
+      };
+
+      // Add minimum spend threshold for "X off when Y spent" discount types
+      if ((editDiscountType === '$ off when $ spent' || editDiscountType === '% off when $ spent') && editMinSpend) {
+        offerData.minPurchaseAmount = parseFloat(editMinSpend) || 0;
+      }
+
+      console.log('[PAGE] Updating offer:', editingOffer.id, offerData);
+      await api.updateOffer(editingOffer.id, offerData, session);
+      console.log('[PAGE] Offer updated successfully');
+
+      // Update local state
+      setItems(items.map((group) => ({
+        ...group,
+        items: group.items.map((item) =>
+          item.id === editingOffer.id
+            ? {
+                ...item,
+                name: editOfferName,
+                description: editOfferDescription,
+                discountType: editDiscountType,
+                discountAmount: editDiscountAmount,
+                minimumSpend: editMinSpend || undefined,
+                useType: editUseType,
+              }
+            : item
+        ),
+      })));
+
+      setShowEditForm(false);
+      setEditingOffer(null);
+      setError(null);
+    } catch (err) {
+      setError(`Failed to update offer: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('[PAGE] Error:', err);
+    }
+  };
+
   const filteredItems = (Array.isArray(items) ? items : []).filter((item) => {
     const matchesSearch = searchTerm === ''
  || item.merchantName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -762,14 +841,6 @@ export default function OffersPage() {
                  </div>
                   <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
                    <button
-                   style={{
-                   background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                 }}
-                   onClick={(e) => e.stopPropagation()}
-                 >
-                   <Icon name="edit" size={16} color={themeColors.info600} />
-                 </button>
-                   <button
                    onClick={(e) => { e.stopPropagation(); handleDelete(offer.merchantId); }}
                    style={{
   background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -822,6 +893,26 @@ export default function OffersPage() {
                  </span>
                  </div>
                  </div>
+                   <div style={{ display: 'flex', gap: themeSpace.sm, alignItems: 'flex-start' }}>
+                     <button
+                       onClick={() => openEditForm(item)}
+                       style={{
+                         background: themeColors.info50,
+                         border: 'none',
+                         color: themeColors.info600,
+                         width: '28px',
+                         height: '28px',
+                         borderRadius: themeRadius.sm,
+                         cursor: 'pointer',
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                       }}
+                       title="Edit offer"
+                     >
+                       <Icon name="edit" size={14} color={themeColors.info600} />
+                     </button>
+                   </div>
                    {item.image && (
                  <div style={{ marginLeft: themeSpace.lg, textAlign: 'center' }}>
                  <img
@@ -1425,6 +1516,237 @@ Upload Image / Barcode
            Create Offer
               </button>
             )}
+          </div>
+        </div>
+      </div>
+      )}
+
+      {/* Edit Offer Modal */}
+      {showEditForm && editingOffer && (
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, overflowY: 'auto', padding: `${themeSpace.xl} 0`,
+      }}
+      >
+        <div style={{
+          backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '550px', boxShadow: themeShadow.md, margin: 'auto',
+        }}
+        >
+          <h2 style={{
+            fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0,
+          }}
+          >
+            Edit Offer
+          </h2>
+
+          {error && (
+          <div style={{
+            backgroundColor: '#fee2e2', border: `1px solid ${themeColors.error500}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.lg, color: themeColors.error500, fontSize: '14px',
+          }}
+          >
+            {error}
+          </div>
+          )}
+
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl,
+          }}
+          >
+            <div>
+              <label style={{
+                display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+              }}
+              >
+                Offer Name
+              </label>
+              <input
+                type="text"
+                value={editOfferName}
+                onChange={(e) => setEditOfferName(e.target.value)}
+                placeholder="e.g., 20% Off Winter Clothes"
+                style={{
+                  width: '100%',
+                  padding: `${themeSpace.sm} ${themeSpace.md}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+              }}
+              >
+                Offer Description
+              </label>
+              <textarea
+                value={editOfferDescription}
+                onChange={(e) => setEditOfferDescription(e.target.value)}
+                placeholder="Describe the offer details..."
+                style={{
+                  width: '100%',
+                  padding: `${themeSpace.sm} ${themeSpace.md}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  minHeight: '80px',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: themeSpace.lg }}>
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+                  Discount Type
+                </label>
+                <select
+                  value={editDiscountType}
+                  onChange={(e) => setEditDiscountType(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    border: `1px solid ${themeColors.gray200}`,
+                    borderRadius: themeRadius.sm,
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                    backgroundColor: themeColors.white,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="">Select type</option>
+                  {discountTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+                  Discount Amount
+                </label>
+                <input
+                  type="text"
+                  value={editDiscountAmount}
+                  onChange={(e) => setEditDiscountAmount(e.target.value)}
+                  placeholder="e.g., 20, 100, etc"
+                  style={{
+                    width: '100%',
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    border: `1px solid ${themeColors.gray200}`,
+                    borderRadius: themeRadius.sm,
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </div>
+
+            {(editDiscountType === '$ off when $ spent' || editDiscountType === '% off when $ spent') && (
+            <div>
+              <label style={{
+                display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+              }}
+              >
+                Minimum Spend Amount ($)
+              </label>
+              <input
+                type="number"
+                value={editMinSpend}
+                onChange={(e) => setEditMinSpend(e.target.value)}
+                placeholder="e.g., 50, 100, etc"
+                style={{
+                  width: '100%',
+                  padding: `${themeSpace.sm} ${themeSpace.md}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            )}
+
+            <div>
+              <label style={{
+                display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+              }}
+              >
+                Usage Type
+              </label>
+              <div style={{ display: 'flex', gap: themeSpace.lg }}>
+                {usageTypes.map((type) => (
+                  <label
+                    key={type}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="editUseType"
+                      value={type}
+                      checked={editUseType === type}
+                      onChange={(e) => setEditUseType(e.target.value as 'one-time' | 'reusable')}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: '14px', fontWeight: '500', color: themeColors.text }}>
+                      {type === 'one-time' ? 'One-Time Use' : 'Reusable'}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowEditForm(false);
+                setEditingOffer(null);
+                setError(null);
+              }}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                border: `1px solid ${themeColors.gray200}`,
+                backgroundColor: themeColors.white,
+                borderRadius: themeRadius.sm,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: themeColors.gray600,
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleEditOffer}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                background: themeColors.primary600,
+                color: themeColors.white,
+                border: 'none',
+                borderRadius: themeRadius.sm,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+              }}
+            >
+              Save Changes
+            </button>
           </div>
         </div>
       </div>
