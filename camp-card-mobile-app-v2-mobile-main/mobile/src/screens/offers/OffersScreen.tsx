@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,13 @@ import {
   Image,
   ActivityIndicator,
   TextInput,
-  FlatList
+  FlatList,
+  RefreshControl
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
+import { useAuthStore } from '../../store/authStore';
 
 interface Offer {
   id: number;
@@ -33,15 +35,20 @@ interface Offer {
   totalRedemptions: number;
   remainingRedemptions?: number;
   isValid: boolean;
+  usageLimitPerUser?: number;
+  userRedemptionCount?: number;
+  userHasReachedLimit?: boolean;
 }
 
 export default function OffersScreen() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [filteredOffers, setFilteredOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const navigation = useNavigation();
+  const { user } = useAuthStore();
 
   const categories = [
     'ALL',
@@ -62,17 +69,43 @@ export default function OffersScreen() {
     filterOffers();
   }, [selectedCategory, searchQuery, offers]);
 
-  const loadOffers = async () => {
+  const loadOffers = async (isRefresh = false) => {
     try {
-      setLoading(true);
-      const response = await apiClient.get('/api/v1/offers/active');
-      setOffers(response.data.content || response.data);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      // Use user-specific endpoint if user is logged in to get redemption data
+      const endpoint = user?.id
+        ? `/api/v1/offers/active/user/${user.id}`
+        : '/api/v1/offers/active';
+
+      const response = await apiClient.get(endpoint);
+      const allOffers = response.data.content || response.data;
+
+      // Filter out offers where user has reached their redemption limit
+      const availableOffers = allOffers.filter((offer: Offer) => {
+        // If userHasReachedLimit is true, hide the offer
+        if (offer.userHasReachedLimit === true) {
+          return false;
+        }
+        return true;
+      });
+
+      setOffers(availableOffers);
     } catch (error) {
       console.error('Error loading offers:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const onRefresh = useCallback(() => {
+    loadOffers(true);
+  }, [user?.id]);
 
   const filterOffers = () => {
     let filtered = [...offers];
@@ -260,6 +293,14 @@ export default function OffersScreen() {
         renderItem={renderOfferCard}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#003f87']}
+            tintColor="#003f87"
+          />
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="pricetag-outline" size={64} color="#ccc" />

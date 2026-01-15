@@ -456,10 +456,23 @@ function ScoutDashboard() {
 function CustomerDashboard() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simulated refresh - will be replaced with API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Header */}
         <View style={[styles.header, { backgroundColor: '#F59E0B' }]}>
           <View style={styles.headerContent}>
