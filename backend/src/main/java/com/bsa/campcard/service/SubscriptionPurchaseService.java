@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserRepository;
-import org.bsa.campcard.security.JwtTokenProvider;
+import com.bsa.campcard.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,6 +1,6 @@
-// Wallet Screen - Digital Camp Card display
+// Wallet Screen - Digital Camp Card with Flip Animation & Analytics
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Dimensions,
   RefreshControl,
   ImageBackground,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,13 +33,21 @@ interface CardData {
   status: 'active' | 'expired' | 'pending';
   troopNumber?: string;
   councilName?: string;
+  email?: string;
 }
 
-// Generate unique card number from user ID
-const generateCardNumber = (userId: string | number): string => {
+interface RedemptionStats {
+  totalRedemptions: number;
+  totalSavings: number;
+  thisMonth: number;
+  favoriteCategory: string;
+}
+
+// Generate unique card number from user ID or use provided cardNumber
+const generateCardNumber = (userId: string | number, existingCardNumber?: string): string => {
+  if (existingCardNumber) return existingCardNumber;
   const numStr = userId.toString().padStart(8, '0');
   const prefix = 'CC';
-  // Format: CC-XXXX-XXXX-XXXX
   const part1 = numStr.slice(0, 4);
   const part2 = numStr.slice(4, 8);
   const checksum = (parseInt(numStr) % 10000).toString().padStart(4, '0');
@@ -49,19 +58,65 @@ export default function WalletScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
-  const [showQR, setShowQR] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  // Animation values
+  const flipAnimation = useRef(new Animated.Value(0)).current;
 
   // Generate card data from user info
-  // Note: troopNumber and councilName may be returned by API but not typed in User interface
   const userAny = user as any;
   const cardData: CardData = {
-    cardNumber: generateCardNumber(user?.id || Date.now()),
+    cardNumber: generateCardNumber(user?.id || Date.now(), userAny?.cardNumber),
     memberName: `${user?.firstName || 'Member'} ${user?.lastName || ''}`.trim(),
-    expiryDate: '12/26', // TODO: Get from subscription
-    memberSince: 'Jan 2026',
+    expiryDate: userAny?.subscriptionExpiresAt
+      ? new Date(userAny.subscriptionExpiresAt).toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })
+      : '12/26',
+    memberSince: userAny?.createdAt
+      ? new Date(userAny.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      : 'Jan 2026',
     status: user?.subscriptionStatus === 'active' ? 'active' : 'pending',
     troopNumber: userAny?.troopNumber || '234',
-    councilName: userAny?.councilName || 'Local Council',
+    councilName: userAny?.councilName || 'Central Florida Council',
+    email: user?.email,
+  };
+
+  // Mock redemption stats (would come from API)
+  const redemptionStats: RedemptionStats = {
+    totalRedemptions: 23,
+    totalSavings: 147.50,
+    thisMonth: 5,
+    favoriteCategory: 'Restaurants',
+  };
+
+  // Flip animation
+  const flipCard = () => {
+    const toValue = isFlipped ? 0 : 1;
+    Animated.spring(flipAnimation, {
+      toValue,
+      friction: 8,
+      tension: 10,
+      useNativeDriver: true,
+    }).start();
+    setIsFlipped(!isFlipped);
+  };
+
+  // Interpolations for flip animation
+  const frontInterpolate = flipAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const backInterpolate = flipAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['180deg', '360deg'],
+  });
+
+  const frontAnimatedStyle = {
+    transform: [{ rotateY: frontInterpolate }],
+  };
+
+  const backAnimatedStyle = {
+    transform: [{ rotateY: backInterpolate }],
   };
 
   const onRefresh = async () => {
@@ -72,7 +127,6 @@ export default function WalletScreen() {
   };
 
   const handleAddToWallet = () => {
-    // TODO: Implement Apple Wallet / Google Wallet integration
     alert('Coming Soon! Apple Wallet and Google Wallet integration will be available in a future update.');
   };
 
@@ -123,122 +177,179 @@ export default function WalletScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Digital Card */}
+        {/* Digital Card with Flip */}
         <View style={styles.cardSection}>
-          <Text style={styles.sectionTitle}>Your Camp Card</Text>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.sectionTitle}>Your Camp Card</Text>
+            <TouchableOpacity onPress={flipCard} style={styles.flipButton}>
+              <Ionicons name="sync-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.flipButtonText}>Flip</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={styles.cardContainer}
-            onPress={() => setShowQR(!showQR)}
-            activeOpacity={0.95}
-          >
-            <ImageBackground
-              source={require('../../../assets/campcard_bg.png')}
-              style={styles.card}
-              imageStyle={styles.cardBackgroundImage}
-              resizeMode="cover"
-            >
-              {/* Card Overlay for better text visibility */}
-              <View style={styles.cardOverlay}>
-                {/* Logo */}
-                <View style={styles.cardHeader}>
+          <View style={styles.cardContainer}>
+            {/* Front of Card */}
+            <Animated.View style={[styles.cardFace, frontAnimatedStyle]}>
+              <ImageBackground
+                source={require('../../../assets/campcard_bg.png')}
+                style={styles.card}
+                imageStyle={styles.cardBackgroundImage}
+                resizeMode="cover"
+              >
+                {/* Lockup Logo Centered */}
+                <View style={styles.cardContent}>
                   <Image
                     source={require('../../../assets/campcard_lockup_left.png')}
-                    style={styles.cardLogo}
+                    style={styles.cardLockup}
                     resizeMode="contain"
                   />
+                </View>
+
+                {/* Status Badge */}
+                <View style={styles.cardStatusContainer}>
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(cardData.status) }]}>
                     <Text style={styles.statusText}>{getStatusText(cardData.status)}</Text>
                   </View>
                 </View>
+              </ImageBackground>
+            </Animated.View>
 
-                {/* QR Code or Card Number */}
-                {showQR ? (
-                  <View style={styles.qrContainer}>
-                    <QRCode
-                      value={cardData.cardNumber}
-                      size={100}
-                      backgroundColor="white"
-                      color={COLORS.primary}
-                    />
-                    <Text style={styles.qrHint}>Tap to show card details</Text>
-                  </View>
-                ) : (
-                  <View style={styles.cardNumberContainer}>
-                    <Text style={styles.cardNumber}>{cardData.cardNumber}</Text>
-                    <Text style={styles.tapHint}>Tap to show QR code</Text>
-                  </View>
-                )}
+            {/* Back of Card */}
+            <Animated.View style={[styles.cardFace, styles.cardBack, backAnimatedStyle]}>
+              <View style={styles.cardBackContent}>
+                {/* Magnetic Strip */}
+                <View style={styles.magneticStrip} />
 
-                {/* Card Footer */}
-                <View style={styles.cardFooter}>
-                  <View style={styles.cardFooterLeft}>
-                    <Text style={styles.cardLabel}>MEMBER</Text>
-                    <Text style={styles.cardValue}>{cardData.memberName}</Text>
+                {/* Card Details */}
+                <View style={styles.cardBackDetails}>
+                  <View style={styles.cardBackRow}>
+                    <Text style={styles.cardBackLabel}>Card Number</Text>
+                    <Text style={styles.cardBackValue}>{cardData.cardNumber}</Text>
                   </View>
-                  <View style={styles.cardFooterRight}>
-                    <Text style={styles.cardLabel}>VALID THRU</Text>
-                    <Text style={styles.cardValue}>{cardData.expiryDate}</Text>
+
+                  <View style={styles.cardBackRow}>
+                    <Text style={styles.cardBackLabel}>Member Name</Text>
+                    <Text style={styles.cardBackValue}>{cardData.memberName}</Text>
+                  </View>
+
+                  <View style={styles.cardBackRow}>
+                    <Text style={styles.cardBackLabel}>Email</Text>
+                    <Text style={styles.cardBackValue}>{cardData.email || 'Not provided'}</Text>
+                  </View>
+
+                  <View style={styles.cardBackRowDouble}>
+                    <View style={styles.cardBackCol}>
+                      <Text style={styles.cardBackLabel}>Valid Thru</Text>
+                      <Text style={styles.cardBackValue}>{cardData.expiryDate}</Text>
+                    </View>
+                    <View style={styles.cardBackCol}>
+                      <Text style={styles.cardBackLabel}>Member Since</Text>
+                      <Text style={styles.cardBackValue}>{cardData.memberSince}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.cardBackRow}>
+                    <Text style={styles.cardBackLabel}>Council</Text>
+                    <Text style={styles.cardBackValue}>{cardData.councilName}</Text>
                   </View>
                 </View>
+
+                {/* QR Code */}
+                <View style={styles.qrSection}>
+                  <QRCode
+                    value={cardData.cardNumber}
+                    size={60}
+                    backgroundColor="white"
+                    color={COLORS.navy || '#001a3a'}
+                  />
+                </View>
               </View>
-            </ImageBackground>
-          </TouchableOpacity>
+            </Animated.View>
+          </View>
+
+          <Text style={styles.cardHint}>Tap the flip button to see card details</Text>
         </View>
 
-        {/* Card Details */}
-        <View style={styles.detailsSection}>
-          <Text style={styles.sectionTitle}>Card Details</Text>
+        {/* Analytics Section */}
+        <View style={styles.analyticsSection}>
+          <Text style={styles.sectionTitle}>Your Savings</Text>
 
-          <View style={styles.detailCard}>
-            <View style={styles.detailRow}>
-              <View style={styles.detailItem}>
-                <Ionicons name="card" size={20} color={COLORS.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Card Number</Text>
-                  <Text style={styles.detailValue}>{cardData.cardNumber}</Text>
-                </View>
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <View style={[styles.statIcon, { backgroundColor: '#E8F5E9' }]}>
+                <Ionicons name="cash-outline" size={24} color={COLORS.success} />
               </View>
+              <Text style={styles.statValue}>${redemptionStats.totalSavings.toFixed(2)}</Text>
+              <Text style={styles.statLabel}>Total Saved</Text>
             </View>
 
-            <View style={styles.detailRow}>
-              <View style={styles.detailItem}>
-                <Ionicons name="person" size={20} color={COLORS.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Member Name</Text>
-                  <Text style={styles.detailValue}>{cardData.memberName}</Text>
-                </View>
+            <View style={styles.statCard}>
+              <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
+                <Ionicons name="receipt-outline" size={24} color={COLORS.secondary} />
               </View>
+              <Text style={styles.statValue}>{redemptionStats.totalRedemptions}</Text>
+              <Text style={styles.statLabel}>Redemptions</Text>
             </View>
 
-            <View style={styles.detailRow}>
-              <View style={styles.detailItem}>
-                <Ionicons name="people" size={20} color={COLORS.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Troop</Text>
-                  <Text style={styles.detailValue}>Troop {cardData.troopNumber}</Text>
-                </View>
+            <View style={styles.statCard}>
+              <View style={[styles.statIcon, { backgroundColor: '#FFF3E0' }]}>
+                <Ionicons name="calendar-outline" size={24} color="#F57C00" />
               </View>
+              <Text style={styles.statValue}>{redemptionStats.thisMonth}</Text>
+              <Text style={styles.statLabel}>This Month</Text>
             </View>
 
-            <View style={styles.detailRow}>
-              <View style={styles.detailItem}>
-                <Ionicons name="business" size={20} color={COLORS.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Council</Text>
-                  <Text style={styles.detailValue}>{cardData.councilName}</Text>
-                </View>
+            <View style={styles.statCard}>
+              <View style={[styles.statIcon, { backgroundColor: '#FCE4EC' }]}>
+                <Ionicons name="heart-outline" size={24} color={COLORS.primary} />
               </View>
+              <Text style={styles.statValue} numberOfLines={1}>{redemptionStats.favoriteCategory}</Text>
+              <Text style={styles.statLabel}>Top Category</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Recent Redemptions */}
+        <View style={styles.redemptionsSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Recent Redemptions</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllLink}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.redemptionsList}>
+            <View style={styles.redemptionItem}>
+              <View style={styles.redemptionIcon}>
+                <Ionicons name="restaurant-outline" size={20} color={COLORS.primary} />
+              </View>
+              <View style={styles.redemptionInfo}>
+                <Text style={styles.redemptionName}>Pizza Palace</Text>
+                <Text style={styles.redemptionDate}>Jan 14, 2026</Text>
+              </View>
+              <Text style={styles.redemptionSavings}>-$5.00</Text>
             </View>
 
-            <View style={[styles.detailRow, styles.lastRow]}>
-              <View style={styles.detailItem}>
-                <Ionicons name="calendar" size={20} color={COLORS.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Member Since</Text>
-                  <Text style={styles.detailValue}>{cardData.memberSince}</Text>
-                </View>
+            <View style={styles.redemptionItem}>
+              <View style={styles.redemptionIcon}>
+                <Ionicons name="cart-outline" size={20} color={COLORS.secondary} />
               </View>
+              <View style={styles.redemptionInfo}>
+                <Text style={styles.redemptionName}>Sports Gear Pro</Text>
+                <Text style={styles.redemptionDate}>Jan 12, 2026</Text>
+              </View>
+              <Text style={styles.redemptionSavings}>-$12.50</Text>
+            </View>
+
+            <View style={styles.redemptionItem}>
+              <View style={styles.redemptionIcon}>
+                <Ionicons name="cafe-outline" size={20} color="#795548" />
+              </View>
+              <View style={styles.redemptionInfo}>
+                <Text style={styles.redemptionName}>Coffee Corner</Text>
+                <Text style={styles.redemptionDate}>Jan 10, 2026</Text>
+              </View>
+              <Text style={styles.redemptionSavings}>-$2.50</Text>
             </View>
           </View>
         </View>
@@ -260,7 +371,7 @@ export default function WalletScreen() {
 
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={() => setShowQR(true)}
+              onPress={flipCard}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
                 <Ionicons name="qr-code" size={24} color={COLORS.success} />
@@ -342,13 +453,41 @@ const styles = StyleSheet.create({
   cardSection: {
     padding: 20,
   },
+  cardTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
-    marginBottom: 16,
+  },
+  flipButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(206, 17, 38, 0.1)',
+    borderRadius: 16,
+  },
+  flipButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
   cardContainer: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    perspective: 1000,
+  },
+  cardFace: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backfaceVisibility: 'hidden',
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -357,127 +496,194 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
+  cardBack: {
+    backgroundColor: '#001a3a',
+  },
   card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
+    width: '100%',
+    height: '100%',
   },
   cardBackgroundImage: {
     borderRadius: 16,
   },
-  cardOverlay: {
+  cardContent: {
     flex: 1,
-    backgroundColor: 'rgba(0, 63, 135, 0.85)',
-    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
-    justifyContent: 'space-between',
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  cardLockup: {
+    width: '85%',
+    height: '70%',
   },
-  cardLogo: {
-    width: 120,
-    height: 40,
+  cardStatusContainer: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 12,
   },
   statusText: {
     fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  cardBackContent: {
+    flex: 1,
+    padding: 0,
+  },
+  magneticStrip: {
+    width: '100%',
+    height: 40,
+    backgroundColor: '#1a1a1a',
+    marginTop: 20,
+  },
+  cardBackDetails: {
+    flex: 1,
+    padding: 16,
+    paddingTop: 12,
+  },
+  cardBackRow: {
+    marginBottom: 8,
+  },
+  cardBackRowDouble: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  cardBackCol: {
+    flex: 1,
+  },
+  cardBackLabel: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  cardBackValue: {
+    fontSize: 13,
     fontWeight: '600',
     color: '#fff',
   },
-  cardNumberContainer: {
+  qrSection: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#fff',
+    padding: 6,
+    borderRadius: 8,
+  },
+  cardHint: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  analyticsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 16,
+  },
+  statCard: {
+    width: '47%',
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    flex: 1,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  statIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
-  },
-  cardNumber: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#fff',
-    letterSpacing: 2,
-    fontFamily: 'monospace',
-  },
-  tapHint: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 8,
-  },
-  qrContainer: {
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
+    marginBottom: 8,
   },
-  qrHint: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 8,
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 2,
   },
-  cardFooter: {
+  statLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
+  redemptionsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  cardFooterLeft: {},
-  cardFooterRight: {
-    alignItems: 'flex-end',
-  },
-  cardLabel: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  cardValue: {
+  seeAllLink: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: COLORS.primary,
   },
-  detailsSection: {
-    paddingHorizontal: 20,
-  },
-  detailCard: {
+  redemptionsList: {
     backgroundColor: COLORS.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  detailRow: {
-    padding: 16,
+  redemptionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  lastRow: {
-    borderBottomWidth: 0,
-  },
-  detailItem: {
-    flexDirection: 'row',
+  redemptionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-  detailContent: {
-    marginLeft: 12,
+  redemptionInfo: {
     flex: 1,
   },
-  detailLabel: {
+  redemptionName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  redemptionDate: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    marginBottom: 2,
+    marginTop: 2,
   },
-  detailValue: {
+  redemptionSavings: {
     fontSize: 15,
-    fontWeight: '500',
-    color: COLORS.text,
+    fontWeight: '700',
+    color: COLORS.success,
   },
   actionsSection: {
     padding: 20,
+    paddingTop: 0,
   },
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    marginTop: 16,
   },
   actionCard: {
     width: '47%',
