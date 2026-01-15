@@ -1,7 +1,9 @@
 package com.bsa.campcard.service;
 
 import com.bsa.campcard.dto.auth.*;
+import com.bsa.campcard.entity.Subscription;
 import com.bsa.campcard.exception.AuthenticationException;
+import com.bsa.campcard.repository.SubscriptionRepository;
 import com.bsa.campcard.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final SmsService smsService;
+    private final SubscriptionRepository subscriptionRepository;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -196,6 +199,18 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthenticationException("User not found"));
 
+        // Get subscription status and card number
+        String subscriptionStatus = "none";
+        String cardNumber = user.getCardNumber();
+
+        var subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(user.getId());
+        if (subscription.isPresent()) {
+            subscriptionStatus = subscription.get().getStatus().name().toLowerCase();
+            if (subscription.get().getCardNumber() != null) {
+                cardNumber = subscription.get().getCardNumber();
+            }
+        }
+
         return UserProfileResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -204,12 +219,27 @@ public class AuthService {
                 .phone(user.getPhoneNumber())
                 .role(user.getRole().name())
                 .emailVerified(user.getEmailVerified())
+                .cardNumber(cardNumber)
+                .subscriptionStatus(subscriptionStatus)
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())
                 .build();
     }
 
     private AuthResponse.UserInfo toUserInfo(User user) {
+        // Get subscription status and card number
+        String subscriptionStatus = "none";
+        String cardNumber = user.getCardNumber();
+
+        var subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(user.getId());
+        if (subscription.isPresent()) {
+            subscriptionStatus = subscription.get().getStatus().name().toLowerCase();
+            // Use subscription card number if available
+            if (subscription.get().getCardNumber() != null) {
+                cardNumber = subscription.get().getCardNumber();
+            }
+        }
+
         return AuthResponse.UserInfo.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -217,6 +247,8 @@ public class AuthService {
                 .lastName(user.getLastName())
                 .role(user.getRole().name())
                 .emailVerified(user.getEmailVerified())
+                .cardNumber(cardNumber)
+                .subscriptionStatus(subscriptionStatus)
                 .build();
     }
 

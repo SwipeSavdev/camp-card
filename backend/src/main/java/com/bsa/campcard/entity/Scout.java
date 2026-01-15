@@ -86,7 +86,10 @@ public class Scout {
     
     @Column(columnDefinition = "TEXT")
     private String notes;
-    
+
+    @Column(name = "card_number", unique = true, length = 20)
+    private String cardNumber;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     

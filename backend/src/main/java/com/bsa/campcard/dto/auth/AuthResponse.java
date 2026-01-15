@@ -31,6 +31,8 @@ public class AuthResponse {
         private String role;
         private boolean emailVerified;
         private String profileImageUrl;
+        private String cardNumber;
+        private String subscriptionStatus;
     }
 
     public static AuthResponse of(String accessToken, String refreshToken, Long expiresIn, UserInfo user) {

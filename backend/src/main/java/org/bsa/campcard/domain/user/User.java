@@ -84,6 +84,9 @@ public class User {
     @Column(name = "referral_code", unique = true, length = 20)
     private String referralCode;
 
+    @Column(name = "card_number", unique = true, length = 20)
+    private String cardNumber;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

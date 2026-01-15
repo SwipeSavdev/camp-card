@@ -22,6 +22,8 @@ public class UserProfileResponse {
     private String role;
     private boolean emailVerified;
     private String profileImageUrl;
+    private String cardNumber;
+    private String subscriptionStatus;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
     private ScoutProfile scoutProfile;

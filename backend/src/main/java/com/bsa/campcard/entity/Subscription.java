@@ -57,7 +57,11 @@ public class Subscription {
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status = SubscriptionStatus.PENDING;
-    
+
+    // Card number (auto-generated on creation)
+    @Column(name = "card_number", unique = true, length = 20)
+    private String cardNumber;
+
     // Audit
     @Column(nullable = false)
     private LocalDateTime createdAt;
