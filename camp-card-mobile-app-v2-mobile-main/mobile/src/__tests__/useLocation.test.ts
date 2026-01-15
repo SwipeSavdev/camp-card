@@ -51,7 +51,7 @@ describe('Location Services Configuration', () => {
   describe('Permission Request', () => {
     it('should call requestForegroundPermissionsAsync', async () => {
       mockedLocation.requestForegroundPermissionsAsync.mockResolvedValue({
-        status: 'granted',
+        status: 'granted' as Location.PermissionStatus,
         expires: 'never',
         granted: true,
         canAskAgain: true,
@@ -63,7 +63,7 @@ describe('Location Services Configuration', () => {
 
     it('should return granted status on success', async () => {
       mockedLocation.requestForegroundPermissionsAsync.mockResolvedValue({
-        status: 'granted',
+        status: 'granted' as Location.PermissionStatus,
         expires: 'never',
         granted: true,
         canAskAgain: true,
@@ -76,7 +76,7 @@ describe('Location Services Configuration', () => {
 
     it('should return denied status when user declines', async () => {
       mockedLocation.requestForegroundPermissionsAsync.mockResolvedValue({
-        status: 'denied',
+        status: 'denied' as Location.PermissionStatus,
         expires: 'never',
         granted: false,
         canAskAgain: true,
@@ -89,7 +89,7 @@ describe('Location Services Configuration', () => {
 
     it('should include canAskAgain flag', async () => {
       mockedLocation.requestForegroundPermissionsAsync.mockResolvedValue({
-        status: 'denied',
+        status: 'denied' as Location.PermissionStatus,
         expires: 'never',
         granted: false,
         canAskAgain: false,

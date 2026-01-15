@@ -33,6 +33,8 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   QRScanner: undefined;
+  Settings: undefined;
+  HelpSupport: undefined;
 
   // Scout-specific screens
   Scout: undefined;
@@ -64,7 +66,7 @@ export type OffersStackParamList = {
 
 export type ScoutTabParamList = {
   Home: undefined;
-  MyCards: undefined;
+  QRCode: undefined;
   Profile: undefined;
 };
 
@@ -80,6 +82,8 @@ export type ScoutStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 // ============================================================================
@@ -98,6 +102,7 @@ export type TroopLeaderStackParamList = {
   TroopLeaderTabs: undefined;
   Merchants: undefined;
   MerchantDetail: { merchantId: number };
+  OfferDetail: { offerId: number };
   Notifications: undefined;
   ManageScouts: undefined;
   TroopStats: undefined;
@@ -107,6 +112,8 @@ export type TroopLeaderStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 // ============================================================================
@@ -123,10 +130,13 @@ export type CustomerTabParamList = {
 export type CustomerStackParamList = {
   CustomerTabs: undefined;
   MerchantDetail: { merchantId: number };
+  OfferDetail: { offerId: number };
   Notifications: undefined;
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 // ============================================================================

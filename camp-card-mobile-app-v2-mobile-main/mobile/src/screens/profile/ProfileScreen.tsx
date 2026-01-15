@@ -14,7 +14,7 @@ export default function ProfileScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigation = useNavigation<RootNavigation>();
 
-  // Filter menu items based on user role (Troop Leaders don't have QR codes or referrals)
+  // Filter menu items based on user role (Troop Leaders don't have referrals)
   const allMenuItems = [
     {
       icon: 'card-outline',
@@ -28,13 +28,6 @@ export default function ProfileScreen() {
       title: 'Referrals',
       subtitle: 'Share and earn rewards',
       onPress: () => navigation.navigate('Referral'),
-      showFor: ['SCOUT', 'PARENT'], // Not for Troop Leaders
-    },
-    {
-      icon: 'qr-code-outline',
-      title: 'My QR Code',
-      subtitle: 'Show your unique code',
-      onPress: () => navigation.navigate('QRScanner'),
       showFor: ['SCOUT', 'PARENT'], // Not for Troop Leaders
     },
     {
@@ -85,8 +78,11 @@ export default function ProfileScreen() {
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-          
-          <TouchableOpacity style={styles.menuItem}>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Settings')}
+          >
             <View style={styles.menuIconContainer}>
               <Ionicons name="settings-outline" size={24} color={COLORS.textSecondary} />
             </View>
@@ -96,7 +92,10 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('HelpSupport')}
+          >
             <View style={styles.menuIconContainer}>
               <Ionicons name="help-circle-outline" size={24} color={COLORS.textSecondary} />
             </View>

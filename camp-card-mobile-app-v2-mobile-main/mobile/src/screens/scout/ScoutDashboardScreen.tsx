@@ -124,7 +124,7 @@ export default function ScoutDashboardScreen() {
           </View>
           <View style={styles.earningsContainer}>
             <Text style={styles.earningsAmount}>${stats.totalEarnings}</Text>
-            <Text style={styles.earningsLabel}>Total Raised</Text>
+            <Text style={styles.earningsLabel}>Total Funds Raised</Text>
           </View>
           <View style={styles.progressStats}>
             <View style={styles.progressStatItem}>

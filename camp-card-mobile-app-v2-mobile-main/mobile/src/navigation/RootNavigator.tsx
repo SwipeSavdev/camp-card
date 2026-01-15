@@ -35,6 +35,8 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import RedemptionSuccessScreen from '../screens/RedemptionSuccessScreen';
 import ShareOfferScreen from '../screens/ShareOfferScreen';
 import QRScannerScreen from '../screens/QRScannerScreen';
+import SettingsScreen from '../screens/profile/SettingsScreen';
+import HelpSupportScreen from '../screens/profile/HelpSupportScreen';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -54,7 +56,7 @@ export type OffersStackParamList = {
 // Scout Types
 export type ScoutTabParamList = {
   Home: undefined;
-  MyCards: undefined;
+  QRCode: undefined;
   Profile: undefined;
 };
 
@@ -70,6 +72,8 @@ export type ScoutStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 // Troop Leader Types
@@ -95,6 +99,8 @@ export type TroopLeaderStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 // Customer/Parent Types
@@ -113,6 +119,8 @@ export type CustomerStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  Settings: undefined;
+  HelpSupport: undefined;
 };
 
 // ============================================================================
@@ -179,7 +187,7 @@ function ScoutTabNavigator() {
         tabBarIcon: ({ focused, color, size }) => {
           const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
             Home: focused ? 'home' : 'home-outline',
-            MyCards: focused ? 'card' : 'card-outline',
+            QRCode: focused ? 'qr-code' : 'qr-code-outline',
             Profile: focused ? 'person' : 'person-outline',
           };
           return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
@@ -190,7 +198,7 @@ function ScoutTabNavigator() {
       })}
     >
       <ScoutTab.Screen name="Home" component={HomeScreen} />
-      <ScoutTab.Screen name="MyCards" component={ScoutDashboardScreen} options={{ tabBarLabel: 'My Cards' }} />
+      <ScoutTab.Screen name="QRCode" component={ScoutDashboardScreen} options={{ tabBarLabel: 'QR Code' }} />
       <ScoutTab.Screen name="Profile" component={ProfileScreen} />
     </ScoutTab.Navigator>
   );
@@ -208,6 +216,8 @@ function ScoutMainNavigator() {
         <ScoutStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: true, title: 'Referrals' }} />
         <ScoutStack.Screen name="ViewOffers" component={OffersScreen} options={{ headerShown: true, title: 'Available Offers' }} />
         <ScoutStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
       </ScoutStack.Group>
       <ScoutStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
         <ScoutStack.Screen name="QRScanner" component={QRScannerScreen} options={{ headerShown: true, title: 'My QR Code' }} />
@@ -279,6 +289,8 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="InviteScouts" component={InviteScoutsScreen} options={{ headerShown: true, title: 'Invite Scouts' }} />
         <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
+        <TroopLeaderStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
       </TroopLeaderStack.Group>
       <TroopLeaderStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
         <TroopLeaderStack.Screen name="QRScanner" component={QRScannerScreen} options={{ headerShown: true, title: 'My QR Code' }} />
@@ -330,6 +342,8 @@ function CustomerMainNavigator() {
         <CustomerStack.Screen name="MerchantDetail" component={MerchantDetailScreen} options={{ headerShown: true, title: 'Merchant Details' }} />
         <CustomerStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
+        <CustomerStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
       </CustomerStack.Group>
       <CustomerStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
         <CustomerStack.Screen name="QRScanner" component={QRScannerScreen} options={{ headerShown: true, title: 'My QR Code' }} />
