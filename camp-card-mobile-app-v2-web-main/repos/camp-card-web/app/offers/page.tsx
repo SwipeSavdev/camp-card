@@ -234,12 +234,12 @@ export default function OffersPage() {
           // Always convert to string for consistent grouping key
           const merchantId = String(rawMerchantId);
 
-          // Extract merchant name - check multiple possible fields
+          // Extract merchant name - check offer.merchantName first, then merchant object fields
           let merchantName = 'Unknown';
-          if (typeof merchantObj === 'object') {
-            merchantName = merchantObj.business_name || merchantObj.businessName || merchantObj.name || 'Unknown';
-          } else if (offer.merchantName) {
+          if (offer.merchantName) {
             merchantName = offer.merchantName;
+          } else if (typeof merchantObj === 'object' && Object.keys(merchantObj).length > 0) {
+            merchantName = merchantObj.business_name || merchantObj.businessName || merchantObj.name || 'Unknown';
           }
 
           if (!grouped.has(merchantId)) {
