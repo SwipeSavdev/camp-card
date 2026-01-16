@@ -215,29 +215,49 @@ export default function OffersPage() {
       // If offers are flat objects, transform them to the expected structure
       if (offersData.length > 0 && !offersData[0].items) {
         console.log('Transforming flat offers to grouped structure...');
-        // Group offers by merchant
-        const grouped: { [key: string]: Offer } = {};
+        // Group offers by merchant - use Map to preserve insertion order and ensure unique keys
+        const grouped = new Map<string, Offer>();
         offersData.forEach((offer: any) => {
           // Handle both API format (merchant object) and legacy format
           const merchantObj = offer.merchant || {};
-          const merchantName = (typeof merchantObj === 'object' ? merchantObj.business_name : merchantObj) || offer.merchantName || 'Unknown';
-          // Always convert merchantId to string for consistent grouping
-          const merchantId = String((typeof merchantObj === 'object' ? merchantObj.id : offer.merchantId) || 'unknown');
 
-          if (!grouped[merchantId]) {
-            grouped[merchantId] = {
+          // Extract merchantId - prioritize the merchant object's id, then fallback to offer.merchantId
+          let rawMerchantId: string | number;
+          if (typeof merchantObj === 'object' && merchantObj.id !== undefined) {
+            rawMerchantId = merchantObj.id;
+          } else if (offer.merchantId !== undefined) {
+            rawMerchantId = offer.merchantId;
+          } else {
+            rawMerchantId = 'unknown';
+          }
+
+          // Always convert to string for consistent grouping key
+          const merchantId = String(rawMerchantId);
+
+          // Extract merchant name - check multiple possible fields
+          let merchantName = 'Unknown';
+          if (typeof merchantObj === 'object') {
+            merchantName = merchantObj.business_name || merchantObj.businessName || merchantObj.name || 'Unknown';
+          } else if (offer.merchantName) {
+            merchantName = offer.merchantName;
+          }
+
+          if (!grouped.has(merchantId)) {
+            grouped.set(merchantId, {
               id: merchantId,
               merchantId,
               merchantName,
               items: [],
-            };
+            });
           }
-          grouped[merchantId].items.push({
+
+          const group = grouped.get(merchantId)!;
+          group.items.push({
             id: String(offer.id),
             name: offer.title || offer.name,
             description: offer.description,
             merchantId,
-            merchantName,
+            merchantName: group.merchantName, // Use the group's merchantName for consistency
             discountType: offer.discountType || offer.discount,
             discountAmount: String(offer.discountValue || offer.value || ''),
             useType: (offer.usage_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
@@ -245,7 +265,7 @@ export default function OffersPage() {
             barcode: offer.imageUrl || offer.barcode,
           });
         });
-        offersData = Object.values(grouped);
+        offersData = Array.from(grouped.values());
         console.log('Grouped offers:', offersData);
       }
       console.log('Final offers state:', offersData);
