@@ -13,6 +13,7 @@ import {
   Keyboard,
   Image,
   useWindowDimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +21,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import {
+  isBiometricEnabled,
+  authenticateWithBiometrics,
+  checkBiometricAvailability,
+  getBiometricTypeName,
+} from '../../services/biometricsService';
 
 // Add your logo asset (adjust path/filename as needed)
 const COUNCIL_LOGO = require('../../../assets/council_logo.png');
@@ -32,11 +39,53 @@ export default function LoginScreen() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
-  
+  const [biometricAvailable, setBiometricAvailable] = React.useState(false);
+  const [biometricEnabled, setBiometricEnabled] = React.useState(false);
+  const [biometricType, setBiometricType] = React.useState('Biometric');
+  const [biometricLoading, setBiometricLoading] = React.useState(false);
+
   const navigation = useNavigation();
   const { login, isLoading } = useAuthStore();
   const { width } = useWindowDimensions();
   const logoSize = Math.min(220, Math.round(width * 0.6));
+
+  // Check if biometric authentication is available and enabled
+  React.useEffect(() => {
+    checkBiometric();
+  }, []);
+
+  const checkBiometric = async () => {
+    try {
+      const capability = await checkBiometricAvailability();
+      setBiometricAvailable(capability.available);
+      if (capability.biometryType) {
+        setBiometricType(getBiometricTypeName(capability.biometryType));
+      }
+
+      const enabled = await isBiometricEnabled();
+      setBiometricEnabled(enabled);
+    } catch (error) {
+      console.error('Error checking biometric:', error);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setBiometricLoading(true);
+    try {
+      const result = await authenticateWithBiometrics();
+
+      if (result.success && result.credentials) {
+        // Use stored credentials to auto-login
+        await login(result.credentials.email, result.credentials.encryptedToken);
+      } else {
+        Alert.alert('Authentication Failed', result.error || 'Biometric authentication failed');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to authenticate with biometrics');
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -158,6 +207,26 @@ export default function LoginScreen() {
                 </Text>
               </TouchableOpacity>
 
+              {/* Biometric Login Button */}
+              {biometricAvailable && biometricEnabled && (
+                <TouchableOpacity
+                  style={styles.biometricButton}
+                  onPress={handleBiometricLogin}
+                  disabled={biometricLoading || isLoading}
+                >
+                  {biometricLoading ? (
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  ) : (
+                    <>
+                      <Ionicons name="finger-print" size={24} color={COLORS.primary} />
+                      <Text style={styles.biometricButtonText}>
+                        Sign in with {biometricType}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
                 style={styles.forgotPassword}
                 onPress={() => navigation.navigate('ForgotPassword')}
@@ -251,6 +320,23 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: COLORS.surface,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    height: 52,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    gap: 8,
+  },
+  biometricButtonText: {
+    color: COLORS.primary,
     fontSize: 16,
     fontWeight: '600',
   },

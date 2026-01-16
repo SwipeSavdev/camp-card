@@ -1,6 +1,6 @@
 // Settings Screen - App preferences and account settings
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,20 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../store/authStore';
+import {
+  checkBiometricAvailability,
+  getBiometricTypeName,
+  isBiometricEnabled,
+  enableBiometricAuth,
+  disableBiometricAuth,
+} from '../../services/biometricsService';
 
 interface SettingItem {
   icon: string;
@@ -36,6 +44,86 @@ export default function SettingsScreen() {
   const [offerAlerts, setOfferAlerts] = useState(true);
   const [locationServices, setLocationServices] = useState(true);
   const [biometricLogin, setBiometricLogin] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState<string>('Biometric Login');
+  const [loadingBiometric, setLoadingBiometric] = useState(false);
+
+  // Check biometric availability on mount
+  useEffect(() => {
+    checkBiometrics();
+  }, []);
+
+  const checkBiometrics = async () => {
+    const capability = await checkBiometricAvailability();
+    setBiometricAvailable(capability.available);
+    if (capability.biometryType) {
+      setBiometricType(getBiometricTypeName(capability.biometryType));
+    }
+
+    // Check if biometric is already enabled
+    const enabled = await isBiometricEnabled();
+    setBiometricLogin(enabled);
+  };
+
+  const handleBiometricToggle = async (value: boolean) => {
+    if (loadingBiometric) return;
+
+    setLoadingBiometric(true);
+
+    if (value) {
+      // Enable biometric auth
+      if (!user?.email) {
+        Alert.alert('Error', 'User email not found');
+        setLoadingBiometric(false);
+        return;
+      }
+
+      // Get access token from secure storage or auth store
+      const accessToken = (user as any).accessToken || '';
+
+      const result = await enableBiometricAuth(user.email, accessToken);
+
+      if (result.success) {
+        setBiometricLogin(true);
+        Alert.alert(
+          'Success',
+          `${biometricType} has been enabled. You can now use it to sign in quickly.`
+        );
+      } else {
+        Alert.alert('Error', result.error || 'Failed to enable biometric authentication');
+      }
+    } else {
+      // Disable biometric auth
+      Alert.alert(
+        `Disable ${biometricType}?`,
+        `Are you sure you want to disable ${biometricType}? You'll need to enter your password to sign in.`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => setLoadingBiometric(false),
+          },
+          {
+            text: 'Disable',
+            style: 'destructive',
+            onPress: async () => {
+              const result = await disableBiometricAuth();
+              if (result.success) {
+                setBiometricLogin(false);
+                Alert.alert('Success', `${biometricType} has been disabled.`);
+              } else {
+                Alert.alert('Error', result.error || 'Failed to disable biometric authentication');
+              }
+              setLoadingBiometric(false);
+            },
+          },
+        ]
+      );
+      return; // Don't set loading false here, it's handled in alert callbacks
+    }
+
+    setLoadingBiometric(false);
+  };
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -93,14 +181,18 @@ export default function SettingsScreen() {
       value: locationServices,
       onToggle: setLocationServices,
     },
-    {
-      icon: 'finger-print',
-      title: 'Biometric Login',
-      subtitle: 'Use Face ID or fingerprint to login',
-      type: 'toggle',
-      value: biometricLogin,
-      onToggle: setBiometricLogin,
-    },
+    ...(biometricAvailable
+      ? [
+          {
+            icon: 'finger-print' as any,
+            title: biometricType,
+            subtitle: `Use ${biometricType} for quick login`,
+            type: 'toggle' as const,
+            value: biometricLogin,
+            onToggle: handleBiometricToggle,
+          },
+        ]
+      : []),
   ];
 
   const accountSettings: SettingItem[] = [
@@ -149,12 +241,19 @@ export default function SettingsScreen() {
         )}
       </View>
       {item.type === 'toggle' && (
-        <Switch
-          value={item.value}
-          onValueChange={item.onToggle}
-          trackColor={{ false: '#E0E0E0', true: COLORS.primary + '60' }}
-          thumbColor={item.value ? COLORS.primary : '#F4F4F4'}
-        />
+        <>
+          {loadingBiometric && item.title === biometricType ? (
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          ) : (
+            <Switch
+              value={item.value}
+              onValueChange={item.onToggle}
+              trackColor={{ false: '#E0E0E0', true: COLORS.primary + '60' }}
+              thumbColor={item.value ? COLORS.primary : '#F4F4F4'}
+              disabled={loadingBiometric && item.title === biometricType}
+            />
+          )}
+        </>
       )}
       {item.type === 'link' && (
         <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />

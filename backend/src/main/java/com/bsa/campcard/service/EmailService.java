@@ -1659,6 +1659,282 @@ public class EmailService {
     }
 
     // ========================================================================
+    // ACCOUNT CHANGE NOTIFICATIONS
+    // ========================================================================
+
+    @Async
+    public void sendProfileUpdateNotification(String to, String firstName, String changedFields) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send profile update notification to: {}", to);
+            return;
+        }
+
+        String subject = "Your BSA Camp Card Profile Has Been Updated";
+
+        String htmlBody = buildEmailTemplate(
+            "Profile Updated",
+            BSA_NAVY,
+            """
+            <p style="font-size: 16px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your BSA Camp Card profile has been successfully updated.</p>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <h3 style="color: %s; margin-top: 0;">Updated Information:</h3>
+                <p style="font-size: 14px; color: #666666; margin: 0;">%s</p>
+            </div>
+
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #856404;"><strong>If you didn't make this change:</strong></p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #856404;">Please contact us immediately at support@bsa.swipesavvy.com to secure your account.</p>
+            </div>
+            """.formatted(firstName, BSA_NAVY, changedFields)
+        );
+
+        String textBody = """
+            Profile Updated
+
+            Hi %s,
+
+            Your BSA Camp Card profile has been successfully updated.
+
+            Updated Information:
+            %s
+
+            If you didn't make this change, please contact us immediately at support@bsa.swipesavvy.com to secure your account.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, changedFields);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Profile update notification sent to: {}", to);
+    }
+
+    @Async
+    public void sendEmailChangeNotification(String oldEmail, String newEmail, String firstName) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send email change notification");
+            return;
+        }
+
+        String subject = "Your BSA Camp Card Email Address Has Been Changed";
+
+        // Send to both old and new email addresses
+        String htmlBody = buildEmailTemplate(
+            "Email Address Changed",
+            WARNING_ORANGE,
+            """
+            <p style="font-size: 16px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your BSA Camp Card email address has been changed.</p>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <p style="font-size: 14px; color: #666666; margin: 0 0 8px 0;"><strong>Previous Email:</strong> %s</p>
+                <p style="font-size: 14px; color: #666666; margin: 0;"><strong>New Email:</strong> %s</p>
+            </div>
+
+            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>⚠️ Security Alert:</strong></p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">If you didn't make this change, your account may have been compromised. Please contact us immediately at support@bsa.swipesavvy.com.</p>
+            </div>
+            """.formatted(firstName, oldEmail, newEmail)
+        );
+
+        String textBody = """
+            Email Address Changed
+
+            Hi %s,
+
+            Your BSA Camp Card email address has been changed.
+
+            Previous Email: %s
+            New Email: %s
+
+            ⚠️ Security Alert:
+            If you didn't make this change, your account may have been compromised. Please contact us immediately at support@bsa.swipesavvy.com.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, oldEmail, newEmail);
+
+        // Send to old email
+        sendEmail(oldEmail, subject, htmlBody, textBody);
+        // Send to new email
+        sendEmail(newEmail, subject, htmlBody, textBody);
+
+        log.info("Email change notification sent to: {} and {}", oldEmail, newEmail);
+    }
+
+    @Async
+    public void sendSecuritySettingsChangedNotification(String to, String firstName, String settingChanged) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send security settings notification to: {}", to);
+            return;
+        }
+
+        String subject = "Security Settings Changed on Your BSA Camp Card Account";
+
+        String htmlBody = buildEmailTemplate(
+            "Security Settings Updated",
+            BSA_RED,
+            """
+            <p style="font-size: 16px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">A security setting on your BSA Camp Card account has been changed.</p>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <p style="font-size: 14px; color: #666666; margin: 0;"><strong>Changed Setting:</strong> %s</p>
+            </div>
+
+            <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 14px; color: #155724;"><strong>If you made this change:</strong> No further action is needed.</p>
+            </div>
+
+            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>If you didn't make this change:</strong></p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">Please contact us immediately at support@bsa.swipesavvy.com or change your password right away.</p>
+            </div>
+            """.formatted(firstName, settingChanged)
+        );
+
+        String textBody = """
+            Security Settings Updated
+
+            Hi %s,
+
+            A security setting on your BSA Camp Card account has been changed.
+
+            Changed Setting: %s
+
+            If you made this change: No further action is needed.
+
+            If you didn't make this change: Please contact us immediately at support@bsa.swipesavvy.com or change your password right away.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, settingChanged);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Security settings notification sent to: {}", to);
+    }
+
+    @Async
+    public void sendAccountDeletionRequestNotification(String to, String firstName) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send account deletion notification to: {}", to);
+            return;
+        }
+
+        String subject = "Account Deletion Request - BSA Camp Card";
+
+        String htmlBody = buildEmailTemplate(
+            "Account Deletion Requested",
+            BSA_RED,
+            """
+            <p style="font-size: 16px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">We've received a request to delete your BSA Camp Card account.</p>
+
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 14px; color: #856404;"><strong>⏰ Waiting Period:</strong></p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #856404;">Your account will be permanently deleted in 30 days. During this time, you can still sign in to cancel the deletion request.</p>
+            </div>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <h3 style="color: %s; margin-top: 0;">What happens when your account is deleted:</h3>
+                <ul style="padding-left: 20px; color: #666666;">
+                    <li style="margin-bottom: 8px;">All your personal information will be permanently removed</li>
+                    <li style="margin-bottom: 8px;">Your subscription and payment history will be deleted</li>
+                    <li style="margin-bottom: 8px;">Your referral code will be deactivated</li>
+                    <li style="margin-bottom: 8px;">This action cannot be undone</li>
+                </ul>
+            </div>
+
+            """ + buildButton("Cancel Deletion", baseUrl + "/cancel-deletion", BSA_NAVY) + """
+
+            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>Didn't request this?</strong></p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">Contact us immediately at support@bsa.swipesavvy.com to secure your account.</p>
+            </div>
+            """.formatted(firstName, BSA_RED)
+        );
+
+        String textBody = """
+            Account Deletion Requested
+
+            Hi %s,
+
+            We've received a request to delete your BSA Camp Card account.
+
+            ⏰ Waiting Period:
+            Your account will be permanently deleted in 30 days. During this time, you can still sign in to cancel the deletion request.
+
+            What happens when your account is deleted:
+            - All your personal information will be permanently removed
+            - Your subscription and payment history will be deleted
+            - Your referral code will be deactivated
+            - This action cannot be undone
+
+            To cancel deletion, visit: %s/cancel-deletion
+
+            Didn't request this? Contact us immediately at support@bsa.swipesavvy.com to secure your account.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, baseUrl);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Account deletion notification sent to: {}", to);
+    }
+
+    @Async
+    public void sendNotificationSettingsChangedNotification(String to, String firstName, String changes) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send notification settings notification to: {}", to);
+            return;
+        }
+
+        String subject = "Notification Preferences Updated - BSA Camp Card";
+
+        String htmlBody = buildEmailTemplate(
+            "Notification Preferences Updated",
+            BSA_GOLD,
+            """
+            <p style="font-size: 16px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your notification preferences have been updated.</p>
+
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <h3 style="color: %s; margin-top: 0;">Updated Preferences:</h3>
+                <p style="font-size: 14px; color: #666666; margin: 0;">%s</p>
+            </div>
+
+            <p style="font-size: 14px; color: #666666;">You can manage your notification preferences anytime in your account settings.</p>
+            """.formatted(firstName, BSA_NAVY, changes)
+        );
+
+        String textBody = """
+            Notification Preferences Updated
+
+            Hi %s,
+
+            Your notification preferences have been updated.
+
+            Updated Preferences:
+            %s
+
+            You can manage your notification preferences anytime in your account settings.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, changes);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Notification settings notification sent to: {}", to);
+    }
+
+    // ========================================================================
     // HELPER METHODS
     // ========================================================================
 

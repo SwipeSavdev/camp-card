@@ -99,6 +99,43 @@ async function apiCall<T>(
 }
 
 export const api = {
+  // ============ AUTH ============
+  forgotPassword: async (email: string) => {
+    try {
+      return await apiCall<any>('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    } catch (error) {
+      console.error('Failed to send forgot password email:', error);
+      throw error;
+    }
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    try {
+      return await apiCall<any>('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword }),
+      });
+    } catch (error) {
+      console.error('Failed to reset password:', error);
+      throw error;
+    }
+  },
+
+  verifyEmail: async (token: string) => {
+    try {
+      return await apiCall<any>('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
+    } catch (error) {
+      console.error('Failed to verify email:', error);
+      throw error;
+    }
+  },
+
   // ============ USERS ============
   getUsers: async (session?: Session | null) => {
     try {

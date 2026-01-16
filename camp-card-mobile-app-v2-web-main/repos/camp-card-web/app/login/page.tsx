@@ -4,6 +4,7 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   colors, radius, space, shadow, gradients,
 } from '@/lib/theme';
@@ -224,20 +225,31 @@ export default function LoginPage() {
           </div>
 
           {/* Password Field */}
-          <div style={{ marginBottom: space.xl }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: colors.text,
-                marginBottom: space.sm,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Password
-            </label>
+          <div style={{ marginBottom: space.md }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.sm }}>
+              <label
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: colors.text,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                style={{
+                  fontSize: '12px',
+                  color: colors.primary600,
+                  textDecoration: 'none',
+                  fontWeight: '600',
+                }}
+              >
+                Forgot password?
+              </Link>
+            </div>
             <input
               type="password"
               required
@@ -268,6 +280,9 @@ export default function LoginPage() {
               }}
             />
           </div>
+
+          {/* Spacing before button */}
+          <div style={{ marginBottom: space.lg }} />
 
           {/* Sign In Button */}
           <button
