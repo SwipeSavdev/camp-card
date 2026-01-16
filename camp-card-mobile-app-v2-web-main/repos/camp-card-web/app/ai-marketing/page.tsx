@@ -553,11 +553,9 @@ export default function AIMarketingPage() {
         contentJson: { message: newCampaign.message },
         scheduledAt: newCampaign.scheduleDate || null,
         aiGenerated: !!aiGeneratedContent,
-        metadata: {
-          enableGeofencing: newCampaign.enableGeofencing,
-          enableGamification: newCampaign.enableGamification,
-          enableLearning: newCampaign.enableLearning,
-        },
+        enableGeofencing: newCampaign.enableGeofencing,
+        enableGamification: newCampaign.enableGamification,
+        enableAiOptimization: newCampaign.enableLearning,
       };
 
       const result = await api.createCampaign(campaignData, session);
@@ -616,11 +614,9 @@ export default function AIMarketingPage() {
         contentJson: { message: newCampaign.message },
         scheduledAt: newCampaign.scheduleDate || null,
         aiGenerated: !!aiGeneratedContent,
-        metadata: {
-          enableGeofencing: newCampaign.enableGeofencing,
-          enableGamification: newCampaign.enableGamification,
-          enableLearning: newCampaign.enableLearning,
-        },
+        enableGeofencing: newCampaign.enableGeofencing,
+        enableGamification: newCampaign.enableGamification,
+        enableAiOptimization: newCampaign.enableLearning,
       };
 
       await api.saveCampaign(draftData, session);
