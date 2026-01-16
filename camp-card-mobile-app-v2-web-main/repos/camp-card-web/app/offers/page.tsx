@@ -137,6 +137,10 @@ export default function OffersPage() {
   const [tempOffers, setTempOffers] = useState<OfferItem[]>([]);
   const [showAddMultiple, setShowAddMultiple] = useState(false);
 
+  // Merchant search dropdown state
+  const [merchantSearchTerm, setMerchantSearchTerm] = useState('');
+  const [showMerchantDropdown, setShowMerchantDropdown] = useState(false);
+
   // Edit state
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingOffer, setEditingOffer] = useState<OfferItem | null>(null);
@@ -578,8 +582,27 @@ export default function OffersPage() {
     setMultipleOffers(false);
     setTempOffers([]);
     setShowAddMultiple(false);
+    setMerchantSearchTerm('');
+    setShowMerchantDropdown(false);
     setError(null);
   };
+
+  // Filter merchants based on search term
+  const filteredMerchants = useMemo(() => {
+    if (!merchantSearchTerm.trim()) return merchants;
+    const search = merchantSearchTerm.toLowerCase();
+    return merchants.filter((merchant: any) => {
+      const name = (merchant.businessName || merchant.name || '').toLowerCase();
+      return name.includes(search);
+    });
+  }, [merchants, merchantSearchTerm]);
+
+  // Get selected merchant name for display
+  const selectedMerchantName = useMemo(() => {
+    if (!newMerchantId) return '';
+    const merchant = merchants.find((m: any) => String(m.id) === String(newMerchantId));
+    return merchant?.businessName || merchant?.name || '';
+  }, [merchants, newMerchantId]);
 
   const openEditForm = (offer: OfferItem) => {
     setEditingOffer(offer);
@@ -1151,28 +1174,106 @@ export default function OffersPage() {
               >
                 Associated Merchant
               </label>
-              <select
-                value={newMerchantId}
-                onChange={(e) => handleMerchantChange(e.target.value)}
-                disabled={tempOffers.length > 0}
-                style={{
-                  width: '100%',
-                  padding: `${themeSpace.sm} ${themeSpace.md}`,
-                  border: `1px solid ${themeColors.gray200}`,
-                  borderRadius: themeRadius.sm,
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                  backgroundColor: themeColors.white,
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="">Select a merchant</option>
-                {merchants.map((merchant: any) => (
-                  <option key={merchant.id} value={merchant.id}>
-                   {merchant.businessName || merchant.name}
-                 </option>
-                ))}
-              </select>
+              <div style={{ position: 'relative' }}>
+                <div
+                  onClick={() => !tempOffers.length && setShowMerchantDropdown(!showMerchantDropdown)}
+                  style={{
+                    width: '100%',
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    border: `1px solid ${showMerchantDropdown ? themeColors.primary600 : themeColors.gray200}`,
+                    borderRadius: themeRadius.sm,
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                    backgroundColor: tempOffers.length > 0 ? themeColors.gray100 : themeColors.white,
+                    cursor: tempOffers.length > 0 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span style={{ color: newMerchantId ? themeColors.text : themeColors.gray500 }}>
+                    {selectedMerchantName || 'Select a merchant'}
+                  </span>
+                  <Icon name="chevronDown" size={16} color={themeColors.gray500} />
+                </div>
+
+                {showMerchantDropdown && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: themeColors.white,
+                      border: `1px solid ${themeColors.gray200}`,
+                      borderRadius: themeRadius.sm,
+                      boxShadow: themeShadow.md,
+                      zIndex: 1000,
+                      maxHeight: '250px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <div style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray200}` }}>
+                      <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: themeSpace.sm, top: '50%', transform: 'translateY(-50%)' }}>
+                          <Icon name="search" size={16} color={themeColors.gray500} />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search merchants..."
+                          value={merchantSearchTerm}
+                          onChange={(e) => setMerchantSearchTerm(e.target.value)}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            padding: `${themeSpace.sm} ${themeSpace.sm} ${themeSpace.sm} ${themeSpace.xl}`,
+                            border: `1px solid ${themeColors.gray200}`,
+                            borderRadius: themeRadius.sm,
+                            fontSize: '14px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {filteredMerchants.length === 0 ? (
+                      <div style={{ padding: themeSpace.md, textAlign: 'center', color: themeColors.gray500, fontSize: '14px' }}>
+                        No merchants found
+                      </div>
+                    ) : (
+                      filteredMerchants.map((merchant: any) => (
+                        <div
+                          key={merchant.id}
+                          onClick={() => {
+                            handleMerchantChange(String(merchant.id));
+                            setShowMerchantDropdown(false);
+                            setMerchantSearchTerm('');
+                          }}
+                          style={{
+                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            cursor: 'pointer',
+                            backgroundColor: String(merchant.id) === String(newMerchantId) ? themeColors.primary50 : 'transparent',
+                            borderLeft: String(merchant.id) === String(newMerchantId) ? `3px solid ${themeColors.primary600}` : '3px solid transparent',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (String(merchant.id) !== String(newMerchantId)) {
+                              e.currentTarget.style.backgroundColor = themeColors.gray50;
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (String(merchant.id) !== String(newMerchantId)) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                        >
+                          <div style={{ fontSize: '14px', color: themeColors.text }}>
+                            {merchant.businessName || merchant.name}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {newMerchantId && (
