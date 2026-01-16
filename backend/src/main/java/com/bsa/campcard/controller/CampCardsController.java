@@ -156,7 +156,7 @@ public class CampCardsController {
         }
 
         Subscription sub = subOpt.get();
-        sub.setStatus(Subscription.SubscriptionStatus.CANCELLED);
+        sub.setStatus(Subscription.SubscriptionStatus.CANCELED);
         sub.setCanceledAt(LocalDateTime.now());
         subscriptionRepository.save(sub);
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rsync:*)",
+      "Bash(grep:*)",
+      "Bash(__NEW_LINE_8a3bbc083d1f73ef__ curl -s -X POST https://bsa.swipesavvy.com/api/v1/campaigns/ai/generate -H \"Content-Type: application/json\" -H \"Authorization: Bearer $TOKEN\" -d '{\n    \"\"contentType\"\": \"\"PUSH_NOTIFICATION\"\",\n    \"\"campaignType\"\": \"\"REACTIVATION\"\",\n    \"\"targetAudience\"\": \"\"dormant_users\"\",\n    \"\"tone\"\": \"\"FRIENDLY\"\"\n  }')"
+    ]
+  }
+}
