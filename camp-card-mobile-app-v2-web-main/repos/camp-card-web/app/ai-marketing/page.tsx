@@ -6,6 +6,7 @@ import {
   useEffect, useState, useMemo, useCallback,
 } from 'react';
 import { api } from '@/lib/api';
+import { useIsMobile as _useIsMobile } from '@/lib/hooks';
 import {
   AreaChart,
   Area,
@@ -1546,7 +1547,7 @@ export default function AIMarketingPage() {
       {/* Create Campaign Modal */}
       {showCreateForm && (
       <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: themeSpace.xl,
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: themeSpace.xl,
       }}
       >
         <div style={{

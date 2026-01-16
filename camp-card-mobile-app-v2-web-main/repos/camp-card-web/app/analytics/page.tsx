@@ -1404,7 +1404,7 @@ export default function AnalyticsPage() {
                       <div style={{ border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm }}>
                         {mockChartData.scout_sales
                           .filter((s: any) => s.troop === drilldownModal.selectedItem.name)
-                          .map((scout: any, idx: number) => (
+                          .map((scout: any, _idx: number) => (
                             <div key={scout.id} style={{ display: 'flex', justifyContent: 'space-between', padding: themeSpace.md, borderBottom: `1px solid ${themeColors.gray100}` }}>
                               <div>
                                 <div style={{ fontWeight: '600', color: themeColors.text }}>{scout.name}</div>

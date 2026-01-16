@@ -4,6 +4,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { useIsMobile } from '@/lib/hooks';
+import { ApiErrorDisplay, LoadingState, EmptyState } from '../components/ApiErrorDisplay';
 
 const themeColors = {
   white: '#ffffff',
@@ -206,8 +208,14 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Sidebar state
+  // Sidebar state - collapse on mobile by default
+  const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Collapse sidebar on mobile
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   // Import/Export state
   const [showImportModal, setShowImportModal] = useState(false);
@@ -987,21 +995,20 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
         </div>
 
         <div style={{ flex: 1, padding: themeSpace.xl, overflowY: 'auto' }}>
-          {error && (
-          <div style={{
-            backgroundColor: '#fee2e2', border: `1px solid ${themeColors.error500}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.error500,
-          }}
-          >
-            {error}
-          </div>
-          )}
+          <ApiErrorDisplay
+            error={error}
+            onRetry={fetchData}
+            title="Failed to load users"
+          />
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
+            <LoadingState message="Loading users..." />
           ) : filteredItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>
-              {items.length === 0 ? 'No users found' : 'No users match your filters'}
-            </div>
+            <EmptyState
+              title={items.length === 0 ? 'No users found' : 'No users match your filters'}
+              description={items.length === 0 ? 'Create your first user to get started.' : 'Try adjusting your search or filter criteria.'}
+              action={items.length === 0 ? { label: 'Add User', onClick: () => setShowAddForm(true) } : undefined}
+            />
           ) : (
             <>
               <div style={{
@@ -1216,7 +1223,7 @@ Actions
 
         {showAddForm && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
         }}
         >
           <div style={{
@@ -1381,7 +1388,7 @@ Role
 
         {showEditForm && editingUser && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
         }}
         >
           <div style={{

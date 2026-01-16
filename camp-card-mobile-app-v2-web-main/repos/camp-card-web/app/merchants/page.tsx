@@ -321,7 +321,7 @@ export default function MerchantsPage() {
           }
         : newIsSingleLocation
         ? {
-            locationName: newMerchantName + ' - Main',
+            locationName: `${newMerchantName} - Main`,
             streetAddress: newStreetAddress,
             city: newCity,
             state: newState,

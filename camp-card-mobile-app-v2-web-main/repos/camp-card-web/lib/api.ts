@@ -21,7 +21,7 @@ async function apiCall<T>(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
+    Pragma: 'no-cache',
   };
 
   if (options.headers && typeof options.headers === 'object' && !(options.headers instanceof Headers)) {

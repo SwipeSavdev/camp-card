@@ -2,7 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
+import { useIsMobile } from '@/lib/hooks';
 
 const themeColors = {
   white: '#ffffff',
@@ -118,7 +119,13 @@ interface PageLayoutProps {
 export default function PageLayout({ children, title, currentPath }: PageLayoutProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Collapse sidebar on mobile
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   if (status === 'loading') return null;
   if (!session) return null;

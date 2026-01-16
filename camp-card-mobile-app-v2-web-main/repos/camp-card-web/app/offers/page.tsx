@@ -129,7 +129,7 @@ export default function OffersPage() {
   const [newDiscountType, setNewDiscountType] = useState('');
   const [newDiscountAmount, setNewDiscountAmount] = useState('');
   const [newMinSpend, setNewMinSpend] = useState('');
-  const [newMinSpendType, setNewMinSpendType] = useState<'$' | '%'>('$');
+  const [_newMinSpendType, setNewMinSpendType] = useState<'$' | '%'>('$');
   const [newUseType, setNewUseType] = useState<'one-time' | 'reusable'>('reusable');
   const [newImage, setNewImage] = useState<string | null>(null);
   const [newImageName, setNewImageName] = useState('');
@@ -153,11 +153,11 @@ export default function OffersPage() {
   // Map frontend discount types to backend enum values
   const mapDiscountType = (frontendType: string): string => {
     const mapping: Record<string, string> = {
-      '$': 'FIXED_AMOUNT',
+      $: 'FIXED_AMOUNT',
       '%': 'PERCENTAGE',
-      'BOGO': 'BUY_ONE_GET_ONE',
+      BOGO: 'BUY_ONE_GET_ONE',
       'Free Item': 'FREE_ITEM',
-      'Points': 'SPECIAL_PRICE',
+      Points: 'SPECIAL_PRICE',
       'Buy One Get': 'BUY_ONE_GET_ONE',
       '$ off when $ spent': 'FIXED_AMOUNT',
       '% off when $ spent': 'PERCENTAGE',
@@ -606,19 +606,17 @@ export default function OffersPage() {
       // Update local state
       setItems(items.map((group) => ({
         ...group,
-        items: group.items.map((item) =>
-          item.id === editingOffer.id
-            ? {
-                ...item,
-                name: editOfferName,
-                description: editOfferDescription,
-                discountType: editDiscountType,
-                discountAmount: editDiscountAmount,
-                minimumSpend: editMinSpend || undefined,
-                useType: editUseType,
-              }
-            : item
-        ),
+        items: group.items.map((item) => (item.id === editingOffer.id
+          ? {
+            ...item,
+            name: editOfferName,
+            description: editOfferDescription,
+            discountType: editDiscountType,
+            discountAmount: editDiscountAmount,
+            minimumSpend: editMinSpend || undefined,
+            useType: editUseType,
+          }
+          : item)),
       })));
 
       setShowEditForm(false);
@@ -1108,7 +1106,7 @@ export default function OffersPage() {
 
       {showAddForm && (
       <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, overflowY: 'auto', padding: `${themeSpace.xl} 0`,
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, overflowY: 'auto', padding: `${themeSpace.xl} 0`,
       }}
       >
         <div style={{
@@ -1587,7 +1585,7 @@ Upload Image / Barcode
       {/* Edit Offer Modal */}
       {showEditForm && editingOffer && (
       <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, overflowY: 'auto', padding: `${themeSpace.xl} 0`,
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, overflowY: 'auto', padding: `${themeSpace.xl} 0`,
       }}
       >
         <div style={{

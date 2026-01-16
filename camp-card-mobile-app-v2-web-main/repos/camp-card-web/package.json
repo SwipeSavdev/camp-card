@@ -58,11 +58,14 @@
   "devDependencies": {
     "@next/bundle-analyzer": "^14.2.35",
     "@playwright/test": "^1.41.1",
+    "@swc/core": "^1.15.8",
+    "@swc/jest": "^0.2.39",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
-    "@testing-library/jest-dom": "^6.2.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.2",
+    "@types/jest": "^30.0.0",
     "@types/lodash": "^4.14.202",
     "@types/node": "^20.19.27",
     "@types/react": "^18.3.27",
@@ -91,8 +94,13 @@
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.js"
     ],
+    "transform": {
+      "^.+\\.(js|jsx|ts|tsx)$": [
+        "@swc/jest"
+      ]
+    },
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@/(.*)$": "<rootDir>/$1",
       "\\.(css|less|scss|sass)$": "identity-obj-proxy"
     },
     "collectCoverageFrom": [
@@ -126,7 +134,13 @@
       "react/react-in-jsx-scope": "off",
       "react/jsx-props-no-spreading": "off",
       "import/prefer-default-export": "off",
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_"
+        }
+      ],
       "no-underscore-dangle": "off",
       "@typescript-eslint/naming-convention": "off",
       "@typescript-eslint/indent": "off",
@@ -153,7 +167,12 @@
       "jsx-a11y/control-has-associated-label": "warn",
       "no-nested-ternary": "warn",
       "no-restricted-globals": "warn",
-      "no-param-reassign": ["warn", { "props": false }],
+      "no-param-reassign": [
+        "warn",
+        {
+          "props": false
+        }
+      ],
       "no-return-assign": "warn",
       "react/no-unescaped-entities": "warn",
       "react/jsx-max-props-per-line": "off",

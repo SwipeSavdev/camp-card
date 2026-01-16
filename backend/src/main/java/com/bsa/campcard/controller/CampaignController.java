@@ -41,10 +41,16 @@ public class CampaignController {
     @Operation(summary = "Create a new campaign")
     public ResponseEntity<CampaignDTO> createCampaign(
             @Valid @RequestBody CampaignDTO dto,
-            @RequestHeader("X-User-Id") UUID userId,
-            @RequestHeader(value = "X-Council-Id", required = false) Long councilId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-Council-Id", required = false) Long councilId,
+            org.springframework.security.core.Authentication authentication) {
 
-        CampaignDTO created = campaignService.createCampaign(dto, userId, councilId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        CampaignDTO created = campaignService.createCampaign(dto, effectiveUserId, councilId);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -80,9 +86,15 @@ public class CampaignController {
     public ResponseEntity<CampaignDTO> updateCampaign(
             @PathVariable Long id,
             @Valid @RequestBody CampaignDTO dto,
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            org.springframework.security.core.Authentication authentication) {
 
-        CampaignDTO updated = campaignService.updateCampaign(id, dto, userId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        CampaignDTO updated = campaignService.updateCampaign(id, dto, effectiveUserId);
         return ResponseEntity.ok(updated);
     }
 
@@ -91,10 +103,16 @@ public class CampaignController {
     public ResponseEntity<CampaignDTO> updateCampaignStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            org.springframework.security.core.Authentication authentication) {
+
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
 
         CampaignStatus newStatus = CampaignStatus.valueOf(body.get("status"));
-        CampaignDTO updated = campaignService.updateCampaignStatus(id, newStatus, userId);
+        CampaignDTO updated = campaignService.updateCampaignStatus(id, newStatus, effectiveUserId);
         return ResponseEntity.ok(updated);
     }
 
@@ -111,22 +129,34 @@ public class CampaignController {
     @Operation(summary = "Save a campaign draft or template")
     public ResponseEntity<SavedCampaignDTO> saveCampaign(
             @Valid @RequestBody SavedCampaignDTO dto,
-            @RequestHeader("X-User-Id") UUID userId,
-            @RequestHeader(value = "X-Council-Id", required = false) Long councilId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-Council-Id", required = false) Long councilId,
+            org.springframework.security.core.Authentication authentication) {
 
-        SavedCampaignDTO saved = campaignService.saveCampaign(dto, userId, councilId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        SavedCampaignDTO saved = campaignService.saveCampaign(dto, effectiveUserId, councilId);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping("/saved")
     @Operation(summary = "Get user's saved campaigns")
     public ResponseEntity<Page<SavedCampaignDTO>> getSavedCampaigns(
-            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
             @RequestParam(required = false) SaveType saveType,
             @RequestParam(required = false) String search,
-            @PageableDefault(size = 10) Pageable pageable) {
+            @PageableDefault(size = 10) Pageable pageable,
+            org.springframework.security.core.Authentication authentication) {
 
-        Page<SavedCampaignDTO> saved = campaignService.getSavedCampaigns(userId, saveType, search, pageable);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        Page<SavedCampaignDTO> saved = campaignService.getSavedCampaigns(effectiveUserId, saveType, search, pageable);
         return ResponseEntity.ok(saved);
     }
 
@@ -134,18 +164,30 @@ public class CampaignController {
     @Operation(summary = "Get a saved campaign")
     public ResponseEntity<SavedCampaignDTO> getSavedCampaign(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            org.springframework.security.core.Authentication authentication) {
 
-        SavedCampaignDTO saved = campaignService.getSavedCampaign(id, userId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        SavedCampaignDTO saved = campaignService.getSavedCampaign(id, effectiveUserId);
         return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/saved/favorites")
     @Operation(summary = "Get user's favorite saved campaigns")
     public ResponseEntity<List<SavedCampaignDTO>> getFavorites(
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            org.springframework.security.core.Authentication authentication) {
 
-        List<SavedCampaignDTO> favorites = campaignService.getFavorites(userId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        List<SavedCampaignDTO> favorites = campaignService.getFavorites(effectiveUserId);
         return ResponseEntity.ok(favorites);
     }
 
@@ -154,9 +196,15 @@ public class CampaignController {
     public ResponseEntity<SavedCampaignDTO> updateSavedCampaign(
             @PathVariable Long id,
             @Valid @RequestBody SavedCampaignDTO dto,
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            org.springframework.security.core.Authentication authentication) {
 
-        SavedCampaignDTO updated = campaignService.updateSavedCampaign(id, dto, userId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        SavedCampaignDTO updated = campaignService.updateSavedCampaign(id, dto, effectiveUserId);
         return ResponseEntity.ok(updated);
     }
 
@@ -164,9 +212,15 @@ public class CampaignController {
     @Operation(summary = "Delete a saved campaign")
     public ResponseEntity<Void> deleteSavedCampaign(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            org.springframework.security.core.Authentication authentication) {
 
-        campaignService.deleteSavedCampaign(id, userId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        campaignService.deleteSavedCampaign(id, effectiveUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -174,11 +228,28 @@ public class CampaignController {
     @Operation(summary = "Create a campaign from a saved template")
     public ResponseEntity<CampaignDTO> createFromSaved(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") UUID userId,
-            @RequestHeader(value = "X-Council-Id", required = false) Long councilId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-Council-Id", required = false) Long councilId,
+            org.springframework.security.core.Authentication authentication) {
 
-        CampaignDTO created = campaignService.createCampaignFromSaved(id, userId, councilId);
+        UUID effectiveUserId = resolveUserId(userId, authentication);
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        CampaignDTO created = campaignService.createCampaignFromSaved(id, effectiveUserId, councilId);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    // Helper method to resolve user ID from header or authentication context
+    private UUID resolveUserId(UUID headerUserId, org.springframework.security.core.Authentication authentication) {
+        if (headerUserId != null) {
+            return headerUserId;
+        }
+        if (authentication != null && authentication.getPrincipal() instanceof org.bsa.campcard.domain.user.User user) {
+            return user.getId();
+        }
+        return null;
     }
 
     // Segments
