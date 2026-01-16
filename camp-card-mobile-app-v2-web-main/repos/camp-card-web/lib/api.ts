@@ -33,8 +33,15 @@ async function apiCall<T>(
   const userId = (session?.user as any)?.id || session?.user?.id;
   const councilId = (session?.user as any)?.councilId;
 
+  // Debug logging
+  console.log('[API] Session:', session ? 'present' : 'null');
+  console.log('[API] AccessToken:', accessToken ? `${accessToken.substring(0, 20)}...` : 'null');
+  console.log('[API] Endpoint:', endpoint);
+
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
+  } else {
+    console.warn('[API] No access token available for request to:', endpoint);
   }
 
   // Add user and council headers for endpoints that require them
