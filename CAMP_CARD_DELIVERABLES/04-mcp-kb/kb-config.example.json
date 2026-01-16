@@ -1,0 +1,39 @@
+{
+  "workspaceRoot": "../..",
+  "outputDir": "CAMP_CARD_DELIVERABLES/04-mcp-kb/generated",
+  "projects": [
+    {
+      "name": "CAMP_CARD",
+      "repoGlobs": [
+        "backend",
+        "camp-card-mobile-app-v2-web-main",
+        "camp-card-mobile-app-v2-mobile-main"
+      ]
+    }
+  ],
+  "includePatterns": [
+    "README.md",
+    "CLAUDE.md",
+    "docs/**/*.md",
+    "**/*openapi*.y*ml",
+    "**/*openapi*.json",
+    "**/*schema*.json",
+    "**/*.proto",
+    "**/migrations/**/*",
+    "**/db/migration/**/*",
+    "**/.github/workflows/**/*.yml",
+    "**/package.json",
+    "**/pom.xml",
+    "**/build.gradle*",
+    "**/Dockerfile",
+    "**/docker-compose*.yml"
+  ],
+  "excludePatterns": [
+    "**/node_modules/**",
+    "**/target/**",
+    "**/build/**",
+    "**/.git/**",
+    "**/dist/**",
+    "**/.next/**"
+  ]
+}
