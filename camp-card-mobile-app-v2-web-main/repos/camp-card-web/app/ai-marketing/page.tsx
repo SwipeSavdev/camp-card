@@ -1081,9 +1081,14 @@ export default function AIMarketingPage() {
                   <div style={{ fontSize: '28px', fontWeight: '700', color: themeColors.text }}>{segment.count.toLocaleString()}</div>
                   <div style={{ fontSize: '12px', color: themeColors.gray500 }}>users in segment</div>
                 </div>
-                <button style={{
-                  background: themeColors.primary50, border: 'none', color: themeColors.primary600, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-                }}
+                <button
+                  onClick={() => {
+                    setNewCampaign((prev) => ({ ...prev, segments: [segment.id] }));
+                    setShowCreateForm(true);
+                  }}
+                  style={{
+                    background: themeColors.primary50, border: 'none', color: themeColors.primary600, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+                  }}
                 >
                   Create Campaign
                 </button>
@@ -1456,29 +1461,33 @@ export default function AIMarketingPage() {
                   <td style={{ padding: themeSpace.md, textAlign: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: themeSpace.xs }}>
                       <button
-                              style={{
-                                background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
-                              }}
-                              title="View Details"
-                            >
-                              <Icon name="eye" size={16} color={themeColors.gray500} />
-                            </button>
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
+                        }}
+                        title="View Details"
+                      >
+                        <Icon name="eye" size={16} color={themeColors.gray500} />
+                      </button>
                       <button
-                              style={{
-                                background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
-                              }}
-                              title="Create Campaign"
-                            >
-                              <Icon name="megaphone" size={16} color={themeColors.primary600} />
-                            </button>
+                        onClick={() => {
+                          setNewCampaign((prev) => ({ ...prev, name: `${merchant.name} Campaign` }));
+                          setShowCreateForm(true);
+                        }}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
+                        }}
+                        title="Create Campaign"
+                      >
+                        <Icon name="megaphone" size={16} color={themeColors.primary600} />
+                      </button>
                       <button
-                              style={{
-                                background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
-                              }}
-                              title="Edit"
-                            >
-                              <Icon name="edit" size={16} color={themeColors.gray500} />
-                            </button>
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
+                        }}
+                        title="Edit"
+                      >
+                        <Icon name="edit" size={16} color={themeColors.gray500} />
+                      </button>
                     </div>
                   </td>
                 </tr>
