@@ -113,7 +113,7 @@ async function registerForPushNotificationsAsync() {
 
 async function registerTokenWithBackend(token: string) {
   try {
-    await apiClient.post('/notifications/register-token', {
+    await apiClient.post('/api/v1/notifications/register-token', {
       token,
       deviceType: Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
       deviceModel: Device.modelName,
@@ -139,7 +139,7 @@ export async function sendTestNotification() {
 
 export async function getUnreadNotifications() {
   try {
-    const response = await apiClient.get('/notifications/me/unread-count');
+    const response = await apiClient.get('/api/v1/notifications/me/unread-count');
     return response.data;
   } catch (error) {
     console.error('Error fetching unread count:', error);
@@ -149,7 +149,7 @@ export async function getUnreadNotifications() {
 
 export async function markNotificationAsRead(notificationId: number) {
   try {
-    await apiClient.put(`/notifications/${notificationId}/read`);
+    await apiClient.put(`/api/v1/notifications/${notificationId}/read`);
   } catch (error) {
     console.error('Error marking notification as read:', error);
   }
@@ -157,7 +157,7 @@ export async function markNotificationAsRead(notificationId: number) {
 
 export async function markAllNotificationsAsRead() {
   try {
-    await apiClient.put('/notifications/mark-all-read');
+    await apiClient.put('/api/v1/notifications/mark-all-read');
   } catch (error) {
     console.error('Error marking all as read:', error);
   }

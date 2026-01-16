@@ -35,7 +35,7 @@ export default function NotificationsScreen() {
 
   const loadNotifications = async () => {
     try {
-      const response = await apiClient.get('/notifications/me', {
+      const response = await apiClient.get('/api/v1/notifications/me', {
         params: { page: 0, size: 50 }
       });
       setNotifications(response.data.content);
