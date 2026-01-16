@@ -598,6 +598,55 @@ export default function AIMarketingPage() {
     }
   };
 
+  // Save campaign as draft
+  const handleSaveDraft = async () => {
+    if (!newCampaign.name) {
+      alert('Please enter a campaign name');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const draftData = {
+        name: newCampaign.name,
+        saveType: 'DRAFT',
+        campaignType: newCampaign.type?.toUpperCase() || 'CUSTOM',
+        channels: newCampaign.channels,
+        targetAudience: { segments: newCampaign.segments },
+        contentJson: { message: newCampaign.message },
+        scheduledAt: newCampaign.scheduleDate || null,
+        aiGenerated: !!aiGeneratedContent,
+        metadata: {
+          enableGeofencing: newCampaign.enableGeofencing,
+          enableGamification: newCampaign.enableGamification,
+          enableLearning: newCampaign.enableLearning,
+        },
+      };
+
+      await api.saveCampaign(draftData, session);
+
+      alert('Campaign saved as draft!');
+      setShowCreateForm(false);
+      setAiGeneratedContent(null);
+      setNewCampaign({
+        name: '',
+        type: '',
+        segments: [],
+        channels: [],
+        message: '',
+        scheduleDate: '',
+        enableGeofencing: false,
+        enableGamification: false,
+        enableLearning: true,
+      });
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      alert('Failed to save draft. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Delete campaign
   const handleDeleteCampaign = async (id: string) => {
     if (!confirm('Are you sure you want to delete this campaign?')) return;
@@ -1835,6 +1884,27 @@ export default function AIMarketingPage() {
               }}
             >
               Cancel
+            </button>
+            <button
+              onClick={handleSaveDraft}
+              disabled={!newCampaign.name}
+              style={{
+                padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                border: `1px solid ${themeColors.gray200}`,
+                backgroundColor: themeColors.white,
+                borderRadius: themeRadius.sm,
+                cursor: newCampaign.name ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: themeColors.gray600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: themeSpace.sm,
+                opacity: newCampaign.name ? 1 : 0.5,
+              }}
+            >
+              <Icon name="inbox" size={16} color={themeColors.gray600} />
+              Save as Draft
             </button>
             <button
               onClick={handleCreateCampaign}
