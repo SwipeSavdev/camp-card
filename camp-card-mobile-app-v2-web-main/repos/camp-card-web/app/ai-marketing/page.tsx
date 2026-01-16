@@ -501,21 +501,32 @@ export default function AIMarketingPage() {
       const typeInfo = getCampaignTypeInfo(newCampaign.type);
       const segmentNames = newCampaign.segments.map((s) => segments.find((seg) => seg.id === s)?.name || s).join(', ');
 
+      // Determine content type based on selected channels (prefer push for multi-channel)
+      const primaryChannel = newCampaign.channels.includes('push')
+        ? 'PUSH_NOTIFICATION'
+        : newCampaign.channels.includes('email')
+          ? 'EMAIL_BODY'
+          : newCampaign.channels.includes('sms')
+            ? 'SMS'
+            : 'IN_APP_MESSAGE';
+
       const result = await api.generateAIContent({
+        contentType: primaryChannel,
         campaignType: newCampaign.type.toUpperCase(),
-        targetSegments: newCampaign.segments,
-        tone: 'friendly',
-        keyMessages: [`${typeInfo.description} for ${segmentNames}`],
-        channels: newCampaign.channels,
+        targetAudience: segmentNames,
+        tone: 'FRIENDLY',
+        additionalContext: typeInfo.description,
       }, session);
 
-      if (result?.content) {
-        setAiGeneratedContent(result.content);
-        setNewCampaign((prev) => ({ ...prev, message: result.content }));
-      } else if (result?.subject) {
-        const content = `${result.subject}\n\n${result.body || result.content || ''}`;
-        setAiGeneratedContent(content);
-        setNewCampaign((prev) => ({ ...prev, message: content }));
+      // Handle response from backend (AIGeneratedContent DTO has bodyContent and rawContent)
+      const generatedText = result?.bodyContent || result?.rawContent || result?.content || '';
+      if (generatedText) {
+        // Combine subject line if available (for email campaigns)
+        const fullContent = result?.subjectLine
+          ? `Subject: ${result.subjectLine}\n\n${generatedText}`
+          : generatedText;
+        setAiGeneratedContent(fullContent);
+        setNewCampaign((prev) => ({ ...prev, message: fullContent }));
       }
     } catch (error) {
       console.error('Failed to generate AI content:', error);

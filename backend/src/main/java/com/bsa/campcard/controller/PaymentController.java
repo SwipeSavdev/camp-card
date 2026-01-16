@@ -59,6 +59,31 @@ public class PaymentController {
     // PUBLIC ENDPOINTS FOR WEB SUBSCRIPTION PURCHASE (No auth required)
     // ========================================================================
 
+    @PostMapping("/subscribe/charge")
+    @Operation(summary = "Process subscription payment",
+            description = "Charge a credit card for the $10/year subscription. No authentication required for new subscribers.")
+    public ResponseEntity<PaymentResponse> chargeSubscription(@Valid @RequestBody ChargeRequest request) {
+        log.info("Processing subscription charge for amount: {}", request.getAmount());
+
+        // Ensure it's the correct subscription amount ($10)
+        if (request.getAmount() == null ||
+            request.getAmount().compareTo(new java.math.BigDecimal("10.00")) != 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(PaymentResponse.builder()
+                            .status("FAILED")
+                            .errorMessage("Invalid subscription amount. Subscription is $10/year.")
+                            .build());
+        }
+
+        PaymentResponse response = paymentService.charge(request);
+
+        if ("SUCCESS".equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(response);
+        }
+    }
+
     @PostMapping("/subscribe/token")
     @Operation(summary = "Get Accept Hosted token",
             description = "Generate a token for Authorize.Net Accept Hosted payment form. Static $10/year subscription price.")

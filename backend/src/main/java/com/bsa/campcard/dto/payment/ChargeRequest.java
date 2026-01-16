@@ -34,6 +34,13 @@ public class ChargeRequest {
     private Long offerId;
     
     private String customerEmail;
-    
+
     private String customerName;
+
+    // Billing address fields for AVS verification
+    private String billingAddress;
+    private String billingCity;
+    private String billingState;
+    private String billingZip;
+    private String billingCountry;
 }

@@ -62,14 +62,40 @@ public class PaymentService {
             if (request.getCustomerEmail() != null) {
                 customer.setEmail(request.getCustomerEmail());
             }
-            
+
+            // Set up billing address for AVS verification
+            CustomerAddressType billTo = new CustomerAddressType();
+            if (request.getBillingAddress() != null) {
+                billTo.setAddress(request.getBillingAddress());
+            }
+            if (request.getBillingCity() != null) {
+                billTo.setCity(request.getBillingCity());
+            }
+            if (request.getBillingState() != null) {
+                billTo.setState(request.getBillingState());
+            }
+            if (request.getBillingZip() != null) {
+                billTo.setZip(request.getBillingZip());
+            }
+            if (request.getBillingCountry() != null) {
+                billTo.setCountry(request.getBillingCountry());
+            }
+            if (request.getCustomerName() != null) {
+                String[] nameParts = request.getCustomerName().split(" ", 2);
+                billTo.setFirstName(nameParts[0]);
+                if (nameParts.length > 1) {
+                    billTo.setLastName(nameParts[1]);
+                }
+            }
+
             // Set up transaction request
             TransactionRequestType txnRequest = new TransactionRequestType();
             txnRequest.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value());
             txnRequest.setAmount(request.getAmount());
             txnRequest.setPayment(payment);
             txnRequest.setCustomer(customer);
-            
+            txnRequest.setBillTo(billTo);
+
             // Add order information
             OrderType order = new OrderType();
             order.setDescription(request.getDescription() != null ? request.getDescription() : "Camp Card Purchase");
