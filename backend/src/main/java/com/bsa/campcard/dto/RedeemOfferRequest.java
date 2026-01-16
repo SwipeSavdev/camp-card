@@ -15,5 +15,6 @@ public class RedeemOfferRequest {
     private UUID userId;
     private Long merchantLocationId;
     private BigDecimal purchaseAmount;
+    private String redemptionMethod; // "show_to_cashier" or "scan_merchant_code"
     private String notes;
 }

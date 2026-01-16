@@ -210,3 +210,49 @@ export const merchantsApi = {
   getMerchantOffers: (merchantId: string | number) =>
     apiClient.get(`/api/v1/offers/merchant/${merchantId}`),
 };
+
+export const scoutApi = {
+  // Get scout stats (fundraising metrics, link performance)
+  getStats: (scoutId: string) =>
+    apiClient.get(`/api/v1/scouts/${scoutId}/stats`),
+
+  // Record a sale/subscription attributed to scout
+  recordSale: (scoutId: string, data: { customerId: string; amount: number; transactionId?: string }) =>
+    apiClient.post(`/api/v1/scouts/${scoutId}/sales`, data),
+
+  // Get scout's sales history
+  getSales: (scoutId: string) =>
+    apiClient.get(`/api/v1/scouts/${scoutId}/sales`),
+};
+
+export const referralApi = {
+  // Get or generate the user's referral code
+  getMyReferralCode: () =>
+    apiClient.get('/api/v1/referrals/my-code'),
+
+  // Get list of referrals made by current user
+  getMyReferrals: () =>
+    apiClient.get('/api/v1/referrals/my-referrals'),
+
+  // Apply a referral code during registration
+  applyReferralCode: (code: string) =>
+    apiClient.post('/api/v1/referrals/apply', { code }),
+
+  // Claim a referral reward
+  claimReward: (referralId: string) =>
+    apiClient.post(`/api/v1/referrals/${referralId}/claim`),
+
+  // Track a link click or QR scan
+  trackClick: (code: string, source: 'link' | 'qr') =>
+    apiClient.post('/api/v1/referrals/track', { code, source }),
+};
+
+export const analyticsApi = {
+  // Get user's savings/redemption analytics
+  getUserAnalytics: (userId: string) =>
+    apiClient.get(`/api/v1/analytics/user/${userId}`),
+
+  // Get wallet/card analytics
+  getWalletStats: () =>
+    apiClient.get('/api/v1/analytics/wallet'),
+};

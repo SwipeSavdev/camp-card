@@ -19,6 +19,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { referralApi } from '../../services/apiClient';
 
 interface Referral {
   id: string;
@@ -56,70 +57,41 @@ export default function ReferralScreen() {
   }, []);
 
   const loadReferrals = async () => {
-    // TODO: Replace with API call
-    // GET /api/v1/scouts/{scoutId}/referrals
-    setReferrals([
-      {
-        id: '1',
-        firstName: 'John',
-        lastName: 'Smith',
-        email: 'john.smith@email.com',
-        subscriptionDate: '2025-12-01',
-        planType: 'Annual',
-        status: 'active',
-        isDirectReferral: true,
-      },
-      {
-        id: '2',
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah.j@email.com',
-        subscriptionDate: '2025-12-05',
-        planType: 'Quarterly',
-        status: 'active',
-        isDirectReferral: true,
-      },
-      {
-        id: '3',
-        firstName: 'Mike',
-        lastName: 'Brown',
-        email: 'mike.b@email.com',
-        subscriptionDate: '2025-12-10',
-        planType: 'Monthly',
-        status: 'active',
-        isDirectReferral: true,
-      },
-      {
-        id: '4',
-        firstName: 'Emily',
-        lastName: 'Davis',
-        email: 'emily.d@email.com',
-        subscriptionDate: '2025-12-12',
-        planType: 'Annual',
-        status: 'active',
-        isDirectReferral: false,
-        referredBy: 'John Smith',
-      },
-      {
-        id: '5',
-        firstName: 'Robert',
-        lastName: 'Wilson',
-        email: 'robert.w@email.com',
-        subscriptionDate: '2025-12-15',
-        planType: 'Quarterly',
-        status: 'active',
-        isDirectReferral: false,
-        referredBy: 'Sarah Johnson',
-      },
-    ]);
+    try {
+      // Fetch referrals from API
+      const response = await referralApi.getMyReferrals();
+      const data = response.data;
 
-    setStats({
-      totalReferrals: 5,
-      directReferrals: 3,
-      indirectReferrals: 2,
-      totalEarnings: 50,
-      pendingEarnings: 10,
-    });
+      // Map API response to local format
+      const mappedReferrals: Referral[] = (data.referrals || []).map((r: any) => ({
+        id: r.id,
+        firstName: r.referredUser?.firstName || r.firstName || 'Unknown',
+        lastName: r.referredUser?.lastName || r.lastName || '',
+        email: r.referredUser?.email || r.email || '',
+        subscriptionDate: r.createdAt || r.subscriptionDate,
+        planType: r.planType || 'Annual',
+        status: r.status || 'active',
+        isDirectReferral: r.isDirectReferral ?? r.level === 1,
+        referredBy: r.referredByName || r.referredBy,
+      }));
+
+      setReferrals(mappedReferrals);
+
+      // Calculate stats from data or use provided stats
+      const directCount = mappedReferrals.filter(r => r.isDirectReferral).length;
+      const indirectCount = mappedReferrals.filter(r => !r.isDirectReferral).length;
+
+      setStats({
+        totalReferrals: data.totalReferrals || mappedReferrals.length,
+        directReferrals: data.directReferrals || directCount,
+        indirectReferrals: data.indirectReferrals || indirectCount,
+        totalEarnings: data.totalEarnings || 0,
+        pendingEarnings: data.pendingEarnings || 0,
+      });
+    } catch (error) {
+      console.log('Failed to load referrals:', error);
+      // Keep empty state on error
+    }
   };
 
   const onRefresh = async () => {

@@ -21,6 +21,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { scoutApi } from '../../services/apiClient';
 
 interface ScoutStats {
   totalSubscribers: number;
@@ -55,21 +56,28 @@ export default function ScoutDashboardScreen() {
 
   useEffect(() => {
     loadScoutStats();
-  }, []);
+  }, [scoutId]);
 
   const loadScoutStats = async () => {
-    // TODO: Replace with actual API call
-    // GET /api/v1/scouts/{scoutId}/stats
-    setStats({
-      totalSubscribers: 8,
-      directReferrals: 5,
-      indirectReferrals: 3,
-      linkClicks: 45,
-      qrScans: 12,
-      totalEarnings: 80,
-      redemptionsUsed: 15,
-      savingsEarned: 127.50,
-    });
+    try {
+      // Fetch scout stats from API
+      const response = await scoutApi.getStats(scoutId);
+      const data = response.data;
+
+      setStats({
+        totalSubscribers: data.totalSubscribers || 0,
+        directReferrals: data.directReferrals || 0,
+        indirectReferrals: data.indirectReferrals || 0,
+        linkClicks: data.linkClicks || 0,
+        qrScans: data.qrScans || 0,
+        totalEarnings: data.totalEarnings || 0,
+        redemptionsUsed: data.redemptionsUsed || 0,
+        savingsEarned: data.savingsEarned || 0,
+      });
+    } catch (error) {
+      console.log('Failed to load scout stats, using defaults:', error);
+      // Keep default values on error
+    }
   };
 
   const onRefresh = async () => {

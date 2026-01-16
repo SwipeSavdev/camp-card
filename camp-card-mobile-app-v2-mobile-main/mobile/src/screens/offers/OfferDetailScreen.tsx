@@ -165,7 +165,8 @@ export default function OfferDetailScreen() {
         offerId: offer.id,
         merchantLocationId: offer.merchantId || null,
         purchaseAmount: null,
-        notes: `Redemption method: ${selectedMethod}`,
+        redemptionMethod: selectedMethod, // Track which method was used
+        notes: `Redeemed via ${selectedMethod === 'show_to_cashier' ? 'Show to Cashier' : 'Scan Merchant Code'}`,
       });
 
       // Get updated redemption count from response or increment locally

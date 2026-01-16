@@ -28,13 +28,21 @@ async function apiCall<T>(
     Object.assign(headers, options.headers as Record<string, string>);
   }
 
-  // Get accessToken from session - check multiple possible locations
+  // Get accessToken and user info from session
   const accessToken = (session?.user as any)?.accessToken || (session as any)?.accessToken;
+  const userId = (session?.user as any)?.id || session?.user?.id;
+  const councilId = (session?.user as any)?.councilId;
+
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
-    console.log('[API] Using access token for request to:', endpoint);
-  } else {
-    console.log('[API] No access token found in session for:', endpoint, 'Session keys:', session ? Object.keys(session) : 'null');
+  }
+
+  // Add user and council headers for endpoints that require them
+  if (userId) {
+    headers['X-User-Id'] = userId;
+  }
+  if (councilId) {
+    headers['X-Council-Id'] = councilId;
   }
 
   // Add cache-busting query parameter for GET requests

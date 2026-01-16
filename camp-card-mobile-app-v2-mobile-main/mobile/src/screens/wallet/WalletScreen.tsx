@@ -1,6 +1,6 @@
 // Wallet Screen - Digital Camp Card with Flip Animation & Analytics
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
 import { RootNavigation } from '../../types/navigation';
+import { apiClient } from '../../services/apiClient';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_WIDTH = screenWidth - 40;
@@ -80,12 +81,33 @@ export default function WalletScreen() {
     email: user?.email,
   };
 
-  // Mock redemption stats (would come from API)
-  const redemptionStats: RedemptionStats = {
-    totalRedemptions: 23,
-    totalSavings: 147.50,
-    thisMonth: 5,
-    favoriteCategory: 'Restaurants',
+  // Redemption stats state
+  const [redemptionStats, setRedemptionStats] = useState<RedemptionStats>({
+    totalRedemptions: 0,
+    totalSavings: 0,
+    thisMonth: 0,
+    favoriteCategory: 'None yet',
+  });
+
+  // Load wallet analytics on mount
+  useEffect(() => {
+    loadWalletStats();
+  }, []);
+
+  const loadWalletStats = async () => {
+    try {
+      const response = await apiClient.get('/api/v1/analytics/wallet');
+      const data = response.data;
+      setRedemptionStats({
+        totalRedemptions: data.totalRedemptions || 0,
+        totalSavings: data.totalSavings || 0,
+        thisMonth: data.thisMonth || 0,
+        favoriteCategory: data.favoriteCategory || 'None yet',
+      });
+    } catch (error) {
+      console.log('Failed to load wallet stats:', error);
+      // Keep default values on error
+    }
   };
 
   // Flip animation
@@ -121,8 +143,7 @@ export default function WalletScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // TODO: Refresh card data from API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await loadWalletStats();
     setRefreshing(false);
   };
 
