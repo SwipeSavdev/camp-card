@@ -15,8 +15,9 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 
 # Set build-time environment variables for Next.js
-# These can be overridden at runtime for client-side vars (NEXT_PUBLIC_*)
-ENV NEXT_PUBLIC_API_URL=http://localhost:7010/api/v1
+# NEXT_PUBLIC_* vars must be set at build time to be embedded in the client bundle
+ARG NEXT_PUBLIC_API_URL=http://localhost:7010/api/v1
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
