@@ -64,6 +64,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",  // Web portal (dev - npm run dev default)
             "http://localhost:7020",  // Web portal (dev)
             "http://localhost:8085",  // Mobile Expo (dev)
             "http://18.190.69.205:7020",  // AWS Admin Portal

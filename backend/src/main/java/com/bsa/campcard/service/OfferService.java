@@ -99,35 +99,54 @@ public class OfferService {
     public OfferResponse getOffer(Long offerId) {
         Offer offer = offerRepository.findById(offerId)
             .orElseThrow(() -> new IllegalArgumentException("Offer not found"));
-        return OfferResponse.fromEntity(offer);
+        return toOfferResponseWithMerchant(offer);
     }
-    
+
     public Page<OfferResponse> getActiveOffers(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         return offerRepository.findActiveOffers(OfferStatus.ACTIVE, now, pageable)
-            .map(OfferResponse::fromEntity);
+            .map(this::toOfferResponseWithMerchant);
     }
-    
+
+    public Page<OfferResponse> getAllOffers(Pageable pageable) {
+        return offerRepository.findAll(pageable)
+            .map(this::toOfferResponseWithMerchant);
+    }
+
     public Page<OfferResponse> getMerchantOffers(Long merchantId, Pageable pageable) {
         return offerRepository.findByMerchantId(merchantId, pageable)
-            .map(OfferResponse::fromEntity);
+            .map(this::toOfferResponseWithMerchant);
     }
-    
+
     public Page<OfferResponse> getOffersByCategory(String category, Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         return offerRepository.findActiveByCategoryAndStatus(category, OfferStatus.ACTIVE, now, pageable)
-            .map(OfferResponse::fromEntity);
+            .map(this::toOfferResponseWithMerchant);
     }
-    
+
     public Page<OfferResponse> getFeaturedOffers(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         List<Offer> offers = offerRepository.findFeaturedOffers(OfferStatus.ACTIVE, now, pageable);
         return Page.empty(); // Convert list to page if needed
     }
-    
+
     public Page<OfferResponse> searchOffers(String search, Pageable pageable) {
         return offerRepository.searchOffers(search, OfferStatus.ACTIVE, pageable)
-            .map(OfferResponse::fromEntity);
+            .map(this::toOfferResponseWithMerchant);
+    }
+
+    private OfferResponse toOfferResponseWithMerchant(Offer offer) {
+        OfferResponse response = OfferResponse.fromEntity(offer);
+
+        // Enrich with merchant details
+        if (offer.getMerchantId() != null) {
+            merchantRepository.findById(offer.getMerchantId()).ifPresent(merchant -> {
+                response.setMerchantName(merchant.getBusinessName());
+                response.setMerchantLogoUrl(merchant.getLogoUrl());
+            });
+        }
+
+        return response;
     }
     
     @Transactional

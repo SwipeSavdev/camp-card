@@ -67,7 +67,7 @@ public class OfferController {
         } else if (featured) {
             offers = offerService.getFeaturedOffers(pageable);
         } else {
-            offers = offerService.getActiveOffers(pageable);
+            offers = offerService.getAllOffers(pageable);
         }
         
         return ResponseEntity.ok(offers);
