@@ -220,6 +220,9 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
   -e REDIS_PASSWORD=campcard123 \
   -e REDIS_SSL=false \
+  -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
+  -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
+  -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
   --network campcard_campcard-network campcard-backend:latest
 
 # Frontend deployment
@@ -317,6 +320,9 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
   -e REDIS_PASSWORD=campcard123 \
   -e REDIS_SSL=false \
+  -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
+  -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
+  -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
   --network campcard_campcard-network campcard-backend:latest
 ```
 
