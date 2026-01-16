@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@playwright/test": "^1.57.0",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-svg": "^15.15.1"
   }
