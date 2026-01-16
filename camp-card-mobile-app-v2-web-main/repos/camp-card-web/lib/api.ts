@@ -102,7 +102,8 @@ export const api = {
   // ============ USERS ============
   getUsers: async (session?: Session | null) => {
     try {
-      const result = await apiCall<any>('/users', {}, session);
+      // Request all users with a large page size to avoid pagination issues
+      const result = await apiCall<any>('/users?size=1000', {}, session);
       return {
         content: result.content || result.users || result || [],
       };
