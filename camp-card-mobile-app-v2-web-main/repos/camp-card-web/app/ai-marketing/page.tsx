@@ -1554,7 +1554,7 @@ export default function AIMarketingPage() {
       }}
       >
         <div style={{
-          backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: 0, width: '90%', maxWidth: '800px', maxHeight: '90vh', overflow: 'hidden', boxShadow: themeShadow.lg,
+          backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: 0, width: '90%', maxWidth: '800px', maxHeight: '90vh', boxShadow: themeShadow.lg, display: 'flex', flexDirection: 'column',
         }}
         >
           {/* Modal Header */}
@@ -1587,7 +1587,7 @@ export default function AIMarketingPage() {
           </div>
 
           {/* Modal Body */}
-          <div style={{ padding: themeSpace.lg, overflowY: 'auto', maxHeight: 'calc(90vh - 160px)' }}>
+          <div style={{ padding: themeSpace.lg, overflowY: 'auto', flex: 1, minHeight: 0 }}>
             {/* Campaign Name */}
             <div style={{ marginBottom: themeSpace.lg }}>
               <label style={{
@@ -1867,7 +1867,7 @@ export default function AIMarketingPage() {
 
           {/* Modal Footer */}
           <div style={{
-            padding: themeSpace.lg, borderTop: `1px solid ${themeColors.gray200}`, display: 'flex', justifyContent: 'flex-end', gap: themeSpace.md,
+            padding: themeSpace.lg, borderTop: `1px solid ${themeColors.gray200}`, display: 'flex', justifyContent: 'flex-end', gap: themeSpace.md, flexShrink: 0,
           }}
           >
             <button
