@@ -238,18 +238,16 @@ export default function SettingsScreen() {
       value: locationServices,
       onToggle: handleLocationServicesToggle,
     },
-    ...(biometricAvailable
-      ? [
-          {
-            icon: 'finger-print' as any,
-            title: biometricType,
-            subtitle: `Use ${biometricType} for quick login`,
-            type: 'toggle' as const,
-            value: biometricLogin,
-            onToggle: handleBiometricToggle,
-          },
-        ]
-      : []),
+    {
+      icon: 'finger-print' as any,
+      title: biometricType,
+      subtitle: biometricAvailable
+        ? `Use ${biometricType} for quick login`
+        : 'Not available on this device',
+      type: 'toggle' as const,
+      value: biometricLogin,
+      onToggle: biometricAvailable ? handleBiometricToggle : undefined,
+    },
   ];
 
   const accountSettings: SettingItem[] = [
@@ -307,7 +305,7 @@ export default function SettingsScreen() {
               onValueChange={item.onToggle}
               trackColor={{ false: '#E0E0E0', true: COLORS.primary + '60' }}
               thumbColor={item.value ? COLORS.primary : '#F4F4F4'}
-              disabled={loadingBiometric && item.title === biometricType}
+              disabled={(loadingBiometric && item.title === biometricType) || !item.onToggle}
             />
           )}
         </>
