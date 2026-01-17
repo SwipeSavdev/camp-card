@@ -334,7 +334,7 @@ export default function WalletScreen() {
         <View style={styles.redemptionsSection}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Recent Redemptions</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('RedemptionHistory' as any)}>
               <Text style={styles.seeAllLink}>See All</Text>
             </TouchableOpacity>
           </View>

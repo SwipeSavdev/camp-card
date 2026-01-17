@@ -44,6 +44,7 @@ import PrivacyPolicyScreen from '../screens/profile/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/profile/TermsOfServiceScreen';
 import HelpSupportScreen from '../screens/profile/HelpSupportScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
+import RedemptionHistoryScreen from '../screens/wallet/RedemptionHistoryScreen';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -82,6 +83,7 @@ export type ScoutStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  RedemptionHistory: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -113,6 +115,7 @@ export type TroopLeaderStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  RedemptionHistory: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -140,6 +143,7 @@ export type CustomerStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  RedemptionHistory: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -245,6 +249,7 @@ function ScoutMainNavigator() {
         <ScoutStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: true, title: 'Referrals' }} />
         <ScoutStack.Screen name="ViewOffers" component={OffersScreen} options={{ headerShown: true, title: 'Available Offers' }} />
         <ScoutStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
@@ -322,6 +327,7 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="InviteScouts" component={InviteScoutsScreen} options={{ headerShown: true, title: 'Invite Scouts' }} />
         <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
+        <TroopLeaderStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
@@ -383,6 +389,7 @@ function CustomerMainNavigator() {
         <CustomerStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
         <CustomerStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <CustomerStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />

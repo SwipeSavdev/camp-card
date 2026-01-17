@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -23,6 +24,14 @@ import {
   enableBiometricAuth,
   disableBiometricAuth,
 } from '../../services/biometricsService';
+
+// AsyncStorage keys for settings
+const SETTINGS_KEYS = {
+  PUSH_NOTIFICATIONS: '@settings_push_notifications',
+  EMAIL_NOTIFICATIONS: '@settings_email_notifications',
+  OFFER_ALERTS: '@settings_offer_alerts',
+  LOCATION_SERVICES: '@settings_location_services',
+};
 
 interface SettingItem {
   icon: string;
@@ -48,10 +57,58 @@ export default function SettingsScreen() {
   const [biometricType, setBiometricType] = useState<string>('Biometric Login');
   const [loadingBiometric, setLoadingBiometric] = useState(false);
 
-  // Check biometric availability on mount
+  // Load settings from storage and check biometrics on mount
   useEffect(() => {
+    loadSettings();
     checkBiometrics();
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      const [pushValue, emailValue, offerValue, locationValue] = await Promise.all([
+        AsyncStorage.getItem(SETTINGS_KEYS.PUSH_NOTIFICATIONS),
+        AsyncStorage.getItem(SETTINGS_KEYS.EMAIL_NOTIFICATIONS),
+        AsyncStorage.getItem(SETTINGS_KEYS.OFFER_ALERTS),
+        AsyncStorage.getItem(SETTINGS_KEYS.LOCATION_SERVICES),
+      ]);
+
+      // Default to true if not set
+      if (pushValue !== null) setPushNotifications(pushValue === 'true');
+      if (emailValue !== null) setEmailNotifications(emailValue === 'true');
+      if (offerValue !== null) setOfferAlerts(offerValue === 'true');
+      if (locationValue !== null) setLocationServices(locationValue === 'true');
+    } catch (error) {
+      console.log('Failed to load settings:', error);
+    }
+  };
+
+  const saveSetting = async (key: string, value: boolean) => {
+    try {
+      await AsyncStorage.setItem(key, value.toString());
+    } catch (error) {
+      console.log('Failed to save setting:', error);
+    }
+  };
+
+  const handlePushNotificationsToggle = (value: boolean) => {
+    setPushNotifications(value);
+    saveSetting(SETTINGS_KEYS.PUSH_NOTIFICATIONS, value);
+  };
+
+  const handleEmailNotificationsToggle = (value: boolean) => {
+    setEmailNotifications(value);
+    saveSetting(SETTINGS_KEYS.EMAIL_NOTIFICATIONS, value);
+  };
+
+  const handleOfferAlertsToggle = (value: boolean) => {
+    setOfferAlerts(value);
+    saveSetting(SETTINGS_KEYS.OFFER_ALERTS, value);
+  };
+
+  const handleLocationServicesToggle = (value: boolean) => {
+    setLocationServices(value);
+    saveSetting(SETTINGS_KEYS.LOCATION_SERVICES, value);
+  };
 
   const checkBiometrics = async () => {
     const capability = await checkBiometricAvailability();
@@ -152,7 +209,7 @@ export default function SettingsScreen() {
       subtitle: 'Receive push notifications on your device',
       type: 'toggle',
       value: pushNotifications,
-      onToggle: setPushNotifications,
+      onToggle: handlePushNotificationsToggle,
     },
     {
       icon: 'mail',
@@ -160,7 +217,7 @@ export default function SettingsScreen() {
       subtitle: 'Receive updates via email',
       type: 'toggle',
       value: emailNotifications,
-      onToggle: setEmailNotifications,
+      onToggle: handleEmailNotificationsToggle,
     },
     {
       icon: 'pricetag',
@@ -168,7 +225,7 @@ export default function SettingsScreen() {
       subtitle: 'Get notified about new offers nearby',
       type: 'toggle',
       value: offerAlerts,
-      onToggle: setOfferAlerts,
+      onToggle: handleOfferAlertsToggle,
     },
   ];
 
@@ -179,7 +236,7 @@ export default function SettingsScreen() {
       subtitle: 'Allow app to access your location',
       type: 'toggle',
       value: locationServices,
-      onToggle: setLocationServices,
+      onToggle: handleLocationServicesToggle,
     },
     ...(biometricAvailable
       ? [
