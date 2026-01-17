@@ -98,6 +98,7 @@ public class UserService {
 
         // Generate verification token
         String verificationToken = UUID.randomUUID().toString();
+        log.info("Generated verification token for {}: {}", request.email(), verificationToken);
 
         User user = User.builder()
             .email(request.email().toLowerCase())

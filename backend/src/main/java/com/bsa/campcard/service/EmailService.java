@@ -49,8 +49,11 @@ public class EmailService {
             return;
         }
 
+        log.info("Sending verification email to {} with token: {}", to, token);
+
         String subject = "Verify Your BSA Camp Card Account";
         String verifyUrl = webPortalUrl + "/verify-email?token=" + token;
+        log.info("Verification URL: {}", verifyUrl);
 
         String htmlBody = buildEmailTemplate(
             "Verify Your Email Address",
