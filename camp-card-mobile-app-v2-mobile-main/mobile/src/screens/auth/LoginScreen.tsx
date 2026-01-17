@@ -238,7 +238,7 @@ export default function LoginScreen() {
             {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+              <TouchableOpacity onPress={() => navigation.navigate('SubscriptionSelection')}>
                 <Text style={styles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Share, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Share,
   Alert,
   ActivityIndicator,
-  ScrollView 
+  ScrollView
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
@@ -70,22 +71,28 @@ export default function MyQRCodeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#003f87" />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name="arrow-back" size={24} color="#003f87" />
-      </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {/* Fixed Header with Back Button */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#003f87" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>My QR Code</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
-      <Text style={styles.title}>My Camp Card</Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>My Camp Card</Text>
       <Text style={styles.subtitle}>
         Share your unique QR code or link to earn referral rewards
       </Text>
@@ -153,18 +160,41 @@ export default function MyQRCodeScreen() {
           Friends who join using your link will help support your troop's fundraising goals!
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#f5f5f5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#003f87',
+  },
+  headerSpacer: {
+    width: 40,
+  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
   content: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -173,8 +203,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   title: {
     fontSize: 28,

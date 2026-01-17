@@ -10,18 +10,25 @@ import {
   Platform,
   Image,
   useWindowDimensions,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { AuthStackParamList } from '../../navigation/RootNavigator';
 
 // Add your logo asset (adjust path/filename as needed)
 const COUNCIL_LOGO = require('../../../assets/council_logo.png');
 
+type SignupScreenRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
+
 export default function SignupScreen() {
+  const route = useRoute<SignupScreenRouteProp>();
+  const selectedPlan = route.params?.selectedPlan;
+  const paymentCompleted = route.params?.paymentCompleted;
   const [firstName, setFirstName] = React.useState('');
   const [lastName, setLastName] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -64,7 +71,7 @@ export default function SignupScreen() {
 
     try {
       // Call the signup API
-      const signupData = {
+      const signupData: any = {
         email: email.trim(),
         password,
         firstName: firstName.trim(),
@@ -72,6 +79,11 @@ export default function SignupScreen() {
         phone: phone ? phone.trim() : undefined,
         role: 'PARENT' as const, // Default to customer role for mobile signups
       };
+
+      // Include subscription plan if payment was completed
+      if (selectedPlan && paymentCompleted) {
+        signupData.subscriptionPlanId = selectedPlan.id;
+      }
 
       await signup(signupData);
 
@@ -122,12 +134,36 @@ export default function SignupScreen() {
         </View>
 
         {/* Middle: Header text + Form */}
-        <View style={styles.middleSection}>
+        <ScrollView
+          style={styles.middleSection}
+          contentContainerStyle={styles.middleSectionContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* moved here so it stays visible above the form */}
           <View style={[styles.headerTextContainer, styles.headerTextAboveForm]}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join BSA Camp Card</Text>
+            <Text style={styles.title}>
+              {paymentCompleted ? 'Complete Your Account' : 'Create Account'}
+            </Text>
+            <Text style={styles.subtitle}>
+              {paymentCompleted ? 'One more step to activate your subscription' : 'Join BSA Camp Card'}
+            </Text>
           </View>
+
+          {/* Selected Plan Banner */}
+          {selectedPlan && paymentCompleted && (
+            <View style={styles.planBanner}>
+              <View style={styles.planBannerIcon}>
+                <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+              </View>
+              <View style={styles.planBannerContent}>
+                <Text style={styles.planBannerTitle}>Payment Successful</Text>
+                <Text style={styles.planBannerText}>
+                  {selectedPlan.name} - ${(selectedPlan.priceCents / 100).toFixed(2)}/{selectedPlan.billingInterval === 'ANNUAL' ? 'year' : 'month'}
+                </Text>
+              </View>
+            </View>
+          )}
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
@@ -260,7 +296,7 @@ export default function SignupScreen() {
               Password must be at least 8 characters
             </Text>
           </View>
-        </View>
+        </ScrollView>
 
         {/* Bottom: CTA always visible */}
         <View style={styles.bottomSection}>
@@ -321,10 +357,10 @@ const styles = StyleSheet.create({
   },
   middleSection: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  middleSectionContent: {
     paddingTop: 8,
-    paddingBottom: 8,
-    minHeight: 0,
+    paddingBottom: 16,
   },
   bottomSection: {
     paddingHorizontal: 24,
@@ -422,5 +458,32 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  planBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    marginHorizontal: 24,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  planBannerIcon: {
+    marginRight: 12,
+  },
+  planBannerContent: {
+    flex: 1,
+  },
+  planBannerTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 2,
+  },
+  planBannerText: {
+    fontSize: 13,
+    color: '#388E3C',
   },
 });
