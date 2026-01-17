@@ -25,6 +25,9 @@ public class EmailService {
     @Value("${campcard.base-url:https://bsa.swipesavvy.com}")
     private String baseUrl;
 
+    @Value("${campcard.web-portal-url:${campcard.base-url:https://bsa.swipesavvy.com}}")
+    private String webPortalUrl;
+
     @Value("${campcard.notifications.email.enabled:true}")
     private boolean emailEnabled;
 
@@ -47,7 +50,7 @@ public class EmailService {
         }
 
         String subject = "Verify Your BSA Camp Card Account";
-        String verifyUrl = baseUrl + "/verify-email?token=" + token;
+        String verifyUrl = webPortalUrl + "/verify-email?token=" + token;
 
         String htmlBody = buildEmailTemplate(
             "Verify Your Email Address",
@@ -95,7 +98,7 @@ public class EmailService {
         }
 
         String subject = "Reset Your BSA Camp Card Password";
-        String resetUrl = baseUrl + "/reset-password?token=" + token;
+        String resetUrl = webPortalUrl + "/reset-password?token=" + token;
 
         String htmlBody = buildEmailTemplate(
             "Password Reset Request",

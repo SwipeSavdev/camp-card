@@ -252,6 +252,105 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
+    public void changePassword(UUID userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new AuthenticationException("Current password is incorrect");
+        }
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Send password changed notification
+        emailService.sendSecuritySettingsChangedNotification(
+                user.getEmail(),
+                user.getFirstName(),
+                "Password"
+        );
+
+        log.info("Password changed for user: {}", user.getEmail());
+    }
+
+    @Transactional
+    public UserProfileResponse updateProfile(UUID userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+
+        boolean emailChanged = false;
+        String oldEmail = user.getEmail();
+
+        // Check if email is changing and if it's already taken
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail().toLowerCase())) {
+                throw new AuthenticationException("Email already in use");
+            }
+            emailChanged = true;
+        }
+
+        // Track what changed for notification
+        StringBuilder changedFields = new StringBuilder();
+        if (!user.getFirstName().equals(request.getFirstName())) {
+            changedFields.append("first name, ");
+        }
+        if (!user.getLastName().equals(request.getLastName())) {
+            changedFields.append("last name, ");
+        }
+        if (!user.getPhoneNumber().equals(request.getPhone())) {
+            changedFields.append("phone number, ");
+        }
+        if (emailChanged) {
+            changedFields.append("email address, ");
+        }
+
+        // Update fields
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhoneNumber(request.getPhone());
+
+        if (emailChanged) {
+            user.setEmail(request.getEmail().toLowerCase());
+            user.setEmailVerified(false);
+            user.setEmailVerificationToken(UUID.randomUUID().toString());
+            user.setEmailVerificationExpiresAt(LocalDateTime.now().plusDays(7));
+
+            // Send email change notification to both old and new addresses
+            emailService.sendEmailChangeNotification(
+                    oldEmail,
+                    request.getEmail(),
+                    user.getFirstName()
+            );
+
+            // Send verification email to new address
+            emailService.sendVerificationEmail(
+                    user.getEmail(),
+                    user.getEmailVerificationToken()
+            );
+        } else if (changedFields.length() > 0) {
+            // Send profile update notification
+            String changes = changedFields.substring(0, changedFields.length() - 2); // Remove trailing comma
+            emailService.sendProfileUpdateNotification(
+                    user.getEmail(),
+                    user.getFirstName(),
+                    changes
+            );
+        }
+
+        User savedUser = userRepository.save(user);
+
+        log.info("Profile updated for user: {}", savedUser.getEmail());
+
+        return getCurrentUser(jwtTokenProvider.generateAccessToken(savedUser).replace("Bearer ", ""));
+    }
+
+    public UUID getUserIdFromToken(String token) {
+        return jwtTokenProvider.getUserIdFromToken(token);
+    }
+
     private String generateReferralCode() {
         return UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }

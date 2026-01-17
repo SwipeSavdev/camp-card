@@ -223,8 +223,14 @@ campcard:
     default-limit: 100  # Requests per minute
     burst-capacity: 20
   
-  # Base URL for email links
+  # Base URL for the application (production: https://bsa.swipesavvy.com)
   base-url: ${CAMPCARD_BASE_URL:https://bsa.swipesavvy.com}
+
+  # Web Portal URL for password reset and email verification links
+  # Production: https://bsa.swipesavvy.com/campcard
+  # Development: http://localhost:3000 or http://YOUR_EC2_IP:7020
+  # This defaults to /campcard path on the base URL
+  web-portal-url: ${CAMPCARD_WEB_PORTAL_URL:https://bsa.swipesavvy.com/campcard}
 
   # Notifications (AWS SES for email, AWS SNS for SMS)
   notifications:

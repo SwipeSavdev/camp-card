@@ -45,7 +45,6 @@ export default function OffersScreen() {
   const [filteredOffers, setFilteredOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const navigation = useNavigation();
   const { user } = useAuthStore();
@@ -67,7 +66,7 @@ export default function OffersScreen() {
 
   useEffect(() => {
     filterOffers();
-  }, [selectedCategory, searchQuery, offers]);
+  }, [selectedCategory, offers]);
 
   const loadOffers = async (isRefresh = false) => {
     try {
@@ -112,15 +111,6 @@ export default function OffersScreen() {
 
     if (selectedCategory !== 'ALL') {
       filtered = filtered.filter(o => o.category === selectedCategory);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(o =>
-        o.title.toLowerCase().includes(query) ||
-        o.description?.toLowerCase().includes(query) ||
-        o.merchantName?.toLowerCase().includes(query)
-      );
     }
 
     setFilteredOffers(filtered);
@@ -236,22 +226,6 @@ export default function OffersScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search offers..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery !== '' && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#999" />
-          </TouchableOpacity>
-        )}
-      </View>
-
       {/* Category Filter */}
       <ScrollView
         horizontal
@@ -279,13 +253,6 @@ export default function OffersScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {/* Results Count */}
-      <View style={styles.resultsContainer}>
-        <Text style={styles.resultsText}>
-          {filteredOffers.length} {filteredOffers.length === 1 ? 'offer' : 'offers'} available
-        </Text>
-      </View>
 
       {/* Offers List */}
       <FlatList

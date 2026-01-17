@@ -201,26 +201,26 @@ export default function SettingsScreen() {
       title: 'Edit Profile',
       subtitle: 'Update your personal information',
       type: 'link',
-      onPress: () => Alert.alert('Coming Soon', 'Profile editing will be available soon.'),
+      onPress: () => (navigation as any).navigate('EditProfile'),
     },
     {
       icon: 'lock-closed',
       title: 'Change Password',
       subtitle: 'Update your account password',
       type: 'link',
-      onPress: () => Alert.alert('Coming Soon', 'Password change will be available soon.'),
+      onPress: () => (navigation as any).navigate('ChangePassword'),
     },
     {
       icon: 'shield-checkmark',
       title: 'Privacy Policy',
       type: 'link',
-      onPress: () => Alert.alert('Privacy Policy', 'Our privacy policy can be found at https://campcard.org/privacy'),
+      onPress: () => (navigation as any).navigate('PrivacyPolicy'),
     },
     {
       icon: 'document-text',
       title: 'Terms of Service',
       type: 'link',
-      onPress: () => Alert.alert('Terms of Service', 'Our terms of service can be found at https://campcard.org/terms'),
+      onPress: () => (navigation as any).navigate('TermsOfService'),
     },
   ];
 

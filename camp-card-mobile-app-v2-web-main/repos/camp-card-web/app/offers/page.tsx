@@ -678,7 +678,7 @@ export default function OffersPage() {
  || offer.description?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesMerchant = merchantFilter === '' || item.merchantId === merchantFilter;
     const matchesDiscountType = discountTypeFilter === ''
- || item.items?.some((offer: OfferItem) => offer.discountType === discountTypeFilter);
+ || item.items?.some((offer: OfferItem) => offer.discountType === mapDiscountType(discountTypeFilter));
     const matchesUsageType = usageTypeFilter === ''
  || item.items?.some((offer: OfferItem) => offer.useType === usageTypeFilter);
     return matchesSearch && matchesMerchant && matchesDiscountType && matchesUsageType;

@@ -135,7 +135,7 @@ export const apiClient = new ApiClient();
 export const authApi = {
   login: (email: string, password: string) =>
     apiClient.post('/api/v1/auth/login', { email, password }),
-  
+
   signup: (data: {
     email: string;
     password: string;
@@ -144,19 +144,33 @@ export const authApi = {
     phone?: string;
     role: string;
   }) => apiClient.post('/api/v1/auth/register', data),
-  
+
   logout: () => apiClient.post('/api/v1/auth/logout'),
-  
+
   refreshToken: (refreshToken: string) =>
     apiClient.post('/api/v1/auth/refresh', { refreshToken }),
-  
+
   getCurrentUser: () => apiClient.get('/api/v1/auth/me'),
-  
+
   forgotPassword: (email: string) =>
     apiClient.post('/api/v1/auth/forgot-password', { email }),
-  
+
   resetPassword: (token: string, newPassword: string) =>
     apiClient.post('/api/v1/auth/reset-password', { token, newPassword }),
+};
+
+export const userApi = {
+  updateProfile: (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  }) => apiClient.put('/api/v1/auth/profile', data),
+
+  changePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+  }) => apiClient.post('/api/v1/auth/change-password', data),
 };
 
 export const offersApi = {

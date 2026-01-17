@@ -75,4 +75,26 @@ public class AuthController {
         UserProfileResponse profile = authService.getCurrentUser(token);
         return ResponseEntity.ok(profile);
     }
+
+    @PostMapping("/change-password")
+    @Operation(summary = "Change user password")
+    public ResponseEntity<MessageResponse> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        String token = authHeader.replace("Bearer ", "");
+        UUID userId = authService.getUserIdFromToken(token);
+        authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok(new MessageResponse("Password changed successfully"));
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "Update user profile")
+    public ResponseEntity<UserProfileResponse> updateProfile(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody UpdateProfileRequest request) {
+        String token = authHeader.replace("Bearer ", "");
+        UUID userId = authService.getUserIdFromToken(token);
+        UserProfileResponse profile = authService.updateProfile(userId, request);
+        return ResponseEntity.ok(profile);
+    }
 }

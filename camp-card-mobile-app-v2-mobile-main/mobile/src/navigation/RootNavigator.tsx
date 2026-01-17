@@ -38,6 +38,10 @@ import RedemptionSuccessScreen from '../screens/RedemptionSuccessScreen';
 import ShareOfferScreen from '../screens/ShareOfferScreen';
 import QRScannerScreen from '../screens/QRScannerScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import ChangePasswordScreen from '../screens/profile/ChangePasswordScreen';
+import PrivacyPolicyScreen from '../screens/profile/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '../screens/profile/TermsOfServiceScreen';
 import HelpSupportScreen from '../screens/profile/HelpSupportScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 
@@ -79,6 +83,10 @@ export type ScoutStackParamList = {
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
   Settings: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
   HelpSupport: undefined;
 };
 
@@ -106,6 +114,10 @@ export type TroopLeaderStackParamList = {
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
   Settings: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
   HelpSupport: undefined;
 };
 
@@ -129,6 +141,10 @@ export type CustomerStackParamList = {
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
   Settings: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
   HelpSupport: undefined;
 };
 
@@ -173,7 +189,7 @@ function OffersNavigator() {
       <OffersStack.Screen
         name="OffersList"
         component={OffersScreen}
-        options={{ title: 'Offers Near You' }}
+        options={{ headerShown: false }}
       />
       <OffersStack.Screen
         name="OfferDetail"
@@ -230,6 +246,10 @@ function ScoutMainNavigator() {
         <ScoutStack.Screen name="ViewOffers" component={OffersScreen} options={{ headerShown: true, title: 'Available Offers' }} />
         <ScoutStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="TermsOfService" component={TermsOfServiceScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
       </ScoutStack.Group>
       <ScoutStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
@@ -303,6 +323,10 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
         <TroopLeaderStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="TermsOfService" component={TermsOfServiceScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
       </TroopLeaderStack.Group>
       <TroopLeaderStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
@@ -360,6 +384,10 @@ function CustomerMainNavigator() {
         <CustomerStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <CustomerStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="TermsOfService" component={TermsOfServiceScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
       </CustomerStack.Group>
       <CustomerStack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
