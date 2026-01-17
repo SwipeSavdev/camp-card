@@ -320,10 +320,11 @@ const styles = StyleSheet.create({
   categoryContainer: {
     flexGrow: 0,
     marginBottom: 8,
+    marginTop: 12,
   },
   categoryContent: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   categoryButton: {

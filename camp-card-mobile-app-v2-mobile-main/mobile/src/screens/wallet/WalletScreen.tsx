@@ -392,7 +392,7 @@ export default function WalletScreen() {
 
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={flipCard}
+              onPress={() => navigation.navigate('QRScanner' as any)}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
                 <Ionicons name="qr-code" size={24} color={COLORS.success} />

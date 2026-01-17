@@ -30,7 +30,7 @@ export default function MyQRCodeScreen() {
   const loadUserQRCode = async () => {
     try {
       // Generate or fetch user's unique QR code data
-      const response = await apiClient.get('/users/me/qr-code');
+      const response = await apiClient.get('/api/v1/users/me/qr-code');
       const data = response.data;
       
       setQrData({

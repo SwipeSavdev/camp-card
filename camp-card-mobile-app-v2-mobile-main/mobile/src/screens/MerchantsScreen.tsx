@@ -149,9 +149,11 @@ export default function MerchantsScreen() {
       });
     }
 
-    // Filter by category
+    // Filter by category (case-insensitive comparison)
     if (selectedCategory !== 'ALL') {
-      filtered = filtered.filter((m) => m.category === selectedCategory);
+      filtered = filtered.filter((m) =>
+        m.category?.toUpperCase() === selectedCategory.toUpperCase()
+      );
     }
 
     // Filter by search query

@@ -63,8 +63,8 @@ export default function SubscriptionScreen() {
   const loadSubscriptionData = async () => {
     try {
       const [subResponse, plansResponse] = await Promise.all([
-        apiClient.get('/subscriptions/me'),
-        apiClient.get('/subscription-plans')
+        apiClient.get('/api/v1/subscriptions/me'),
+        apiClient.get('/api/v1/subscription-plans')
       ]);
 
       setSubscription(subResponse.data);
@@ -72,7 +72,7 @@ export default function SubscriptionScreen() {
     } catch (error: any) {
       if (error.response?.status === 404) {
         // No subscription yet, just load plans
-        const plansResponse = await apiClient.get('/subscription-plans');
+        const plansResponse = await apiClient.get('/api/v1/subscription-plans');
         setAvailablePlans(plansResponse.data.data || []);
       } else {
         console.error('Error loading subscription:', error);
@@ -103,7 +103,7 @@ export default function SubscriptionScreen() {
               setLoading(true);
 
               // In production, this would integrate with Stripe
-              await apiClient.post('/subscriptions', {
+              await apiClient.post('/api/v1/subscriptions', {
                 plan_id: plan.id,
                 payment_method: {
                   type: 'STRIPE',
@@ -139,7 +139,7 @@ export default function SubscriptionScreen() {
           onPress: async () => {
             try {
               setLoading(true);
-              await apiClient.patch('/subscriptions/me', {
+              await apiClient.patch('/api/v1/subscriptions/me', {
                 cancel_at_period_end: true
               });
               Alert.alert('Subscription Canceled', 'Your subscription will end at the current billing period.');
@@ -158,7 +158,7 @@ export default function SubscriptionScreen() {
   const handleReactivate = async () => {
     try {
       setLoading(true);
-      await apiClient.post('/subscriptions/me/reactivate');
+      await apiClient.post('/api/v1/subscriptions/me/reactivate');
       Alert.alert('Success!', 'Your subscription has been reactivated');
       loadSubscriptionData();
     } catch (error: any) {
@@ -175,7 +175,7 @@ export default function SubscriptionScreen() {
 
   const toggleAutoRenew = async (value: boolean) => {
     try {
-      await apiClient.patch('/subscriptions/me', {
+      await apiClient.patch('/api/v1/subscriptions/me', {
         cancel_at_period_end: !value
       });
       loadSubscriptionData();
