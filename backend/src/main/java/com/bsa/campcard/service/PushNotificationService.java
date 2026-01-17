@@ -1,6 +1,5 @@
 package com.bsa.campcard.service;
 
-import com.bsa.campcard.dto.notification.NotificationRequest;
 import com.bsa.campcard.entity.DeviceToken;
 import com.bsa.campcard.repository.DeviceTokenRepository;
 import com.google.firebase.messaging.*;

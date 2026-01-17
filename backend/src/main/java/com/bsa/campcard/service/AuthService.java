@@ -1,7 +1,6 @@
 package com.bsa.campcard.service;
 
 import com.bsa.campcard.dto.auth.*;
-import com.bsa.campcard.entity.Subscription;
 import com.bsa.campcard.exception.AuthenticationException;
 import com.bsa.campcard.repository.SubscriptionRepository;
 import com.bsa.campcard.security.JwtTokenProvider;
