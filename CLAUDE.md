@@ -186,8 +186,9 @@ Closes #123
 ### EC2 Server Details
 - **IP Address**: 18.190.69.205
 - **SSH User**: ubuntu
-- **SSH Key**: `~/.ssh/campcard-ec2`
+- **SSH Key**: `~/.ssh/campcard-github-actions`
 - **Domain**: https://bsa.swipesavvy.com
+- **SSH Command**: `ssh -i ~/.ssh/campcard-github-actions ubuntu@18.190.69.205`
 
 ### Docker Containers on EC2
 | Container | Image | Ports | Network |
