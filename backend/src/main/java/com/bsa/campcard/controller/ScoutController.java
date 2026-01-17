@@ -99,7 +99,7 @@ public class ScoutController {
     }
     
     @PostMapping("/{id}/record-sale")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER', 'SCOUT')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER', 'SCOUT')")
     public ResponseEntity<Void> recordSale(
             @PathVariable Long id,
             @RequestParam BigDecimal amount,
@@ -109,7 +109,7 @@ public class ScoutController {
     }
     
     @PatchMapping("/{id}/rank")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Void> updateScoutRank(
             @PathVariable Long id,
             @RequestParam String rank) {
@@ -118,7 +118,7 @@ public class ScoutController {
     }
     
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Void> updateScoutStatus(
             @PathVariable Long id,
             @RequestParam String status) {

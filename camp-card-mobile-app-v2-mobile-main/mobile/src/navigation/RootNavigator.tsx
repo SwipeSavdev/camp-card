@@ -427,7 +427,7 @@ export default function RootNavigator() {
 
   // Role-based navigation
   switch (userRole) {
-    case 'TROOP_LEADER':
+    case 'UNIT_LEADER':
       // Blue theme - Troop management features
       return <TroopLeaderMainNavigator />;
 

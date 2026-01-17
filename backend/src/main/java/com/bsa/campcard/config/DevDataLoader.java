@@ -117,7 +117,7 @@ public class DevDataLoader implements CommandLineRunner {
                 .firstName("David")
                 .lastName("Wilson")
                 .phoneNumber("212-555-1101")
-                .role(User.UserRole.TROOP_LEADER)
+                .role(User.UserRole.UNIT_LEADER)
                 .isActive(true)
                 .emailVerified(true)
                 .referralCode("TRP10101")
@@ -131,7 +131,7 @@ public class DevDataLoader implements CommandLineRunner {
                 .firstName("Maria")
                 .lastName("Rodriguez")
                 .phoneNumber("213-555-2101")
-                .role(User.UserRole.TROOP_LEADER)
+                .role(User.UserRole.UNIT_LEADER)
                 .isActive(true)
                 .emailVerified(true)
                 .referralCode("TRP20101")
@@ -219,7 +219,7 @@ public class DevDataLoader implements CommandLineRunner {
         log.info("Test accounts:");
         log.info("  - admin@campcard.org (NATIONAL_ADMIN)");
         log.info("  - john.smith@nycbsa.org (COUNCIL_ADMIN)");
-        log.info("  - david.wilson@troop101.org (TROOP_LEADER)");
+        log.info("  - david.wilson@troop101.org (UNIT_LEADER)");
         log.info("  - james.anderson@email.com (PARENT)");
         log.info("  - ethan.anderson@email.com (SCOUT)");
     }

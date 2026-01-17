@@ -683,7 +683,7 @@ export default function HomeScreen() {
   const userRole = user?.role;
 
   switch (userRole) {
-    case 'TROOP_LEADER':
+    case 'UNIT_LEADER':
       return <TroopLeaderDashboard />;
     case 'SCOUT':
       return <ScoutDashboard />;

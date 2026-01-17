@@ -651,7 +651,7 @@ public class CampaignDispatchService {
                 .collect(Collectors.toList());
             case "SCOUTS" -> userRepository.findByRole(User.UserRole.SCOUT, PageRequest.of(0, 10000)).getContent();
             case "PARENTS" -> userRepository.findByRole(User.UserRole.PARENT, PageRequest.of(0, 10000)).getContent();
-            case "TROOP_LEADERS" -> userRepository.findByRole(User.UserRole.TROOP_LEADER, PageRequest.of(0, 10000)).getContent();
+            case "UNIT_LEADERS" -> userRepository.findByRole(User.UserRole.UNIT_LEADER, PageRequest.of(0, 10000)).getContent();
             default -> Collections.emptyList();
         };
     }

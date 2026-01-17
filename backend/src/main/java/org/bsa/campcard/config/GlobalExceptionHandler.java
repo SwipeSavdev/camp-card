@@ -1,5 +1,6 @@
 package org.bsa.campcard.config;
 
+import com.bsa.campcard.exception.AuthenticationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,20 @@ import java.util.Map;
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    /**
+     * Handle AuthenticationException (invalid tokens, credentials, etc.)
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationException(AuthenticationException ex) {
+        log.warn("Authentication error: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+            "success", false,
+            "error", ex.getMessage(),
+            "timestamp", LocalDateTime.now().toString()
+        ));
+    }
 
     /**
      * Handle IllegalArgumentException (validation errors, duplicate entries, etc.)

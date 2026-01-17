@@ -132,7 +132,7 @@ public class UserController {
 
     @Operation(summary = "Get users by troop", description = "Get all users in a troop")
     @GetMapping("/troop/{troopId}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> getUsersByTroop(
         @Parameter(description = "Troop ID") @PathVariable UUID troopId,
         @PageableDefault(size = 20) Pageable pageable
@@ -144,7 +144,7 @@ public class UserController {
 
     @Operation(summary = "Get scouts by troop", description = "Get all scouts in a troop")
     @GetMapping("/troop/{troopId}/scouts")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> getScoutsByTroop(
         @Parameter(description = "Troop ID") @PathVariable UUID troopId,
         @PageableDefault(size = 50) Pageable pageable
@@ -156,7 +156,7 @@ public class UserController {
 
     @Operation(summary = "Assign scout to troop", description = "Assign a scout user to a troop")
     @PatchMapping("/{userId}/assign-troop/{troopId}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<UserResponse> assignScoutToTroop(
         @Parameter(description = "User ID (Scout)") @PathVariable UUID userId,
         @Parameter(description = "Troop ID") @PathVariable UUID troopId
@@ -167,7 +167,7 @@ public class UserController {
 
     @Operation(summary = "Remove scout from troop", description = "Remove a scout from their troop")
     @DeleteMapping("/{userId}/troop")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<UserResponse> removeScoutFromTroop(
         @Parameter(description = "User ID (Scout)") @PathVariable UUID userId
     ) {
@@ -177,7 +177,7 @@ public class UserController {
 
     @Operation(summary = "Get unassigned scouts", description = "Get scouts not assigned to any troop")
     @GetMapping("/scouts/unassigned")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> getUnassignedScouts(
         @Parameter(description = "Council ID (optional)") @RequestParam(required = false) UUID councilId,
         @PageableDefault(size = 50) Pageable pageable
@@ -198,6 +198,7 @@ public class UserController {
             user.getRole(),
             user.getCouncilId(),
             user.getTroopId(),
+            user.getUnitType(),
             user.getIsActive(),
             user.getEmailVerified(),
             user.getLastLoginAt(),
@@ -215,6 +216,7 @@ public class UserController {
         User.UserRole role,
         UUID councilId,
         UUID troopId,
+        User.UnitType unitType,
         Boolean isActive,
         Boolean emailVerified,
         java.time.LocalDateTime lastLoginAt,

@@ -87,6 +87,10 @@ public class User {
     @Column(name = "card_number", unique = true, length = 20)
     private String cardNumber;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unit_type", length = 50)
+    private UnitType unitType;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -101,9 +105,21 @@ public class User {
     public enum UserRole {
         NATIONAL_ADMIN,
         COUNCIL_ADMIN,
-        TROOP_LEADER,
+        UNIT_LEADER,
         PARENT,
         SCOUT
+    }
+
+    /**
+     * Unit type for scouts (Pack, BSA Troop for Boys, BSA Troop for Girls, Ship, Crew, Family Scouting)
+     */
+    public enum UnitType {
+        PACK,
+        BSA_TROOP_BOYS,
+        BSA_TROOP_GIRLS,
+        SHIP,
+        CREW,
+        FAMILY_SCOUTING
     }
 
     public String getFullName() {

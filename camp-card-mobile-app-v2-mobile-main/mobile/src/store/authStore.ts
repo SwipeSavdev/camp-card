@@ -11,7 +11,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'SCOUT' | 'PARENT' | 'TROOP_LEADER' | 'COUNCIL_ADMIN' | 'NATIONAL_ADMIN';
+  role: 'SCOUT' | 'PARENT' | 'UNIT_LEADER' | 'COUNCIL_ADMIN' | 'NATIONAL_ADMIN';
   councilId?: string;
   troopId?: string;
   subscriptionStatus?: 'active' | 'inactive' | 'expired' | 'none';

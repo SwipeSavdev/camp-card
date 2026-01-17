@@ -101,6 +101,6 @@ public class MarketingSegment {
         ACTIVE_SUBSCRIBERS,
         SCOUTS,
         PARENTS,
-        TROOP_LEADERS
+        UNIT_LEADERS
     }
 }

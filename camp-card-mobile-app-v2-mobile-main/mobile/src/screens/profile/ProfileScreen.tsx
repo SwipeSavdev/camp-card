@@ -21,7 +21,7 @@ export default function ProfileScreen() {
       title: 'Subscription',
       subtitle: 'Manage your subscription',
       onPress: () => navigation.navigate('Subscription'),
-      showFor: ['SCOUT', 'PARENT', 'TROOP_LEADER'],
+      showFor: ['SCOUT', 'PARENT', 'UNIT_LEADER'],
     },
     {
       icon: 'people-outline',
@@ -35,7 +35,7 @@ export default function ProfileScreen() {
       title: 'Notifications',
       subtitle: 'Manage notifications',
       onPress: () => navigation.navigate('Notifications'),
-      showFor: ['SCOUT', 'PARENT', 'TROOP_LEADER'],
+      showFor: ['SCOUT', 'PARENT', 'UNIT_LEADER'],
     },
   ];
 

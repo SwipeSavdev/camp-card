@@ -54,7 +54,7 @@ export default function SubscriptionScreen() {
   const { user } = useAuthStore();
 
   // Check if user is a Troop Leader - they need to select a scout before subscribing
-  const isTroopLeader = user?.role === 'TROOP_LEADER';
+  const isTroopLeader = user?.role === 'UNIT_LEADER';
 
   useEffect(() => {
     loadSubscriptionData();

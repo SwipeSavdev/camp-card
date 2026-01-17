@@ -165,7 +165,8 @@ const bottomNavItems = [
   { name: 'config', label: 'Config', href: '/config' },
 ];
 
-type UserRole = 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'TROOP_LEADER' | 'PARENT' | 'SCOUT';
+type UserRole = 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'UNIT_LEADER' | 'PARENT' | 'SCOUT';
+type UnitType = 'PACK' | 'BSA_TROOP_BOYS' | 'BSA_TROOP_GIRLS' | 'SHIP' | 'CREW' | 'FAMILY_SCOUTING' | null;
 
 interface User {
   id: string;
@@ -173,6 +174,7 @@ interface User {
   email: string;
   status: 'active' | 'inactive';
   role: UserRole;
+  unitType?: UnitType;
 }
 
 export default function UsersPage() {
@@ -187,6 +189,7 @@ export default function UsersPage() {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserStatus, setNewUserStatus] = useState<'active' | 'inactive'>('active');
   const [newUserRole, setNewUserRole] = useState<UserRole>('SCOUT');
+  const [newUserUnitType, setNewUserUnitType] = useState<UnitType>(null);
   const [_troopLeaderSearchTerm, _setTroopLeaderSearchTerm] = useState('');
   const [_showAddTroopLeaderForm, setShowAddTroopLeaderForm] = useState(false);
   const [newTroopLeaderName, setNewTroopLeaderName] = useState('');
@@ -199,6 +202,7 @@ export default function UsersPage() {
   const [editUserEmail, setEditUserEmail] = useState('');
   const [editUserStatus, setEditUserStatus] = useState<'active' | 'inactive'>('active');
   const [editUserRole, setEditUserRole] = useState<UserRole>('SCOUT');
+  const [editUserUnitType, setEditUserUnitType] = useState<UnitType>(null);
 
   // Filter state
   const [roleFilter, setRoleFilter] = useState('');
@@ -228,9 +232,19 @@ export default function UsersPage() {
   const roleOptions = [
     { value: 'NATIONAL_ADMIN', label: 'National Admin' },
     { value: 'COUNCIL_ADMIN', label: 'Council Admin' },
-    { value: 'TROOP_LEADER', label: 'Troop Leader' },
+    { value: 'UNIT_LEADER', label: 'Unit Leader' },
     { value: 'PARENT', label: 'Parent' },
     { value: 'SCOUT', label: 'Scout' },
+  ];
+
+  const unitTypeOptions = [
+    { value: '', label: 'Select Unit Type' },
+    { value: 'PACK', label: 'Pack' },
+    { value: 'BSA_TROOP_BOYS', label: 'BSA Troop for Boys' },
+    { value: 'BSA_TROOP_GIRLS', label: 'BSA Troop for Girls' },
+    { value: 'SHIP', label: 'Ship' },
+    { value: 'CREW', label: 'Crew' },
+    { value: 'FAMILY_SCOUTING', label: 'Family Scouting' },
   ];
 
   useEffect(() => {
@@ -417,7 +431,7 @@ export default function UsersPage() {
     setCurrentPage(1);
   }, [searchTerm, roleFilter, statusFilter, itemsPerPage]);
 
-  const troopLeaders = (Array.isArray(items) ? items : []).filter((item) => item.role === 'TROOP_LEADER');
+  const troopLeaders = (Array.isArray(items) ? items : []).filter((item) => item.role === 'UNIT_LEADER');
 
   const _filteredTroopLeaders = troopLeaders.filter((leader) => leader.name?.toLowerCase().includes(_troopLeaderSearchTerm.toLowerCase())
  || leader.email?.toLowerCase().includes(_troopLeaderSearchTerm.toLowerCase()));
@@ -442,7 +456,7 @@ export default function UsersPage() {
         email: newTroopLeaderEmail,
         password: tempPassword,
         isActive: true,
-        role: 'TROOP_LEADER',
+        role: 'UNIT_LEADER',
       };
 
       console.log('[PAGE] Creating new troop leader:', userData);
@@ -455,7 +469,7 @@ export default function UsersPage() {
           id: newTroopLeader.id || String(Math.floor(Math.random() * 10000)),
           name: `${newTroopLeader.firstName || firstName} ${newTroopLeader.lastName || lastName}`.trim(),
           email: newTroopLeader.email || newTroopLeaderEmail,
-          role: 'TROOP_LEADER' as UserRole,
+          role: 'UNIT_LEADER' as UserRole,
           status: 'active' as 'active' | 'inactive',
         };
         setItems([...items, leader]);
@@ -501,7 +515,7 @@ export default function UsersPage() {
   // Download CSV template
   const downloadTemplate = () => {
     const csvContent = `Name,Email,Role,Status
-John Smith,john.smith@example.com,TROOP_LEADER,active
+John Smith,john.smith@example.com,UNIT_LEADER,active
 Jane Doe,jane.doe@example.com,PARENT,active
 Bob Johnson,bob.johnson@example.com,SCOUT,active`;
 
@@ -552,7 +566,7 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
       const roleIdx = headers.indexOf('role');
       const statusIdx = headers.indexOf('status');
 
-      const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER', 'PARENT', 'SCOUT'];
+      const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER', 'PARENT', 'SCOUT'];
       const validStatuses = ['active', 'inactive'];
       const preview: any[] = [];
       const errors: string[] = [];
@@ -1651,7 +1665,7 @@ Role
                  </tr>
                    <tr>
                    <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>Role</strong></td>
-                   <td style={{ padding: '4px 8px', background: themeColors.white }}>NATIONAL_ADMIN, COUNCIL_ADMIN, TROOP_LEADER, PARENT, or SCOUT</td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>NATIONAL_ADMIN, COUNCIL_ADMIN, UNIT_LEADER, PARENT, or SCOUT</td>
                  </tr>
                    <tr>
                    <td style={{ padding: '4px 8px' }}><strong>Status</strong></td>

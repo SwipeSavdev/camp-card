@@ -204,7 +204,7 @@ export default function CouncilsPage() {
 
       // Filter for existing troop leaders
       const troopLeaders = (usersData.content || usersData || []).filter(
-        (user: any) => user.role === 'TROOP_LEADER',
+        (user: any) => user.role === 'UNIT_LEADER',
       );
       setAvailableTroopLeaders(troopLeaders);
 

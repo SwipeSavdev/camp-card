@@ -126,9 +126,9 @@ export const api = {
 
   verifyEmail: async (token: string) => {
     try {
-      return await apiCall<any>('/auth/verify-email', {
+      // Token must be sent as query parameter, not in body
+      return await apiCall<any>(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
         method: 'POST',
-        body: JSON.stringify({ token }),
       });
     } catch (error) {
       console.error('Failed to verify email:', error);

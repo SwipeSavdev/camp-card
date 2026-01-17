@@ -29,7 +29,7 @@ public class DashboardController {
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     @Operation(summary = "Get dashboard summary", description = "Returns summary metrics only")
     public ResponseEntity<DashboardResponse> getDashboardSummary() {
         log.info("Dashboard summary requested");
@@ -44,7 +44,7 @@ public class DashboardController {
     }
 
     @GetMapping("/troop-sales")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     @Operation(summary = "Get troop sales data", description = "Returns troop sales breakdown for analytics")
     public ResponseEntity<?> getTroopSales() {
         log.info("Troop sales data requested");
@@ -53,7 +53,7 @@ public class DashboardController {
     }
 
     @GetMapping("/troop-recruiting")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     @Operation(summary = "Get troop recruiting data", description = "Returns scout recruiting numbers by troop")
     public ResponseEntity<?> getTroopRecruiting() {
         log.info("Troop recruiting data requested");
@@ -62,7 +62,7 @@ public class DashboardController {
     }
 
     @GetMapping("/scout-sales")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     @Operation(summary = "Get individual scout sales", description = "Returns sales data for individual scouts")
     public ResponseEntity<?> getScoutSales() {
         log.info("Scout sales data requested");
@@ -71,7 +71,7 @@ public class DashboardController {
     }
 
     @GetMapping("/scout-referrals")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     @Operation(summary = "Get scout referrals", description = "Returns referral data for scouts")
     public ResponseEntity<?> getScoutReferrals() {
         log.info("Scout referrals data requested");
@@ -89,7 +89,7 @@ public class DashboardController {
     }
 
     @GetMapping("/sales-trend")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'TROOP_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     @Operation(summary = "Get sales trend data", description = "Returns 30-day sales trend for charts")
     public ResponseEntity<?> getSalesTrend() {
         log.info("Sales trend data requested");
