@@ -31,6 +31,7 @@ public class NotificationRequest {
     private Map<String, String> data;
     
     private String imageUrl;
-    
+
+    @Builder.Default
     private Boolean saveToDatabase = true;
 }
