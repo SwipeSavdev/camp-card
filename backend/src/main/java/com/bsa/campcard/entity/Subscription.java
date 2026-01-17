@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -36,10 +35,11 @@ public class Subscription {
     
     // Referral attribution
     private String referralCode;
-    
+
     @Column(columnDefinition = "UUID")
     private UUID rootScoutId;
-    
+
+    @Builder.Default
     private Integer referralDepth = 0;
     
     // Stripe integration
@@ -49,13 +49,15 @@ public class Subscription {
     // Billing period
     private LocalDateTime currentPeriodStart;
     private LocalDateTime currentPeriodEnd;
-    
+
+    @Builder.Default
     private Boolean cancelAtPeriodEnd = false;
     private LocalDateTime canceledAt;
     
     // Status
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private SubscriptionStatus status = SubscriptionStatus.PENDING;
 
     // Card number (auto-generated on creation)
