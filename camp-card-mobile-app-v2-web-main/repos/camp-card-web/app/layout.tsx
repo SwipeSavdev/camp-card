@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   title: 'BSA Camp Card Portal',
   description: 'Admin portal for BSA Camp Card platform',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
   },
 };
 

@@ -2007,11 +2007,8 @@ public class EmailService {
                                         <table role="presentation" style="width: 100%%;">
                                             <tr>
                                                 <td style="text-align: center;">
-                                                    <!-- BSA Fleur-de-lis symbol approximation -->
-                                                    <div style="width: 60px; height: 60px; background-color: white; border-radius: 50%%; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center;">
-                                                        <span style="font-size: 32px; line-height: 60px;">⚜️</span>
-                                                    </div>
-                                                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">BSA Camp Card</h1>
+                                                    <!-- Camp Card Logo -->
+                                                    <img src="%s/campcard-logo.png" alt="BSA Camp Card" style="max-width: 200px; height: auto; margin-bottom: 16px;" />
                                                     <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Supporting Scouts, One Card at a Time</p>
                                                 </td>
                                             </tr>
@@ -2066,6 +2063,7 @@ public class EmailService {
                 title,
                 BSA_NAVY,
                 adjustColor(BSA_NAVY),
+                webPortalUrl,
                 headerColor,
                 title,
                 content,
