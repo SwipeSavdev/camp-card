@@ -220,6 +220,13 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
   -e REDIS_PASSWORD=campcard123 \
   -e REDIS_SSL=false \
+  -e KAFKA_BOOTSTRAP_SERVERS=campcard-kafka:9092 \
+  -e SMTP_HOST=email-smtp.us-east-2.amazonaws.com \
+  -e SMTP_PORT=587 \
+  -e SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX \
+  -e SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV \
+  -e CAMPCARD_BASE_URL=https://bsa.swipesavvy.com \
+  -e CAMPCARD_WEB_PORTAL_URL=https://bsa.swipesavvy.com \
   -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
   -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
   -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
@@ -320,6 +327,13 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
   -e REDIS_PASSWORD=campcard123 \
   -e REDIS_SSL=false \
+  -e KAFKA_BOOTSTRAP_SERVERS=campcard-kafka:9092 \
+  -e SMTP_HOST=email-smtp.us-east-2.amazonaws.com \
+  -e SMTP_PORT=587 \
+  -e SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX \
+  -e SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV \
+  -e CAMPCARD_BASE_URL=https://bsa.swipesavvy.com \
+  -e CAMPCARD_WEB_PORTAL_URL=https://bsa.swipesavvy.com \
   -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
   -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
   -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
@@ -374,6 +388,41 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
 **Files Modified**:
 - `backend/src/main/resources/application-aws.yml` - JWT expiration from 900000 to 86400000
 - `camp-card-web/app/api/auth/[...nextauth]/route.ts` - Added token refresh logic
+
+### Email Service Configuration (January 2026)
+
+**Problem**: Password reset emails were not being sent. Backend health check showed mail service DOWN with authentication error.
+
+**Root Cause**:
+- AWS SES SMTP credentials were not configured in environment variables
+- Backend expected `SMTP_USERNAME` and `SMTP_PASSWORD` but they were missing
+
+**Solution**:
+1. **Created new AWS SES SMTP credentials**:
+   - IAM User: `ses-smtp-user.20250815-034311`
+   - Access Key ID: `AKIA4P7NVGN7DPQTMHCX`
+   - Converted IAM secret key to SES SMTP password using AWS algorithm
+
+2. **Updated environment variables** (`.env.aws`):
+   ```bash
+   SMTP_HOST=email-smtp.us-east-2.amazonaws.com
+   SMTP_PORT=587
+   SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX
+   SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV
+   ```
+
+3. **Verified domain and sender**:
+   - Domain: `bsa.swipesavvy.com` (verified in SES)
+   - Sender: `no-reply@bsa.swipesavvy.com` (verified)
+
+**Test Results**:
+- Backend health check: Mail service UP ✓
+- Forgot password endpoint: Returns 200 OK ✓
+- Email delivery: Confirmed in backend logs ✓
+
+**Files Modified**:
+- `.env.aws` - Added SMTP configuration
+- Backend container command updated with SMTP environment variables
 
 ### Expo Go Mobile Testing
 
