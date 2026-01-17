@@ -108,7 +108,7 @@ public class UserService {
             .role(request.role())
             .councilId(request.councilId())
             .troopId(request.troopId())
-            .unitType(request.unitType())
+            // .unitType(request.unitType()) // TODO: Re-enable once unit_type column exists
             .isActive(true)
             .emailVerified(false)
             .emailVerificationToken(verificationToken)
@@ -168,9 +168,10 @@ public class UserService {
         if (request.isActive() != null) {
             user.setIsActive(request.isActive());
         }
-        if (request.unitType() != null) {
-            user.setUnitType(request.unitType());
-        }
+        // TODO: Re-enable once unit_type column exists
+        // if (request.unitType() != null) {
+        //     user.setUnitType(request.unitType());
+        // }
 
         User updatedUser = userRepository.save(user);
         log.info("Updated user with ID: {}", id);

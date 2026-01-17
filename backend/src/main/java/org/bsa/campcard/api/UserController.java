@@ -198,7 +198,7 @@ public class UserController {
             user.getRole(),
             user.getCouncilId(),
             user.getTroopId(),
-            user.getUnitType(),
+            null, // unitType - TODO: Re-enable once unit_type column exists
             user.getIsActive(),
             user.getEmailVerified(),
             user.getLastLoginAt(),
@@ -216,7 +216,7 @@ public class UserController {
         User.UserRole role,
         UUID councilId,
         UUID troopId,
-        User.UnitType unitType,
+        String unitType, // Changed to String temporarily until column exists
         Boolean isActive,
         Boolean emailVerified,
         java.time.LocalDateTime lastLoginAt,
