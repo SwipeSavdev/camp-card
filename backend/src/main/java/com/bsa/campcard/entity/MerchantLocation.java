@@ -46,26 +46,29 @@ public class MerchantLocation {
     
     @Column(nullable = false, length = 20)
     private String zipCode;
-    
+
     @Column(length = 50)
+    @Builder.Default
     private String country = "USA";
-    
+
     // Geolocation
     @Column(precision = 10, scale = 7)
     private BigDecimal latitude;
-    
+
     @Column(precision = 10, scale = 7)
     private BigDecimal longitude;
-    
+
     // Contact
     @Column(length = 20)
     private String phone;
-    
+
     @Column(columnDefinition = "TEXT")
     private String hours; // JSON or formatted string
-    
+
     // Features
+    @Builder.Default
     private Boolean primaryLocation = false;
+    @Builder.Default
     private Boolean active = true;
     
     // Audit

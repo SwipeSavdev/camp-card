@@ -66,23 +66,28 @@ public class Merchant {
     // Status and Approval
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private MerchantStatus status = MerchantStatus.PENDING;
-    
+
     private LocalDateTime approvedAt;
-    
+
     @Column(columnDefinition = "UUID")
     private UUID approvedBy; // Admin user ID
-    
+
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
-    
+
     // Agreement
+    @Builder.Default
     private Boolean termsAccepted = false;
     private LocalDateTime termsAcceptedAt;
-    
+
     // Metrics
+    @Builder.Default
     private Integer totalOffers = 0;
+    @Builder.Default
     private Integer activeOffers = 0;
+    @Builder.Default
     private Integer totalRedemptions = 0;
     
     // Audit

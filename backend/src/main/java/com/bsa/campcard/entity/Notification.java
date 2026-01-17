@@ -40,9 +40,11 @@ public class Notification {
     private String imageUrl;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean sent = false;
-    
+
     @Column(nullable = false)
+    @Builder.Default
     private Boolean read = false;
     
     private LocalDateTime sentAt;

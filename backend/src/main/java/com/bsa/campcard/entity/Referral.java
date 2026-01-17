@@ -37,8 +37,9 @@ public class Referral {
     
     @Column(precision = 10, scale = 2)
     private BigDecimal rewardAmount;
-    
+
     @Column(nullable = false)
+    @Builder.Default
     private Boolean rewardClaimed = false;
     
     private LocalDateTime rewardClaimedAt;
