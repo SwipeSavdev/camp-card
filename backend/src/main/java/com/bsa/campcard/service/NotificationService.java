@@ -174,15 +174,15 @@ public class NotificationService {
                     .addAllTokens(tokens)
                     .build();
             
-            BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
-            log.info("iOS notifications sent. Success: {}, Failure: {}", 
+            BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
+            log.info("iOS notifications sent. Success: {}, Failure: {}",
                     response.getSuccessCount(), response.getFailureCount());
-            
+
         } catch (FirebaseMessagingException e) {
             log.error("Error sending to iOS devices", e);
         }
     }
-    
+
     /**
      * Send notifications to Android devices
      */
@@ -195,16 +195,16 @@ public class NotificationService {
                             .setColor("#003f87")
                             .build())
                     .build();
-            
+
             MulticastMessage message = MulticastMessage.builder()
                     .setNotification(notification)
                     .putAllData(data)
                     .setAndroidConfig(androidConfig)
                     .addAllTokens(tokens)
                     .build();
-            
-            BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
-            log.info("Android notifications sent. Success: {}, Failure: {}", 
+
+            BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
+            log.info("Android notifications sent. Success: {}, Failure: {}",
                     response.getSuccessCount(), response.getFailureCount());
             
         } catch (FirebaseMessagingException e) {

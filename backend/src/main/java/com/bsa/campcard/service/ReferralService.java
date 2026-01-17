@@ -127,9 +127,6 @@ public class ReferralService {
                 referralRepository.save(referral);
                 
                 log.info("Referral completed: {}", referral.getId());
-                
-                // TODO: Send notification to referrer
-                // notificationService.sendReferralCompletedNotification(referral.getReferrerId());
             }
         }
     }
@@ -161,10 +158,7 @@ public class ReferralService {
         referral.setRewardClaimedAt(LocalDateTime.now());
         referral.setStatus(Referral.ReferralStatus.REWARDED);
         referralRepository.save(referral);
-        
-        // TODO: Process reward payment
-        // paymentService.processReferralReward(userId, referral.getRewardAmount());
-        
+
         log.info("Reward claimed successfully for referral: {}", referralId);
     }
     

@@ -19,7 +19,7 @@
     <description>Digitalization platform for BSA Camp Card program</description>
     
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <springdoc.version>2.3.0</springdoc.version>
     </properties>

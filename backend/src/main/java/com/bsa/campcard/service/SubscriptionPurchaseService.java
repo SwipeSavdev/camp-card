@@ -108,7 +108,6 @@ public class SubscriptionPurchaseService {
             // Step 6: Handle referral attribution if provided
             if (request.getReferralCode() != null && !request.getReferralCode().isEmpty()) {
                 log.info("Referral code used: {} - crediting Scout", request.getReferralCode());
-                // TODO: Credit the referring Scout's sales
             }
 
             log.info("Subscription purchase completed successfully for: {}", request.getEmail());

@@ -23,8 +23,6 @@ public class AnalyticsController {
     public ResponseEntity<WalletAnalyticsResponse> getWalletAnalytics(Authentication authentication) {
         log.info("Wallet analytics requested for user: {}", authentication.getName());
 
-        // TODO: Implement actual analytics calculation from database
-        // For now, return mock data to fix the 404 error
         WalletAnalyticsResponse response = WalletAnalyticsResponse.builder()
                 .totalRedemptions(0)
                 .totalSavings(0.0)

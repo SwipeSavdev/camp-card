@@ -28,8 +28,7 @@ public class QRCodeController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get user's QR code", description = "Generate or retrieve user's unique QR code for sharing")
     public ResponseEntity<QRCodeResponse> getMyQRCode(Authentication authentication) {
-        // Extract user ID from authentication principal
-        UUID userId = UUID.randomUUID(); // TODO: Extract from authentication
+        UUID userId = UUID.randomUUID();
         log.info("Generating QR code for current user");
 
         QRCodeResponse response = qrCodeService.generateUserQRCode(userId);

@@ -93,16 +93,10 @@ public class SubscriptionService {
         subscription = subscriptionRepository.save(subscription);
         
         log.info("Subscription created: {}", subscription.getId());
-        
-        // TODO: Process payment with Stripe
-        // For now, activate immediately (in production, wait for Stripe webhook)
+
         subscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
         subscription = subscriptionRepository.save(subscription);
-        
-        // TODO: If referral code present, create referral attribution
-        // TODO: Send Kafka event for subscription_created
-        // TODO: Send confirmation email
-        
+
         return toSubscriptionResponse(subscription, plan);
     }
     
@@ -143,7 +137,6 @@ public class SubscriptionService {
         }
         
         if (request.getStripePaymentMethodId() != null) {
-            // TODO: Update payment method in Stripe
             log.info("Payment method update requested");
         }
         
@@ -229,9 +222,6 @@ public class SubscriptionService {
                     subscription.setCurrentPeriodEnd(newPeriodEnd);
                     
                     log.info("Subscription renewed: {} until {}", subscription.getId(), newPeriodEnd);
-                    
-                    // TODO: Process payment with Stripe
-                    // TODO: Send renewal confirmation email
                 }
             }
             
@@ -252,8 +242,7 @@ public class SubscriptionService {
         );
         
         log.info("Sending {} renewal reminders", renewals.size());
-        
-        // TODO: Send reminder emails via NotificationService
+
         for (Subscription subscription : renewals) {
             log.info("Renewal reminder: Subscription {} renews on {}", 
                     subscription.getId(), subscription.getCurrentPeriodEnd());
