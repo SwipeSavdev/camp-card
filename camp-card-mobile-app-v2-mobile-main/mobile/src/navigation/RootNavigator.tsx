@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/authStore';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import SubscriptionSelectionScreen from '../screens/auth/SubscriptionSelectionScreen';
+import PaymentScreen from '../screens/auth/PaymentScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
@@ -54,6 +55,7 @@ import RedemptionHistoryScreen from '../screens/wallet/RedemptionHistoryScreen';
 export type AuthStackParamList = {
   Login: undefined;
   SubscriptionSelection: undefined;
+  Payment: { selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string } };
   Signup: { selectedPlan?: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string }; paymentCompleted?: boolean } | undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
@@ -182,6 +184,7 @@ function AuthNavigator() {
     <AuthStack.Navigator id="AuthStack" screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SubscriptionSelection" component={SubscriptionSelectionScreen} />
+      <AuthStack.Screen name="Payment" component={PaymentScreen} />
       <AuthStack.Screen name="Signup" component={SignupScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <AuthStack.Screen name="ResetPassword" component={ResetPasswordScreen} />

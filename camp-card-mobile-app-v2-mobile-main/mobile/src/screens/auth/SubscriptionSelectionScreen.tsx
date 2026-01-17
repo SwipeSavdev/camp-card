@@ -34,7 +34,6 @@ export default function SubscriptionSelectionScreen() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
 
@@ -79,25 +78,16 @@ export default function SubscriptionSelectionScreen() {
       return;
     }
 
-    // In a real app, this would integrate with Authorize.net for payment
-    // For now, we'll simulate the payment process
-    setProcessing(true);
-
-    // Simulate payment processing
-    setTimeout(() => {
-      setProcessing(false);
-      // Navigate to signup with the selected plan
-      (navigation as any).navigate('Signup', {
-        selectedPlan: {
-          id: selectedPlan.id,
-          uuid: selectedPlan.uuid,
-          name: selectedPlan.name,
-          priceCents: selectedPlan.priceCents,
-          billingInterval: selectedPlan.billingInterval,
-        },
-        paymentCompleted: true,
-      });
-    }, 1500);
+    // Navigate to payment screen with the selected plan
+    (navigation as any).navigate('Payment', {
+      selectedPlan: {
+        id: selectedPlan.id,
+        uuid: selectedPlan.uuid,
+        name: selectedPlan.name,
+        priceCents: selectedPlan.priceCents,
+        billingInterval: selectedPlan.billingInterval,
+      },
+    });
   };
 
   const renderPlanCard = (plan: SubscriptionPlan) => {
@@ -229,21 +219,15 @@ export default function SubscriptionSelectionScreen() {
         <TouchableOpacity
           style={[
             styles.continueButton,
-            (!selectedPlan || processing) && styles.continueButtonDisabled,
+            !selectedPlan && styles.continueButtonDisabled,
           ]}
           onPress={handleContinue}
-          disabled={!selectedPlan || processing}
+          disabled={!selectedPlan}
         >
-          {processing ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <>
-              <Text style={styles.continueButtonText}>
-                Continue to Payment
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color="#fff" />
-            </>
-          )}
+          <Text style={styles.continueButtonText}>
+            Continue to Payment
+          </Text>
+          <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
 
         <TouchableOpacity
