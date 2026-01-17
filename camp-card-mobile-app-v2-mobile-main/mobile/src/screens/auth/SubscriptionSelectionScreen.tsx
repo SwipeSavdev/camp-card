@@ -48,12 +48,13 @@ export default function SubscriptionSelectionScreen() {
     try {
       const response = await apiClient.get('/api/v1/subscription-plans');
       const plansData = response.data.data || response.data || [];
-      // Filter to only active plans
-      const activePlans = plansData.filter((p: any) => p.status === 'ACTIVE');
-      setPlans(activePlans);
-      // Auto-select first plan if available
-      if (activePlans.length > 0) {
-        setSelectedPlan(activePlans[0]);
+      // Backend already filters to only active plans, no need to filter again
+      setPlans(plansData);
+      // Auto-select the $15 direct plan (higher price) for direct sign-ups
+      if (plansData.length > 0) {
+        // Find the direct plan ($15) - it has the higher price
+        const directPlan = plansData.find((p: any) => p.priceCents === 1500) || plansData[0];
+        setSelectedPlan(directPlan);
       }
     } catch (error) {
       console.error('Error loading plans:', error);
@@ -75,7 +76,7 @@ export default function SubscriptionSelectionScreen() {
       return;
     }
 
-    // In a real app, this would integrate with Stripe for payment
+    // In a real app, this would integrate with Authorize.net for payment
     // For now, we'll simulate the payment process
     setProcessing(true);
 
@@ -219,7 +220,7 @@ export default function SubscriptionSelectionScreen() {
       <View style={styles.bottomSection}>
         <View style={styles.securePayment}>
           <Ionicons name="shield-checkmark" size={16} color="#4CAF50" />
-          <Text style={styles.securePaymentText}>Secure payment powered by Stripe</Text>
+          <Text style={styles.securePaymentText}>Secure payment powered by Authorize.net</Text>
         </View>
 
         <TouchableOpacity

@@ -4,6 +4,7 @@ import com.bsa.campcard.dto.subscription.*;
 import com.bsa.campcard.entity.Subscription;
 import com.bsa.campcard.entity.SubscriptionPlan;
 import com.bsa.campcard.exception.ResourceNotFoundException;
+import com.bsa.campcard.repository.OfferRedemptionRepository;
 import com.bsa.campcard.repository.SubscriptionPlanRepository;
 import com.bsa.campcard.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,10 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SubscriptionService {
-    
+
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
+    private final OfferRedemptionRepository offerRedemptionRepository;
     
     /**
      * Get all active subscription plans
@@ -192,6 +194,53 @@ public class SubscriptionService {
         log.info("Subscription canceled: {}", subscription.getId());
     }
     
+    /**
+     * Renew subscription immediately (user-initiated)
+     * This extends the subscription period and replenishes all one-time offers
+     */
+    @Transactional
+    public SubscriptionResponse renewSubscription(UUID userId) {
+        log.info("Renewing subscription for user: {}", userId);
+
+        Subscription subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("No subscription found"));
+
+        if (subscription.getStatus() != Subscription.SubscriptionStatus.ACTIVE) {
+            throw new IllegalStateException("Can only renew active subscriptions");
+        }
+
+        SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+
+        // Extend the subscription period from current end date
+        LocalDateTime newPeriodStart = subscription.getCurrentPeriodEnd();
+        LocalDateTime newPeriodEnd = calculatePeriodEnd(newPeriodStart, plan.getBillingInterval());
+
+        subscription.setCurrentPeriodStart(newPeriodStart);
+        subscription.setCurrentPeriodEnd(newPeriodEnd);
+        subscription.setCancelAtPeriodEnd(false);
+        subscription.setCanceledAt(null);
+
+        subscription = subscriptionRepository.save(subscription);
+
+        // Replenish all one-time offers by deleting user's redemption history
+        replenishOffers(userId);
+
+        log.info("Subscription renewed for user: {} until {}", userId, newPeriodEnd);
+
+        return toSubscriptionResponse(subscription, plan);
+    }
+
+    /**
+     * Replenish all one-time offers for a user by clearing their redemption history
+     */
+    @Transactional
+    public void replenishOffers(UUID userId) {
+        log.info("Replenishing offers for user: {}", userId);
+        offerRedemptionRepository.deleteByUserId(userId);
+        log.info("Offer redemptions cleared for user: {}", userId);
+    }
+
     /**
      * Process subscription renewal (scheduled job)
      */

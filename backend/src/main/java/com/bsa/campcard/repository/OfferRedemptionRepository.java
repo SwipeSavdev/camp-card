@@ -61,4 +61,14 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
            "GROUP BY r.offerId")
     List<Object[]> countUserRedemptionsByOfferIds(@Param("userId") UUID userId,
                                                    @Param("offerIds") List<Long> offerIds);
+
+    /**
+     * Find all redemptions for a user that can be replenished (one-time offers)
+     */
+    List<OfferRedemption> findByUserId(UUID userId);
+
+    /**
+     * Delete all redemptions for a user (used for offer replenishment on renewal)
+     */
+    void deleteByUserId(UUID userId);
 }

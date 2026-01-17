@@ -102,13 +102,13 @@ export default function SubscriptionScreen() {
             try {
               setLoading(true);
 
-              // In production, this would integrate with Stripe
+              // In production, this would integrate with Authorize.net
               await apiClient.post('/api/v1/subscriptions', {
                 plan_id: plan.id,
                 payment_method: {
-                  type: 'STRIPE',
-                  // This would come from Stripe SDK
-                  stripe_payment_method_id: 'pm_mock'
+                  type: 'AUTHORIZE_NET',
+                  // This would come from Authorize.net Accept.js
+                  payment_token: 'mock_token'
                 }
               });
 
@@ -168,9 +168,39 @@ export default function SubscriptionScreen() {
     }
   };
 
+  const handleRenewNow = () => {
+    if (!subscription) return;
+
+    Alert.alert(
+      'Renew Subscription',
+      `Renew your ${subscription.plan.name} subscription for $${(subscription.plan.priceCents / 100).toFixed(2)}?\n\nThis will:\n• Extend your subscription period\n• Replenish all one-time offers`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Renew Now',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await apiClient.post('/api/v1/subscriptions/me/renew');
+              Alert.alert(
+                'Subscription Renewed!',
+                'Your subscription has been renewed and all one-time offers have been replenished.'
+              );
+              loadSubscriptionData();
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to renew subscription');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleUpdatePayment = () => {
-    // In production, this would open Stripe payment method update flow
-    Alert.alert('Update Payment', 'This would integrate with your payment provider to update card details');
+    // In production, this would open Authorize.net payment method update flow
+    Alert.alert('Update Payment', 'This would integrate with Authorize.net to update card details');
   };
 
   const toggleAutoRenew = async (value: boolean) => {
@@ -288,6 +318,23 @@ export default function SubscriptionScreen() {
                 trackColor={{ false: '#ccc', true: '#003f87' }}
               />
             </View>
+          </View>
+
+          {/* Renew Now Button */}
+          <View style={styles.renewCard}>
+            <View style={styles.renewInfo}>
+              <Ionicons name="sparkles" size={24} color="#003f87" />
+              <View style={styles.renewTextContainer}>
+                <Text style={styles.renewTitle}>Ready for more savings?</Text>
+                <Text style={styles.renewDescription}>
+                  Renew now to replenish all one-time offers
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.renewButton} onPress={handleRenewNow}>
+              <Ionicons name="refresh" size={20} color="white" />
+              <Text style={styles.renewButtonText}>Renew Now</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Actions */}
@@ -688,5 +735,47 @@ const styles = StyleSheet.create({
   benefitText: {
     fontSize: 14,
     color: '#666',
+  },
+  renewCard: {
+    backgroundColor: '#e3f2fd',
+    margin: 20,
+    marginTop: 0,
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#90caf9',
+  },
+  renewInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  renewTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  renewTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#003f87',
+    marginBottom: 4,
+  },
+  renewDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  renewButton: {
+    backgroundColor: '#003f87',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderRadius: 8,
+    gap: 8,
+  },
+  renewButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

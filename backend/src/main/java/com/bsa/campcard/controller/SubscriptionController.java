@@ -92,6 +92,17 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscription);
     }
 
+    @PostMapping("/subscriptions/me/renew")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Renew subscription",
+               description = "Renew subscription immediately and replenish all one-time offers")
+    public ResponseEntity<SubscriptionResponse> renewSubscription(Authentication authentication) {
+        UUID userId = getUserIdFromAuth(authentication);
+        log.info("Renewing subscription for user: {}", userId);
+        SubscriptionResponse subscription = subscriptionService.renewSubscription(userId);
+        return ResponseEntity.ok(subscription);
+    }
+
     @DeleteMapping("/subscriptions/me")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Cancel subscription immediately",
