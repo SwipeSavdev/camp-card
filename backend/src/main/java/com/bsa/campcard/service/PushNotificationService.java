@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 public class PushNotificationService {
 
     private final DeviceTokenRepository deviceTokenRepository;
-    private final NotificationService notificationService;
 
     // BSA Brand Color for Android notifications
     private static final String BSA_NAVY_COLOR = "#003f87";

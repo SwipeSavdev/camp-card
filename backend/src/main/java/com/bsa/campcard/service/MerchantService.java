@@ -238,10 +238,11 @@ public class MerchantService {
     @Transactional
     public MerchantLocationResponse createLocation(Long merchantId, CreateLocationRequest request) {
         log.info("Creating location for merchant: {}", merchantId);
-        
-        Merchant merchant = merchantRepository.findByIdAndDeletedAtIsNull(merchantId)
+
+        // Validate merchant exists
+        merchantRepository.findByIdAndDeletedAtIsNull(merchantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"));
-        
+
         MerchantLocation location = MerchantLocation.builder()
                 .merchantId(merchantId)
                 .locationName(request.getLocationName())

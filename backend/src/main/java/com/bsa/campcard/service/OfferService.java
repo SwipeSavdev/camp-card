@@ -200,8 +200,12 @@ public class OfferService {
 
     public Page<OfferResponse> getFeaturedOffers(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
-        List<Offer> offers = offerRepository.findFeaturedOffers(OfferStatus.ACTIVE, now, pageable);
-        return Page.empty(); // Convert list to page if needed
+        List<Offer> offersList = offerRepository.findFeaturedOffers(OfferStatus.ACTIVE, now, pageable);
+        Map<Long, Merchant> merchantCache = buildMerchantCache(offersList);
+        List<OfferResponse> responses = offersList.stream()
+                .map(offer -> enrichWithMerchant(offer, merchantCache))
+                .toList();
+        return new org.springframework.data.domain.PageImpl<>(responses, pageable, responses.size());
     }
 
     public Page<OfferResponse> searchOffers(String search, Pageable pageable) {

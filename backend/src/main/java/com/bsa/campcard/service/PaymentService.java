@@ -108,7 +108,7 @@ public class PaymentService {
             
             // Execute the request
             CreateTransactionController controller = new CreateTransactionController(apiRequest);
-            controller.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
             controller.execute();
             
             CreateTransactionResponse response = controller.getApiResponse();
@@ -205,7 +205,7 @@ public class PaymentService {
             
             // Execute the request
             CreateTransactionController controller = new CreateTransactionController(apiRequest);
-            controller.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
             controller.execute();
             
             CreateTransactionResponse response = controller.getApiResponse();
@@ -270,7 +270,7 @@ public class PaymentService {
             
             // Execute the request
             GetTransactionDetailsController controller = new GetTransactionDetailsController(apiRequest);
-            controller.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
             controller.execute();
             
             GetTransactionDetailsResponse response = controller.getApiResponse();
@@ -438,7 +438,7 @@ public class PaymentService {
 
             // Execute the request
             GetHostedPaymentPageController controller = new GetHostedPaymentPageController(apiRequest);
-            controller.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
             controller.execute();
 
             GetHostedPaymentPageResponse response = controller.getApiResponse();

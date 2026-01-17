@@ -6,7 +6,6 @@ import com.bsa.campcard.entity.MarketingCampaign.CampaignType;
 import com.bsa.campcard.entity.MarketingSegment;
 import com.bsa.campcard.repository.MarketingCampaignRepository;
 import com.bsa.campcard.repository.MarketingSegmentRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ public class AIMarketingAgentService {
     private final TogetherAIService togetherAIService;
     private final MarketingCampaignRepository campaignRepository;
     private final MarketingSegmentRepository segmentRepository;
-    private final ObjectMapper objectMapper;
 
     public AIGeneratedContent generateCampaignContent(CampaignContentRequest request) {
         String prompt = buildContentPrompt(request);

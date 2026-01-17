@@ -59,7 +59,6 @@ public class CampaignDispatchService {
     private final EmailService emailService;
     private final SmsService smsService;
     private final NotificationService notificationService;
-    private final LocationService locationService;
 
     @Value("${campcard.campaigns.batch-size:100}")
     private int batchSize;
