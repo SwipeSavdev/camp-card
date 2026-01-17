@@ -90,9 +90,10 @@ public class UserService {
     public User createUser(UserCreateRequest request) {
         log.info("Creating new user with email: {}", request.email());
 
-        // Check if email already exists
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already exists: " + request.email());
+        // Check if email already exists (case-insensitive)
+        String normalizedEmail = request.email().toLowerCase();
+        if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            throw new IllegalArgumentException("A user with this email already exists");
         }
 
         // Generate verification token

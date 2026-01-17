@@ -68,6 +68,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByEmail(String email);
 
     /**
+     * Check if email exists (case-insensitive)
+     */
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE LOWER(u.email) = LOWER(:email)")
+    boolean existsByEmailIgnoreCase(@Param("email") String email);
+
+    /**
      * Count active users by council
      */
     @Query("SELECT COUNT(u) FROM User u WHERE u.councilId = :councilId AND u.isActive = true AND u.deletedAt IS NULL")
