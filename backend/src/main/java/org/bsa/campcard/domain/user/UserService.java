@@ -180,21 +180,18 @@ public class UserService {
     }
 
     /**
-     * Soft delete user
+     * Hard delete user (permanently removes from database)
      */
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void deleteUser(UUID id) {
-        log.info("Soft deleting user with ID: {}", id);
+        log.info("Deleting user with ID: {}", id);
 
         User user = userRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
 
-        user.setDeletedAt(LocalDateTime.now());
-        user.setIsActive(false);
-
-        userRepository.save(user);
-        log.info("Soft deleted user with ID: {}", id);
+        userRepository.delete(user);
+        log.info("Deleted user with ID: {}", id);
     }
 
     /**
