@@ -2,7 +2,6 @@ package com.bsa.campcard.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bsa.campcard.domain.user.User;
 import org.springframework.beans.factory.annotation.Value;

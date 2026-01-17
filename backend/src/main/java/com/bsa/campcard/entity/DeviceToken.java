@@ -38,8 +38,9 @@ public class DeviceToken {
     
     @Column(length = 20)
     private String appVersion;
-    
+
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
     
     @Column(nullable = false)

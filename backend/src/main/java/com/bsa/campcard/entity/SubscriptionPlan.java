@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -36,20 +35,24 @@ public class SubscriptionPlan {
     
     @Column(nullable = false)
     private Integer priceCents;
-    
+
     @Column(nullable = false, length = 3)
+    @Builder.Default
     private String currency = "USD";
-    
+
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private BillingInterval billingInterval;
-    
+
+    @Builder.Default
     private Integer trialDays = 0;
-    
+
+    @Builder.Default
     private Integer maxMembers = 1;
-    
+
     @Column(length = 20)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private PlanStatus status = PlanStatus.ACTIVE;
     
     // Stripe integration

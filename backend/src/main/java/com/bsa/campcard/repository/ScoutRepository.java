@@ -2,7 +2,6 @@ package com.bsa.campcard.repository;
 
 import com.bsa.campcard.entity.Scout;
 import com.bsa.campcard.entity.Scout.ScoutStatus;
-import com.bsa.campcard.entity.Scout.ScoutRank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
