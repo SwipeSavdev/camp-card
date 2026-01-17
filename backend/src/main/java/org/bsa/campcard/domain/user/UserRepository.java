@@ -89,6 +89,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByReferralCode(String referralCode);
 
     /**
+     * Check if referral code exists
+     */
+    boolean existsByReferralCode(String referralCode);
+
+    /**
      * Find users by troop and role
      */
     @Query("SELECT u FROM User u WHERE u.troopId = :troopId AND u.role = :role AND u.deletedAt IS NULL")

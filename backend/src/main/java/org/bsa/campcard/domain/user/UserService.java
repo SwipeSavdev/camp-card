@@ -1,5 +1,6 @@
 package org.bsa.campcard.domain.user;
 
+import com.bsa.campcard.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -25,6 +26,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     /**
      * Find user by ID
@@ -80,7 +82,8 @@ public class UserService {
     }
 
     /**
-     * Create new user
+     * Create new user (admin-initiated)
+     * Generates verification token and sends verification email
      */
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
@@ -91,6 +94,9 @@ public class UserService {
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already exists: " + request.email());
         }
+
+        // Generate verification token
+        String verificationToken = UUID.randomUUID().toString();
 
         User user = User.builder()
             .email(request.email().toLowerCase())
@@ -103,12 +109,30 @@ public class UserService {
             .troopId(request.troopId())
             .isActive(true)
             .emailVerified(false)
+            .emailVerificationToken(verificationToken)
+            .emailVerificationExpiresAt(LocalDateTime.now().plusDays(7))
+            .referralCode(generateReferralCode())
             .build();
 
         User savedUser = userRepository.save(user);
         log.info("Created user with ID: {}", savedUser.getId());
 
+        // Send verification email
+        emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
+        log.info("Verification email sent to: {}", savedUser.getEmail());
+
         return savedUser;
+    }
+
+    /**
+     * Generate a unique referral code for the user
+     */
+    private String generateReferralCode() {
+        String code;
+        do {
+            code = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        } while (userRepository.existsByReferralCode(code));
+        return code;
     }
 
     /**

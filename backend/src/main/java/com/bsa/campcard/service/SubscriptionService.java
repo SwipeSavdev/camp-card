@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +28,8 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
+    private final EmailService emailService;
+    private final org.bsa.campcard.domain.user.UserRepository userRepository;
     
     /**
      * Get all active subscription plans
@@ -99,9 +103,34 @@ public class SubscriptionService {
         subscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
         subscription = subscriptionRepository.save(subscription);
 
+        // Send subscription confirmation email
+        sendSubscriptionConfirmationEmail(userId, plan, subscription.getCurrentPeriodEnd());
+
         return toSubscriptionResponse(subscription, plan);
     }
-    
+
+    /**
+     * Send subscription confirmation email to user
+     */
+    private void sendSubscriptionConfirmationEmail(UUID userId, SubscriptionPlan plan, LocalDateTime periodEnd) {
+        try {
+            userRepository.findById(userId).ifPresent(user -> {
+                BigDecimal amount = BigDecimal.valueOf(plan.getPriceCents()).divide(BigDecimal.valueOf(100));
+                LocalDate expirationDate = periodEnd.toLocalDate();
+                emailService.sendSubscriptionConfirmation(
+                    user.getEmail(),
+                    user.getFirstName(),
+                    plan.getName(),
+                    amount,
+                    expirationDate
+                );
+                log.info("Subscription confirmation email sent to: {}", user.getEmail());
+            });
+        } catch (Exception e) {
+            log.error("Failed to send subscription confirmation email for user: {}", userId, e);
+        }
+    }
+
     /**
      * Get user's current subscription
      */
@@ -284,17 +313,35 @@ public class SubscriptionService {
     public void sendRenewalReminders() {
         LocalDateTime sevenDaysFromNow = LocalDateTime.now().plusDays(7);
         LocalDateTime eightDaysFromNow = sevenDaysFromNow.plusDays(1);
-        
+
         List<Subscription> renewals = subscriptionRepository.findRenewalsInPeriod(
                 sevenDaysFromNow,
                 eightDaysFromNow
         );
-        
+
         log.info("Sending {} renewal reminders", renewals.size());
 
         for (Subscription subscription : renewals) {
-            log.info("Renewal reminder: Subscription {} renews on {}", 
-                    subscription.getId(), subscription.getCurrentPeriodEnd());
+            try {
+                SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
+                        .orElse(null);
+
+                if (plan != null) {
+                    userRepository.findById(subscription.getUserId()).ifPresent(user -> {
+                        LocalDate expirationDate = subscription.getCurrentPeriodEnd().toLocalDate();
+                        emailService.sendSubscriptionExpiringReminder(
+                            user.getEmail(),
+                            user.getFirstName(),
+                            7, // days until expiration
+                            expirationDate
+                        );
+                        log.info("Renewal reminder sent to: {} for subscription {}",
+                                user.getEmail(), subscription.getId());
+                    });
+                }
+            } catch (Exception e) {
+                log.error("Failed to send renewal reminder for subscription: {}", subscription.getId(), e);
+            }
         }
     }
     
