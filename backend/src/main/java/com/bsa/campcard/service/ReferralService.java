@@ -61,7 +61,7 @@ public class ReferralService {
         Double totalRewards = referralRepository.getTotalRewardsEarned(userId);
         
         BigDecimal pendingRewards = allReferrals.stream()
-                .filter(r -> r.getStatus() == Referral.ReferralStatus.COMPLETED && !r.getRewardClaimed())
+                .filter(r -> r.getStatus() == Referral.ReferralStatus.COMPLETED && Boolean.FALSE.equals(r.getRewardClaimed()))
                 .map(Referral::getRewardAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
