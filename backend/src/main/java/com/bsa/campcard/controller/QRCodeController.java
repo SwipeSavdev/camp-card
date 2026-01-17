@@ -28,8 +28,9 @@ public class QRCodeController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get user's QR code", description = "Generate or retrieve user's unique QR code for sharing")
     public ResponseEntity<QRCodeResponse> getMyQRCode(Authentication authentication) {
-        UUID userId = UUID.randomUUID();
-        log.info("Generating QR code for current user");
+        org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User) authentication.getPrincipal();
+        UUID userId = user.getId();
+        log.info("Generating QR code for user: {}", userId);
 
         QRCodeResponse response = qrCodeService.generateUserQRCode(userId);
         return ResponseEntity.ok(response);
