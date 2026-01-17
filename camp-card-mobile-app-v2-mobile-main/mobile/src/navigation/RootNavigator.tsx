@@ -204,7 +204,7 @@ function OffersNavigator() {
       <OffersStack.Screen
         name="OfferDetail"
         component={OfferDetailScreen}
-        options={{ title: 'Offer Details' }}
+        options={{ headerShown: false }}
       />
     </OffersStack.Navigator>
   );
