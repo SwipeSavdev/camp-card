@@ -11,6 +11,7 @@ import {
   FlatList,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
@@ -225,7 +226,12 @@ export default function OffersScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Offers</Text>
+      </View>
+
       {/* Category Filter */}
       <ScrollView
         horizontal
@@ -276,7 +282,7 @@ export default function OffersScreen() {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -284,6 +290,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: '#f5f5f5',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#003f87',
   },
   loadingContainer: {
     flex: 1,
@@ -320,7 +337,7 @@ const styles = StyleSheet.create({
   categoryContainer: {
     flexGrow: 0,
     marginBottom: 8,
-    marginTop: 12,
+    marginTop: 0,
   },
   categoryContent: {
     paddingHorizontal: 16,
