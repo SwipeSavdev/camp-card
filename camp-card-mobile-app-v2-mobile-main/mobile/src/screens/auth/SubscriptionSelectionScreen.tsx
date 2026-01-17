@@ -48,13 +48,16 @@ export default function SubscriptionSelectionScreen() {
     try {
       const response = await apiClient.get('/api/v1/subscription-plans');
       const plansData = response.data.data || response.data || [];
-      // Backend already filters to only active plans, no need to filter again
-      setPlans(plansData);
-      // Auto-select the $15 direct plan (higher price) for direct sign-ups
-      if (plansData.length > 0) {
-        // Find the direct plan ($15) - it has the higher price
-        const directPlan = plansData.find((p: any) => p.priceCents === 1500) || plansData[0];
+      // For direct sign-ups (not via Scout QR), only show the $15 plan
+      // The $10 Scout Referral plan is only available when scanning a Scout's QR code
+      const directPlan = plansData.find((p: any) => p.priceCents === 1500);
+      if (directPlan) {
+        setPlans([directPlan]);
         setSelectedPlan(directPlan);
+      } else if (plansData.length > 0) {
+        // Fallback: show first plan if $15 plan not found
+        setPlans([plansData[0]]);
+        setSelectedPlan(plansData[0]);
       }
     } catch (error) {
       console.error('Error loading plans:', error);

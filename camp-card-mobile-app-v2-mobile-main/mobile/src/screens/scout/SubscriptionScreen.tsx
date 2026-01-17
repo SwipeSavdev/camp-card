@@ -68,12 +68,19 @@ export default function SubscriptionScreen() {
       ]);
 
       setSubscription(subResponse.data);
-      setAvailablePlans(plansResponse.data.data || []);
+      // For in-app subscription/renewal, only show the $15 Direct plan
+      // The $10 Scout Referral plan is only available when scanning a Scout's QR code
+      const allPlans = plansResponse.data.data || [];
+      const directPlan = allPlans.find((p: any) => p.priceCents === 1500);
+      setAvailablePlans(directPlan ? [directPlan] : allPlans.slice(0, 1));
     } catch (error: any) {
       if (error.response?.status === 404) {
         // No subscription yet, just load plans
         const plansResponse = await apiClient.get('/api/v1/subscription-plans');
-        setAvailablePlans(plansResponse.data.data || []);
+        // For in-app subscription, only show the $15 Direct plan
+        const allPlans = plansResponse.data.data || [];
+        const directPlan = allPlans.find((p: any) => p.priceCents === 1500);
+        setAvailablePlans(directPlan ? [directPlan] : allPlans.slice(0, 1));
       } else {
         console.error('Error loading subscription:', error);
         Alert.alert('Error', 'Failed to load subscription information');
