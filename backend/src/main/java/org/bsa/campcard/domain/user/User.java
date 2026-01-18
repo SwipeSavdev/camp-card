@@ -124,6 +124,7 @@ public class User {
     private LocalDateTime deletedAt;
 
     public enum UserRole {
+        GLOBAL_SYSTEM_ADMIN,
         NATIONAL_ADMIN,
         COUNCIL_ADMIN,
         UNIT_LEADER,

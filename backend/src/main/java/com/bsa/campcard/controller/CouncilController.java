@@ -7,14 +7,18 @@ import com.bsa.campcard.service.CouncilService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bsa.campcard.domain.user.User;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -39,7 +43,7 @@ public class CouncilController {
     // ========================================================================
 
     @PostMapping({"/api/v1/councils", "/api/v1/organizations"})
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilResponse> createCouncil(@Valid @RequestBody CouncilRequest request) {
         log.info("POST /councils - Creating council: {}", request.getName());
         CouncilResponse council = councilService.createCouncil(request);
@@ -52,6 +56,7 @@ public class CouncilController {
 
     @GetMapping({"/api/v1/councils", "/api/v1/organizations"})
     public ResponseEntity<Page<CouncilResponse>> getCouncils(
+            Authentication authentication,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String region,
@@ -62,6 +67,20 @@ public class CouncilController {
 
         log.info("GET /councils - search={}, status={}, region={}, page={}, size={}",
             search, status, region, page, size);
+
+        // RBAC: Council Admins can only see their own council
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            if (user.getRole() == User.UserRole.COUNCIL_ADMIN && user.getCouncilId() != null) {
+                log.info("Council Admin user {} - filtering to council {}", user.getEmail(), user.getCouncilId());
+                CouncilResponse council = councilService.getCouncilByUuid(user.getCouncilId());
+                Page<CouncilResponse> singleCouncilPage = new PageImpl<>(
+                    Collections.singletonList(council),
+                    PageRequest.of(0, 1),
+                    1
+                );
+                return ResponseEntity.ok(singleCouncilPage);
+            }
+        }
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -123,7 +142,7 @@ public class CouncilController {
     // ========================================================================
 
     @PutMapping({"/api/v1/councils/{id}", "/api/v1/organizations/{id}"})
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilResponse> updateCouncil(
             @PathVariable Long id,
             @Valid @RequestBody CouncilRequest request) {
@@ -133,7 +152,7 @@ public class CouncilController {
     }
 
     @PatchMapping({"/api/v1/councils/{id}/status", "/api/v1/organizations/{id}/status"})
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN')")
     public ResponseEntity<CouncilResponse> updateCouncilStatus(
             @PathVariable Long id,
             @RequestParam String status) {
@@ -147,7 +166,7 @@ public class CouncilController {
     // ========================================================================
 
     @DeleteMapping({"/api/v1/councils/{id}", "/api/v1/organizations/{id}"})
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN')")
     public ResponseEntity<Void> deleteCouncil(@PathVariable Long id) {
         log.info("DELETE /councils/{}", id);
         councilService.deleteCouncil(id);
@@ -159,7 +178,7 @@ public class CouncilController {
     // ========================================================================
 
     @GetMapping({"/api/v1/councils/stats", "/api/v1/organizations/stats"})
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilStatsResponse> getCouncilStats() {
         log.info("GET /councils/stats");
         CouncilStatsResponse stats = councilService.getStats();
@@ -167,7 +186,7 @@ public class CouncilController {
     }
 
     @PostMapping("/api/v1/councils/{id}/update-stats")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilResponse> updateCouncilStats(@PathVariable Long id) {
         log.info("POST /councils/{}/update-stats", id);
         CouncilResponse council = councilService.updateCouncilStats(id);

@@ -68,6 +68,13 @@ public class UserService {
     }
 
     /**
+     * Search users by name or email within a specific council
+     */
+    public Page<User> searchUsersInCouncil(String searchTerm, UUID councilId, Pageable pageable) {
+        return userRepository.searchUsersInCouncil(searchTerm, councilId, pageable);
+    }
+
+    /**
      * Get users by council
      */
     public Page<User> getUsersByCouncil(UUID councilId, Pageable pageable) {

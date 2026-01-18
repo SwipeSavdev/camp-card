@@ -255,6 +255,44 @@ export const api = {
     }
   },
 
+  // ============ COUNCILS ============
+  getCouncils: async (session?: Session | null, search?: string) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (search) queryParams.append('search', search);
+      queryParams.append('size', '100'); // Get up to 100 councils
+      const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      const result = await apiCall<any>(`/councils${query}`, {}, session);
+      return {
+        content: result.content || result || [],
+      };
+    } catch (error) {
+      console.error('Failed to fetch councils from API:', error);
+      return { content: [] };
+    }
+  },
+
+  searchCouncils: async (searchTerm: string, session?: Session | null) => {
+    try {
+      const result = await apiCall<any>(`/councils?search=${encodeURIComponent(searchTerm)}&size=20`, {}, session);
+      return {
+        content: result.content || result || [],
+      };
+    } catch (error) {
+      console.error('Failed to search councils:', error);
+      return { content: [] };
+    }
+  },
+
+  getCouncilById: async (id: string, session?: Session | null) => {
+    try {
+      return await apiCall<any>(`/councils/${id}`, {}, session);
+    } catch (error) {
+      console.error('Failed to fetch council:', error);
+      return null;
+    }
+  },
+
   // ============ ORGANIZATIONS ============
   getOrganizations: async (session?: Session | null) => {
     try {

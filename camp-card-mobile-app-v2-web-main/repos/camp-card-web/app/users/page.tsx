@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -165,7 +165,7 @@ const bottomNavItems = [
   { name: 'config', label: 'Config', href: '/config' },
 ];
 
-type UserRole = 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'UNIT_LEADER' | 'PARENT' | 'SCOUT';
+type UserRole = 'GLOBAL_SYSTEM_ADMIN' | 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'UNIT_LEADER' | 'PARENT' | 'SCOUT';
 type UnitType = 'PACK' | 'BSA_TROOP_BOYS' | 'BSA_TROOP_GIRLS' | 'SHIP' | 'CREW' | 'FAMILY_SCOUTING' | null;
 
 interface User {
@@ -192,6 +192,11 @@ export default function UsersPage() {
   const [newUserRole, setNewUserRole] = useState<UserRole>('SCOUT');
   const [newUserUnitType, setNewUserUnitType] = useState<UnitType>(null);
   const [newUserUnitNumber, setNewUserUnitNumber] = useState('');
+  const [newUserCouncilId, setNewUserCouncilId] = useState<string>('');
+  const [councilSearchTerm, setCouncilSearchTerm] = useState('');
+  const [councils, setCouncils] = useState<Array<{ id: string; uuid: string; name: string }>>([]);
+  const [councilsLoading, setCouncilsLoading] = useState(false);
+  const [showCouncilDropdown, setShowCouncilDropdown] = useState(false);
   const [_troopLeaderSearchTerm, _setTroopLeaderSearchTerm] = useState('');
   const [_showAddTroopLeaderForm, setShowAddTroopLeaderForm] = useState(false);
   const [newTroopLeaderName, setNewTroopLeaderName] = useState('');
@@ -233,6 +238,7 @@ export default function UsersPage() {
   const [importSuccess, setImportSuccess] = useState<number>(0);
 
   const roleOptions = [
+    { value: 'GLOBAL_SYSTEM_ADMIN', label: 'Global System Admin' },
     { value: 'NATIONAL_ADMIN', label: 'National Admin' },
     { value: 'COUNCIL_ADMIN', label: 'Council Admin' },
     { value: 'UNIT_LEADER', label: 'Unit Leader' },
@@ -256,6 +262,44 @@ export default function UsersPage() {
       fetchData();
     }
   }, [status, session]);
+
+  // Fetch councils when the form opens
+  useEffect(() => {
+    if (showAddForm && status === 'authenticated' && session) {
+      fetchCouncils();
+    }
+  }, [showAddForm, status, session]);
+
+  // Fetch councils with optional search term (debounced)
+  useEffect(() => {
+    if (!showAddForm) return;
+
+    const debounceTimer = setTimeout(() => {
+      if (councilSearchTerm.length >= 2 || councilSearchTerm.length === 0) {
+        fetchCouncils(councilSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [councilSearchTerm, showAddForm]);
+
+  const fetchCouncils = async (search?: string) => {
+    try {
+      setCouncilsLoading(true);
+      const data = await api.getCouncils(session, search);
+      const councilList = data.content || [];
+      setCouncils(councilList.map((c: any) => ({
+        id: c.id,
+        uuid: c.uuid,
+        name: c.name,
+      })));
+    } catch (err) {
+      console.error('Failed to fetch councils:', err);
+      setCouncils([]);
+    } finally {
+      setCouncilsLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -393,6 +437,11 @@ export default function UsersPage() {
         role: newUserRole,
       };
 
+      // Include council ID if selected
+      if (newUserCouncilId) {
+        userData.councilId = newUserCouncilId;
+      }
+
       // Include unit type and number only for Scouts
       if (newUserRole === 'SCOUT') {
         userData.unitType = newUserUnitType;
@@ -426,6 +475,9 @@ export default function UsersPage() {
       setNewUserRole('SCOUT');
       setNewUserUnitType(null);
       setNewUserUnitNumber('');
+      setNewUserCouncilId('');
+      setCouncilSearchTerm('');
+      setShowCouncilDropdown(false);
       setShowAddForm(false);
       setError(null);
     } catch (err) {
@@ -887,7 +939,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
             </div>
           ))}
           <div
-            onClick={() => router.push('/login')}
+            onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
             style={{
               padding: themeSpace.md,
               display: 'flex',
@@ -1443,6 +1495,101 @@ Role
                 </select>
               </div>
 
+              {/* Council dropdown with search */}
+              <div style={{ position: 'relative' }}>
+                <label style={{
+                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                }}
+                >
+                  Council
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={councilSearchTerm}
+                    onChange={(e) => {
+                      setCouncilSearchTerm(e.target.value);
+                      setShowCouncilDropdown(true);
+                    }}
+                    onFocus={() => setShowCouncilDropdown(true)}
+                    placeholder={newUserCouncilId ? councils.find(c => c.uuid === newUserCouncilId)?.name || 'Search councils...' : 'Search councils...'}
+                    style={{
+                      width: '100%',
+                      padding: `${themeSpace.sm} ${themeSpace.md}`,
+                      border: `1px solid ${themeColors.gray200}`,
+                      borderRadius: themeRadius.sm,
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  {councilsLoading && (
+                    <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: themeColors.gray500 }}>
+                      Loading...
+                    </div>
+                  )}
+                </div>
+                {showCouncilDropdown && councils.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    backgroundColor: themeColors.white,
+                    border: `1px solid ${themeColors.gray200}`,
+                    borderRadius: themeRadius.sm,
+                    boxShadow: themeShadow.md,
+                    zIndex: 10,
+                  }}>
+                    {councils
+                      .filter(c => !councilSearchTerm || c.name.toLowerCase().includes(councilSearchTerm.toLowerCase()))
+                      .map((council) => (
+                        <div
+                          key={council.uuid}
+                          onClick={() => {
+                            setNewUserCouncilId(council.uuid);
+                            setCouncilSearchTerm(council.name);
+                            setShowCouncilDropdown(false);
+                          }}
+                          style={{
+                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            cursor: 'pointer',
+                            backgroundColor: newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent',
+                            borderBottom: `1px solid ${themeColors.gray100}`,
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColors.gray50)}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent')}
+                        >
+                          {council.name}
+                        </div>
+                      ))}
+                  </div>
+                )}
+                {newUserCouncilId && (
+                  <div style={{ marginTop: themeSpace.xs, fontSize: '12px', color: themeColors.primary600 }}>
+                    Selected: {councils.find(c => c.uuid === newUserCouncilId)?.name || 'Loading...'}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewUserCouncilId('');
+                        setCouncilSearchTerm('');
+                      }}
+                      style={{
+                        marginLeft: themeSpace.sm,
+                        background: 'none',
+                        border: 'none',
+                        color: themeColors.error500,
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Unit Type and Unit Number fields - shown only for Scouts */}
               {newUserRole === 'SCOUT' && (
                 <>
@@ -1511,6 +1658,9 @@ Unit Number
                   setNewUserRole('SCOUT');
                   setNewUserUnitType(null);
                   setNewUserUnitNumber('');
+                  setNewUserCouncilId('');
+                  setCouncilSearchTerm('');
+                  setShowCouncilDropdown(false);
                   setError(null);
                 }}
                 style={{

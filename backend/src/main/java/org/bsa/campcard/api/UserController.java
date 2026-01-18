@@ -17,6 +17,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -33,28 +34,48 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "Get all users", description = "Retrieve paginated list of all users (admin only)")
+    @Operation(summary = "Get all users", description = "Retrieve paginated list of users. National Admins see all users, Council Admins see only users in their council.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
         @ApiResponse(responseCode = "403", description = "Access denied", content = @Content)
     })
     @GetMapping
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<Page<UserResponse>> getAllUsers(
+        Authentication authentication,
         @PageableDefault(size = 20) Pageable pageable
     ) {
+        // RBAC: Council Admins can only see users in their council
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            if (user.getRole() == User.UserRole.COUNCIL_ADMIN && user.getCouncilId() != null) {
+                Page<User> users = userService.getUsersByCouncil(user.getCouncilId(), pageable);
+                Page<UserResponse> response = users.map(this::toResponse);
+                return ResponseEntity.ok(response);
+            }
+        }
+
         Page<User> users = userService.getAllUsers(pageable);
         Page<UserResponse> response = users.map(this::toResponse);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Search users", description = "Search users by name or email")
+    @Operation(summary = "Search users", description = "Search users by name or email. Council Admins only see users in their council.")
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<Page<UserResponse>> searchUsers(
+        Authentication authentication,
         @Parameter(description = "Search term") @RequestParam String q,
         @PageableDefault(size = 20) Pageable pageable
     ) {
+        // RBAC: Council Admins can only search users in their council
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            if (user.getRole() == User.UserRole.COUNCIL_ADMIN && user.getCouncilId() != null) {
+                Page<User> users = userService.searchUsersInCouncil(q, user.getCouncilId(), pageable);
+                Page<UserResponse> response = users.map(this::toResponse);
+                return ResponseEntity.ok(response);
+            }
+        }
+
         Page<User> users = userService.searchUsers(q, pageable);
         Page<UserResponse> response = users.map(this::toResponse);
         return ResponseEntity.ok(response);
@@ -74,17 +95,37 @@ public class UserController {
             .orElse(ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Create user", description = "Create a new user (admin only)")
+    @Operation(summary = "Create user", description = "Create a new user. Council Admins can only create users in their own council.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "User created successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
         @ApiResponse(responseCode = "409", description = "Email already exists", content = @Content)
     })
     @PostMapping
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<UserResponse> createUser(
+        Authentication authentication,
         @Valid @RequestBody UserService.UserCreateRequest request
     ) {
+        // RBAC: Council Admins can only create users in their own council
+        if (authentication != null && authentication.getPrincipal() instanceof User currentUser) {
+            if (currentUser.getRole() == User.UserRole.COUNCIL_ADMIN && currentUser.getCouncilId() != null) {
+                // Force the new user to be in the Council Admin's council
+                request = new UserService.UserCreateRequest(
+                    request.email(),
+                    request.password(),
+                    request.firstName(),
+                    request.lastName(),
+                    request.phoneNumber(),
+                    request.role(),
+                    currentUser.getCouncilId(), // Force to Council Admin's council
+                    request.troopId(),
+                    request.unitType(),
+                    request.unitNumber()
+                );
+            }
+        }
+
         User user = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(user));
     }
@@ -95,7 +136,7 @@ public class UserController {
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN') or #id == authentication.principal.id")
     public ResponseEntity<UserResponse> updateUser(
         @Parameter(description = "User ID") @PathVariable UUID id,
         @Valid @RequestBody UserService.UserUpdateRequest request
@@ -110,7 +151,7 @@ public class UserController {
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN')")
     public ResponseEntity<Void> deleteUser(
         @Parameter(description = "User ID") @PathVariable UUID id
     ) {
@@ -120,7 +161,7 @@ public class UserController {
 
     @Operation(summary = "Get users by council", description = "Get all users in a council")
     @GetMapping("/council/{councilId}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<Page<UserResponse>> getUsersByCouncil(
         @Parameter(description = "Council ID") @PathVariable UUID councilId,
         @PageableDefault(size = 20) Pageable pageable
@@ -132,7 +173,7 @@ public class UserController {
 
     @Operation(summary = "Get users by troop", description = "Get all users in a troop")
     @GetMapping("/troop/{troopId}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> getUsersByTroop(
         @Parameter(description = "Troop ID") @PathVariable UUID troopId,
         @PageableDefault(size = 20) Pageable pageable
@@ -144,7 +185,7 @@ public class UserController {
 
     @Operation(summary = "Get scouts by troop", description = "Get all scouts in a troop")
     @GetMapping("/troop/{troopId}/scouts")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> getScoutsByTroop(
         @Parameter(description = "Troop ID") @PathVariable UUID troopId,
         @PageableDefault(size = 50) Pageable pageable
@@ -156,7 +197,7 @@ public class UserController {
 
     @Operation(summary = "Assign scout to troop", description = "Assign a scout user to a troop")
     @PatchMapping("/{userId}/assign-troop/{troopId}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<UserResponse> assignScoutToTroop(
         @Parameter(description = "User ID (Scout)") @PathVariable UUID userId,
         @Parameter(description = "Troop ID") @PathVariable UUID troopId
@@ -167,7 +208,7 @@ public class UserController {
 
     @Operation(summary = "Remove scout from troop", description = "Remove a scout from their troop")
     @DeleteMapping("/{userId}/troop")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<UserResponse> removeScoutFromTroop(
         @Parameter(description = "User ID (Scout)") @PathVariable UUID userId
     ) {
@@ -177,7 +218,7 @@ public class UserController {
 
     @Operation(summary = "Get unassigned scouts", description = "Get scouts not assigned to any troop")
     @GetMapping("/scouts/unassigned")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> getUnassignedScouts(
         @Parameter(description = "Council ID (optional)") @RequestParam(required = false) UUID councilId,
         @PageableDefault(size = 50) Pageable pageable
