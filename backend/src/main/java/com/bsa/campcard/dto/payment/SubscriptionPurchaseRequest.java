@@ -33,5 +33,13 @@ public class SubscriptionPurchaseRequest {
 
     private String phone;
 
+    // Direct Scout referral code (from ?scout= parameter) - $10/year tier
+    private String scoutCode;
+
+    // Customer referral code (from ?ref= parameter) - $15/year tier
+    // When present, the system looks up the chain to find the original Scout
+    private String customerRefCode;
+
+    // Legacy field for backwards compatibility
     private String referralCode;
 }

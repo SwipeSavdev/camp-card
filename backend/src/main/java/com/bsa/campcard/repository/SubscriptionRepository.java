@@ -42,4 +42,14 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findRenewalsInPeriod(LocalDateTime startDate, LocalDateTime endDate);
 
     boolean existsByCardNumber(String cardNumber);
+
+    /**
+     * Find subscription by referral code (the code used when the customer signed up)
+     */
+    Optional<Subscription> findByReferralCode(String referralCode);
+
+    /**
+     * Find active subscription by user ID
+     */
+    Optional<Subscription> findByUserIdAndStatus(UUID userId, Subscription.SubscriptionStatus status);
 }

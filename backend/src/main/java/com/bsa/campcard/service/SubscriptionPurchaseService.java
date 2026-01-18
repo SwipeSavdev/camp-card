@@ -10,11 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserRepository;
 import com.bsa.campcard.security.JwtTokenProvider;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -27,6 +29,9 @@ public class SubscriptionPurchaseService {
     private final SubscriptionRepository subscriptionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String QR_CODE_PREFIX = "qr:user:";
 
     /**
      * Complete a subscription purchase after successful payment.
@@ -81,7 +86,40 @@ public class SubscriptionPurchaseService {
             user = userRepository.save(user);
             log.info("User created with ID: {} and card number: {}", user.getId(), cardNumber);
 
-            // Step 4: Create annual subscription
+            // Step 4: Resolve Scout attribution through referral chain
+            UUID rootScoutId = null;
+            int referralDepth = 0;
+            String effectiveReferralCode = null;
+
+            // Direct Scout referral ($10/year tier)
+            if (request.getScoutCode() != null && !request.getScoutCode().isEmpty()) {
+                effectiveReferralCode = request.getScoutCode();
+                // Look up the Scout by their QR code
+                rootScoutId = findScoutByCode(request.getScoutCode());
+                referralDepth = 1; // Direct from Scout
+                log.info("Direct Scout referral: code={}, scoutId={}", request.getScoutCode(), rootScoutId);
+            }
+            // Customer referral ($15/year tier) - trace back to original Scout
+            else if (request.getCustomerRefCode() != null && !request.getCustomerRefCode().isEmpty()) {
+                effectiveReferralCode = request.getCustomerRefCode();
+                // Find the customer who referred and trace their rootScoutId
+                var referrerChain = findReferralChain(request.getCustomerRefCode());
+                if (referrerChain != null) {
+                    rootScoutId = referrerChain.rootScoutId();
+                    referralDepth = referrerChain.depth() + 1;
+                    log.info("Customer referral chain: code={}, rootScoutId={}, depth={}",
+                            request.getCustomerRefCode(), rootScoutId, referralDepth);
+                }
+            }
+            // Legacy referralCode field for backwards compatibility
+            else if (request.getReferralCode() != null && !request.getReferralCode().isEmpty()) {
+                effectiveReferralCode = request.getReferralCode();
+                rootScoutId = findScoutByCode(request.getReferralCode());
+                referralDepth = 1;
+                log.info("Legacy referral code: {}", request.getReferralCode());
+            }
+
+            // Step 5: Create annual subscription with Scout attribution
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime expiresAt = now.plusYears(1);
 
@@ -89,7 +127,9 @@ public class SubscriptionPurchaseService {
                     .userId(user.getId())
                     .councilId(1L) // Default council
                     .planId(1L) // Default annual plan
-                    .referralCode(request.getReferralCode())
+                    .referralCode(effectiveReferralCode)
+                    .rootScoutId(rootScoutId) // Original Scout in the chain
+                    .referralDepth(referralDepth)
                     .currentPeriodStart(now)
                     .currentPeriodEnd(expiresAt)
                     .status(Subscription.SubscriptionStatus.ACTIVE)
@@ -99,15 +139,16 @@ public class SubscriptionPurchaseService {
                     .build();
 
             subscription = subscriptionRepository.save(subscription);
-            log.info("Subscription created with ID: {} expires: {}", subscription.getId(), expiresAt);
+            log.info("Subscription created with ID: {} expires: {} rootScoutId: {} depth: {}",
+                    subscription.getId(), expiresAt, rootScoutId, referralDepth);
 
-            // Step 5: Generate auth tokens for immediate login
+            // Step 6: Generate auth tokens for immediate login
             String accessToken = jwtTokenProvider.generateAccessToken(user);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-            // Step 6: Handle referral attribution if provided
-            if (request.getReferralCode() != null && !request.getReferralCode().isEmpty()) {
-                log.info("Referral code used: {} - crediting Scout", request.getReferralCode());
+            // Log Scout attribution for tracking
+            if (rootScoutId != null) {
+                log.info("Scout {} credited for subscription (depth: {})", rootScoutId, referralDepth);
             }
 
             log.info("Subscription purchase completed successfully for: {}", request.getEmail());
@@ -170,4 +211,161 @@ public class SubscriptionPurchaseService {
 
         return cardNumber;
     }
+
+    /**
+     * Find a Scout's user ID by their QR code.
+     * The QR code is stored in Redis with key pattern "qr:user:{userId}" -> uniqueCode
+     * We need to reverse lookup: find the userId that has this uniqueCode.
+     *
+     * @param code The unique QR code from the ?scout= parameter
+     * @return The Scout's user ID, or null if not found or user is inactive
+     */
+    private UUID findScoutByCode(String code) {
+        if (code == null || code.isEmpty()) {
+            return null;
+        }
+
+        // First, try to find in Redis (reverse lookup through all QR codes)
+        String pattern = QR_CODE_PREFIX + "*";
+        var keys = redisTemplate.keys(pattern);
+
+        if (keys != null) {
+            for (String key : keys) {
+                String storedCode = (String) redisTemplate.opsForValue().get(key);
+                if (code.equals(storedCode)) {
+                    String userIdStr = key.replace(QR_CODE_PREFIX, "");
+                    try {
+                        UUID userId = UUID.fromString(userIdStr);
+                        // Verify this user is actually a Scout and is active
+                        Optional<User> userOpt = userRepository.findById(userId);
+                        if (userOpt.isPresent()) {
+                            User user = userOpt.get();
+                            if (user.getRole() == User.UserRole.SCOUT &&
+                                Boolean.TRUE.equals(user.getIsActive()) &&
+                                user.getDeletedAt() == null) {
+                                return userId;
+                            }
+                        }
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Invalid UUID in Redis key: {}", key);
+                    }
+                }
+            }
+        }
+
+        // Fallback: check if the code matches a user's referralCode field
+        Optional<User> userByRefCode = userRepository.findByReferralCode(code);
+        if (userByRefCode.isPresent()) {
+            User user = userByRefCode.get();
+            if (user.getRole() == User.UserRole.SCOUT &&
+                Boolean.TRUE.equals(user.getIsActive()) &&
+                user.getDeletedAt() == null) {
+                return user.getId();
+            }
+        }
+
+        log.warn("Could not find active Scout for code: {}", code);
+        return null;
+    }
+
+    /**
+     * Find the referral chain for a customer referral code.
+     * When a customer refers someone, we need to trace back to the original Scout
+     * who started the chain.
+     *
+     * The chain works as follows:
+     * - Scout refers Customer A (depth=1, rootScoutId=Scout)
+     * - Customer A refers Customer B (depth=2, rootScoutId=Scout)
+     * - Customer B refers Customer C (depth=3, rootScoutId=Scout)
+     * All customers in the chain maintain the same rootScoutId.
+     *
+     * @param code The unique QR code from the ?ref= parameter
+     * @return ReferralChainInfo with the rootScoutId and current depth, or null if not found
+     */
+    private ReferralChainInfo findReferralChain(String code) {
+        if (code == null || code.isEmpty()) {
+            return null;
+        }
+
+        // First, find the user who has this QR code
+        UUID referrerUserId = null;
+
+        // Check Redis for the QR code
+        String pattern = QR_CODE_PREFIX + "*";
+        var keys = redisTemplate.keys(pattern);
+
+        if (keys != null) {
+            for (String key : keys) {
+                String storedCode = (String) redisTemplate.opsForValue().get(key);
+                if (code.equals(storedCode)) {
+                    String userIdStr = key.replace(QR_CODE_PREFIX, "");
+                    try {
+                        referrerUserId = UUID.fromString(userIdStr);
+                        break;
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Invalid UUID in Redis key: {}", key);
+                    }
+                }
+            }
+        }
+
+        // Fallback: check referralCode field
+        if (referrerUserId == null) {
+            Optional<User> userByRefCode = userRepository.findByReferralCode(code);
+            if (userByRefCode.isPresent()) {
+                referrerUserId = userByRefCode.get().getId();
+            }
+        }
+
+        if (referrerUserId == null) {
+            log.warn("Could not find referrer user for code: {}", code);
+            return null;
+        }
+
+        // Verify the referrer is active
+        Optional<User> referrerOpt = userRepository.findById(referrerUserId);
+        if (referrerOpt.isEmpty() ||
+            !Boolean.TRUE.equals(referrerOpt.get().getIsActive()) ||
+            referrerOpt.get().getDeletedAt() != null) {
+            log.warn("Referrer user is not active: {}", referrerUserId);
+            return null;
+        }
+
+        // Find the referrer's subscription to get their rootScoutId and depth
+        Optional<Subscription> subscriptionOpt = subscriptionRepository.findByUserIdAndStatus(
+                referrerUserId, Subscription.SubscriptionStatus.ACTIVE);
+
+        if (subscriptionOpt.isEmpty()) {
+            // Try to find any subscription for this user (even expired)
+            subscriptionOpt = subscriptionRepository.findByUserIdAndDeletedAtIsNull(referrerUserId);
+        }
+
+        if (subscriptionOpt.isPresent()) {
+            Subscription subscription = subscriptionOpt.get();
+            UUID rootScoutId = subscription.getRootScoutId();
+            Integer depth = subscription.getReferralDepth();
+
+            if (rootScoutId != null) {
+                // Verify the root Scout is still active
+                Optional<User> rootScoutOpt = userRepository.findById(rootScoutId);
+                if (rootScoutOpt.isPresent() &&
+                    Boolean.TRUE.equals(rootScoutOpt.get().getIsActive()) &&
+                    rootScoutOpt.get().getDeletedAt() == null) {
+                    return new ReferralChainInfo(rootScoutId, depth != null ? depth : 1);
+                } else {
+                    log.info("Root Scout {} is no longer active, chain tracking ends", rootScoutId);
+                    return null;
+                }
+            }
+        }
+
+        log.warn("Could not find subscription chain for referrer: {}", referrerUserId);
+        return null;
+    }
+
+    /**
+     * Record to hold referral chain information.
+     * Contains the original Scout ID and the current depth in the referral chain.
+     */
+    private record ReferralChainInfo(UUID rootScoutId, int depth) {}
 }
