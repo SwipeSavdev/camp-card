@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 24,
-    justifyContent: 'center',
+    paddingTop: 200,
   },
   backArrow: {
     marginBottom: 24,
