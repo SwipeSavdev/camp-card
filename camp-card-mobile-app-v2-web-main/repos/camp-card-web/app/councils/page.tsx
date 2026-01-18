@@ -122,6 +122,7 @@ interface ScoutCandidate {
   lastName?: string;
   email?: string;
   role?: string;
+  troopId?: string;
 }
 
 interface TroopUnit {
