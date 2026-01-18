@@ -26,7 +26,7 @@ public class TroopController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'SCOUTMASTER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<TroopResponse> updateTroop(
             @PathVariable Long id,
             @RequestBody CreateTroopRequest request) {

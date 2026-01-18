@@ -175,6 +175,7 @@ interface User {
   status: 'active' | 'inactive';
   role: UserRole;
   unitType?: UnitType;
+  unitNumber?: string;
 }
 
 export default function UsersPage() {
@@ -190,6 +191,7 @@ export default function UsersPage() {
   const [newUserStatus, setNewUserStatus] = useState<'active' | 'inactive'>('active');
   const [newUserRole, setNewUserRole] = useState<UserRole>('SCOUT');
   const [newUserUnitType, setNewUserUnitType] = useState<UnitType>(null);
+  const [newUserUnitNumber, setNewUserUnitNumber] = useState('');
   const [_troopLeaderSearchTerm, _setTroopLeaderSearchTerm] = useState('');
   const [_showAddTroopLeaderForm, setShowAddTroopLeaderForm] = useState(false);
   const [newTroopLeaderName, setNewTroopLeaderName] = useState('');
@@ -203,6 +205,7 @@ export default function UsersPage() {
   const [editUserStatus, setEditUserStatus] = useState<'active' | 'inactive'>('active');
   const [editUserRole, setEditUserRole] = useState<UserRole>('SCOUT');
   const [editUserUnitType, setEditUserUnitType] = useState<UnitType>(null);
+  const [editUserUnitNumber, setEditUserUnitNumber] = useState('');
 
   // Filter state
   const [roleFilter, setRoleFilter] = useState('');
@@ -303,6 +306,8 @@ export default function UsersPage() {
     setEditUserEmail(user.email || '');
     setEditUserStatus(user.status || 'active');
     setEditUserRole(user.role || 'SCOUT');
+    setEditUserUnitType(user.unitType || null);
+    setEditUserUnitNumber(user.unitNumber || '');
     setShowEditForm(true);
   };
 
@@ -318,12 +323,18 @@ export default function UsersPage() {
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      const updateData = {
+      const updateData: any = {
         firstName,
         lastName,
         isActive: editUserStatus === 'active',
         role: editUserRole,
       };
+
+      // Include unit type and number only for Scouts
+      if (editUserRole === 'SCOUT') {
+        updateData.unitType = editUserUnitType;
+        updateData.unitNumber = editUserUnitNumber;
+      }
 
       console.log('[PAGE] Updating user:', editingUser.id, updateData);
       const updatedUser = await api.updateUser(editingUser.id, updateData, session);
@@ -337,6 +348,8 @@ export default function UsersPage() {
           email: editUserEmail,
           status: editUserStatus,
           role: editUserRole,
+          unitType: editUserRole === 'SCOUT' ? editUserUnitType : undefined,
+          unitNumber: editUserRole === 'SCOUT' ? editUserUnitNumber : undefined,
         }
         : item)));
 
@@ -347,6 +360,8 @@ export default function UsersPage() {
       setEditUserEmail('');
       setEditUserStatus('active');
       setEditUserRole('SCOUT');
+      setEditUserUnitType(null);
+      setEditUserUnitNumber('');
       setError(null);
     } catch (err) {
       setError(`Failed to update user: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -369,7 +384,7 @@ export default function UsersPage() {
       // Generate a temporary password for the new user
       const tempPassword = `TempPass${Math.random().toString(36).slice(-8)}!`;
 
-      const userData = {
+      const userData: any = {
         firstName,
         lastName,
         email: newUserEmail,
@@ -378,18 +393,26 @@ export default function UsersPage() {
         role: newUserRole,
       };
 
+      // Include unit type and number only for Scouts
+      if (newUserRole === 'SCOUT') {
+        userData.unitType = newUserUnitType;
+        userData.unitNumber = newUserUnitNumber;
+      }
+
       console.log('[PAGE] Submitting user data:', userData);
       const newUser = await api.createUser(userData, session);
       console.log('[PAGE] User created successfully:', newUser);
 
       // Add to local state immediately
       if (newUser) {
-        const user = {
+        const user: User = {
           id: newUser.id || String(Math.floor(Math.random() * 10000)),
           name: `${newUser.firstName || firstName} ${newUser.lastName || lastName}`.trim(),
           email: newUser.email || newUserEmail,
           role: newUser.role || newUserRole,
           status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
+          unitType: newUserRole === 'SCOUT' ? newUserUnitType : undefined,
+          unitNumber: newUserRole === 'SCOUT' ? newUserUnitNumber : undefined,
         };
         setItems([...items, user]);
       }
@@ -401,6 +424,8 @@ export default function UsersPage() {
       setNewUserEmail('');
       setNewUserStatus('active');
       setNewUserRole('SCOUT');
+      setNewUserUnitType(null);
+      setNewUserUnitNumber('');
       setShowAddForm(false);
       setError(null);
     } catch (err) {
@@ -1336,7 +1361,14 @@ Role
                 </label>
                 <select
                   value={newUserRole}
-                  onChange={(e) => setNewUserRole(e.target.value as UserRole)}
+                  onChange={(e) => {
+                    setNewUserRole(e.target.value as UserRole);
+                    // Clear unit fields when switching away from Scout
+                    if (e.target.value !== 'SCOUT') {
+                      setNewUserUnitType(null);
+                      setNewUserUnitNumber('');
+                    }
+                  }}
                   style={{
                    width: '100%',
                    padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -1355,6 +1387,63 @@ Role
                  ))}
                 </select>
               </div>
+
+              {/* Unit Type and Unit Number fields - shown only for Scouts */}
+              {newUserRole === 'SCOUT' && (
+                <>
+                  <div>
+                    <label style={{
+                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                    }}
+                    >
+Unit Type
+                    </label>
+                    <select
+                      value={newUserUnitType || ''}
+                      onChange={(e) => setNewUserUnitType(e.target.value as UnitType || null)}
+                      style={{
+                       width: '100%',
+                       padding: `${themeSpace.sm} ${themeSpace.md}`,
+                       border: `1px solid ${themeColors.gray200}`,
+                       borderRadius: themeRadius.sm,
+                       fontSize: '14px',
+                       boxSizing: 'border-box',
+                       backgroundColor: themeColors.white,
+                       cursor: 'pointer',
+                     }}
+                    >
+                      {unitTypeOptions.map((type) => (
+                       <option key={type.value} value={type.value}>
+                       {type.label}
+                     </option>
+                     ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                    }}
+                    >
+Unit Number
+                    </label>
+                    <input
+                      type="text"
+                      value={newUserUnitNumber}
+                      onChange={(e) => setNewUserUnitNumber(e.target.value)}
+                      placeholder="Enter unit number"
+                      style={{
+                       width: '100%',
+                       padding: `${themeSpace.sm} ${themeSpace.md}`,
+                       border: `1px solid ${themeColors.gray200}`,
+                       borderRadius: themeRadius.sm,
+                       fontSize: '14px',
+                       boxSizing: 'border-box',
+                     }}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
@@ -1365,6 +1454,8 @@ Role
                   setNewUserEmail('');
                   setNewUserStatus('active');
                   setNewUserRole('SCOUT');
+                  setNewUserUnitType(null);
+                  setNewUserUnitNumber('');
                   setError(null);
                 }}
                 style={{
@@ -1505,7 +1596,14 @@ Role
                 </label>
                 <select
                   value={editUserRole}
-                  onChange={(e) => setEditUserRole(e.target.value as UserRole)}
+                  onChange={(e) => {
+                    setEditUserRole(e.target.value as UserRole);
+                    // Clear unit fields when switching away from Scout
+                    if (e.target.value !== 'SCOUT') {
+                      setEditUserUnitType(null);
+                      setEditUserUnitNumber('');
+                    }
+                  }}
                   style={{
                    width: '100%',
                    padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -1524,6 +1622,63 @@ Role
                  ))}
                 </select>
               </div>
+
+              {/* Unit Type and Unit Number fields - shown only for Scouts */}
+              {editUserRole === 'SCOUT' && (
+                <>
+                  <div>
+                    <label style={{
+                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                    }}
+                    >
+Unit Type
+                    </label>
+                    <select
+                      value={editUserUnitType || ''}
+                      onChange={(e) => setEditUserUnitType(e.target.value as UnitType || null)}
+                      style={{
+                       width: '100%',
+                       padding: `${themeSpace.sm} ${themeSpace.md}`,
+                       border: `1px solid ${themeColors.gray200}`,
+                       borderRadius: themeRadius.sm,
+                       fontSize: '14px',
+                       boxSizing: 'border-box',
+                       backgroundColor: themeColors.white,
+                       cursor: 'pointer',
+                     }}
+                    >
+                      {unitTypeOptions.map((type) => (
+                       <option key={type.value} value={type.value}>
+                       {type.label}
+                     </option>
+                     ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                    }}
+                    >
+Unit Number
+                    </label>
+                    <input
+                      type="text"
+                      value={editUserUnitNumber}
+                      onChange={(e) => setEditUserUnitNumber(e.target.value)}
+                      placeholder="Enter unit number"
+                      style={{
+                       width: '100%',
+                       padding: `${themeSpace.sm} ${themeSpace.md}`,
+                       border: `1px solid ${themeColors.gray200}`,
+                       borderRadius: themeRadius.sm,
+                       fontSize: '14px',
+                       boxSizing: 'border-box',
+                     }}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
@@ -1535,6 +1690,8 @@ Role
                   setEditUserEmail('');
                   setEditUserStatus('active');
                   setEditUserRole('SCOUT');
+                  setEditUserUnitType(null);
+                  setEditUserUnitNumber('');
                   setError(null);
                 }}
                 style={{

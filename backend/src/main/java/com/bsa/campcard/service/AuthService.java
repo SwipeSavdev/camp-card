@@ -90,6 +90,11 @@ public class AuthService {
             throw new AuthenticationException("Account is inactive");
         }
 
+        // Block SCOUT and PARENT roles from admin portal access
+        if (user.getRole() == User.UserRole.SCOUT || user.getRole() == User.UserRole.PARENT) {
+            throw new AuthenticationException("This account cannot access the admin portal. Please use the mobile app.");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new AuthenticationException("Invalid credentials");
         }
