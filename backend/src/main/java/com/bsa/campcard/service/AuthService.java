@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -316,13 +317,13 @@ public class AuthService {
 
         // Track what changed for notification
         StringBuilder changedFields = new StringBuilder();
-        if (!user.getFirstName().equals(request.getFirstName())) {
+        if (!Objects.equals(user.getFirstName(), request.getFirstName())) {
             changedFields.append("first name, ");
         }
-        if (!user.getLastName().equals(request.getLastName())) {
+        if (!Objects.equals(user.getLastName(), request.getLastName())) {
             changedFields.append("last name, ");
         }
-        if (!user.getPhoneNumber().equals(request.getPhone())) {
+        if (!Objects.equals(user.getPhoneNumber(), request.getPhone())) {
             changedFields.append("phone number, ");
         }
         if (emailChanged) {
