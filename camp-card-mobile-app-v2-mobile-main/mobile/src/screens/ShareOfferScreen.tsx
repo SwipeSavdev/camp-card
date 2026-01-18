@@ -43,9 +43,11 @@ export default function ShareOfferScreen() {
         offerId: offer.id
       });
       
+      // Use shareable link from backend API response
+      // Fallback to offers page on bsa.swipesavvy.com if not provided
       const uniqueCode = response.data.uniqueCode;
-      const link = `https://campcardapp.com/o/${uniqueCode}`;
-      
+      const link = response.data.shareableLink || `https://bsa.swipesavvy.com/campcard/offers/?offer=${uniqueCode}`;
+
       setShareableLink(link);
       setQrData({
         type: 'campcard_offer',

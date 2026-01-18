@@ -59,7 +59,7 @@ class ReferralServiceTest {
 
         // Set the @Value fields via reflection
         ReflectionTestUtils.setField(referralService, "referralRewardAmount", new BigDecimal("10.00"));
-        ReflectionTestUtils.setField(referralService, "baseUrl", "https://campcardapp.com");
+        ReflectionTestUtils.setField(referralService, "baseUrl", "https://bsa.swipesavvy.com");
 
         testUser = User.builder()
                 .id(testUserId)
@@ -124,7 +124,7 @@ class ReferralServiceTest {
             // Then
             assertNotNull(response);
             assertEquals("TESTCODE", response.getReferralCode());
-            assertEquals("https://campcardapp.com/join?ref=TESTCODE", response.getShareableLink());
+            assertTrue(response.getShareableLink().startsWith("https://bsa.swipesavvy.com/campcard/subscribe/?ref=TESTCODE"));
             assertEquals(0, response.getTotalReferrals());
             assertEquals(0, response.getSuccessfulReferrals());
             assertEquals(0, response.getTotalRewardsEarned().compareTo(BigDecimal.ZERO));

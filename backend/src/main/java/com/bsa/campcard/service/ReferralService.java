@@ -32,7 +32,7 @@ public class ReferralService {
     @Value("${app.referral.reward.amount:10.00}")
     private BigDecimal referralRewardAmount;
     
-    @Value("${app.base.url:https://campcardapp.com}")
+    @Value("${campcard.base-url:https://bsa.swipesavvy.com}")
     private String baseUrl;
     
     private static final String REFERRAL_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

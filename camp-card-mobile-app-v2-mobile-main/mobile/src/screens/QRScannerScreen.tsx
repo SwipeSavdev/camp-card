@@ -42,9 +42,9 @@ export default function MyQRCodeScreen() {
         validUntil: data.validUntil
       });
       
-      // Generate shareable link
-      const link = `https://campcardapp.com/u/${data.uniqueCode}`;
-      setShareableLink(link);
+      // Use shareable link from backend API response (points to /campcard/subscribe/)
+      // Fallback to manual URL construction if not provided
+      setShareableLink(data.shareableLink || `https://bsa.swipesavvy.com/campcard/subscribe/?ref=${data.uniqueCode}`);
     } catch (error: any) {
       Alert.alert('Error', 'Failed to load QR code');
     } finally {
