@@ -4,6 +4,7 @@ import com.bsa.campcard.entity.Subscription;
 import com.bsa.campcard.repository.SubscriptionRepository;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserRepository;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,7 +20,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -37,8 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for CampCardsController using @Import(ControllerTestConfig.class)
-@WebMvcTest.
+ * Unit tests for CampCardsController using @WebMvcTest.
  *
  * Tests the REST API layer including:
  * - Request/response handling
@@ -47,7 +46,6 @@ import org.springframework.context.annotation.Import;
  *
  * Security is disabled for unit testing - authorization is tested at integration level.
  */
-@Import(ControllerTestConfig.class)
 @WebMvcTest(value = CampCardsController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

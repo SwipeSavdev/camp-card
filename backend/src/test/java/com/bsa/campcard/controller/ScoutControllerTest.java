@@ -4,6 +4,7 @@ import com.bsa.campcard.dto.CreateScoutRequest;
 import com.bsa.campcard.dto.ScoutResponse;
 import com.bsa.campcard.service.ScoutService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,7 +23,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -43,8 +43,7 @@ import org.springframework.context.annotation.Import;
 /**
  * Unit tests for ScoutController REST API endpoints.
  *
- * Uses @Import(ControllerTestConfig.class)
-@WebMvcTest to test the controller layer in isolation with MockMvc.
+ * Uses @WebMvcTest to test the controller layer in isolation with MockMvc.
  * ScoutService is mocked to test only controller behavior.
  *
  * Test categories:
@@ -59,7 +58,6 @@ import org.springframework.context.annotation.Import;
  * - Not found scenarios
  * - Pagination and filtering
  */
-@Import(ControllerTestConfig.class)
 @WebMvcTest(value = ScoutController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

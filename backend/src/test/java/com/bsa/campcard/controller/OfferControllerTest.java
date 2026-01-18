@@ -3,6 +3,7 @@ package com.bsa.campcard.controller;
 import com.bsa.campcard.dto.*;
 import com.bsa.campcard.service.OfferService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,12 +29,10 @@ import org.springframework.context.annotation.Import;
 /**
  * Comprehensive unit tests for OfferController REST API endpoints.
  *
- * Uses @Import(ControllerTestConfig.class)
-@WebMvcTest for lightweight controller testing with MockMvc.
+ * Uses @WebMvcTest for lightweight controller testing with MockMvc.
  * Security is tested using @WithMockUser for different roles.
  * OfferService is mocked using @MockBean.
  */
-@Import(ControllerTestConfig.class)
 @WebMvcTest(OfferController.class)
 @DisplayName("OfferController Tests")
 class OfferControllerTest {

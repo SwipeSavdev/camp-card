@@ -3,6 +3,7 @@ package com.bsa.campcard.controller;
 import com.bsa.campcard.service.LocationService;
 import com.bsa.campcard.service.LocationService.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -36,8 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for LocationController using @Import(ControllerTestConfig.class)
-@WebMvcTest.
+ * Unit tests for LocationController using @WebMvcTest.
  *
  * Tests the REST API layer including:
  * - Geocoding endpoints
@@ -49,7 +48,6 @@ import org.springframework.context.annotation.Import;
  *
  * Security is disabled for unit testing - authorization is tested at integration level.
  */
-@Import(ControllerTestConfig.class)
 @WebMvcTest(value = LocationController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

@@ -5,6 +5,7 @@ import com.bsa.campcard.exception.ResourceNotFoundException;
 import com.bsa.campcard.service.ReferralService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bsa.campcard.domain.user.User;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for ReferralController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
+ * Unit tests for ReferralController using @Import(TestSecurityConfig.class)
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -46,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Referral code management
  * - Reward claiming scenarios
  */
-@Import({ControllerTestConfig.class, TestSecurityConfig.class})
+@Import(TestSecurityConfig.class)
 @WebMvcTest(ReferralController.class)
 @DisplayName("ReferralController Tests")
 class ReferralControllerTest {

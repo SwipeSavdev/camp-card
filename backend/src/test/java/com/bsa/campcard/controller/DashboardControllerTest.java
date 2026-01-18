@@ -3,6 +3,7 @@ package com.bsa.campcard.controller;
 import com.bsa.campcard.dto.DashboardResponse;
 import com.bsa.campcard.dto.DashboardResponse.*;
 import com.bsa.campcard.service.DashboardService;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for DashboardController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
+ * Unit tests for DashboardController using @Import(TestSecurityConfig.class)
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Authorization (RBAC)
  * - Error handling
  */
-@Import({ControllerTestConfig.class, TestSecurityConfig.class})
+@Import(TestSecurityConfig.class)
 @WebMvcTest(DashboardController.class)
 @DisplayName("DashboardController Tests")
 class DashboardControllerTest {

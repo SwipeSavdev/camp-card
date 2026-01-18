@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bsa.campcard.api.UserController;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserService;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,7 +21,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -38,8 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for UserController using @Import(ControllerTestConfig.class)
-@WebMvcTest.
+ * Unit tests for UserController using @WebMvcTest.
  *
  * Tests the REST API layer including:
  * - User CRUD operations
@@ -49,7 +48,6 @@ import org.springframework.context.annotation.Import;
  *
  * Security is disabled for unit testing - authorization is tested at integration level.
  */
-@Import(ControllerTestConfig.class)
 @WebMvcTest(value = UserController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

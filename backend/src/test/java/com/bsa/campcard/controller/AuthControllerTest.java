@@ -4,6 +4,7 @@ import com.bsa.campcard.dto.auth.*;
 import com.bsa.campcard.exception.AuthenticationException;
 import com.bsa.campcard.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for AuthController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
+ * Unit tests for AuthController using @Import(TestSecurityConfig.class)
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -46,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Input validation
  * - Error handling
  */
-@Import({ControllerTestConfig.class, TestSecurityConfig.class})
+@Import(TestSecurityConfig.class)
 @WebMvcTest(AuthController.class)
 @DisplayName("AuthController Tests")
 class AuthControllerTest {

@@ -8,6 +8,7 @@ import com.bsa.campcard.service.MerchantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bsa.campcard.config.JwtAuthenticationFilter;
 import org.bsa.campcard.domain.user.UserRepository;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,7 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -47,7 +47,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import org.springframework.context.annotation.Import;
 
-@Import(ControllerTestConfig.class)
 @WebMvcTest(controllers = MerchantController.class)
 @org.springframework.boot.autoconfigure.ImportAutoConfiguration({
     org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration.class,

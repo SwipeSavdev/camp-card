@@ -5,6 +5,7 @@ import com.bsa.campcard.exception.ResourceNotFoundException;
 import com.bsa.campcard.service.SubscriptionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bsa.campcard.domain.user.User;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for SubscriptionController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
+ * Unit tests for SubscriptionController using @Import(TestSecurityConfig.class)
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -45,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Error handling
  * - Payment integration scenarios
  */
-@Import({ControllerTestConfig.class, TestSecurityConfig.class})
+@Import(TestSecurityConfig.class)
 @WebMvcTest(SubscriptionController.class)
 @DisplayName("SubscriptionController Tests")
 class SubscriptionControllerTest {

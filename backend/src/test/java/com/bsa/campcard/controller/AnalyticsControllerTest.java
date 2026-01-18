@@ -1,5 +1,6 @@
 package com.bsa.campcard.controller;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,15 +11,13 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for AnalyticsController using @Import(ControllerTestConfig.class)
-@WebMvcTest.
+ * Unit tests for AnalyticsController using @WebMvcTest.
  *
  * Tests the REST API layer including:
  * - Wallet analytics endpoint mapping
@@ -31,7 +30,6 @@ import org.springframework.context.annotation.Import;
  * exist rather than the response content. Full testing should be done at
  * integration level where proper authentication is available.
  */
-@Import(ControllerTestConfig.class)
 @WebMvcTest(value = AnalyticsController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

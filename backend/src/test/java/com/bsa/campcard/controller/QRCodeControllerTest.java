@@ -6,6 +6,7 @@ import com.bsa.campcard.dto.qr.ShareableLinkResponse;
 import com.bsa.campcard.exception.ResourceNotFoundException;
 import com.bsa.campcard.service.QRCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,7 +19,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -33,8 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for QRCodeController using @Import(ControllerTestConfig.class)
-@WebMvcTest.
+ * Unit tests for QRCodeController using @WebMvcTest.
  *
  * Tests the REST API layer including:
  * - QR code generation for users (admin endpoint)
@@ -47,7 +46,6 @@ import org.springframework.context.annotation.Import;
  * Note: The /users/me/qr-code endpoint requires Authentication principal cast to User,
  * which is difficult to mock in unit tests. It should be tested at integration level.
  */
-@Import(ControllerTestConfig.class)
 @WebMvcTest(value = QRCodeController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

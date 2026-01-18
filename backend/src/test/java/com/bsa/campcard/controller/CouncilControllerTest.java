@@ -5,6 +5,7 @@ import com.bsa.campcard.dto.CouncilResponse;
 import com.bsa.campcard.dto.CouncilStatsResponse;
 import com.bsa.campcard.service.CouncilService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,7 +43,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for CouncilController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
+ * Unit tests for CouncilController using @Import(TestSecurityConfig.class)
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -52,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - ID parsing (Long, UUID, council number)
  * - Error handling
  */
-@Import({ControllerTestConfig.class, TestSecurityConfig.class})
+@Import(TestSecurityConfig.class)
 @WebMvcTest(CouncilController.class)
 @DisplayName("CouncilController Tests")
 class CouncilControllerTest {
