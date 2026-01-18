@@ -70,11 +70,21 @@ public class QRCodeService {
             qrCodeData = uniqueCode;
         }
 
-        // Build subscribe URL with scout tracking
-        String scoutName = URLEncoder.encode(
+        // Build subscribe URL based on user role
+        // Scouts use ?scout= parameter ($10/year tier)
+        // Customers/Parents use ?ref= parameter ($15/year tier)
+        String userName = URLEncoder.encode(
                 user.getFirstName() + " " + user.getLastName(),
                 StandardCharsets.UTF_8);
-        String subscribeUrl = baseUrl + "/campcard/subscribe/?scout=" + uniqueCode + "&name=" + scoutName;
+
+        String subscribeUrl;
+        if (user.getRole() == User.UserRole.SCOUT) {
+            // Scout referral - $10/year
+            subscribeUrl = baseUrl + "/campcard/subscribe/?scout=" + uniqueCode + "&name=" + userName;
+        } else {
+            // Customer/Parent referral - $15/year
+            subscribeUrl = baseUrl + "/campcard/subscribe/?ref=" + uniqueCode + "&refname=" + userName;
+        }
 
         return QRCodeResponse.builder()
                 .uniqueCode(uniqueCode)
