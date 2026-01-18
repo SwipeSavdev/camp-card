@@ -515,14 +515,17 @@ export default function UsersPage() {
 
   // Export users to CSV
   const exportUsers = () => {
-    const headers = ['Name', 'Email', 'Role', 'Status'];
+    const headers = ['Name', 'Email', 'Role', 'Status', 'CouncilName', 'UnitNumber', 'UnitType'];
     const csvContent = [
       headers.join(','),
-      ...items.map((user) => [
+      ...items.map((user: any) => [
         `"${user.name.replace(/"/g, '""')}"`,
         `"${user.email.replace(/"/g, '""')}"`,
         user.role,
         user.status,
+        `"${(user.councilName || '').replace(/"/g, '""')}"`,
+        user.unitNumber || '',
+        user.unitType || '',
       ].join(',')),
     ].join('\n');
 
@@ -539,10 +542,18 @@ export default function UsersPage() {
 
   // Download CSV template
   const downloadTemplate = () => {
-    const csvContent = `Name,Email,Role,Status
-John Smith,john.smith@example.com,UNIT_LEADER,active
-Jane Doe,jane.doe@example.com,PARENT,active
-Bob Johnson,bob.johnson@example.com,SCOUT,active`;
+    const csvContent = `Name,Email,Role,Status,CouncilName,UnitNumber,UnitType
+# Example rows (delete these and add your own data):
+John Smith,john.smith@example.com,UNIT_LEADER,active,Greater New York Councils,123,BSA_TROOP_BOYS
+Jane Doe,jane.doe@example.com,PARENT,active,Greater New York Councils,,
+Bob Johnson,bob.johnson@example.com,SCOUT,active,Greater New York Councils,123,BSA_TROOP_BOYS
+Sarah Williams,sarah.williams@example.com,COUNCIL_ADMIN,active,Greater New York Councils,,
+#
+# INSTRUCTIONS:
+# - CouncilName: Must match an existing council name exactly (required for UNIT_LEADER, PARENT, SCOUT)
+# - UnitNumber: Required for SCOUT and UNIT_LEADER roles (e.g., 123, 456)
+# - UnitType: Required for SCOUT role. Options: PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, FAMILY_SCOUTING
+# - Lines starting with # are ignored as comments`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -590,9 +601,13 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
       const emailIdx = headers.indexOf('email');
       const roleIdx = headers.indexOf('role');
       const statusIdx = headers.indexOf('status');
+      const councilNameIdx = headers.indexOf('councilname');
+      const unitNumberIdx = headers.indexOf('unitnumber');
+      const unitTypeIdx = headers.indexOf('unittype');
 
       const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER', 'PARENT', 'SCOUT'];
       const validStatuses = ['active', 'inactive'];
+      const validUnitTypes = ['PACK', 'BSA_TROOP_BOYS', 'BSA_TROOP_GIRLS', 'SHIP', 'CREW', 'FAMILY_SCOUTING'];
       const preview: any[] = [];
       const errors: string[] = [];
 
@@ -620,6 +635,9 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
         const email = values[emailIdx]?.replace(/^"|"$/g, '');
         const role = values[roleIdx]?.toUpperCase();
         const status = values[statusIdx]?.toLowerCase();
+        const councilName = councilNameIdx >= 0 ? values[councilNameIdx]?.replace(/^"|"$/g, '') : '';
+        const unitNumber = unitNumberIdx >= 0 ? values[unitNumberIdx]?.replace(/^"|"$/g, '') : '';
+        const unitType = unitTypeIdx >= 0 ? values[unitTypeIdx]?.toUpperCase().replace(/^"|"$/g, '') : '';
 
         const rowErrors: string[] = [];
         if (!name) rowErrors.push('Name is required');
@@ -627,6 +645,17 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) rowErrors.push('Invalid email format');
         if (!validRoles.includes(role)) rowErrors.push(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
         if (!validStatuses.includes(status)) rowErrors.push('Invalid status. Must be: active or inactive');
+
+        // Validate council-related fields based on role
+        if (['UNIT_LEADER', 'PARENT', 'SCOUT'].includes(role) && !councilName) {
+          rowErrors.push('CouncilName is required for UNIT_LEADER, PARENT, and SCOUT roles');
+        }
+        if (['UNIT_LEADER', 'SCOUT'].includes(role) && !unitNumber) {
+          rowErrors.push('UnitNumber is required for UNIT_LEADER and SCOUT roles');
+        }
+        if (role === 'SCOUT' && unitType && !validUnitTypes.includes(unitType)) {
+          rowErrors.push(`Invalid UnitType. Must be one of: ${validUnitTypes.join(', ')}`);
+        }
 
         if (rowErrors.length > 0) {
           errors.push(`Row ${i + 1}: ${rowErrors.join('; ')}`);
@@ -638,6 +667,9 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
           email,
           role,
           status,
+          councilName,
+          unitNumber,
+          unitType,
           valid: rowErrors.length === 0,
           errors: rowErrors,
         });
@@ -672,7 +704,7 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
         const lastName = nameParts.slice(1).join(' ') || '';
         const tempPassword = `TempPass${Math.random().toString(36).slice(-8)}!`;
 
-        const userData = {
+        const userData: any = {
           firstName,
           lastName,
           email: row.email,
@@ -680,6 +712,17 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
           isActive: row.status === 'active',
           role: row.role,
         };
+
+        // Add council/unit fields if provided
+        if (row.councilName) {
+          userData.councilName = row.councilName;
+        }
+        if (row.unitNumber) {
+          userData.unitNumber = row.unitNumber;
+        }
+        if (row.unitType) {
+          userData.unitType = row.unitType;
+        }
 
         const newUser = await api.createUser(userData, session);
 
@@ -690,6 +733,8 @@ Bob Johnson,bob.johnson@example.com,SCOUT,active`;
             email: newUser.email || row.email,
             role: newUser.role || row.role,
             status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
+            unitType: row.unitType || undefined,
+            unitNumber: row.unitNumber || undefined,
           });
           successCount++;
         }
@@ -1804,7 +1849,8 @@ Unit Number
                 <ol style={{ margin: 0, paddingLeft: themeSpace.lg, marginBottom: themeSpace.md }}>
                   <li>Click "Download Template" above to get the CSV file</li>
                   <li>Open the file in Excel or Google Sheets</li>
-                  <li>Delete the example rows and add your user data</li>
+                  <li>Delete the example rows (lines starting with # are comments)</li>
+                  <li>Add your user data following the column format</li>
                   <li>Save the file (keep it as CSV format)</li>
                   <li>Upload the file below</li>
                 </ol>
@@ -1827,6 +1873,24 @@ Unit Number
                    <tr>
                    <td style={{ padding: '4px 8px' }}><strong>Status</strong></td>
                    <td style={{ padding: '4px 8px' }}>active or inactive</td>
+                 </tr>
+                 </tbody>
+                </table>
+
+                <p style={{ margin: 0, marginBottom: themeSpace.xs }}><strong>Council/Unit columns (for hierarchy assignment):</strong></p>
+                <table style={{ width: '100%', fontSize: '12px', marginBottom: themeSpace.md }}>
+                  <tbody>
+                   <tr>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>CouncilName</strong></td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>Council name (required for UNIT_LEADER, PARENT, SCOUT)</td>
+                 </tr>
+                   <tr>
+                   <td style={{ padding: '4px 8px' }}><strong>UnitNumber</strong></td>
+                   <td style={{ padding: '4px 8px' }}>Unit/Troop number (required for UNIT_LEADER and SCOUT)</td>
+                 </tr>
+                   <tr>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>UnitType</strong></td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, or FAMILY_SCOUTING</td>
                  </tr>
                  </tbody>
                 </table>
@@ -1921,7 +1985,7 @@ Unit Number
                 maxHeight: '250px', overflow: 'auto', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm,
               }}
               >
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                  <thead>
                  <tr style={{ backgroundColor: themeColors.gray50, position: 'sticky', top: 0 }}>
                  <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Row</th>
@@ -1929,6 +1993,9 @@ Unit Number
                  <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Email</th>
                  <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Role</th>
                  <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Status</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Council</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Unit #</th>
+                 <th style={{ padding: themeSpace.sm, textAlign: 'left', borderBottom: `1px solid ${themeColors.gray200}` }}>Unit Type</th>
                  <th style={{ padding: themeSpace.sm, textAlign: 'center', borderBottom: `1px solid ${themeColors.gray200}` }}>Valid</th>
                </tr>
                </thead>
@@ -1937,9 +2004,12 @@ Unit Number
                  <tr key={idx} style={{ backgroundColor: row.valid ? themeColors.white : `${themeColors.error400}20` }}>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.row}</td>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.name}</td>
-                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.email}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}`, maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.email}</td>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.role}</td>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.status}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}`, maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.councilName || '-'}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.unitNumber || '-'}</td>
+                 <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.unitType || '-'}</td>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}`, textAlign: 'center' }}>
                    {row.valid ? (
                    <span style={{ color: themeColors.success600 }}>✓</span>
