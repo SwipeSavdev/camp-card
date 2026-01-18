@@ -183,12 +183,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: camp-card-mobile-app-v2-mobile-main/mobile/package-lock.json
 
       - name: Install dependencies
         working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Run ESLint
         working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
@@ -212,12 +210,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: camp-card-mobile-app-v2-mobile-main/mobile/package-lock.json
 
       - name: Install dependencies
         working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Run Jest tests
         working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
