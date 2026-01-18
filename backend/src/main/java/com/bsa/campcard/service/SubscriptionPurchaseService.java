@@ -1,6 +1,8 @@
 package com.bsa.campcard.service;
 
+import com.bsa.campcard.dto.payment.ChargeRequest;
 import com.bsa.campcard.dto.payment.PaymentResponse;
+import com.bsa.campcard.dto.payment.SubscriptionCheckoutRequest;
 import com.bsa.campcard.dto.payment.SubscriptionPurchaseRequest;
 import com.bsa.campcard.dto.payment.SubscriptionPurchaseResponse;
 import com.bsa.campcard.entity.Subscription;
@@ -368,4 +370,165 @@ public class SubscriptionPurchaseService {
      * Contains the original Scout ID and the current depth in the referral chain.
      */
     private record ReferralChainInfo(UUID rootScoutId, int depth) {}
+
+    /**
+     * Process a complete subscription checkout in one step:
+     * 1. Check if email already exists
+     * 2. Process payment with Authorize.Net
+     * 3. Create user account
+     * 4. Create subscription with Scout attribution
+     * 5. Return auth tokens for immediate login
+     *
+     * This is used by the custom payment form on the website.
+     */
+    @Transactional
+    public SubscriptionPurchaseResponse checkout(SubscriptionCheckoutRequest request) {
+        log.info("Processing subscription checkout for: {}", request.getEmail());
+
+        try {
+            // Step 1: Check if email already exists BEFORE charging
+            if (userRepository.existsByEmail(request.getEmail())) {
+                log.warn("Email already registered: {}", request.getEmail());
+                return SubscriptionPurchaseResponse.builder()
+                        .success(false)
+                        .errorMessage("An account with this email already exists. Please login instead.")
+                        .errorCode("EMAIL_EXISTS")
+                        .build();
+            }
+
+            // Step 2: Determine subscription amount based on referral type
+            java.math.BigDecimal amount = request.getScoutCode() != null && !request.getScoutCode().isEmpty()
+                    ? new java.math.BigDecimal("10.00")  // Scout referral = $10
+                    : new java.math.BigDecimal("15.00"); // Regular or customer referral = $15
+
+            // Step 3: Process payment
+            ChargeRequest chargeRequest = new ChargeRequest();
+            chargeRequest.setAmount(amount);
+            chargeRequest.setCardNumber(request.getCardNumber());
+            // Normalize expiration date format (remove slash if present)
+            String expDate = request.getExpirationDate().replace("/", "");
+            chargeRequest.setExpirationDate(expDate);
+            chargeRequest.setCvv(request.getCvv());
+            chargeRequest.setCustomerEmail(request.getEmail());
+            chargeRequest.setCustomerName(request.getFirstName() + " " + request.getLastName());
+            chargeRequest.setDescription(PaymentService.WEB_SUBSCRIPTION_DESCRIPTION);
+            if (request.getBillingZip() != null) {
+                chargeRequest.setBillingZip(request.getBillingZip());
+            }
+
+            PaymentResponse paymentResponse = paymentService.charge(chargeRequest);
+
+            if (!"SUCCESS".equals(paymentResponse.getStatus())) {
+                log.error("Payment failed for checkout: {}", paymentResponse.getErrorMessage());
+                return SubscriptionPurchaseResponse.builder()
+                        .success(false)
+                        .errorMessage(paymentResponse.getErrorMessage() != null
+                                ? paymentResponse.getErrorMessage()
+                                : "Payment failed. Please check your card details and try again.")
+                        .errorCode(paymentResponse.getErrorCode() != null
+                                ? paymentResponse.getErrorCode()
+                                : "PAYMENT_FAILED")
+                        .build();
+            }
+
+            log.info("Payment successful, transaction ID: {}", paymentResponse.getTransactionId());
+
+            // Step 4: Create user account
+            String cardNumber = generateUniqueCardNumber();
+
+            User user = User.builder()
+                    .email(request.getEmail())
+                    .passwordHash(passwordEncoder.encode(request.getPassword()))
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .phoneNumber(request.getPhone())
+                    .role(User.UserRole.PARENT)
+                    .emailVerified(true) // Auto-verify since they paid
+                    .cardNumber(cardNumber)
+                    .isActive(true)
+                    .build();
+
+            user = userRepository.save(user);
+            log.info("User created with ID: {} and card number: {}", user.getId(), cardNumber);
+
+            // Step 5: Resolve Scout attribution through referral chain
+            UUID rootScoutId = null;
+            int referralDepth = 0;
+            String effectiveReferralCode = null;
+
+            // Direct Scout referral ($10/year tier)
+            if (request.getScoutCode() != null && !request.getScoutCode().isEmpty()) {
+                effectiveReferralCode = request.getScoutCode();
+                rootScoutId = findScoutByCode(request.getScoutCode());
+                referralDepth = 1;
+                log.info("Direct Scout referral: code={}, scoutId={}", request.getScoutCode(), rootScoutId);
+            }
+            // Customer referral ($15/year tier) - trace back to original Scout
+            else if (request.getCustomerRefCode() != null && !request.getCustomerRefCode().isEmpty()) {
+                effectiveReferralCode = request.getCustomerRefCode();
+                var referrerChain = findReferralChain(request.getCustomerRefCode());
+                if (referrerChain != null) {
+                    rootScoutId = referrerChain.rootScoutId();
+                    referralDepth = referrerChain.depth() + 1;
+                    log.info("Customer referral chain: code={}, rootScoutId={}, depth={}",
+                            request.getCustomerRefCode(), rootScoutId, referralDepth);
+                }
+            }
+
+            // Step 6: Create annual subscription with Scout attribution
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime expiresAt = now.plusYears(1);
+
+            Subscription subscription = Subscription.builder()
+                    .userId(user.getId())
+                    .councilId(1L)
+                    .planId(1L)
+                    .referralCode(effectiveReferralCode)
+                    .rootScoutId(rootScoutId)
+                    .referralDepth(referralDepth)
+                    .currentPeriodStart(now)
+                    .currentPeriodEnd(expiresAt)
+                    .status(Subscription.SubscriptionStatus.ACTIVE)
+                    .cancelAtPeriodEnd(false)
+                    .stripeSubscriptionId(paymentResponse.getTransactionId())
+                    .cardNumber(cardNumber)
+                    .build();
+
+            subscription = subscriptionRepository.save(subscription);
+            log.info("Subscription created with ID: {} expires: {} rootScoutId: {} depth: {}",
+                    subscription.getId(), expiresAt, rootScoutId, referralDepth);
+
+            // Step 7: Generate auth tokens for immediate login
+            String accessToken = jwtTokenProvider.generateAccessToken(user);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+            if (rootScoutId != null) {
+                log.info("Scout {} credited for subscription (depth: {})", rootScoutId, referralDepth);
+            }
+
+            log.info("Subscription checkout completed successfully for: {}", request.getEmail());
+
+            return SubscriptionPurchaseResponse.builder()
+                    .success(true)
+                    .userId(user.getId().toString())
+                    .email(user.getEmail())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .cardNumber(cardNumber)
+                    .subscriptionStatus("ACTIVE")
+                    .subscriptionExpiresAt(expiresAt)
+                    .transactionId(paymentResponse.getTransactionId())
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Error during subscription checkout", e);
+            return SubscriptionPurchaseResponse.builder()
+                    .success(false)
+                    .errorMessage(e.getMessage())
+                    .errorCode("INTERNAL_ERROR")
+                    .build();
+        }
+    }
 }

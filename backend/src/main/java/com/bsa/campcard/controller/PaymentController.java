@@ -1,6 +1,7 @@
 package com.bsa.campcard.controller;
 
 import com.bsa.campcard.dto.payment.*;
+import com.bsa.campcard.dto.payment.SubscriptionCheckoutRequest;
 import com.bsa.campcard.service.PaymentService;
 import com.bsa.campcard.service.SubscriptionPurchaseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -137,6 +138,24 @@ public class PaymentController {
                             .status("FAILED")
                             .errorMessage(e.getMessage())
                             .build());
+        }
+    }
+
+    @PostMapping("/subscribe/checkout")
+    @Operation(summary = "Complete subscription checkout",
+            description = "Process payment and create account in a single step. " +
+                    "Collects card details and account information, processes payment with Authorize.Net, " +
+                    "creates user account, and returns auth tokens for immediate login.")
+    public ResponseEntity<SubscriptionPurchaseResponse> checkout(
+            @Valid @RequestBody SubscriptionCheckoutRequest request) {
+        log.info("Processing subscription checkout for email: {}", request.getEmail());
+
+        SubscriptionPurchaseResponse response = subscriptionPurchaseService.checkout(request);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 }
