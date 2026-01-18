@@ -28,9 +28,8 @@ public class ReferralController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get my referral code", description = "Get or generate user's referral code")
     public ResponseEntity<ReferralCodeResponse> getMyReferralCode(Authentication authentication) {
-        // In real implementation, extract UUID from authentication
-        UUID userId = UUID.randomUUID(); // Placeholder - replace with actual authentication logic
-        
+        UUID userId = getUserIdFromAuth(authentication);
+
         log.info("Getting referral code for user: {}", userId);
         ReferralCodeResponse response = referralService.getUserReferralCode(userId);
         return ResponseEntity.ok(response);
@@ -41,37 +40,39 @@ public class ReferralController {
     public ResponseEntity<Void> applyReferralCode(
             @Valid @RequestBody ApplyReferralRequest request,
             Authentication authentication) {
-        // In real implementation, extract UUID from authentication
-        UUID userId = UUID.randomUUID(); // Placeholder - replace with actual authentication logic
-        
+        UUID userId = getUserIdFromAuth(authentication);
+
         log.info("Applying referral code: {}", request.getReferralCode());
         referralService.applyReferralCode(userId, request.getReferralCode());
         return ResponseEntity.ok().build();
     }
-    
+
     @GetMapping("/my-referrals")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get my referrals", description = "Get list of users I have referred")
     public ResponseEntity<List<ReferralResponse>> getMyReferrals(Authentication authentication) {
-        // In real implementation, extract UUID from authentication
-        UUID userId = UUID.randomUUID(); // Placeholder - replace with actual authentication logic
-        
+        UUID userId = getUserIdFromAuth(authentication);
+
         log.info("Getting referrals for user: {}", userId);
         List<ReferralResponse> referrals = referralService.getUserReferrals(userId);
         return ResponseEntity.ok(referrals);
     }
-    
+
     @PostMapping("/{referralId}/claim")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Claim referral reward", description = "Claim reward for completed referral")
     public ResponseEntity<Void> claimReward(
             @PathVariable Long referralId,
             Authentication authentication) {
-        // In real implementation, extract UUID from authentication
-        UUID userId = UUID.randomUUID(); // Placeholder - replace with actual authentication logic
-        
+        UUID userId = getUserIdFromAuth(authentication);
+
         log.info("Claiming reward for referral: {}", referralId);
         referralService.claimReward(userId, referralId);
         return ResponseEntity.ok().build();
+    }
+
+    private UUID getUserIdFromAuth(Authentication authentication) {
+        org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User) authentication.getPrincipal();
+        return user.getId();
     }
 }
