@@ -579,7 +579,7 @@
 
                 <div class="url-box">
                     <div class="url-label">Mobile App URL</div>
-                    <div class="url-value">https://otrrq8s-anonymous-8081.exp.direct</div>
+                    <div class="url-value">exp://eqywmxe-anonymous-8081.exp.direct</div>
                 </div>
 
                 <div class="alert info">
@@ -643,7 +643,7 @@
                 support@swipesavvy.com
             </div>
             <div class="footer-right">
-                Page 1 of 2
+                Page 1 of 4
             </div>
         </footer>
     </div>
@@ -794,7 +794,7 @@
                 <tbody>
                     <tr>
                         <td><strong>Mobile App (Expo)</strong></td>
-                        <td style="font-family: monospace;">https://otrrq8s-anonymous-8081.exp.direct</td>
+                        <td style="font-family: monospace;">exp://eqywmxe-anonymous-8081.exp.direct</td>
                     </tr>
                     <tr>
                         <td><strong>Admin Dashboard</strong></td>
@@ -822,7 +822,322 @@
                 support@swipesavvy.com
             </div>
             <div class="footer-right">
-                Page 2 of 2
+                Page 2 of 4
+            </div>
+        </footer>
+    </div>
+
+    <!-- Page 3: Subscription & Payment Testing -->
+    <div class="page">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-placeholder">BSA<br>CAMP<br>CARD</div>
+                <div class="brand-text">
+                    <h1>BSA Camp Card</h1>
+                    <p>Digital Fundraising Platform</p>
+                </div>
+            </div>
+            <div class="document-type">Testing Guide</div>
+        </header>
+
+        <!-- Subscription Testing Section -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-number">6</div>
+                <h2>Subscription & Payment Testing</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">💳</div>
+                    <div>
+                        <div class="card-title">Web Subscription Page</div>
+                        <div class="card-subtitle">Test the customer subscription flow</div>
+                    </div>
+                </div>
+
+                <div class="url-box">
+                    <div class="url-label">Subscribe Page URL</div>
+                    <div class="url-value">https://bsa.swipesavvy.com/campcard/subscribe/</div>
+                </div>
+
+                <h4 style="margin: 20px 0 12px; font-size: 15px; color: var(--bsa-blue);">Test Scenarios</h4>
+
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Regular Subscription ($15/year)</h4>
+                            <p>Visit the subscribe page directly without any URL parameters</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Scout Referral ($10/year)</h4>
+                            <p>Add <code>?scout=CODE&name=ScoutName</code> to the URL</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Customer Referral ($15/year)</h4>
+                            <p>Add <code>?ref=CODE&refname=FriendName</code> to the URL</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="credentials-box">
+                <h3>🧪 Test Credit Card Numbers (Sandbox)</h3>
+                <div class="credential-row">
+                    <span class="credential-label">Visa (Approved)</span>
+                    <span class="credential-value">4111 1111 1111 1111</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Mastercard</span>
+                    <span class="credential-value">5424 0000 0000 0015</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Amex</span>
+                    <span class="credential-value">3782 822463 10005</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Expiration</span>
+                    <span class="credential-value">Any future date (e.g., 12/26)</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">CVV</span>
+                    <span class="credential-value">Any 3-4 digits (e.g., 123)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Flow Testing -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-number">7</div>
+                <h2>Payment Flow Verification</h2>
+            </div>
+
+            <div class="card">
+                <h4 style="margin-bottom: 16px; font-size: 15px; color: var(--bsa-blue);">Expected Results After Payment</h4>
+
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Account created automatically</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Camp Card number generated</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>1-year subscription activated</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Scout attribution recorded</span>
+                    </div>
+                </div>
+
+                <div class="alert info">
+                    <div class="alert-icon">💡</div>
+                    <div class="alert-content">
+                        <div class="alert-title">After Successful Payment</div>
+                        <div class="alert-text">You'll see your Camp Card number (e.g., CC-XXXX-XXXX-XXXX). Use your email and password to log in to the mobile app or web portal.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-left">
+                <strong>BSA Camp Card</strong> | Digital Fundraising Platform<br>
+                support@swipesavvy.com
+            </div>
+            <div class="footer-right">
+                Page 3 of 4
+            </div>
+        </footer>
+    </div>
+
+    <!-- Page 4: Comprehensive Testing Checklist -->
+    <div class="page">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-placeholder">BSA<br>CAMP<br>CARD</div>
+                <div class="brand-text">
+                    <h1>BSA Camp Card</h1>
+                    <p>Digital Fundraising Platform</p>
+                </div>
+            </div>
+            <div class="document-type">Testing Checklist</div>
+        </header>
+
+        <!-- Mobile App Testing -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-number">8</div>
+                <h2>Mobile App Testing Checklist</h2>
+            </div>
+
+            <div class="card">
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Steps</th>
+                            <th>Expected Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Login</strong></td>
+                            <td>Enter test@campcard.org / Password123</td>
+                            <td>Dashboard loads with user info</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Browse Offers</strong></td>
+                            <td>Navigate to Offers tab</td>
+                            <td>List of merchant offers displays</td>
+                        </tr>
+                        <tr>
+                            <td><strong>View Offer Details</strong></td>
+                            <td>Tap on any offer</td>
+                            <td>Full offer details shown</td>
+                        </tr>
+                        <tr>
+                            <td><strong>QR Code (Scout)</strong></td>
+                            <td>Login as Scout, view QR code</td>
+                            <td>Unique Scout QR code displayed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Profile</strong></td>
+                            <td>Navigate to Profile tab</td>
+                            <td>User profile info displays</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Logout</strong></td>
+                            <td>Tap Logout in Profile</td>
+                            <td>Returns to login screen</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Portal Testing -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-number">9</div>
+                <h2>Admin Portal Testing Checklist</h2>
+            </div>
+
+            <div class="card">
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Steps</th>
+                            <th>Expected Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Admin Login</strong></td>
+                            <td>Login at bsa.swipesavvy.com</td>
+                            <td>Dashboard with analytics</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Create User</strong></td>
+                            <td>Users → Add User → Fill form</td>
+                            <td>New user appears in list</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Create Merchant</strong></td>
+                            <td>Merchants → Add Merchant</td>
+                            <td>Merchant created successfully</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Create Offer</strong></td>
+                            <td>Offers → Add Offer</td>
+                            <td>Offer appears in list</td>
+                        </tr>
+                        <tr>
+                            <td><strong>View Councils</strong></td>
+                            <td>Navigate to Councils</td>
+                            <td>Council list displays</td>
+                        </tr>
+                        <tr>
+                            <td><strong>View Reports</strong></td>
+                            <td>Navigate to Dashboard</td>
+                            <td>Analytics charts load</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Reference URLs -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-number">📋</div>
+                <h2>All URLs Quick Reference</h2>
+            </div>
+
+            <table class="info-table">
+                <thead>
+                    <tr>
+                        <th>Resource</th>
+                        <th>URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Mobile App (Expo Go)</strong></td>
+                        <td style="font-family: monospace;">exp://eqywmxe-anonymous-8081.exp.direct</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Admin Dashboard</strong></td>
+                        <td style="font-family: monospace;">https://bsa.swipesavvy.com</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Subscribe Page</strong></td>
+                        <td style="font-family: monospace;">https://bsa.swipesavvy.com/campcard/subscribe/</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scout Referral Link</strong></td>
+                        <td style="font-family: monospace;">https://bsa.swipesavvy.com/campcard/subscribe/?scout=CODE</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Marketing Landing Page</strong></td>
+                        <td style="font-family: monospace;">https://bsa.swipesavvy.com/campcard/</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Documentation</strong></td>
+                        <td style="font-family: monospace;">https://bsa.swipesavvy.com/swagger-ui.html</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert success" style="margin-top: 20px;">
+                <div class="alert-icon">🚀</div>
+                <div class="alert-content">
+                    <div class="alert-title">Ready to Test!</div>
+                    <div class="alert-text">Use this guide to thoroughly test all Camp Card features. Report any issues to support@swipesavvy.com</div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-left">
+                <strong>BSA Camp Card</strong> | Digital Fundraising Platform<br>
+                support@swipesavvy.com | Updated: January 2026
+            </div>
+            <div class="footer-right">
+                Page 4 of 4
             </div>
         </footer>
     </div>
