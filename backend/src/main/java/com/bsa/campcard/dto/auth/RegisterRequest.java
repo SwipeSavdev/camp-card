@@ -33,4 +33,8 @@ public class RegisterRequest {
     private String role;
 
     private String referralCode;
+
+    // Unit type and number for Scouts (e.g., Pack, BSA Troop for Boys, etc.)
+    private String unitType;
+    private String unitNumber;
 }

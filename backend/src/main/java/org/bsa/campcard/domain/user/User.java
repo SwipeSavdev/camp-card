@@ -87,11 +87,14 @@ public class User {
     @Column(name = "card_number", unique = true, length = 20)
     private String cardNumber;
 
-    // TODO: Re-enable once unit_type column is added to database by DBA
-    // Run as DB superuser: ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS unit_type VARCHAR(50);
+    // Temporarily disabled - columns need to be added by DBA with postgres permissions
+    // Once columns exist, uncomment these fields:
     // @Enumerated(EnumType.STRING)
     // @Column(name = "unit_type", length = 50)
     // private UnitType unitType;
+
+    // @Column(name = "unit_number", length = 20)
+    // private String unitNumber;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

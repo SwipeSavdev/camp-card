@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../services/apiClient';
 import { COLORS } from '../../config/constants';
 
-const COUNCIL_LOGO = require('../../../assets/council_logo.png');
+const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
 type ResetPasswordRouteProp = RouteProp<{ params: { token: string } }, 'params'>;
 
@@ -131,7 +131,7 @@ export default function ResetPasswordScreen() {
           >
             {/* Header */}
             <View style={styles.headerContainer}>
-              <Image source={COUNCIL_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize }]} />
+              <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
               <View style={styles.iconContainer}>
                 <Ionicons name="key-outline" size={64} color={COLORS.primary} />
               </View>

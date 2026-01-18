@@ -109,7 +109,9 @@ public class UserService {
             .role(request.role())
             .councilId(request.councilId())
             .troopId(request.troopId())
-            // .unitType(request.unitType()) // TODO: Re-enable once unit_type column exists
+            // Disabled until DB columns exist
+            // .unitType(request.unitType())
+            // .unitNumber(request.unitNumber())
             .isActive(true)
             .emailVerified(false)
             .emailVerificationToken(verificationToken)
@@ -169,9 +171,12 @@ public class UserService {
         if (request.isActive() != null) {
             user.setIsActive(request.isActive());
         }
-        // TODO: Re-enable once unit_type column exists
+        // Disabled until DB columns exist
         // if (request.unitType() != null) {
         //     user.setUnitType(request.unitType());
+        // }
+        // if (request.unitNumber() != null) {
+        //     user.setUnitNumber(request.unitNumber());
         // }
 
         User updatedUser = userRepository.save(user);
@@ -300,7 +305,8 @@ public class UserService {
         User.UserRole role,
         UUID councilId,
         UUID troopId,
-        User.UnitType unitType
+        User.UnitType unitType,
+        String unitNumber
     ) {}
 
     public record UserUpdateRequest(
@@ -309,6 +315,7 @@ public class UserService {
         String phoneNumber,
         User.UserRole role,
         Boolean isActive,
-        User.UnitType unitType
+        User.UnitType unitType,
+        String unitNumber
     ) {}
 }

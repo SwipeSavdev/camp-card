@@ -2011,7 +2011,7 @@ public class EmailService {
                                             <tr>
                                                 <td style="text-align: center;">
                                                     <!-- Camp Card Logo -->
-                                                    <img src="%s/campcard-logo.png" alt="BSA Camp Card" style="max-width: 200px; height: auto; margin-bottom: 16px;" />
+                                                    <img src="%s/images/campcard-logo.png" alt="BSA Camp Card" style="max-width: 200px; height: auto; margin-bottom: 16px;" />
                                                     <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Supporting Scouts, One Card at a Time</p>
                                                 </td>
                                             </tr>

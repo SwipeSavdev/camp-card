@@ -24,6 +24,8 @@ public class UserProfileResponse {
     private String profileImageUrl;
     private String cardNumber;
     private String subscriptionStatus;
+    private String unitType;
+    private String unitNumber;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
     private ScoutProfile scoutProfile;

@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../services/apiClient';
 import { COLORS } from '../../config/constants';
 
-const COUNCIL_LOGO = require('../../../assets/council_logo.png');
+const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
 type EmailVerificationRouteProp = RouteProp<{ params: { token: string } }, 'params'>;
 
@@ -60,7 +60,7 @@ export default function EmailVerificationScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Image source={COUNCIL_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize }]} />
+          <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
           <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
           <Text style={styles.loadingText}>Verifying your email...</Text>
         </View>
@@ -72,7 +72,7 @@ export default function EmailVerificationScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Image source={COUNCIL_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize }]} />
+          <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
           <View style={styles.successIconContainer}>
             <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
           </View>
@@ -95,7 +95,7 @@ export default function EmailVerificationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.centerContainer}>
-        <Image source={COUNCIL_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize }]} />
+        <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
         <View style={styles.errorIconContainer}>
           <Ionicons name="alert-circle" size={80} color={COLORS.error} />
         </View>

@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
 
-const COUNCIL_LOGO = require('../../../assets/council_logo.png');
+const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
 type PaymentScreenRouteProp = RouteProp<AuthStackParamList, 'Payment'>;
 
@@ -154,8 +154,8 @@ export default function PaymentScreen() {
 
           <View style={styles.headerLogoContainer}>
             <Image
-              source={COUNCIL_LOGO}
-              style={[styles.logoImage, { width: headerLogoSize, height: headerLogoSize }]}
+              source={CAMP_CARD_LOGO}
+              style={[styles.logoImage, { width: headerLogoSize, height: headerLogoSize * 0.4 }]}
             />
           </View>
 

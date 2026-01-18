@@ -18,4 +18,14 @@ public class UpdateProfileRequest {
     private String email;
 
     private String phone;
+
+    // Role for admin updates
+    private String role;
+
+    // For admin updates - active status
+    private Boolean isActive;
+
+    // Unit type and number for Scouts
+    private String unitType;
+    private String unitNumber;
 }
