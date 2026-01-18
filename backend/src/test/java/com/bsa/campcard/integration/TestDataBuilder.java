@@ -1,9 +1,19 @@
 package com.bsa.campcard.integration;
 
 import com.bsa.campcard.entity.Council;
+import com.bsa.campcard.entity.Merchant;
+import com.bsa.campcard.entity.Merchant.MerchantStatus;
+import com.bsa.campcard.entity.Offer;
+import com.bsa.campcard.entity.Offer.DiscountType;
+import com.bsa.campcard.entity.Offer.OfferStatus;
+import com.bsa.campcard.entity.Troop;
+import com.bsa.campcard.entity.Troop.TroopStatus;
+import com.bsa.campcard.entity.Troop.TroopType;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.User.UserRole;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -85,5 +95,69 @@ public class TestDataBuilder {
      */
     public static String uniqueSuffix() {
         return UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    /**
+     * Create a new Merchant with default values.
+     */
+    public static Merchant createMerchant(Long councilId) {
+        String uniqueId = uniqueSuffix();
+        return Merchant.builder()
+                .councilId(councilId)
+                .businessName("Test Business " + uniqueId)
+                .dbaName("Test DBA " + uniqueId)
+                .description("A test merchant for integration testing")
+                .category("RESTAURANTS")
+                .contactName("John Doe")
+                .contactEmail("contact-" + uniqueId + "@test.com")
+                .contactPhone("555-0100")
+                .websiteUrl("https://example.com")
+                .status(MerchantStatus.PENDING)
+                .build();
+    }
+
+    /**
+     * Create a new Offer with default values.
+     */
+    public static Offer createOffer(Long merchantId) {
+        Offer offer = new Offer();
+        offer.setMerchantId(merchantId);
+        offer.setTitle("Test Offer " + uniqueSuffix());
+        offer.setDescription("A test offer for integration testing");
+        offer.setDiscountType(DiscountType.PERCENTAGE);
+        offer.setDiscountValue(new BigDecimal("10.00"));
+        offer.setCategory("RESTAURANTS");
+        offer.setStatus(OfferStatus.ACTIVE);
+        offer.setValidFrom(LocalDateTime.now().minusDays(1));
+        offer.setValidUntil(LocalDateTime.now().plusDays(30));
+        offer.setTotalRedemptions(0);
+        offer.setFeatured(false);
+        offer.setScoutExclusive(false);
+        return offer;
+    }
+
+    /**
+     * Create a new Troop with default values.
+     */
+    public static Troop createTroop(Long councilId) {
+        Troop troop = new Troop();
+        String uniqueId = uniqueSuffix();
+        troop.setTroopNumber("T-" + uniqueId);
+        troop.setCouncilId(councilId);
+        troop.setTroopName("Test Troop " + uniqueId);
+        troop.setTroopType(TroopType.SCOUTS_BSA);
+        troop.setCharterOrganization("Test Church " + uniqueId);
+        troop.setMeetingLocation("Community Center");
+        troop.setMeetingDay("Tuesday");
+        troop.setMeetingTime("7:00 PM");
+        troop.setScoutmasterName("John Smith");
+        troop.setScoutmasterEmail("scoutmaster-" + uniqueId + "@test.com");
+        troop.setScoutmasterPhone("555-0100");
+        troop.setStatus(TroopStatus.ACTIVE);
+        troop.setTotalScouts(20);
+        troop.setActiveScouts(18);
+        troop.setTotalSales(BigDecimal.ZERO);
+        troop.setCardsSold(0);
+        return troop;
     }
 }
