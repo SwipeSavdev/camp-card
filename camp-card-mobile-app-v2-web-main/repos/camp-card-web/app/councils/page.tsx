@@ -108,12 +108,30 @@ interface TroopLeaderCandidate {
   email?: string;
 }
 
+interface Scout {
+  id: string;
+  name: string;
+  email?: string;
+  rank?: string;
+}
+
+interface ScoutCandidate {
+  id: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: string;
+}
+
 interface TroopUnit {
   id: string;
   uuid: string;
   name: string;
   leaderName: string;
   troopLeaders: TroopLeader[];
+  scouts: Scout[];
+  scoutCount: number;
 }
 
 interface Council {
@@ -142,10 +160,14 @@ export default function CouncilsPage() {
   const [showAddCouncil, setShowAddCouncil] = useState(false);
   const [showAddTroop, setShowAddTroop] = useState<string | null>(null);
   const [showAddLeader, setShowAddLeader] = useState<string | null>(null);
+  const [showAddScout, setShowAddScout] = useState<string | null>(null);
   const [_addedTroopLeaders, _setAddedTroopLeaders] = useState<TroopLeaderCandidate[]>([]);
   const [availableTroopLeaders, setAvailableTroopLeaders] = useState<TroopLeaderCandidate[]>([]);
+  const [availableScouts, setAvailableScouts] = useState<ScoutCandidate[]>([]);
   const [troopLeaderSearchTerm, setTroopLeaderSearchTerm] = useState('');
+  const [scoutSearchTerm, setScoutSearchTerm] = useState('');
   const [selectedTroopLeader, setSelectedTroopLeader] = useState<TroopLeaderCandidate | null>(null);
+  const [selectedScout, setSelectedScout] = useState<ScoutCandidate | null>(null);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -208,6 +230,12 @@ export default function CouncilsPage() {
       );
       setAvailableTroopLeaders(troopLeaders);
 
+      // Filter for scouts (users with SCOUT role who are not yet assigned to a troop)
+      const scouts = (usersData.content || usersData || []).filter(
+        (user: any) => user.role === 'SCOUT',
+      );
+      setAvailableScouts(scouts);
+
       const councilsArray = (councilData.content || councilData || []).map((council: any) => ({
         id: council.id?.toString() || council.uuid,
         name: council.name,
@@ -236,13 +264,24 @@ export default function CouncilsPage() {
               userId: leader.id,
             }));
 
+            // Find scouts assigned to this troop
+            const troopScouts = scouts.filter(
+              (scout: any) => scout.troopId === troopUuid || scout.troopId?.toString() === troop.id?.toString(),
+            ).map((scout: any) => ({
+              id: scout.id,
+              name: scout.name || `${scout.firstName} ${scout.lastName}`,
+              email: scout.email,
+              rank: scout.rank || 'Scout',
+            }));
+
             return {
               id: troop.id?.toString(),
               uuid: troop.uuid || troop.id?.toString(),
               name: troop.troopName || troop.name || `Troop ${troop.troopNumber}`,
               troopNumber: troop.troopNumber,
               leaderName: troop.charterOrganization || troop.scoutmasterName || 'Scout Leader',
-              scouts: troop.totalScouts || 0,
+              scoutCount: troop.totalScouts || troopScouts.length || 0,
+              scouts: troopScouts,
               troopLeaders: assignedLeaders,
             };
           }),
@@ -410,6 +449,101 @@ export default function CouncilsPage() {
     } catch (error) {
       console.error('Failed to assign leader to troop:', error);
       alert('Failed to assign leader to troop. Please try again.');
+    }
+  };
+
+  const addScoutToTroop = async (councilId: string, troopId: string) => {
+    if (!selectedScout) {
+      console.warn('No scout selected');
+      return;
+    }
+
+    try {
+      // Assign the scout to the troop via API
+      await api.assignScoutToTroop(selectedScout.id, troopId, session);
+
+      // Create assignment with existing scout
+      const newScoutAssignment = {
+        id: selectedScout.id,
+        name: selectedScout.name || `${selectedScout.firstName} ${selectedScout.lastName}`,
+        email: selectedScout.email,
+        rank: 'Scout',
+      };
+
+      // Add to councils state
+      setCouncils(
+        councils.map((council) => {
+          if (council.id === councilId) {
+            return {
+              ...council,
+              troopUnits: council.troopUnits.map((troop) => {
+                if (troop.uuid === troopId || troop.id === troopId) {
+                  return {
+                    ...troop,
+                    scouts: [...troop.scouts, newScoutAssignment],
+                    scoutCount: troop.scoutCount + 1,
+                  };
+                }
+                return troop;
+              }),
+            };
+          }
+          return council;
+        }),
+      );
+
+      // Remove from available scouts list (they're now assigned)
+      setAvailableScouts(availableScouts.filter((s) => s.id !== selectedScout.id));
+
+      // Reset search and selection
+      setScoutSearchTerm('');
+      setSelectedScout(null);
+      setShowAddScout(null);
+    } catch (error) {
+      console.error('Failed to assign scout to troop:', error);
+      alert('Failed to assign scout to troop. Please try again.');
+    }
+  };
+
+  const removeScoutFromTroop = async (councilId: string, troopId: string, scoutId: string) => {
+    try {
+      // Remove scout from troop via API
+      await api.removeScoutFromTroop(scoutId, session);
+
+      // Update local state
+      setCouncils(
+        councils.map((council) => {
+          if (council.id === councilId) {
+            return {
+              ...council,
+              troopUnits: council.troopUnits.map((troop) => {
+                if (troop.uuid === troopId || troop.id === troopId) {
+                  const removedScout = troop.scouts.find((s) => s.id === scoutId);
+                  // Add back to available scouts
+                  if (removedScout) {
+                    setAvailableScouts((prev) => [...prev, {
+                      id: removedScout.id,
+                      name: removedScout.name,
+                      email: removedScout.email,
+                      role: 'SCOUT',
+                    }]);
+                  }
+                  return {
+                    ...troop,
+                    scouts: troop.scouts.filter((s) => s.id !== scoutId),
+                    scoutCount: Math.max(0, troop.scoutCount - 1),
+                  };
+                }
+                return troop;
+              }),
+            };
+          }
+          return council;
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to remove scout from troop:', error);
+      alert('Failed to remove scout from troop. Please try again.');
     }
   };
 
@@ -1238,6 +1372,220 @@ export default function CouncilsPage() {
                ))}
              </div>
              )}
+
+               {/* Scouts Section */}
+               <div style={{ marginTop: themeSpace.lg, borderTop: `1px solid ${themeColors.gray200}`, paddingTop: themeSpace.lg }}>
+               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.md }}>
+                 <h5 style={{ margin: 0, fontSize: '13px', fontWeight: '600', color: themeColors.text }}>
+                   Scouts ({troop.scouts?.length || 0})
+                 </h5>
+                 <button
+                   onClick={() => setShowAddScout(showAddScout === troop.id ? null : troop.id)}
+                   style={{
+                     padding: `${themeSpace.xs} ${themeSpace.md}`,
+                     backgroundColor: themeColors.success600,
+                     color: themeColors.white,
+                     border: 'none',
+                     borderRadius: themeRadius.sm,
+                     cursor: 'pointer',
+                     fontWeight: '600',
+                     fontSize: '12px',
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: themeSpace.xs,
+                   }}
+                 >
+                   <Icon name="plus" size={14} />
+                   Add Scout
+                 </button>
+               </div>
+
+               {/* Add Scout Form */}
+               {showAddScout === troop.id && (
+               <div style={{
+                 backgroundColor: themeColors.white, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md, border: `1px solid ${themeColors.success50}`,
+               }}
+               >
+                 <h5 style={{
+                   margin: `0 0 ${themeSpace.sm} 0`, fontSize: '12px', fontWeight: '600', color: themeColors.text,
+                 }}
+                 >
+                   Search for Scout
+                 </h5>
+                 <div style={{ marginBottom: themeSpace.md }}>
+                   <input
+                     type="text"
+                     placeholder="Search by name or email..."
+                     value={scoutSearchTerm}
+                     onChange={(e) => setScoutSearchTerm(e.target.value)}
+                     style={{
+                       width: '100%',
+                       padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                       border: `1px solid ${themeColors.gray300}`,
+                       borderRadius: themeRadius.sm,
+                       fontSize: '12px',
+                       boxSizing: 'border-box',
+                       marginBottom: themeSpace.sm,
+                     }}
+                   />
+                   <p style={{ fontSize: '11px', color: themeColors.gray600, margin: 0 }}>
+                     {availableScouts.filter((s) => !s.troopId).length} unassigned scouts available
+                   </p>
+                 </div>
+
+                 {/* Filtered Scouts List */}
+                 <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: themeSpace.md }}>
+                   {availableScouts
+                     .filter((scout: any) => !scout.troopId)
+                     .filter(
+                       (scout: any) => scout.name?.toLowerCase().includes(scoutSearchTerm.toLowerCase())
+                         || scout.firstName?.toLowerCase().includes(scoutSearchTerm.toLowerCase())
+                         || scout.email?.toLowerCase().includes(scoutSearchTerm.toLowerCase()),
+                     )
+                     .length === 0 ? (
+                     <p style={{
+                       fontSize: '11px', color: themeColors.gray600, margin: 0, padding: themeSpace.sm, textAlign: 'center',
+                     }}
+                     >
+                       No unassigned scouts found
+                     </p>
+                   ) : (
+                     <div style={{ display: 'grid', gap: themeSpace.sm }}>
+                       {availableScouts
+                         .filter((scout: any) => !scout.troopId)
+                         .filter(
+                           (scout: any) => scout.name?.toLowerCase().includes(scoutSearchTerm.toLowerCase())
+                             || scout.firstName?.toLowerCase().includes(scoutSearchTerm.toLowerCase())
+                             || scout.email?.toLowerCase().includes(scoutSearchTerm.toLowerCase()),
+                         )
+                         .map((scout: any) => (
+                           <button
+                             key={scout.id}
+                             onClick={() => setSelectedScout(scout)}
+                             style={{
+                               padding: `${themeSpace.sm} ${themeSpace.md}`,
+                               border: `1px solid ${selectedScout?.id === scout.id ? themeColors.success600 : themeColors.gray300}`,
+                               borderRadius: themeRadius.sm,
+                               backgroundColor: selectedScout?.id === scout.id ? themeColors.success50 : themeColors.white,
+                               cursor: 'pointer',
+                               fontSize: '11px',
+                               textAlign: 'left',
+                               transition: 'all 150ms ease',
+                             }}
+                             onMouseEnter={(e) => {
+                               if (selectedScout?.id !== scout.id) {
+                                 e.currentTarget.style.backgroundColor = themeColors.gray50;
+                                 e.currentTarget.style.borderColor = themeColors.success200;
+                               }
+                             }}
+                             onMouseLeave={(e) => {
+                               if (selectedScout?.id !== scout.id) {
+                                 e.currentTarget.style.backgroundColor = themeColors.white;
+                                 e.currentTarget.style.borderColor = themeColors.gray300;
+                               }
+                             }}
+                           >
+                             <div style={{ fontWeight: selectedScout?.id === scout.id ? '600' : '500', color: themeColors.text }}>
+                               {scout.name || `${scout.firstName} ${scout.lastName}`}
+                             </div>
+                             <div style={{ fontSize: '10px', color: themeColors.gray600 }}>{scout.email}</div>
+                           </button>
+                         ))}
+                     </div>
+                   )}
+                 </div>
+
+                 {/* Action Buttons */}
+                 <div style={{ display: 'flex', gap: themeSpace.sm }}>
+                   <button
+                     onClick={() => {
+                       if (selectedScout) {
+                         addScoutToTroop(council.id, troop.uuid);
+                       }
+                     }}
+                     disabled={!selectedScout}
+                     style={{
+                       padding: `${themeSpace.xs} ${themeSpace.md}`,
+                       backgroundColor: selectedScout ? themeColors.success600 : themeColors.gray300,
+                       color: themeColors.white,
+                       border: 'none',
+                       borderRadius: themeRadius.sm,
+                       cursor: selectedScout ? 'pointer' : 'not-allowed',
+                       fontWeight: '600',
+                       fontSize: '11px',
+                     }}
+                   >
+                     Assign Scout
+                   </button>
+                   <button
+                     onClick={() => {
+                       setShowAddScout(null);
+                       setScoutSearchTerm('');
+                       setSelectedScout(null);
+                     }}
+                     style={{
+                       padding: `${themeSpace.xs} ${themeSpace.md}`,
+                       backgroundColor: themeColors.gray200,
+                       color: themeColors.text,
+                       border: 'none',
+                       borderRadius: themeRadius.sm,
+                       cursor: 'pointer',
+                       fontWeight: '600',
+                       fontSize: '11px',
+                     }}
+                   >
+                     Cancel
+                   </button>
+                 </div>
+               </div>
+               )}
+
+               {/* Scouts List */}
+               {(!troop.scouts || troop.scouts.length === 0) ? (
+                 <p style={{ color: themeColors.gray500, fontSize: '12px', margin: 0 }}>No scouts assigned yet</p>
+               ) : (
+                 <div style={{ display: 'grid', gap: themeSpace.sm }}>
+                   {troop.scouts.map((scout) => (
+                     <div
+                       key={scout.id}
+                       style={{
+                         backgroundColor: themeColors.white,
+                         borderRadius: themeRadius.sm,
+                         padding: themeSpace.md,
+                         borderLeft: `3px solid ${themeColors.success600}`,
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'space-between',
+                       }}
+                     >
+                       <div>
+                         <h6 style={{
+                           margin: 0, color: themeColors.text, fontWeight: '500', fontSize: '12px',
+                         }}
+                         >
+                           {scout.name}
+                         </h6>
+                         <p style={{ margin: `${themeSpace.xs} 0 0 0`, fontSize: '10px', color: themeColors.gray600 }}>
+                           {scout.email} {scout.rank && `• ${scout.rank}`}
+                         </p>
+                       </div>
+                       <button
+                         onClick={() => removeScoutFromTroop(council.id, troop.id, scout.id)}
+                         style={{
+                           background: 'none',
+                           border: 'none',
+                           cursor: 'pointer',
+                           color: themeColors.error500,
+                           padding: themeSpace.xs,
+                         }}
+                       >
+                         <Icon name="trash" size={14} />
+                       </button>
+                     </div>
+                   ))}
+                 </div>
+               )}
+             </div>
              </div>
                )}
                </div>
