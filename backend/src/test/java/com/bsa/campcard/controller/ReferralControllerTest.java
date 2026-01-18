@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for ReferralController using @Import(ControllerTestConfig.class)
+ * Unit tests for ReferralController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -46,9 +46,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Referral code management
  * - Reward claiming scenarios
  */
-@Import(ControllerTestConfig.class)
+@Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest(ReferralController.class)
-@Import(TestSecurityConfig.class)
 @DisplayName("ReferralController Tests")
 class ReferralControllerTest {
 

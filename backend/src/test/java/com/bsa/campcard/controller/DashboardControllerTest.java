@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for DashboardController using @Import(ControllerTestConfig.class)
+ * Unit tests for DashboardController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -40,9 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Authorization (RBAC)
  * - Error handling
  */
-@Import(ControllerTestConfig.class)
+@Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest(DashboardController.class)
-@Import(TestSecurityConfig.class)
 @DisplayName("DashboardController Tests")
 class DashboardControllerTest {
 

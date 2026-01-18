@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for CouncilController using @Import(ControllerTestConfig.class)
+ * Unit tests for CouncilController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -52,9 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - ID parsing (Long, UUID, council number)
  * - Error handling
  */
-@Import(ControllerTestConfig.class)
+@Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest(CouncilController.class)
-@Import(TestSecurityConfig.class)
 @DisplayName("CouncilController Tests")
 class CouncilControllerTest {
 

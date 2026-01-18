@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for SubscriptionController using @Import(ControllerTestConfig.class)
+ * Unit tests for SubscriptionController using @Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest.
  *
  * Tests the REST API layer including:
@@ -45,9 +45,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Error handling
  * - Payment integration scenarios
  */
-@Import(ControllerTestConfig.class)
+@Import({ControllerTestConfig.class, TestSecurityConfig.class})
 @WebMvcTest(SubscriptionController.class)
-@Import(TestSecurityConfig.class)
 @DisplayName("SubscriptionController Tests")
 class SubscriptionControllerTest {
 
