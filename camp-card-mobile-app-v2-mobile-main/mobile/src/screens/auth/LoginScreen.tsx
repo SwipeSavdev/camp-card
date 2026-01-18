@@ -28,8 +28,8 @@ import {
   getBiometricTypeName,
 } from '../../services/biometricsService';
 
-// Add your logo asset (adjust path/filename as needed)
-const COUNCIL_LOGO = require('../../../assets/council_logo.png');
+// BSA Camp Card logo
+const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
 /**
  * Login Screen
@@ -135,9 +135,7 @@ export default function LoginScreen() {
           >
             {/* Logo */}
             <View style={styles.logoContainer}>
-              <Image source={COUNCIL_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize }]} />
-              <Text style={styles.title}>BSA Camp Card</Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
+              <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
             </View>
 
             {/* Form */}
@@ -270,17 +268,6 @@ const styles = StyleSheet.create({
   },
   logoImage: {
     resizeMode: 'contain',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginTop: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    marginTop: 8,
   },
   form: {
     marginBottom: 32,
