@@ -40,7 +40,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for CampaignController using @WebMvcTest.
+ * Unit tests for CampaignController using @Import(ControllerTestConfig.class)
+@WebMvcTest.
  *
  * Tests the REST API layer including:
  * - Campaign CRUD operations
@@ -51,6 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Input validation
  * - Error handling
  */
+@Import(ControllerTestConfig.class)
 @WebMvcTest(CampaignController.class)
 @Import(TestSecurityConfig.class)
 @DisplayName("CampaignController Tests")

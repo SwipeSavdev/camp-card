@@ -14,9 +14,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for AnalyticsController using @WebMvcTest.
+ * Unit tests for AnalyticsController using @Import(ControllerTestConfig.class)
+@WebMvcTest.
  *
  * Tests the REST API layer including:
  * - Wallet analytics endpoint mapping
@@ -29,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * exist rather than the response content. Full testing should be done at
  * integration level where proper authentication is available.
  */
+@Import(ControllerTestConfig.class)
 @WebMvcTest(value = AnalyticsController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

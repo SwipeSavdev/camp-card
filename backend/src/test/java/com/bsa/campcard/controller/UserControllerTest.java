@@ -35,9 +35,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for UserController using @WebMvcTest.
+ * Unit tests for UserController using @Import(ControllerTestConfig.class)
+@WebMvcTest.
  *
  * Tests the REST API layer including:
  * - User CRUD operations
@@ -47,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * Security is disabled for unit testing - authorization is tested at integration level.
  */
+@Import(ControllerTestConfig.class)
 @WebMvcTest(value = UserController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

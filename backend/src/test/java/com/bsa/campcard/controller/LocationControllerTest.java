@@ -33,9 +33,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for LocationController using @WebMvcTest.
+ * Unit tests for LocationController using @Import(ControllerTestConfig.class)
+@WebMvcTest.
  *
  * Tests the REST API layer including:
  * - Geocoding endpoints
@@ -47,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * Security is disabled for unit testing - authorization is tested at integration level.
  */
+@Import(ControllerTestConfig.class)
 @WebMvcTest(value = LocationController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

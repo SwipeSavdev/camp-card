@@ -30,9 +30,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.context.annotation.Import;
 
 /**
- * Unit tests for QRCodeController using @WebMvcTest.
+ * Unit tests for QRCodeController using @Import(ControllerTestConfig.class)
+@WebMvcTest.
  *
  * Tests the REST API layer including:
  * - QR code generation for users (admin endpoint)
@@ -45,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Note: The /users/me/qr-code endpoint requires Authentication principal cast to User,
  * which is difficult to mock in unit tests. It should be tested at integration level.
  */
+@Import(ControllerTestConfig.class)
 @WebMvcTest(value = QRCodeController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

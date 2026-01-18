@@ -23,14 +23,17 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.context.annotation.Import;
 
 /**
  * Comprehensive unit tests for OfferController REST API endpoints.
  *
- * Uses @WebMvcTest for lightweight controller testing with MockMvc.
+ * Uses @Import(ControllerTestConfig.class)
+@WebMvcTest for lightweight controller testing with MockMvc.
  * Security is tested using @WithMockUser for different roles.
  * OfferService is mocked using @MockBean.
  */
+@Import(ControllerTestConfig.class)
 @WebMvcTest(OfferController.class)
 @DisplayName("OfferController Tests")
 class OfferControllerTest {

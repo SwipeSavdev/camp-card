@@ -45,7 +45,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.context.annotation.Import;
 
+@Import(ControllerTestConfig.class)
 @WebMvcTest(controllers = MerchantController.class)
 @org.springframework.boot.autoconfigure.ImportAutoConfiguration({
     org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration.class,

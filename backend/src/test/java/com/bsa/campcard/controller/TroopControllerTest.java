@@ -36,11 +36,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.context.annotation.Import;
 
 /**
  * Unit tests for TroopController REST API endpoints.
  *
- * Uses @WebMvcTest to test the controller layer in isolation with MockMvc.
+ * Uses @Import(ControllerTestConfig.class)
+@WebMvcTest to test the controller layer in isolation with MockMvc.
  * TroopService is mocked to test only controller behavior.
  *
  * Test categories:
@@ -53,6 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Not found scenarios
  * - Pagination
  */
+@Import(ControllerTestConfig.class)
 @WebMvcTest(value = TroopController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
