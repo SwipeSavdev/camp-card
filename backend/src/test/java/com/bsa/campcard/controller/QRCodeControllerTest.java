@@ -46,7 +46,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * which is difficult to mock in unit tests. It should be tested at integration level.
  */
 @WebMvcTest(value = QRCodeController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = QRCodeControllerTestConfig.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 @DisplayName("QRCodeController Tests")

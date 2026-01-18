@@ -46,7 +46,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Security is disabled for unit testing - authorization is tested at integration level.
  */
 @WebMvcTest(value = CampCardsController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = CampCardsControllerTestConfig.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 @DisplayName("CampCardsController Tests")

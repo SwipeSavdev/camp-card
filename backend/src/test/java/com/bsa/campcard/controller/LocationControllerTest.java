@@ -48,7 +48,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Security is disabled for unit testing - authorization is tested at integration level.
  */
 @WebMvcTest(value = LocationController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = LocationControllerTestConfig.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 @DisplayName("LocationController Tests")

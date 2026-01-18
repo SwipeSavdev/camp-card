@@ -41,7 +41,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = PaymentController.class)
-@ContextConfiguration(classes = {PaymentController.class, PaymentControllerTest.TestExceptionHandler.class})
 @org.springframework.boot.autoconfigure.ImportAutoConfiguration({
     org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration.class
 })

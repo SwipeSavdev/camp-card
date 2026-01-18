@@ -127,8 +127,8 @@ class ReferralServiceTest {
             assertEquals("https://campcardapp.com/join?ref=TESTCODE", response.getShareableLink());
             assertEquals(0, response.getTotalReferrals());
             assertEquals(0, response.getSuccessfulReferrals());
-            assertEquals(BigDecimal.ZERO, response.getTotalRewardsEarned());
-            assertEquals(BigDecimal.ZERO, response.getPendingRewards());
+            assertEquals(0, response.getTotalRewardsEarned().compareTo(BigDecimal.ZERO));
+            assertEquals(0, response.getPendingRewards().compareTo(BigDecimal.ZERO));
             verify(userRepository, never()).save(any(User.class));
         }
 

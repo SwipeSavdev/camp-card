@@ -48,7 +48,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = NotificationController.class)
-@ContextConfiguration(classes = {NotificationController.class, NotificationControllerTest.TestExceptionHandler.class})
 @org.springframework.boot.autoconfigure.ImportAutoConfiguration({
     org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration.class
 })

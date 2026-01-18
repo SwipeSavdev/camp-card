@@ -30,7 +30,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * integration level where proper authentication is available.
  */
 @WebMvcTest(value = AnalyticsController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = AnalyticsControllerTestConfig.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 @DisplayName("AnalyticsController Tests")

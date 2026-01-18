@@ -54,7 +54,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Pagination
  */
 @WebMvcTest(value = TroopController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = TroopControllerTestConfig.class)
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 @DisplayName("TroopController Tests")
