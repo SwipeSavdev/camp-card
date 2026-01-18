@@ -290,3 +290,13 @@ export const analyticsApi = {
   getWalletStats: () =>
     apiClient.get('/api/v1/analytics/wallet'),
 };
+
+export const qrCodeApi = {
+  // Get user's QR code with shareable link for scout affiliate tracking
+  getUserQRCode: () =>
+    apiClient.get('/api/v1/qr-codes/user'),
+
+  // Validate a QR code
+  validateQRCode: (code: string) =>
+    apiClient.get(`/api/v1/qr-codes/validate/${code}`),
+};

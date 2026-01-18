@@ -21,7 +21,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
-import { scoutApi } from '../../services/apiClient';
+import { scoutApi, qrCodeApi } from '../../services/apiClient';
 
 interface ScoutStats {
   totalSubscribers: number;
@@ -49,14 +49,40 @@ export default function ScoutDashboardScreen() {
     savingsEarned: 0,
   });
 
-  // Generate Scout's unique affiliate link (FR-16)
+  // QR Code state - fetched from backend API
+  const [affiliateLink, setAffiliateLink] = useState('');
+  const [affiliateCode, setAffiliateCode] = useState('');
+  const [isLoadingQR, setIsLoadingQR] = useState(true);
+
   const scoutId = user?.id || 'scout123';
-  const affiliateCode = `SC-${scoutId.slice(0, 8).toUpperCase()}`;
-  const affiliateLink = `https://campcard.org/join/${affiliateCode}`;
 
   useEffect(() => {
-    loadScoutStats();
+    loadScoutData();
   }, [scoutId]);
+
+  const loadScoutData = async () => {
+    await Promise.all([loadScoutStats(), loadQRCode()]);
+  };
+
+  const loadQRCode = async () => {
+    try {
+      setIsLoadingQR(true);
+      // Fetch QR code from backend - returns shareable link pointing to /campcard/subscribe/
+      const response = await qrCodeApi.getUserQRCode();
+      const data = response.data;
+
+      setAffiliateLink(data.shareableLink || '');
+      setAffiliateCode(data.uniqueCode || '');
+    } catch (error) {
+      console.log('Failed to load QR code, using fallback:', error);
+      // Fallback to local generation if API fails
+      const fallbackCode = `SC-${scoutId.slice(0, 8).toUpperCase()}`;
+      setAffiliateCode(fallbackCode);
+      setAffiliateLink(`https://bsa.swipesavvy.com/campcard/subscribe/?scout=${fallbackCode}`);
+    } finally {
+      setIsLoadingQR(false);
+    }
+  };
 
   const loadScoutStats = async () => {
     try {
@@ -82,7 +108,7 @@ export default function ScoutDashboardScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadScoutStats();
+    await loadScoutData();
     setRefreshing(false);
   };
 
@@ -157,28 +183,39 @@ export default function ScoutDashboardScreen() {
           <Text style={styles.sectionTitle}>My Camp Card QR Code</Text>
           <View style={styles.qrCard}>
             <View style={styles.qrContainer}>
-              <QRCode
-                value={affiliateLink}
-                size={180}
-                color={COLORS.text}
-                backgroundColor={COLORS.surface}
-              />
+              {isLoadingQR ? (
+                <View style={styles.qrLoading}>
+                  <Text style={styles.qrLoadingText}>Loading...</Text>
+                </View>
+              ) : affiliateLink ? (
+                <QRCode
+                  value={affiliateLink}
+                  size={180}
+                  color={COLORS.text}
+                  backgroundColor={COLORS.surface}
+                />
+              ) : (
+                <View style={styles.qrLoading}>
+                  <Ionicons name="qr-code-outline" size={60} color={COLORS.textSecondary} />
+                </View>
+              )}
             </View>
             <View style={styles.qrInfo}>
               <Text style={styles.qrLabel}>Your Affiliate Code</Text>
-              <Text style={styles.qrCode}>{affiliateCode}</Text>
+              <Text style={styles.qrCode}>{affiliateCode || '---'}</Text>
               <Text style={styles.qrHint}>
                 Have customers scan this code to support your fundraising
               </Text>
             </View>
             <View style={styles.linkActions}>
-              <TouchableOpacity style={styles.linkButton} onPress={handleCopyLink}>
+              <TouchableOpacity style={styles.linkButton} onPress={handleCopyLink} disabled={!affiliateLink}>
                 <Ionicons name="copy-outline" size={20} color={COLORS.secondary} />
                 <Text style={styles.linkButtonText}>Copy Link</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.linkButton, styles.shareButton]}
                 onPress={handleShareLink}
+                disabled={!affiliateLink}
               >
                 <Ionicons name="share-social" size={20} color={COLORS.surface} />
                 <Text style={[styles.linkButtonText, styles.shareButtonText]}>Share</Text>
@@ -405,6 +442,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.primary,
     marginBottom: 16,
+  },
+  qrLoading: {
+    width: 180,
+    height: 180,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qrLoadingText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
   qrInfo: {
     alignItems: 'center',
