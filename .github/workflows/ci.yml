@@ -1,0 +1,622 @@
+name: CI Quality Gates
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+  # Coverage thresholds
+  BACKEND_COVERAGE_THRESHOLD: 80
+  FRONTEND_COVERAGE_THRESHOLD: 80
+
+jobs:
+  # ==========================================================================
+  # Backend Quality Gates
+  # ==========================================================================
+  backend-lint:
+    name: Backend Lint & Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Check code formatting (Spotless)
+        working-directory: ./backend
+        run: ./mvnw spotless:check
+
+      - name: Run Checkstyle
+        working-directory: ./backend
+        run: ./mvnw checkstyle:check
+
+  backend-unit-tests:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run unit tests with coverage
+        working-directory: ./backend
+        run: ./mvnw test jacoco:report
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/target/site/jacoco/
+          retention-days: 7
+
+      - name: Check coverage threshold
+        working-directory: ./backend
+        run: |
+          COVERAGE=$(grep -Po 'Total.*?([0-9]+)%' target/site/jacoco/index.html | grep -Po '[0-9]+' | head -1 || echo "0")
+          echo "Backend coverage: ${COVERAGE}%"
+          if [ "$COVERAGE" -lt "${{ env.BACKEND_COVERAGE_THRESHOLD }}" ]; then
+            echo "::error::Coverage ${COVERAGE}% is below threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+            exit 1
+          fi
+          echo "::notice::Coverage ${COVERAGE}% meets threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/target/surefire-reports/
+          retention-days: 7
+
+  backend-integration-tests:
+    name: Backend Integration Tests
+    runs-on: ubuntu-latest
+    needs: backend-unit-tests
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: campcard_app
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: campcard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run integration tests
+        working-directory: ./backend
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: campcard_test
+          DB_USERNAME: campcard_app
+          DB_PASSWORD: test_password
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: ./mvnw verify -P integration-tests -DskipUnitTests
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: backend/target/failsafe-reports/
+          retention-days: 7
+
+  backend-contract-tests:
+    name: Backend Contract Tests
+    runs-on: ubuntu-latest
+    needs: backend-unit-tests
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: campcard_app
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: campcard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run contract tests
+        working-directory: ./backend
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: campcard_test
+          DB_USERNAME: campcard_app
+          DB_PASSWORD: test_password
+        run: ./mvnw test -Dtest="*ContractTest"
+
+  backend-security-scan:
+    name: Backend Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run OWASP dependency check
+        working-directory: ./backend
+        run: ./mvnw dependency-check:check || true
+        continue-on-error: true
+
+      - name: Build backend for Trivy scan
+        working-directory: ./backend
+        run: ./mvnw package -DskipTests
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './backend'
+          format: 'table'
+          exit-code: '0'  # Don't fail on vulnerabilities (report only)
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+  # ==========================================================================
+  # Frontend (Web) Quality Gates
+  # ==========================================================================
+  frontend-lint:
+    name: Frontend Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-web-main/repos/camp-card-web/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm ci
+
+      - name: Type check
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm run type-check
+
+      - name: Lint
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm run lint
+
+  frontend-unit-tests:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-web-main/repos/camp-card-web/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm test -- --coverage --passWithNoTests
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: camp-card-mobile-app-v2-web-main/repos/camp-card-web/coverage/
+          retention-days: 7
+
+      - name: Check coverage threshold
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct // 0' | cut -d. -f1)
+            echo "Frontend coverage: ${COVERAGE}%"
+            if [ "$COVERAGE" -lt "${{ env.FRONTEND_COVERAGE_THRESHOLD }}" ]; then
+              echo "::warning::Coverage ${COVERAGE}% is below threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
+            else
+              echo "::notice::Coverage ${COVERAGE}% meets threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
+            fi
+          else
+            echo "::warning::No coverage report found"
+          fi
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    needs: [frontend-lint, frontend-unit-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-web-main/repos/camp-card-web/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm ci
+
+      - name: Build
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        env:
+          NEXT_PUBLIC_API_URL: https://bsa.swipesavvy.com/api/v1
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: camp-card-mobile-app-v2-web-main/repos/camp-card-web/.next/
+          retention-days: 1
+
+  frontend-security-scan:
+    name: Frontend Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-web-main/repos/camp-card-web/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm ci
+
+      - name: Run npm audit
+        working-directory: ./camp-card-mobile-app-v2-web-main/repos/camp-card-web
+        run: npm audit --audit-level=high || true
+        continue-on-error: true
+
+  # ==========================================================================
+  # Mobile Quality Gates
+  # ==========================================================================
+  mobile-lint:
+    name: Mobile Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-mobile-main/mobile/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm ci
+
+      - name: Type check
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm run type-check
+
+      - name: Lint
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm run lint
+
+  mobile-unit-tests:
+    name: Mobile Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'camp-card-mobile-app-v2-mobile-main/mobile/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        working-directory: ./camp-card-mobile-app-v2-mobile-main/mobile
+        run: npm test -- --coverage --passWithNoTests
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-coverage
+          path: camp-card-mobile-app-v2-mobile-main/mobile/coverage/
+          retention-days: 7
+
+  # ==========================================================================
+  # E2E Tests (Playwright)
+  # ==========================================================================
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [frontend-build]
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Playwright dependencies
+        working-directory: ./testing/e2e/playwright
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: ./testing/e2e/playwright
+        env:
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL || 'https://bsa.swipesavvy.com' }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL || 'admin@campcard.org' }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD || 'Password123' }}
+        run: npx playwright test --project=chromium --reporter=html
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: testing/e2e/playwright/playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: testing/e2e/playwright/test-results/
+          retention-days: 7
+
+  # ==========================================================================
+  # Load Tests (k6) - Only on main branch
+  # ==========================================================================
+  load-tests-smoke:
+    name: Load Tests (Smoke)
+    runs-on: ubuntu-latest
+    needs: [backend-unit-tests, frontend-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run k6 smoke test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: testing/load/k6/scenarios.js
+        env:
+          BASE_URL: ${{ vars.API_BASE_URL || 'https://bsa.swipesavvy.com/api/v1' }}
+          ADMIN_EMAIL: ${{ secrets.LOAD_TEST_EMAIL || 'admin@campcard.org' }}
+          ADMIN_PASSWORD: ${{ secrets.LOAD_TEST_PASSWORD || 'Password123' }}
+          SCENARIO: smoke
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-smoke-results
+          path: load-test-report-*.json
+          retention-days: 7
+
+  # ==========================================================================
+  # Quality Gate Summary
+  # ==========================================================================
+  quality-gate-check:
+    name: Quality Gate Check
+    runs-on: ubuntu-latest
+    needs: [
+      backend-lint,
+      backend-unit-tests,
+      backend-integration-tests,
+      backend-contract-tests,
+      backend-security-scan,
+      frontend-lint,
+      frontend-unit-tests,
+      frontend-build,
+      frontend-security-scan,
+      mobile-lint,
+      mobile-unit-tests
+    ]
+    if: always()
+
+    steps:
+      - name: Check quality gates
+        run: |
+          echo "=== Quality Gate Results ==="
+          echo ""
+          echo "Backend:"
+          echo "  - Lint: ${{ needs.backend-lint.result }}"
+          echo "  - Unit Tests: ${{ needs.backend-unit-tests.result }}"
+          echo "  - Integration Tests: ${{ needs.backend-integration-tests.result }}"
+          echo "  - Contract Tests: ${{ needs.backend-contract-tests.result }}"
+          echo "  - Security Scan: ${{ needs.backend-security-scan.result }}"
+          echo ""
+          echo "Frontend:"
+          echo "  - Lint: ${{ needs.frontend-lint.result }}"
+          echo "  - Unit Tests: ${{ needs.frontend-unit-tests.result }}"
+          echo "  - Build: ${{ needs.frontend-build.result }}"
+          echo "  - Security Scan: ${{ needs.frontend-security-scan.result }}"
+          echo ""
+          echo "Mobile:"
+          echo "  - Lint: ${{ needs.mobile-lint.result }}"
+          echo "  - Unit Tests: ${{ needs.mobile-unit-tests.result }}"
+          echo ""
+
+          # Fail if any critical job failed
+          if [[ "${{ needs.backend-unit-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.frontend-unit-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.mobile-unit-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then
+            echo "::error::Quality gates failed - one or more critical checks did not pass"
+            exit 1
+          fi
+
+          echo "::notice::All quality gates passed!"
+
+      - name: Create PR comment with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              backend: {
+                lint: '${{ needs.backend-lint.result }}',
+                unitTests: '${{ needs.backend-unit-tests.result }}',
+                integrationTests: '${{ needs.backend-integration-tests.result }}',
+                contractTests: '${{ needs.backend-contract-tests.result }}',
+                security: '${{ needs.backend-security-scan.result }}'
+              },
+              frontend: {
+                lint: '${{ needs.frontend-lint.result }}',
+                unitTests: '${{ needs.frontend-unit-tests.result }}',
+                build: '${{ needs.frontend-build.result }}',
+                security: '${{ needs.frontend-security-scan.result }}'
+              },
+              mobile: {
+                lint: '${{ needs.mobile-lint.result }}',
+                unitTests: '${{ needs.mobile-unit-tests.result }}'
+              }
+            };
+
+            const getEmoji = (status) => {
+              switch(status) {
+                case 'success': return '✅';
+                case 'failure': return '❌';
+                case 'skipped': return '⏭️';
+                default: return '⚠️';
+              }
+            };
+
+            let body = '## 🔍 Quality Gate Results\n\n';
+
+            body += '### Backend\n';
+            body += `| Check | Status |\n|-------|--------|\n`;
+            body += `| Lint & Format | ${getEmoji(results.backend.lint)} ${results.backend.lint} |\n`;
+            body += `| Unit Tests | ${getEmoji(results.backend.unitTests)} ${results.backend.unitTests} |\n`;
+            body += `| Integration Tests | ${getEmoji(results.backend.integrationTests)} ${results.backend.integrationTests} |\n`;
+            body += `| Contract Tests | ${getEmoji(results.backend.contractTests)} ${results.backend.contractTests} |\n`;
+            body += `| Security Scan | ${getEmoji(results.backend.security)} ${results.backend.security} |\n\n`;
+
+            body += '### Frontend\n';
+            body += `| Check | Status |\n|-------|--------|\n`;
+            body += `| Lint & Type Check | ${getEmoji(results.frontend.lint)} ${results.frontend.lint} |\n`;
+            body += `| Unit Tests | ${getEmoji(results.frontend.unitTests)} ${results.frontend.unitTests} |\n`;
+            body += `| Build | ${getEmoji(results.frontend.build)} ${results.frontend.build} |\n`;
+            body += `| Security Scan | ${getEmoji(results.frontend.security)} ${results.frontend.security} |\n\n`;
+
+            body += '### Mobile\n';
+            body += `| Check | Status |\n|-------|--------|\n`;
+            body += `| Lint & Type Check | ${getEmoji(results.mobile.lint)} ${results.mobile.lint} |\n`;
+            body += `| Unit Tests | ${getEmoji(results.mobile.unitTests)} ${results.mobile.unitTests} |\n\n`;
+
+            body += '---\n';
+            body += '*🤖 Automated quality gate check by CI pipeline*';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

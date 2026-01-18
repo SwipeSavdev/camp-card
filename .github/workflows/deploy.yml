@@ -17,6 +17,15 @@ on:
         description: 'Deploy Mobile Dev Server'
         type: boolean
         default: true
+      skip_ci_check:
+        description: 'Skip CI quality gate check (emergency deployments only)'
+        type: boolean
+        default: false
+
+# Ensure only one deployment runs at a time
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -28,12 +37,42 @@ env:
 
 jobs:
   # ==========================================================================
+  # Wait for CI Quality Gates to Pass
+  # ==========================================================================
+  wait-for-ci:
+    name: Wait for CI Quality Gates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.skip_ci_check != 'true'
+
+    steps:
+      - name: Wait for CI workflow
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-for-ci
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Quality Gate Check
+          ref: ${{ github.sha }}
+          timeoutSeconds: 1800  # 30 minutes
+          intervalSeconds: 30
+
+      - name: Fail if CI did not pass
+        if: steps.wait-for-ci.outputs.conclusion != 'success'
+        run: |
+          echo "::error::CI Quality Gates did not pass. Deployment blocked."
+          echo "CI conclusion: ${{ steps.wait-for-ci.outputs.conclusion }}"
+          exit 1
+
+  # ==========================================================================
   # Build Backend Docker Image
   # ==========================================================================
   build-backend:
     name: Build Backend
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.inputs.deploy_backend == 'true'
+    needs: [wait-for-ci]
+    if: |
+      always() &&
+      (needs.wait-for-ci.result == 'success' || needs.wait-for-ci.result == 'skipped') &&
+      (github.event_name == 'push' || github.event.inputs.deploy_backend == 'true')
 
     steps:
       - name: Checkout code
@@ -75,7 +114,11 @@ jobs:
   build-web:
     name: Build Web Portal
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.inputs.deploy_web == 'true'
+    needs: [wait-for-ci]
+    if: |
+      always() &&
+      (needs.wait-for-ci.result == 'success' || needs.wait-for-ci.result == 'skipped') &&
+      (github.event_name == 'push' || github.event.inputs.deploy_web == 'true')
 
     steps:
       - name: Checkout code
@@ -117,7 +160,11 @@ jobs:
   build-mobile:
     name: Build Mobile Dev Server
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.inputs.deploy_mobile == 'true'
+    needs: [wait-for-ci]
+    if: |
+      always() &&
+      (needs.wait-for-ci.result == 'success' || needs.wait-for-ci.result == 'skipped') &&
+      (github.event_name == 'push' || github.event.inputs.deploy_mobile == 'true')
 
     steps:
       - name: Checkout code
