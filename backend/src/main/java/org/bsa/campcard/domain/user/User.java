@@ -124,12 +124,31 @@ public class User {
     private LocalDateTime deletedAt;
 
     public enum UserRole {
+        // System-level roles (only assignable by GLOBAL_SYSTEM_ADMIN)
         GLOBAL_SYSTEM_ADMIN,
+        ADMIN,                  // Full Access Admin
+        SUPPORT_REPRESENTATIVE, // Support Rep
+        SYSTEM_ANALYST,         // System Analyst
+        SYSTEM_QA,              // QA Role
+        SECURITY_ANALYST,       // Security Role
+        // Organization-level roles
         NATIONAL_ADMIN,
         COUNCIL_ADMIN,
         UNIT_LEADER,
         PARENT,
         SCOUT
+    }
+
+    /**
+     * Check if a role is a system-level role (only assignable by GLOBAL_SYSTEM_ADMIN)
+     */
+    public static boolean isSystemRole(UserRole role) {
+        return role == UserRole.GLOBAL_SYSTEM_ADMIN
+            || role == UserRole.ADMIN
+            || role == UserRole.SUPPORT_REPRESENTATIVE
+            || role == UserRole.SYSTEM_ANALYST
+            || role == UserRole.SYSTEM_QA
+            || role == UserRole.SECURITY_ANALYST;
     }
 
     /**

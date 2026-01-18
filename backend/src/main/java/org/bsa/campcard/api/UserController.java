@@ -107,8 +107,14 @@ public class UserController {
         Authentication authentication,
         @Valid @RequestBody UserService.UserCreateRequest request
     ) {
-        // RBAC: Council Admins can only create users in their own council
         if (authentication != null && authentication.getPrincipal() instanceof User currentUser) {
+            // RBAC: Only GLOBAL_SYSTEM_ADMIN can assign system-level roles
+            if (User.isSystemRole(request.role()) && currentUser.getRole() != User.UserRole.GLOBAL_SYSTEM_ADMIN) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                    "Only Global System Admin can assign system-level roles (Admin, Support Representative, System Analyst, System QA, Security Analyst)");
+            }
+
+            // RBAC: Council Admins can only create users in their own council
             if (currentUser.getRole() == User.UserRole.COUNCIL_ADMIN && currentUser.getCouncilId() != null) {
                 // Force the new user to be in the Council Admin's council
                 request = new UserService.UserCreateRequest(
@@ -138,9 +144,20 @@ public class UserController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN') or #id == authentication.principal.id")
     public ResponseEntity<UserResponse> updateUser(
+        Authentication authentication,
         @Parameter(description = "User ID") @PathVariable UUID id,
         @Valid @RequestBody UserService.UserUpdateRequest request
     ) {
+        // RBAC: Only GLOBAL_SYSTEM_ADMIN can assign system-level roles
+        if (request.role() != null
+            && authentication != null
+            && authentication.getPrincipal() instanceof User currentUser
+            && User.isSystemRole(request.role())
+            && currentUser.getRole() != User.UserRole.GLOBAL_SYSTEM_ADMIN) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                "Only Global System Admin can assign system-level roles (Admin, Support Representative, System Analyst, System QA, Security Analyst)");
+        }
+
         User user = userService.updateUser(id, request);
         return ResponseEntity.ok(toResponse(user));
     }

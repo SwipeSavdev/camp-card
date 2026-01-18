@@ -165,8 +165,11 @@ const bottomNavItems = [
   { name: 'config', label: 'Config', href: '/config' },
 ];
 
-type UserRole = 'GLOBAL_SYSTEM_ADMIN' | 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'UNIT_LEADER' | 'PARENT' | 'SCOUT';
+type UserRole = 'GLOBAL_SYSTEM_ADMIN' | 'ADMIN' | 'SUPPORT_REPRESENTATIVE' | 'SYSTEM_ANALYST' | 'SYSTEM_QA' | 'SECURITY_ANALYST' | 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'UNIT_LEADER' | 'PARENT' | 'SCOUT';
 type UnitType = 'PACK' | 'BSA_TROOP_BOYS' | 'BSA_TROOP_GIRLS' | 'SHIP' | 'CREW' | 'FAMILY_SCOUTING' | null;
+
+// System-level roles that can only be assigned by Global System Admin
+const SYSTEM_ROLES: UserRole[] = ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'SYSTEM_ANALYST', 'SYSTEM_QA', 'SECURITY_ANALYST'];
 
 interface User {
   id: string;
@@ -237,14 +240,30 @@ export default function UsersPage() {
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importSuccess, setImportSuccess] = useState<number>(0);
 
-  const roleOptions = [
-    { value: 'GLOBAL_SYSTEM_ADMIN', label: 'Global System Admin' },
-    { value: 'NATIONAL_ADMIN', label: 'National Admin' },
-    { value: 'COUNCIL_ADMIN', label: 'Council Admin' },
-    { value: 'UNIT_LEADER', label: 'Unit Leader' },
-    { value: 'PARENT', label: 'Parent' },
-    { value: 'SCOUT', label: 'Scout' },
+  // All role options - system roles require Global System Admin to assign
+  const allRoleOptions = [
+    // System-level roles (only assignable by GLOBAL_SYSTEM_ADMIN)
+    { value: 'GLOBAL_SYSTEM_ADMIN', label: 'Global System Admin', isSystemRole: true },
+    { value: 'ADMIN', label: 'Admin (Full Access)', isSystemRole: true },
+    { value: 'SUPPORT_REPRESENTATIVE', label: 'Support Representative', isSystemRole: true },
+    { value: 'SYSTEM_ANALYST', label: 'System Analyst', isSystemRole: true },
+    { value: 'SYSTEM_QA', label: 'System QA', isSystemRole: true },
+    { value: 'SECURITY_ANALYST', label: 'Security Analyst', isSystemRole: true },
+    // Organization-level roles
+    { value: 'NATIONAL_ADMIN', label: 'National Admin', isSystemRole: false },
+    { value: 'COUNCIL_ADMIN', label: 'Council Admin', isSystemRole: false },
+    { value: 'UNIT_LEADER', label: 'Unit Leader', isSystemRole: false },
+    { value: 'PARENT', label: 'Parent', isSystemRole: false },
+    { value: 'SCOUT', label: 'Scout', isSystemRole: false },
   ];
+
+  // Get current user's role from session
+  const currentUserRole = (session?.user as any)?.role as UserRole | undefined;
+  const isGlobalSystemAdmin = currentUserRole === 'GLOBAL_SYSTEM_ADMIN';
+
+  // Filter role options based on current user's permissions
+  // Only Global System Admin can see/assign system-level roles
+  const roleOptions = allRoleOptions.filter((role) => !role.isSystemRole || isGlobalSystemAdmin);
 
   const unitTypeOptions = [
     { value: '', label: 'Select Unit Type' },
@@ -1072,7 +1091,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
               }}
             >
               <option value="">All Roles</option>
-              {roleOptions.map((role) => (
+              {allRoleOptions.map((role) => (
                 <option key={role.value} value={role.value}>{role.label}</option>
               ))}
             </select>
@@ -1211,7 +1230,7 @@ Actions
                    padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: themeColors.primary50, color: themeColors.primary600, borderRadius: themeRadius.sm, fontSize: '12px', fontWeight: '500',
                  }}
                  >
-                   {roleOptions.find((r) => r.value === item.role)?.label || item.role}
+                   {allRoleOptions.find((r) => r.value === item.role)?.label || item.role}
                  </span>
                  </td>
                    <td style={{ padding: themeSpace.lg }}>
