@@ -37,10 +37,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     Optional<User> findByPasswordResetToken(String token);
 
-    /**
-     * Find user by password setup token (for admin-created users setting their password)
-     */
-    Optional<User> findByPasswordSetupToken(String token);
+    // NOTE: Disabled until DBA adds password_setup_token column
+    // /**
+    //  * Find user by password setup token (for admin-created users setting their password)
+    //  */
+    // Optional<User> findByPasswordSetupToken(String token);
 
     /**
      * Find all users by council ID (for council admins)

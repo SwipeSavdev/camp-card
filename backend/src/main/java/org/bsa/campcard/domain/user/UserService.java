@@ -100,8 +100,9 @@ public class UserService {
         String verificationToken = UUID.randomUUID().toString();
         log.info("Generated verification token for {}: {}", request.email(), verificationToken);
 
+        // NOTE: Password setup fields are disabled until DBA adds columns
         // Generate password setup token - admin-created users need to set their own password
-        String passwordSetupToken = UUID.randomUUID().toString();
+        // String passwordSetupToken = UUID.randomUUID().toString();
 
         User user = User.builder()
             .email(request.email().toLowerCase())
@@ -119,9 +120,10 @@ public class UserService {
             .emailVerified(false)
             .emailVerificationToken(verificationToken)
             .emailVerificationExpiresAt(LocalDateTime.now().plusDays(7))
-            .passwordSetupRequired(true)
-            .passwordSetupToken(passwordSetupToken)
-            .passwordSetupExpiresAt(LocalDateTime.now().plusDays(7))
+            // Disabled until DB columns exist - uncomment when DBA adds columns:
+            // .passwordSetupRequired(true)
+            // .passwordSetupToken(passwordSetupToken)
+            // .passwordSetupExpiresAt(LocalDateTime.now().plusDays(7))
             .referralCode(generateReferralCode())
             .build();
 

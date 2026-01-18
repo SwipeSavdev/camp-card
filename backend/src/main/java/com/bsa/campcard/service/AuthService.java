@@ -211,17 +211,15 @@ public class AuthService {
         user.setEmailVerificationExpiresAt(null);
         userRepository.save(user);
 
-        // Check if user needs to set their password (admin-created users)
-        boolean requiresPasswordSetup = Boolean.TRUE.equals(user.getPasswordSetupRequired());
-        String passwordSetupToken = requiresPasswordSetup ? user.getPasswordSetupToken() : null;
+        // NOTE: Password setup feature is disabled until DBA adds columns to database
+        // For now, all users go directly to login after email verification
+        boolean requiresPasswordSetup = false;
+        String passwordSetupToken = null;
 
-        // Only send welcome email if no password setup required
-        // Otherwise, welcome email is sent after password is set
-        if (!requiresPasswordSetup) {
-            emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
-        }
+        // Send welcome email
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
 
-        log.info("Email verified for: {}. Requires password setup: {}", user.getEmail(), requiresPasswordSetup);
+        log.info("Email verified for: {}", user.getEmail());
 
         return VerifyEmailResponse.builder()
                 .success(true)
@@ -233,28 +231,10 @@ public class AuthService {
 
     @Transactional
     public void setPassword(String token, String newPassword) {
-        User user = userRepository.findByPasswordSetupToken(token)
-                .orElseThrow(() -> new AuthenticationException("Invalid password setup token"));
-
-        if (user.getPasswordSetupExpiresAt() != null && user.getPasswordSetupExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new AuthenticationException("Password setup token has expired");
-        }
-
-        if (!Boolean.TRUE.equals(user.getPasswordSetupRequired())) {
-            throw new AuthenticationException("Password setup is not required for this user");
-        }
-
-        // Set the new password
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setPasswordSetupRequired(false);
-        user.setPasswordSetupToken(null);
-        user.setPasswordSetupExpiresAt(null);
-        userRepository.save(user);
-
-        // Send welcome email now that account is fully set up
-        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
-
-        log.info("Password set for admin-created user: {}", user.getEmail());
+        // NOTE: Password setup feature is disabled until DBA adds columns to database
+        // This endpoint will return an error until the columns are added
+        log.warn("setPassword called but feature is disabled - token: {}", token);
+        throw new AuthenticationException("Password setup feature is temporarily unavailable. Please use the forgot password option.");
     }
 
     public UserProfileResponse getCurrentUser(String token) {
