@@ -8,8 +8,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image,
-  useWindowDimensions,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,9 +17,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
-
-// Add your logo asset (adjust path/filename as needed)
-const COUNCIL_LOGO = require('../../../assets/council_logo.png');
 
 type SignupScreenRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
 
@@ -40,10 +35,6 @@ export default function SignupScreen() {
   
   const navigation = useNavigation();
   const { signup, isLoading } = useAuthStore();
-  const { width, height } = useWindowDimensions();
-
-  // Prominent header logo (double the previous size)
-  const headerLogoSize = Math.min(144, Math.max(112, Math.round(width * 0.36)));
 
   const handleSignup = async () => {
     // Validation
@@ -109,7 +100,7 @@ export default function SignupScreen() {
         // Keep CTA tappable; adjust if you have a header/nav bar on iOS
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
       >
-        {/* Top: Header (Back | Logo centered | Spacer) */}
+        {/* Top: Header with back button */}
         <View style={styles.topSection}>
           <View style={styles.headerRow}>
             <TouchableOpacity
@@ -118,18 +109,6 @@ export default function SignupScreen() {
             >
               <Ionicons name="arrow-back" size={24} color={COLORS.text} />
             </TouchableOpacity>
-
-            <View style={styles.headerLogoContainer}>
-              <Image
-                source={COUNCIL_LOGO}
-                style={[
-                  styles.logoImage,
-                  { width: headerLogoSize, height: headerLogoSize },
-                ]}
-              />
-            </View>
-
-            <View style={styles.headerRightSpacer} />
           </View>
         </View>
 
@@ -338,22 +317,12 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 112, // room for the doubled logo
-  },
-  headerLogoContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerRightSpacer: {
-    width: 88,
-    height: 88,
+    minHeight: 48,
   },
   backButton: {
-    width: 88,
-    height: 88,
+    width: 48,
+    height: 48,
     justifyContent: 'center',
-    marginBottom: 0, // header row shouldn't add vertical push
   },
   middleSection: {
     flex: 1,
@@ -373,9 +342,6 @@ const styles = StyleSheet.create({
   },
   headerTextAboveForm: {
     marginBottom: 12,
-  },
-  logoImage: {
-    resizeMode: 'contain',
   },
   title: {
     fontSize: 28,
