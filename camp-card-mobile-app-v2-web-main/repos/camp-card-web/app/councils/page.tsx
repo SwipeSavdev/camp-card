@@ -382,6 +382,8 @@ export default function CouncilsPage() {
                     name: savedTroop.troopName || newTroopName,
                     leaderName: newTroopLeader,
                     troopLeaders: [],
+                    scouts: [],
+                    scoutCount: 0,
                   },
                 ],
               };
