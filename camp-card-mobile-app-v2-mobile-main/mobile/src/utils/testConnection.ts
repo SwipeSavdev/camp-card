@@ -135,7 +135,7 @@ export async function testUserLogin(credentials: {
   details?: any;
 }> {
   try {
-    const response = await apiClient.post('/api/v1/auth/login', credentials);
+    const response = await apiClient.post('/api/v1/auth/mobile/login', credentials);
 
     return {
       success: true,

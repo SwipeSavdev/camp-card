@@ -131,7 +131,7 @@ export const useAuthStore = create<AuthState>()(
         console.log('📡 API URL:', API_BASE_URL);
 
         try {
-          const response = await apiClient.post('/api/v1/auth/login', {
+          const response = await apiClient.post('/api/v1/auth/mobile/login', {
             email,
             password,
           });
@@ -154,7 +154,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (error: any) {
           console.error('❌ Login failed:', error.message);
           console.error('❌ Error details:', error.response?.data || error);
-          console.error('❌ Request URL:', `${API_BASE_URL}/api/v1/auth/login`);
+          console.error('❌ Request URL:', `${API_BASE_URL}/api/v1/auth/mobile/login`);
           set({ isLoading: false });
           throw error;
         }

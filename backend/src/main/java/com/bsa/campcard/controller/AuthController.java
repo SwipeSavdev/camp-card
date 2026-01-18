@@ -28,9 +28,16 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Authenticate user and get tokens")
+    @Operation(summary = "Authenticate user and get tokens (admin portal - blocks SCOUT/PARENT)")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/mobile/login")
+    @Operation(summary = "Authenticate user and get tokens (mobile app - all roles allowed)")
+    public ResponseEntity<AuthResponse> mobileLogin(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.mobileLogin(request);
         return ResponseEntity.ok(response);
     }
 

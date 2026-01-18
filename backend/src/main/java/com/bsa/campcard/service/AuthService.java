@@ -81,8 +81,26 @@ public class AuthService {
         );
     }
 
+    /**
+     * Login for admin portal - blocks SCOUT and PARENT roles
+     */
     @Transactional
     public AuthResponse login(LoginRequest request) {
+        return loginInternal(request, true);
+    }
+
+    /**
+     * Login for mobile app - allows all roles
+     */
+    @Transactional
+    public AuthResponse mobileLogin(LoginRequest request) {
+        return loginInternal(request, false);
+    }
+
+    /**
+     * Internal login method with optional admin portal role restriction
+     */
+    private AuthResponse loginInternal(LoginRequest request, boolean isAdminPortal) {
         User user = userRepository.findByEmail(request.getEmail().toLowerCase())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
@@ -90,8 +108,8 @@ public class AuthService {
             throw new AuthenticationException("Account is inactive");
         }
 
-        // Block SCOUT and PARENT roles from admin portal access
-        if (user.getRole() == User.UserRole.SCOUT || user.getRole() == User.UserRole.PARENT) {
+        // Block SCOUT and PARENT roles from admin portal access only
+        if (isAdminPortal && (user.getRole() == User.UserRole.SCOUT || user.getRole() == User.UserRole.PARENT)) {
             throw new AuthenticationException("This account cannot access the admin portal. Please use the mobile app.");
         }
 

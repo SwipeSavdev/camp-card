@@ -61,6 +61,7 @@ class ApiClient {
 
         // Skip token refresh for auth endpoints (login, register, forgot-password)
         const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+          originalRequest.url?.includes('/auth/mobile/login') ||
           originalRequest.url?.includes('/auth/register') ||
           originalRequest.url?.includes('/auth/forgot-password') ||
           originalRequest.url?.includes('/auth/reset-password');
@@ -134,7 +135,7 @@ export const apiClient = new ApiClient();
 // Type-safe API functions
 export const authApi = {
   login: (email: string, password: string) =>
-    apiClient.post('/api/v1/auth/login', { email, password }),
+    apiClient.post('/api/v1/auth/mobile/login', { email, password }),
 
   signup: (data: {
     email: string;
