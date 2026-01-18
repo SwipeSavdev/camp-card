@@ -49,6 +49,8 @@ export const createMockSession = (userOverrides: Partial<MockUser> = {}): Sessio
       troopId: user.troopId,
       accessToken: user.accessToken,
     },
+    accessToken: user.accessToken || 'mock-access-token',
+    refreshToken: 'mock-refresh-token',
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   } as Session;
 };

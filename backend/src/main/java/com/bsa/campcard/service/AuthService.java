@@ -198,7 +198,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void verifyEmail(String token) {
+    public VerifyEmailResponse verifyEmail(String token) {
         User user = userRepository.findByEmailVerificationToken(token)
                 .orElseThrow(() -> new AuthenticationException("Invalid verification token"));
 
@@ -211,10 +211,50 @@ public class AuthService {
         user.setEmailVerificationExpiresAt(null);
         userRepository.save(user);
 
-        // Send welcome email now that email is verified
+        // Check if user needs to set their password (admin-created users)
+        boolean requiresPasswordSetup = Boolean.TRUE.equals(user.getPasswordSetupRequired());
+        String passwordSetupToken = requiresPasswordSetup ? user.getPasswordSetupToken() : null;
+
+        // Only send welcome email if no password setup required
+        // Otherwise, welcome email is sent after password is set
+        if (!requiresPasswordSetup) {
+            emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
+        }
+
+        log.info("Email verified for: {}. Requires password setup: {}", user.getEmail(), requiresPasswordSetup);
+
+        return VerifyEmailResponse.builder()
+                .success(true)
+                .message("Email verified successfully")
+                .requiresPasswordSetup(requiresPasswordSetup)
+                .passwordSetupToken(passwordSetupToken)
+                .build();
+    }
+
+    @Transactional
+    public void setPassword(String token, String newPassword) {
+        User user = userRepository.findByPasswordSetupToken(token)
+                .orElseThrow(() -> new AuthenticationException("Invalid password setup token"));
+
+        if (user.getPasswordSetupExpiresAt() != null && user.getPasswordSetupExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new AuthenticationException("Password setup token has expired");
+        }
+
+        if (!Boolean.TRUE.equals(user.getPasswordSetupRequired())) {
+            throw new AuthenticationException("Password setup is not required for this user");
+        }
+
+        // Set the new password
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordSetupRequired(false);
+        user.setPasswordSetupToken(null);
+        user.setPasswordSetupExpiresAt(null);
+        userRepository.save(user);
+
+        // Send welcome email now that account is fully set up
         emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
 
-        log.info("Email verified for: {}", user.getEmail());
+        log.info("Password set for admin-created user: {}", user.getEmail());
     }
 
     public UserProfileResponse getCurrentUser(String token) {

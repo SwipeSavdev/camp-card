@@ -100,6 +100,9 @@ public class UserService {
         String verificationToken = UUID.randomUUID().toString();
         log.info("Generated verification token for {}: {}", request.email(), verificationToken);
 
+        // Generate password setup token - admin-created users need to set their own password
+        String passwordSetupToken = UUID.randomUUID().toString();
+
         User user = User.builder()
             .email(request.email().toLowerCase())
             .passwordHash(passwordEncoder.encode(request.password()))
@@ -116,6 +119,9 @@ public class UserService {
             .emailVerified(false)
             .emailVerificationToken(verificationToken)
             .emailVerificationExpiresAt(LocalDateTime.now().plusDays(7))
+            .passwordSetupRequired(true)
+            .passwordSetupToken(passwordSetupToken)
+            .passwordSetupExpiresAt(LocalDateTime.now().plusDays(7))
             .referralCode(generateReferralCode())
             .build();
 

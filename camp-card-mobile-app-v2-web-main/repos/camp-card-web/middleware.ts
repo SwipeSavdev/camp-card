@@ -2,10 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 // Public routes that don't require authentication
-const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/verify-email'];
+const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/verify-email', '/set-password'];
 
 // Roles that are NOT allowed to access the admin portal
 const blockedRoles = ['SCOUT', 'PARENT'];
+
+/**
+ * Add cache control headers to prevent browser caching of dynamic content
+ */
+function addNoCacheHeaders(response: NextResponse): NextResponse {
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+  response.headers.set('Surrogate-Control', 'no-store');
+  return response;
+}
 
 /**
  * Middleware to protect routes and enforce role-based access control
@@ -18,9 +29,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Allow API auth routes
+  // Allow API auth routes with no-cache headers
   if (pathname.startsWith('/api/auth')) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return addNoCacheHeaders(response);
   }
 
   // Allow public routes
@@ -29,14 +41,16 @@ export async function middleware(request: NextRequest) {
     if (token && pathname.startsWith('/login')) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return addNoCacheHeaders(response);
   }
 
   // Redirect to login if not authenticated
   if (!token) {
     const url = new URL('/login', request.url);
     url.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    return addNoCacheHeaders(response);
   }
 
   // Check if user role is blocked from admin portal
@@ -46,10 +60,12 @@ export async function middleware(request: NextRequest) {
     const url = new URL('/login', request.url);
     url.searchParams.set('error', 'AccessDenied');
     url.searchParams.set('message', 'This account cannot access the admin portal. Please use the mobile app.');
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    return addNoCacheHeaders(response);
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  return addNoCacheHeaders(response);
 }
 
 export const config = {

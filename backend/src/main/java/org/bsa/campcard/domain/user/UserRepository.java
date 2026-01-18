@@ -38,6 +38,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByPasswordResetToken(String token);
 
     /**
+     * Find user by password setup token (for admin-created users setting their password)
+     */
+    Optional<User> findByPasswordSetupToken(String token);
+
+    /**
      * Find all users by council ID (for council admins)
      */
     Page<User> findByCouncilId(UUID councilId, Pageable pageable);

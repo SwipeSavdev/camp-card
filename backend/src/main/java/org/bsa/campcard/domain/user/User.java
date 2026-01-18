@@ -78,6 +78,16 @@ public class User {
     @Column(name = "password_reset_expires_at")
     private LocalDateTime passwordResetExpiresAt;
 
+    @Column(name = "password_setup_required", nullable = false)
+    @Builder.Default
+    private Boolean passwordSetupRequired = false;
+
+    @Column(name = "password_setup_token", length = 255)
+    private String passwordSetupToken;
+
+    @Column(name = "password_setup_expires_at")
+    private LocalDateTime passwordSetupExpiresAt;
+
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 

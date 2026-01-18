@@ -124,14 +124,27 @@ export const api = {
     }
   },
 
-  verifyEmail: async (token: string) => {
+  verifyEmail: async (token: string): Promise<{ success: boolean; message: string; requiresPasswordSetup: boolean; passwordSetupToken: string | null }> => {
     try {
       // Token must be sent as query parameter, not in body
-      return await apiCall<any>(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
-        method: 'POST',
-      });
+      return await apiCall<{ success: boolean; message: string; requiresPasswordSetup: boolean; passwordSetupToken: string | null }>(
+        `/auth/verify-email?token=${encodeURIComponent(token)}`,
+        { method: 'POST' }
+      );
     } catch (error) {
       console.error('Failed to verify email:', error);
+      throw error;
+    }
+  },
+
+  setPassword: async (token: string, newPassword: string) => {
+    try {
+      return await apiCall<any>('/auth/set-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword }),
+      });
+    } catch (error) {
+      console.error('Failed to set password:', error);
       throw error;
     }
   },

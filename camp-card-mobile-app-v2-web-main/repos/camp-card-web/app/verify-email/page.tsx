@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { api } from '@/lib/api';
@@ -12,6 +12,7 @@ function EmailVerificationContent() {
   const [verificationStatus, setVerificationStatus] = useState<'success' | 'error' | 'loading'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const searchParams = useSearchParams();
+  const router = useRouter();
   const token = searchParams.get('token') || '';
 
   useEffect(() => {
@@ -27,7 +28,15 @@ function EmailVerificationContent() {
     }
 
     try {
-      await api.verifyEmail(token);
+      const response = await api.verifyEmail(token);
+
+      // Check if user needs to set their password (admin-created users)
+      if (response.requiresPasswordSetup && response.passwordSetupToken) {
+        // Redirect to set-password page with the token
+        router.push(`/set-password?token=${encodeURIComponent(response.passwordSetupToken)}`);
+        return;
+      }
+
       setVerificationStatus('success');
     } catch (err: any) {
       setVerificationStatus('error');

@@ -72,9 +72,16 @@ public class AuthController {
 
     @PostMapping("/verify-email")
     @Operation(summary = "Verify email with token")
-    public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
-        authService.verifyEmail(token);
-        return ResponseEntity.ok(new MessageResponse("Email verified successfully"));
+    public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestParam String token) {
+        VerifyEmailResponse response = authService.verifyEmail(token);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/set-password")
+    @Operation(summary = "Set password for admin-created users after email verification")
+    public ResponseEntity<MessageResponse> setPassword(@Valid @RequestBody SetPasswordRequest request) {
+        authService.setPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(new MessageResponse("Password set successfully. You can now log in."));
     }
 
     @GetMapping("/me")
