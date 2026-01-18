@@ -7,16 +7,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
-  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
 import { COLORS } from '../../config/constants';
-
-const COUNCIL_LOGO = require('../../../assets/council_logo.png');
 
 interface SubscriptionPlan {
   id: number;
@@ -35,9 +31,6 @@ export default function SubscriptionSelectionScreen() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
-  const { width } = useWindowDimensions();
-
-  const headerLogoSize = Math.min(100, Math.max(80, Math.round(width * 0.25)));
 
   useEffect(() => {
     loadPlans();
@@ -171,15 +164,6 @@ export default function SubscriptionSelectionScreen() {
         >
           <Ionicons name="arrow-back" size={24} color={COLORS.text} />
         </TouchableOpacity>
-
-        <View style={styles.headerLogoContainer}>
-          <Image
-            source={COUNCIL_LOGO}
-            style={[styles.logoImage, { width: headerLogoSize, height: headerLogoSize }]}
-          />
-        </View>
-
-        <View style={styles.headerSpacer} />
       </View>
 
       {/* Title Section */}

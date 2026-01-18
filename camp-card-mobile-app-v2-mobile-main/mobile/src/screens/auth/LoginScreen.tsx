@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingBottom: 24,
-    paddingTop: 300,
+    paddingTop: 500,
   },
   logoContainer: {
     alignItems: 'center',
