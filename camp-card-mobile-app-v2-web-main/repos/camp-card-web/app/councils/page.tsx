@@ -551,37 +551,43 @@ export default function CouncilsPage() {
   };
 
   const deleteCouncil = async (councilId: string) => {
+    if (!confirm('Are you sure you want to delete this council? This action cannot be undone.')) {
+      return;
+    }
     try {
       // Delete from backend
       await api.deleteOrganization(councilId, session);
-      // Update local state
+      // Update local state only on success
       setCouncils(councils.filter((c) => c.id !== councilId));
     } catch (error) {
       console.error('Failed to delete council:', error);
-      // Still remove from local state for UX
-      setCouncils(councils.filter((c) => c.id !== councilId));
+      alert('Failed to delete council. Please try again.');
     }
   };
 
   const deleteTroopUnit = async (councilId: string, troopId: string) => {
+    if (!confirm('Are you sure you want to delete this troop? This action cannot be undone.')) {
+      return;
+    }
     try {
       // Delete from backend
       await api.deleteTroop(troopId, session);
+      // Update local state only on success
+      setCouncils(
+        councils.map((council) => {
+          if (council.id === councilId) {
+            return {
+              ...council,
+              troopUnits: council.troopUnits.filter((t) => t.id !== troopId),
+            };
+          }
+          return council;
+        }),
+      );
     } catch (error) {
       console.error('Failed to delete troop:', error);
+      alert('Failed to delete troop. Please try again.');
     }
-    // Update local state regardless
-    setCouncils(
-      councils.map((council) => {
-        if (council.id === councilId) {
-          return {
-            ...council,
-            troopUnits: council.troopUnits.filter((t) => t.id !== troopId),
-          };
-        }
-        return council;
-      }),
-    );
   };
 
   const deleteTroopLeader = (councilId: string, troopId: string, leaderId: string) => {

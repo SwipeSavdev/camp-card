@@ -106,7 +106,8 @@ public class MerchantService {
         } else if (status != null) {
             merchants = merchantRepository.findByStatusAndDeletedAtIsNull(status, pageable);
         } else {
-            merchants = merchantRepository.findAll(pageable);
+            // Exclude soft-deleted merchants
+            merchants = merchantRepository.findByDeletedAtIsNull(pageable);
         }
         
         return merchants.map(this::toMerchantResponse);
