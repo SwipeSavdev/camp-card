@@ -548,12 +548,18 @@ John Smith,john.smith@example.com,UNIT_LEADER,active,Greater New York Councils,1
 Jane Doe,jane.doe@example.com,PARENT,active,Greater New York Councils,,
 Bob Johnson,bob.johnson@example.com,SCOUT,active,Greater New York Councils,123,BSA_TROOP_BOYS
 Sarah Williams,sarah.williams@example.com,COUNCIL_ADMIN,active,Greater New York Councils,,
+Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PACK
 #
-# INSTRUCTIONS:
-# - CouncilName: Must match an existing council name exactly (required for UNIT_LEADER, PARENT, SCOUT)
-# - UnitNumber: Required for SCOUT and UNIT_LEADER roles (e.g., 123, 456)
-# - UnitType: Required for SCOUT role. Options: PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, FAMILY_SCOUTING
-# - Lines starting with # are ignored as comments`;
+# COLUMN DESCRIPTIONS:
+# - Name: Full name (e.g., John Smith)
+# - Email: Valid email address (must be unique)
+# - Role: NATIONAL_ADMIN, COUNCIL_ADMIN, UNIT_LEADER, PARENT, or SCOUT
+# - Status: active or inactive
+# - CouncilName: Required for UNIT_LEADER, PARENT, SCOUT (must match existing council exactly)
+# - UnitNumber: Required for UNIT_LEADER and SCOUT (e.g., 123, 456)
+# - UnitType: Required for SCOUT. Options: PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, FAMILY_SCOUTING
+#
+# Lines starting with # are comments and will be ignored`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -653,7 +659,11 @@ Sarah Williams,sarah.williams@example.com,COUNCIL_ADMIN,active,Greater New York 
         if (['UNIT_LEADER', 'SCOUT'].includes(role) && !unitNumber) {
           rowErrors.push('UnitNumber is required for UNIT_LEADER and SCOUT roles');
         }
-        if (role === 'SCOUT' && unitType && !validUnitTypes.includes(unitType)) {
+        // Validate UnitType for SCOUT (required) and UNIT_LEADER (optional but validated if provided)
+        if (role === 'SCOUT' && !unitType) {
+          rowErrors.push('UnitType is required for SCOUT role');
+        }
+        if (['UNIT_LEADER', 'SCOUT'].includes(role) && unitType && !validUnitTypes.includes(unitType)) {
           rowErrors.push(`Invalid UnitType. Must be one of: ${validUnitTypes.join(', ')}`);
         }
 
@@ -1890,7 +1900,7 @@ Unit Number
                  </tr>
                    <tr>
                    <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>UnitType</strong></td>
-                   <td style={{ padding: '4px 8px', background: themeColors.white }}>PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, or FAMILY_SCOUTING</td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>Required for SCOUT: PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, or FAMILY_SCOUTING</td>
                  </tr>
                  </tbody>
                 </table>
