@@ -1,0 +1,70 @@
+# Test profile configuration for integration tests
+# Database connection is configured dynamically via DynamicPropertySource
+
+spring:
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: campcard
+        show_sql: false
+        format_sql: true
+    open-in-view: false
+
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    schemas: campcard
+    default-schema: campcard
+    locations: classpath:db/migration
+
+  # Disable non-essential services for tests
+  redis:
+    enabled: false
+
+  kafka:
+    bootstrap-servers: ""
+    consumer:
+      auto-startup: false
+    producer:
+      properties:
+        spring.json.add.type.headers: false
+
+  mail:
+    host: localhost
+    port: 25
+    properties:
+      mail:
+        smtp:
+          auth: false
+
+# Security configuration for tests
+security:
+  jwt:
+    secret: test-jwt-secret-key-for-integration-tests-only-minimum-256-bits
+    expiration: 3600000
+
+# Logging configuration for tests
+logging:
+  level:
+    root: WARN
+    com.bsa.campcard: DEBUG
+    org.springframework.test: INFO
+    org.testcontainers: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Disable external services
+authorize:
+  net:
+    enabled: false
+
+together:
+  ai:
+    enabled: false
+
+firebase:
+  enabled: false
