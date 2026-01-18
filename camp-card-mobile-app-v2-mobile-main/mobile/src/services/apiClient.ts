@@ -238,6 +238,25 @@ export const scoutApi = {
   // Get scout's sales history
   getSales: (scoutId: string) =>
     apiClient.get(`/api/v1/scouts/${scoutId}/sales`),
+
+  // Create a new scout (by Unit Leader)
+  createScout: (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    unitType: string;
+    unitNumber: string;
+    troopId?: string;
+    role?: string;
+  }) =>
+    apiClient.post('/api/v1/auth/register', {
+      ...data,
+      password: `TempPass${Date.now()}!`, // Temporary password, user will reset via email
+    }),
+
+  // Get scouts for a troop
+  getTroopScouts: (troopId: string) =>
+    apiClient.get(`/api/v1/troops/${troopId}/scouts`),
 };
 
 export const referralApi = {

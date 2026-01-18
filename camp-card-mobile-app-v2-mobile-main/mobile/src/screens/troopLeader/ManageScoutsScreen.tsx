@@ -12,10 +12,24 @@ import {
   RefreshControl,
   Alert,
   Modal,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { scoutApi } from '../../services/apiClient';
+import { useAuthStore } from '../../store/authStore';
+
+// Unit Types from backend enum
+const UNIT_TYPES = [
+  { value: 'PACK', label: 'Pack' },
+  { value: 'BSA_TROOP_BOYS', label: 'BSA Troop (Boys)' },
+  { value: 'BSA_TROOP_GIRLS', label: 'BSA Troop (Girls)' },
+  { value: 'SHIP', label: 'Ship' },
+  { value: 'CREW', label: 'Crew' },
+  { value: 'FAMILY_SCOUTING', label: 'Family Scouting' },
+];
 
 interface Scout {
   id: string;
@@ -98,6 +112,12 @@ export default function ManageScoutsScreen() {
   const [newScoutEmail, setNewScoutEmail] = useState('');
   const [newScoutFirstName, setNewScoutFirstName] = useState('');
   const [newScoutLastName, setNewScoutLastName] = useState('');
+  const [newScoutUnitType, setNewScoutUnitType] = useState('');
+  const [newScoutUnitNumber, setNewScoutUnitNumber] = useState('');
+  const [showUnitTypePicker, setShowUnitTypePicker] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { user } = useAuthStore();
 
   const filteredScouts = scouts.filter(
     (scout) =>
@@ -131,9 +151,19 @@ export default function ManageScoutsScreen() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const handleAddScout = () => {
+  const handleAddScout = async () => {
     if (!newScoutEmail.trim() || !newScoutFirstName.trim() || !newScoutLastName.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    if (!newScoutUnitType) {
+      Alert.alert('Error', 'Please select a unit type');
+      return;
+    }
+
+    if (!newScoutUnitNumber.trim()) {
+      Alert.alert('Error', 'Please enter a unit number');
       return;
     }
 
@@ -149,25 +179,58 @@ export default function ManageScoutsScreen() {
       return;
     }
 
-    const newScout: Scout = {
-      id: Date.now().toString(),
-      firstName: newScoutFirstName.trim(),
-      lastName: newScoutLastName.trim(),
-      email: newScoutEmail.trim().toLowerCase(),
-      subscriptionStatus: 'inactive',
-      totalSales: 0,
-      redemptions: 0,
-      referrals: 0,
-      joinedDate: new Date().toISOString().split('T')[0],
-    };
+    setIsSubmitting(true);
 
-    setScouts([...scouts, newScout]);
-    setShowAddModal(false);
+    try {
+      // Call API to create scout
+      const scoutData = {
+        firstName: newScoutFirstName.trim(),
+        lastName: newScoutLastName.trim(),
+        email: newScoutEmail.trim().toLowerCase(),
+        unitType: newScoutUnitType,
+        unitNumber: newScoutUnitNumber.trim(),
+        troopId: user?.troopId,
+        role: 'SCOUT',
+      };
+
+      const response = await scoutApi.createScout(scoutData);
+      const createdScout = response.data;
+
+      const newScout: Scout = {
+        id: createdScout.id || Date.now().toString(),
+        firstName: newScoutFirstName.trim(),
+        lastName: newScoutLastName.trim(),
+        email: newScoutEmail.trim().toLowerCase(),
+        subscriptionStatus: 'inactive',
+        totalSales: 0,
+        redemptions: 0,
+        referrals: 0,
+        joinedDate: new Date().toISOString().split('T')[0],
+      };
+
+      setScouts([...scouts, newScout]);
+      setShowAddModal(false);
+      resetAddForm();
+
+      Alert.alert('Success', `${newScout.firstName} ${newScout.lastName} has been added to your troop. An invitation email will be sent.`);
+    } catch (error: any) {
+      console.error('Error creating scout:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to add scout. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetAddForm = () => {
     setNewScoutEmail('');
     setNewScoutFirstName('');
     setNewScoutLastName('');
-
-    Alert.alert('Success', `${newScout.firstName} ${newScout.lastName} has been added to your troop. An invitation email will be sent.`);
+    setNewScoutUnitType('');
+    setNewScoutUnitNumber('');
+    setShowUnitTypePicker(false);
   };
 
   const handleRemoveScout = (scout: Scout) => {
@@ -341,69 +404,147 @@ export default function ManageScoutsScreen() {
         visible={showAddModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowAddModal(false)}
+        onRequestClose={() => {
+          setShowAddModal(false);
+          resetAddForm();
+        }}
       >
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowAddModal(false)}>
-              <Text style={styles.modalCancel}>Cancel</Text>
+            <TouchableOpacity onPress={() => {
+              setShowAddModal(false);
+              resetAddForm();
+            }} disabled={isSubmitting}>
+              <Text style={[styles.modalCancel, isSubmitting && styles.disabledText]}>Cancel</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Add Scout</Text>
-            <TouchableOpacity onPress={handleAddScout}>
-              <Text style={styles.modalSave}>Add</Text>
+            <TouchableOpacity onPress={handleAddScout} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={COLORS.secondary} />
+              ) : (
+                <Text style={styles.modalSave}>Add</Text>
+              )}
             </TouchableOpacity>
           </View>
 
-          <View style={styles.modalContent}>
-            <Text style={styles.modalDescription}>
-              Enter the scout's information below. They will receive an invitation email to join your troop.
-            </Text>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>First Name</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Enter first name"
-                placeholderTextColor={COLORS.textSecondary}
-                value={newScoutFirstName}
-                onChangeText={setNewScoutFirstName}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Last Name</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Enter last name"
-                placeholderTextColor={COLORS.textSecondary}
-                value={newScoutLastName}
-                onChangeText={setNewScoutLastName}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Enter email address"
-                placeholderTextColor={COLORS.textSecondary}
-                value={newScoutEmail}
-                onChangeText={setNewScoutEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.infoBox}>
-              <Ionicons name="information-circle" size={20} color={COLORS.secondary} />
-              <Text style={styles.infoText}>
-                The scout (or their parent) will need to complete registration and set up their account after receiving the invitation.
+          <ScrollView style={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalDescription}>
+                Enter the scout's information below. They will receive an invitation email to join your troop.
               </Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>First Name *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Enter first name"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={newScoutFirstName}
+                  onChangeText={setNewScoutFirstName}
+                  autoCapitalize="words"
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Last Name *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Enter last name"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={newScoutLastName}
+                  onChangeText={setNewScoutLastName}
+                  autoCapitalize="words"
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email Address *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Enter email address"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={newScoutEmail}
+                  onChangeText={setNewScoutEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Unit Type *</Text>
+                <TouchableOpacity
+                  style={styles.pickerButton}
+                  onPress={() => setShowUnitTypePicker(!showUnitTypePicker)}
+                  disabled={isSubmitting}
+                >
+                  <Text style={[
+                    styles.pickerButtonText,
+                    !newScoutUnitType && styles.pickerPlaceholder
+                  ]}>
+                    {newScoutUnitType
+                      ? UNIT_TYPES.find(t => t.value === newScoutUnitType)?.label
+                      : 'Select unit type'}
+                  </Text>
+                  <Ionicons
+                    name={showUnitTypePicker ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={COLORS.textSecondary}
+                  />
+                </TouchableOpacity>
+                {showUnitTypePicker && (
+                  <View style={styles.pickerOptions}>
+                    {UNIT_TYPES.map((type) => (
+                      <TouchableOpacity
+                        key={type.value}
+                        style={[
+                          styles.pickerOption,
+                          newScoutUnitType === type.value && styles.pickerOptionSelected
+                        ]}
+                        onPress={() => {
+                          setNewScoutUnitType(type.value);
+                          setShowUnitTypePicker(false);
+                        }}
+                      >
+                        <Text style={[
+                          styles.pickerOptionText,
+                          newScoutUnitType === type.value && styles.pickerOptionTextSelected
+                        ]}>
+                          {type.label}
+                        </Text>
+                        {newScoutUnitType === type.value && (
+                          <Ionicons name="checkmark" size={18} color={COLORS.secondary} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Unit Number *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Enter unit number (e.g., 123)"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={newScoutUnitNumber}
+                  onChangeText={setNewScoutUnitNumber}
+                  keyboardType="number-pad"
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.infoBox}>
+                <Ionicons name="information-circle" size={20} color={COLORS.secondary} />
+                <Text style={styles.infoText}>
+                  The scout (or their parent) will need to complete registration and set up their account after receiving the invitation.
+                </Text>
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
 
@@ -704,8 +845,58 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.secondary,
   },
+  disabledText: {
+    opacity: 0.5,
+  },
+  modalScrollContent: {
+    flex: 1,
+  },
   modalContent: {
     padding: 20,
+  },
+  pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+  },
+  pickerButtonText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  pickerPlaceholder: {
+    color: COLORS.textSecondary,
+  },
+  pickerOptions: {
+    marginTop: 8,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  pickerOptionSelected: {
+    backgroundColor: `${COLORS.secondary}10`,
+  },
+  pickerOptionText: {
+    fontSize: 15,
+    color: COLORS.text,
+  },
+  pickerOptionTextSelected: {
+    color: COLORS.secondary,
+    fontWeight: '600',
   },
   modalDescription: {
     fontSize: 14,
