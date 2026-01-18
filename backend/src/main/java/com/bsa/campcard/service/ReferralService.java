@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,9 +67,16 @@ public class ReferralService {
                 .map(Referral::getRewardAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
+        // Build subscribe URL with customer referral tracking
+        // Customer referrals show $15 tier and include the referring customer's code
+        String customerName = URLEncoder.encode(
+                user.getFirstName() + " " + user.getLastName(),
+                StandardCharsets.UTF_8);
+        String subscribeUrl = baseUrl + "/campcard/subscribe/?ref=" + referralCode + "&refname=" + customerName;
+
         return ReferralCodeResponse.builder()
                 .referralCode(referralCode)
-                .shareableLink(baseUrl + "/join?ref=" + referralCode)
+                .shareableLink(subscribeUrl)
                 .totalReferrals(allReferrals.size())
                 .successfulReferrals(successfulReferrals.intValue())
                 .totalRewardsEarned(totalRewards != null ? BigDecimal.valueOf(totalRewards) : BigDecimal.ZERO)

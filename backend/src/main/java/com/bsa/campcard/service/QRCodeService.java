@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -68,10 +70,16 @@ public class QRCodeService {
             qrCodeData = uniqueCode;
         }
 
+        // Build subscribe URL with scout tracking
+        String scoutName = URLEncoder.encode(
+                user.getFirstName() + " " + user.getLastName(),
+                StandardCharsets.UTF_8);
+        String subscribeUrl = baseUrl + "/campcard/subscribe/?scout=" + uniqueCode + "&name=" + scoutName;
+
         return QRCodeResponse.builder()
                 .uniqueCode(uniqueCode)
                 .qrCodeData(qrCodeData)
-                .shareableLink(baseUrl + "/u/" + uniqueCode)
+                .shareableLink(subscribeUrl)
                 .validUntil(LocalDateTime.now().plusDays(30))
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
