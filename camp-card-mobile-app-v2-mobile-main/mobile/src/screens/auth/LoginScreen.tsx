@@ -28,9 +28,8 @@ import {
   getBiometricTypeName,
 } from '../../services/biometricsService';
 
-// BSA Camp Card logos
+// BSA Camp Card logo
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
-const APP_ICON = require('../../../assets/appicon_1024.jpg');
 
 /**
  * Login Screen
@@ -134,9 +133,8 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* App Icon and Logo */}
+            {/* Logo */}
             <View style={styles.logoContainer}>
-              <Image source={APP_ICON} style={[styles.appIcon, { width: logoSize * 0.5, height: logoSize * 0.5 }]} />
               <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
             </View>
 
@@ -267,11 +265,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 32,
-  },
-  appIcon: {
-    resizeMode: 'contain',
-    marginBottom: 16,
-    borderRadius: 20,
   },
   logoImage: {
     resizeMode: 'contain',
