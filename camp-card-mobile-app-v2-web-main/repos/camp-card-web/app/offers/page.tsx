@@ -180,7 +180,10 @@ export default function OffersPage() {
   const fetchMerchants = async () => {
     try {
       const data = await api.getMerchants(session);
-      setMerchants(data.content || data || []);
+      const allMerchants = data.content || data || [];
+      // Filter to only show APPROVED merchants (only approved merchants can have offers)
+      const approvedMerchants = allMerchants.filter((m: any) => m.status === 'APPROVED');
+      setMerchants(approvedMerchants);
     } catch (err) {
       console.error('Failed to load merchants', err);
     }
@@ -473,8 +476,13 @@ export default function OffersPage() {
         setNewImageName('');
         setShowAddMultiple(false);
       }
-    } catch (err) {
-      setError(`Failed to create offer: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } catch (err: any) {
+      // Check for 409 conflict error (merchant not approved)
+      if (err?.message?.includes('409')) {
+        setError('Cannot create offer: The selected merchant is not approved. Only approved merchants can have offers.');
+      } else {
+        setError(`Failed to create offer: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
       console.error('[PAGE] Error:', err);
     }
   };
