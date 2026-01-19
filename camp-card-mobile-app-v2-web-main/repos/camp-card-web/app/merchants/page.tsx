@@ -126,6 +126,15 @@ export default function MerchantsPage() {
   const [newLocationState, setNewLocationState] = useState('');
   const [newLocationZip, setNewLocationZip] = useState('');
 
+  // State for adding location to existing merchant
+  const [addingLocationToMerchant, setAddingLocationToMerchant] = useState<string | null>(null);
+  const [existingLocName, setExistingLocName] = useState('');
+  const [existingLocStreet, setExistingLocStreet] = useState('');
+  const [existingLocCity, setExistingLocCity] = useState('');
+  const [existingLocState, setExistingLocState] = useState('');
+  const [existingLocZip, setExistingLocZip] = useState('');
+  const [addingLocationLoading, setAddingLocationLoading] = useState(false);
+
   // Filter state
   const [businessTypeFilter, setBusinessTypeFilter] = useState('');
   const [locationCountFilter, setLocationCountFilter] = useState('');
@@ -258,6 +267,63 @@ export default function MerchantsPage() {
     } catch (err: any) {
       console.error('[PAGE] Status update error:', err);
       setError(`Failed to update merchant status: ${err?.message || 'Unknown error'}`);
+    }
+  };
+
+  // Add location to existing merchant
+  const addLocationToExistingMerchant = async (merchantId: string) => {
+    if (!existingLocName.trim() || !existingLocStreet.trim() || !existingLocCity.trim() || !existingLocState.trim() || !existingLocZip.trim()) {
+      setError('All location fields are required');
+      return;
+    }
+
+    setAddingLocationLoading(true);
+    try {
+      const locData = {
+        locationName: existingLocName,
+        streetAddress: existingLocStreet,
+        city: existingLocCity,
+        state: existingLocState,
+        zipCode: existingLocZip,
+        primaryLocation: false,
+      };
+
+      const newLocation = await api.createMerchantLocation(merchantId, locData, session);
+      console.log('[PAGE] Created location for existing merchant:', newLocation);
+
+      // Update local state to show the new location
+      setItems(items.map((m) => {
+        if (m.id === merchantId) {
+          const newLoc: MerchantLocation = {
+            id: newLocation.id || newLocation.uuid || Date.now().toString(),
+            name: newLocation.locationName || existingLocName,
+            streetAddress: newLocation.streetAddress || existingLocStreet,
+            city: newLocation.city || existingLocCity,
+            state: newLocation.state || existingLocState,
+            zipCode: newLocation.zipCode || existingLocZip,
+            isHQ: false,
+          };
+          return {
+            ...m,
+            locations: [...(m.locations || []), newLoc],
+          };
+        }
+        return m;
+      }));
+
+      // Reset form
+      setAddingLocationToMerchant(null);
+      setExistingLocName('');
+      setExistingLocStreet('');
+      setExistingLocCity('');
+      setExistingLocState('');
+      setExistingLocZip('');
+      setError(null);
+    } catch (err: any) {
+      console.error('[PAGE] Failed to add location:', err);
+      setError(`Failed to add location: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setAddingLocationLoading(false);
     }
   };
 
@@ -695,14 +761,162 @@ export default function MerchantsPage() {
 
                 {expandedMerchants.has(merchant.id) && (
                 <div style={{ padding: themeSpace.lg, borderTop: `1px solid ${themeColors.gray200}`, backgroundColor: themeColors.gray50 }}>
-                 <h4 style={{
-                 fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.md, margin: 0,
-               }}
-               >
-               Locations (
-                 {merchant.locations?.length || 0}
-                 )
-             </h4>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.md }}>
+                   <h4 style={{ fontSize: '14px', fontWeight: '600', color: themeColors.text, margin: 0 }}>
+                     Locations ({merchant.locations?.length || 0})
+                   </h4>
+                   <button
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setAddingLocationToMerchant(addingLocationToMerchant === merchant.id ? null : merchant.id);
+                       setExistingLocName('');
+                       setExistingLocStreet('');
+                       setExistingLocCity('');
+                       setExistingLocState('');
+                       setExistingLocZip('');
+                     }}
+                     style={{
+                       background: themeColors.info600,
+                       color: themeColors.white,
+                       border: 'none',
+                       padding: `${themeSpace.xs} ${themeSpace.md}`,
+                       borderRadius: themeRadius.sm,
+                       cursor: 'pointer',
+                       fontSize: '12px',
+                       fontWeight: '500',
+                       display: 'flex',
+                       gap: themeSpace.xs,
+                       alignItems: 'center',
+                     }}
+                   >
+                     <Icon name="add" size={14} color={themeColors.white} />
+                     Add Location
+                   </button>
+                 </div>
+
+                 {/* Add Location Form for existing merchant */}
+                 {addingLocationToMerchant === merchant.id && (
+                   <div style={{
+                     marginBottom: themeSpace.md,
+                     padding: themeSpace.md,
+                     backgroundColor: themeColors.white,
+                     borderRadius: themeRadius.sm,
+                     border: `1px solid ${themeColors.info200}`,
+                   }}>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.sm }}>
+                       <input
+                         type="text"
+                         value={existingLocName}
+                         onChange={(e) => setExistingLocName(e.target.value)}
+                         placeholder="Location Name (e.g., Downtown Branch)"
+                         style={{
+                           width: '100%',
+                           padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                           border: `1px solid ${themeColors.gray200}`,
+                           borderRadius: themeRadius.sm,
+                           fontSize: '13px',
+                           boxSizing: 'border-box',
+                         }}
+                       />
+                       <input
+                         type="text"
+                         value={existingLocStreet}
+                         onChange={(e) => setExistingLocStreet(e.target.value)}
+                         placeholder="Street Address"
+                         style={{
+                           width: '100%',
+                           padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                           border: `1px solid ${themeColors.gray200}`,
+                           borderRadius: themeRadius.sm,
+                           fontSize: '13px',
+                           boxSizing: 'border-box',
+                         }}
+                       />
+                       <div style={{ display: 'flex', gap: themeSpace.sm }}>
+                         <input
+                           type="text"
+                           value={existingLocCity}
+                           onChange={(e) => setExistingLocCity(e.target.value)}
+                           placeholder="City"
+                           style={{
+                             flex: 2,
+                             padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                             border: `1px solid ${themeColors.gray200}`,
+                             borderRadius: themeRadius.sm,
+                             fontSize: '13px',
+                             boxSizing: 'border-box',
+                           }}
+                         />
+                         <input
+                           type="text"
+                           value={existingLocState}
+                           onChange={(e) => setExistingLocState(e.target.value)}
+                           placeholder="State"
+                           style={{
+                             flex: 1,
+                             padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                             border: `1px solid ${themeColors.gray200}`,
+                             borderRadius: themeRadius.sm,
+                             fontSize: '13px',
+                             boxSizing: 'border-box',
+                           }}
+                         />
+                         <input
+                           type="text"
+                           value={existingLocZip}
+                           onChange={(e) => setExistingLocZip(e.target.value)}
+                           placeholder="ZIP"
+                           style={{
+                             flex: 1,
+                             padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                             border: `1px solid ${themeColors.gray200}`,
+                             borderRadius: themeRadius.sm,
+                             fontSize: '13px',
+                             boxSizing: 'border-box',
+                           }}
+                         />
+                       </div>
+                       <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'flex-end' }}>
+                         <button
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             setAddingLocationToMerchant(null);
+                           }}
+                           style={{
+                             padding: `${themeSpace.xs} ${themeSpace.md}`,
+                             backgroundColor: themeColors.gray100,
+                             color: themeColors.gray600,
+                             border: 'none',
+                             borderRadius: themeRadius.sm,
+                             cursor: 'pointer',
+                             fontSize: '12px',
+                           }}
+                         >
+                           Cancel
+                         </button>
+                         <button
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             addLocationToExistingMerchant(merchant.id);
+                           }}
+                           disabled={addingLocationLoading}
+                           style={{
+                             padding: `${themeSpace.xs} ${themeSpace.md}`,
+                             backgroundColor: addingLocationLoading ? themeColors.gray300 : themeColors.success600,
+                             color: themeColors.white,
+                             border: 'none',
+                             borderRadius: themeRadius.sm,
+                             cursor: addingLocationLoading ? 'not-allowed' : 'pointer',
+                             fontSize: '12px',
+                           }}
+                         >
+                           {addingLocationLoading ? 'Adding...' : 'Save Location'}
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
                  <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
                  {(merchant.locations || []).map((location) => (
                  <div
