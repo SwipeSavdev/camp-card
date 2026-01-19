@@ -215,7 +215,8 @@ public class OfferController {
     public ResponseEntity<QrCodeData> generateQrCode(@PathVariable Long offerId) {
         // Get the authenticated user's ID from the security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UUID userId = UUID.fromString(authentication.getName());
+        org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User) authentication.getPrincipal();
+        UUID userId = user.getId();
 
         QrCodeData qrData = offerQrService.generateQrCode(offerId, userId);
         return ResponseEntity.ok(qrData);
