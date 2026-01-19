@@ -269,7 +269,7 @@ export default function OffersPage() {
             merchantName: group.merchantName, // Use the group's merchantName for consistency
             discountType: offer.discountType || offer.discount,
             discountAmount: String(offer.discountValue || offer.value || ''),
-            useType: (offer.usage_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
+            useType: (offer.usageLimitPerUser === 1 ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
             image: offer.imageUrl || offer.image,
             barcode: offer.barcode,
           });
@@ -393,6 +393,8 @@ export default function OffersPage() {
           validFrom: now.toISOString(),
           validUntil: oneYearFromNow.toISOString(),
           imageUrl: newImage || undefined,
+          // Set usageLimitPerUser to 1 for one-time offers, null for reusable
+          usageLimitPerUser: newUseType === 'one-time' ? 1 : null,
         };
 
         // Add location if selected
@@ -478,12 +480,9 @@ export default function OffersPage() {
         setShowAddMultiple(false);
       }
     } catch (err: any) {
-      // Check for 409 conflict error (merchant not approved)
-      if (err?.message?.includes('409')) {
-        setError('Cannot create offer: The selected merchant is not approved. Only approved merchants can have offers.');
-      } else {
-        setError(`Failed to create offer: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      }
+      // Display the actual error message from the backend
+      const errorMessage = err?.message || 'Unknown error';
+      setError(`Failed to create offer: ${errorMessage}`);
       console.error('[PAGE] Error:', err);
     }
   };
@@ -653,6 +652,8 @@ export default function OffersPage() {
         discountValue: parseFloat(editDiscountAmount) || 0,
         validFrom: now.toISOString(),
         validUntil: oneYearFromNow.toISOString(),
+        // Set usageLimitPerUser to 1 for one-time offers, null for reusable
+        usageLimitPerUser: editUseType === 'one-time' ? 1 : null,
       };
 
       // Add minimum spend threshold for "X off when Y spent" discount types

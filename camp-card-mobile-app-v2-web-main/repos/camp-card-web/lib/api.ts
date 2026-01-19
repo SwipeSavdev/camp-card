@@ -72,7 +72,19 @@ async function apiCall<T>(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new ApiError(response.status, `API Error: ${response.status}`);
+      // Try to extract error message from response body
+      let errorMessage = `API Error: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        // If response body is not JSON, use default message
+      }
+      throw new ApiError(response.status, errorMessage);
     }
 
     // Handle 204 No Content responses (common for DELETE operations)
