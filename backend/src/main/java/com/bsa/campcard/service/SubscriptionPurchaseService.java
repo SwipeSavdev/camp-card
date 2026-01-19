@@ -187,11 +187,12 @@ public class SubscriptionPurchaseService {
         String cardNumber;
         int attempts = 0;
         int maxAttempts = 10;
+        java.util.Random random = new java.util.Random();
 
         do {
             // Generate random 12 digits
-            long random = (long) (Math.random() * 999999999999L);
-            String digits = String.format("%012d", random);
+            long randomNum = Math.abs(random.nextLong()) % 1000000000000L;
+            String digits = String.format("%012d", randomNum);
 
             // Format as CC-XXXX-XXXX-XXXX
             cardNumber = String.format("CC-%s-%s-%s",

@@ -1,6 +1,7 @@
 package org.bsa.campcard.config;
 
 import com.bsa.campcard.exception.AuthenticationException;
+import com.bsa.campcard.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,20 @@ import java.util.Map;
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    /**
+     * Handle ResourceNotFoundException (resource not found in database)
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+            "success", false,
+            "error", ex.getMessage(),
+            "timestamp", LocalDateTime.now().toString()
+        ));
+    }
 
     /**
      * Handle AuthenticationException (invalid tokens, credentials, etc.)

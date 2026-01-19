@@ -78,22 +78,6 @@ public class User {
     @Column(name = "password_reset_expires_at")
     private LocalDateTime passwordResetExpiresAt;
 
-    // Temporarily disabled - columns need to be added by DBA with postgres permissions
-    // Run this SQL as postgres/owner user:
-    // ALTER TABLE campcard.users ADD COLUMN password_setup_required BOOLEAN NOT NULL DEFAULT FALSE;
-    // ALTER TABLE campcard.users ADD COLUMN password_setup_token VARCHAR(255);
-    // ALTER TABLE campcard.users ADD COLUMN password_setup_expires_at TIMESTAMP;
-    // Once columns exist, uncomment these fields:
-    // @Column(name = "password_setup_required", nullable = false)
-    // @Builder.Default
-    // private Boolean passwordSetupRequired = false;
-
-    // @Column(name = "password_setup_token", length = 255)
-    // private String passwordSetupToken;
-
-    // @Column(name = "password_setup_expires_at")
-    // private LocalDateTime passwordSetupExpiresAt;
-
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
@@ -102,15 +86,6 @@ public class User {
 
     @Column(name = "card_number", unique = true, length = 20)
     private String cardNumber;
-
-    // Temporarily disabled - columns need to be added by DBA with postgres permissions
-    // Once columns exist, uncomment these fields:
-    // @Enumerated(EnumType.STRING)
-    // @Column(name = "unit_type", length = 50)
-    // private UnitType unitType;
-
-    // @Column(name = "unit_number", length = 20)
-    // private String unitNumber;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

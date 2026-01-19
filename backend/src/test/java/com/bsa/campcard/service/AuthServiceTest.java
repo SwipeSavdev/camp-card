@@ -677,7 +677,7 @@ class AuthServiceTest {
             when(subscriptionRepository.findByUserIdAndDeletedAtIsNull(any())).thenReturn(Optional.empty());
 
             // When
-            UserProfileResponse response = authService.updateProfile(testUserId, request);
+            authService.updateProfile(testUserId, request);
 
             // Then
             verify(userRepository).save(any(User.class));

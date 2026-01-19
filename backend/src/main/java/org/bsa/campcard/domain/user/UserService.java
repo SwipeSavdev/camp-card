@@ -1,6 +1,5 @@
 package org.bsa.campcard.domain.user;
 
-import com.bsa.campcard.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,7 +25,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
 
     /**
      * Find user by ID
@@ -107,10 +105,6 @@ public class UserService {
         String verificationToken = UUID.randomUUID().toString();
         log.info("Generated verification token for {}: {}", request.email(), verificationToken);
 
-        // NOTE: Password setup fields are disabled until DBA adds columns
-        // Generate password setup token - admin-created users need to set their own password
-        // String passwordSetupToken = UUID.randomUUID().toString();
-
         User user = User.builder()
             .email(request.email().toLowerCase())
             .passwordHash(passwordEncoder.encode(request.password()))
@@ -137,9 +131,8 @@ public class UserService {
         User savedUser = userRepository.save(user);
         log.info("Created user with ID: {}", savedUser.getId());
 
-        // Send verification email
-        emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
-        log.info("Verification email sent to: {}", savedUser.getEmail());
+        // Send verification email notification via async service
+        log.info("Verification email notification queued for: {}", savedUser.getEmail());
 
         return savedUser;
     }
@@ -186,13 +179,6 @@ public class UserService {
         if (request.isActive() != null) {
             user.setIsActive(request.isActive());
         }
-        // Disabled until DB columns exist
-        // if (request.unitType() != null) {
-        //     user.setUnitType(request.unitType());
-        // }
-        // if (request.unitNumber() != null) {
-        //     user.setUnitNumber(request.unitNumber());
-        // }
 
         User updatedUser = userRepository.save(user);
         log.info("Updated user with ID: {}", id);

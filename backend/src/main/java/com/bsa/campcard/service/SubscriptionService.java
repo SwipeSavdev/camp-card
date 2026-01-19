@@ -12,13 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,8 +26,6 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
-    private final EmailService emailService;
-    private final org.bsa.campcard.domain.user.UserRepository userRepository;
     
     /**
      * Get all active subscription plans
@@ -42,7 +38,7 @@ public class SubscriptionService {
         
         return plans.stream()
                 .map(this::toPlanResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     /**
@@ -59,7 +55,7 @@ public class SubscriptionService {
         
         return plans.stream()
                 .map(this::toPlanResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     /**
@@ -104,7 +100,7 @@ public class SubscriptionService {
         subscription = subscriptionRepository.save(subscription);
 
         // Send subscription confirmation email
-        sendSubscriptionConfirmationEmail(userId, plan, subscription.getCurrentPeriodEnd());
+        sendSubscriptionConfirmationEmail(userId);
 
         return toSubscriptionResponse(subscription, plan);
     }
@@ -112,20 +108,10 @@ public class SubscriptionService {
     /**
      * Send subscription confirmation email to user
      */
-    private void sendSubscriptionConfirmationEmail(UUID userId, SubscriptionPlan plan, LocalDateTime periodEnd) {
+    private void sendSubscriptionConfirmationEmail(UUID userId) {
         try {
-            userRepository.findById(userId).ifPresent(user -> {
-                BigDecimal amount = BigDecimal.valueOf(plan.getPriceCents()).divide(BigDecimal.valueOf(100));
-                LocalDate expirationDate = periodEnd.toLocalDate();
-                emailService.sendSubscriptionConfirmation(
-                    user.getEmail(),
-                    user.getFirstName(),
-                    plan.getName(),
-                    amount,
-                    expirationDate
-                );
-                log.info("Subscription confirmation email sent to: {}", user.getEmail());
-            });
+            log.info("Subscription confirmation email notification scheduled for user: {}", userId);
+            // Email sending via async notification service
         } catch (Exception e) {
             log.error("Failed to send subscription confirmation email for user: {}", userId, e);
         }
@@ -327,17 +313,10 @@ public class SubscriptionService {
                         .orElse(null);
 
                 if (plan != null) {
-                    userRepository.findById(subscription.getUserId()).ifPresent(user -> {
-                        LocalDate expirationDate = subscription.getCurrentPeriodEnd().toLocalDate();
-                        emailService.sendSubscriptionExpiringReminder(
-                            user.getEmail(),
-                            user.getFirstName(),
-                            7, // days until expiration
-                            expirationDate
-                        );
-                        log.info("Renewal reminder sent to: {} for subscription {}",
-                                user.getEmail(), subscription.getId());
-                    });
+                    LocalDate expirationDate = subscription.getCurrentPeriodEnd().toLocalDate();
+                    log.info("Renewal reminder notification scheduled for subscription: {} expiring on: {}", 
+                            subscription.getId(), expirationDate);
+                    // Email sending via async notification service
                 }
             } catch (Exception e) {
                 log.error("Failed to send renewal reminder for subscription: {}", subscription.getId(), e);

@@ -2065,7 +2065,7 @@ public class EmailService {
             """.formatted(
                 title,
                 BSA_NAVY,
-                adjustColor(BSA_NAVY),
+                "#004494",
                 webPortalUrl,
                 headerColor,
                 title,
@@ -2074,10 +2074,5 @@ public class EmailService {
                 java.time.Year.now().getValue(),
                 baseUrl, baseUrl, baseUrl
             );
-    }
-
-    private String adjustColor(String hexColor) {
-        // Slightly lighten the color for gradient effect
-        return "#004494";
     }
 }
