@@ -33,14 +33,14 @@ public class OfferController {
     private final OfferQrService offerQrService;
     
     @PostMapping
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<OfferResponse> createOffer(@RequestBody CreateOfferRequest request) {
         OfferResponse offer = offerService.createOffer(request);
         return ResponseEntity.ok(offer);
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<OfferResponse> updateOffer(
             @PathVariable Long id,
             @RequestBody CreateOfferRequest request) {
@@ -139,21 +139,21 @@ public class OfferController {
     }
     
     @PostMapping("/{id}/pause")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> pauseOffer(@PathVariable Long id) {
         offerService.pauseOffer(id);
         return ResponseEntity.ok().build();
     }
-    
+
     @PostMapping("/{id}/resume")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> resumeOffer(@PathVariable Long id) {
         offerService.resumeOffer(id);
         return ResponseEntity.ok().build();
     }
-    
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> deleteOffer(@PathVariable Long id) {
         offerService.deleteOffer(id);
         return ResponseEntity.ok().build();
@@ -168,7 +168,7 @@ public class OfferController {
     }
     
     @PostMapping("/verify/{verificationCode}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<OfferRedemptionResponse> verifyRedemption(
             @PathVariable String verificationCode,
             @RequestParam UUID verifierId) {
@@ -188,7 +188,7 @@ public class OfferController {
     }
     
     @GetMapping("/redemptions/merchant/{merchantId}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Page<OfferRedemptionResponse>> getMerchantRedemptions(
             @PathVariable Long merchantId,
             @RequestParam(defaultValue = "0") int page,
