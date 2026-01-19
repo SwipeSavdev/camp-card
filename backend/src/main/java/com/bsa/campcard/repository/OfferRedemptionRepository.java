@@ -71,4 +71,9 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
      * Delete all redemptions for a user (used for offer replenishment on renewal)
      */
     void deleteByUserId(UUID userId);
+
+    /**
+     * Delete all redemptions for an offer (used when deleting an offer)
+     */
+    void deleteByOfferId(Long offerId);
 }

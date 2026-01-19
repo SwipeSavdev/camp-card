@@ -28,6 +28,7 @@ public class OfferService {
     private final OfferRepository offerRepository;
     private final OfferRedemptionRepository redemptionRepository;
     private final MerchantRepository merchantRepository;
+    private final OfferScanAttemptRepository scanAttemptRepository;
 
     /**
      * Helper method to enrich an offer with merchant data
@@ -317,6 +318,11 @@ public class OfferService {
         Offer offer = offerRepository.findById(offerId)
             .orElseThrow(() -> new IllegalArgumentException("Offer not found"));
         Long merchantId = offer.getMerchantId();
+
+        // Delete related records first to avoid FK constraint violations
+        scanAttemptRepository.deleteByOfferId(offerId);
+        redemptionRepository.deleteByOfferId(offerId);
+
         offerRepository.delete(offer);
         updateMerchantOfferCounts(merchantId);
     }

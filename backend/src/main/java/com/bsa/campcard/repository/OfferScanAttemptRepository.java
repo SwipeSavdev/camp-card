@@ -167,4 +167,9 @@ public interface OfferScanAttemptRepository extends JpaRepository<OfferScanAttem
      * Find all scans by a merchant
      */
     Page<OfferScanAttempt> findByMerchantIdOrderByScannedAtDesc(Long merchantId, Pageable pageable);
+
+    /**
+     * Delete all scan attempts for an offer (used when deleting an offer)
+     */
+    void deleteByOfferId(Long offerId);
 }
