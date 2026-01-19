@@ -353,6 +353,9 @@ export default function OffersPage() {
       reader.onloadend = () => {
         setNewImage(reader.result as string);
         setNewImageName(file.name);
+        // TODO: Remove this warning when image upload to cloud storage is implemented
+        // For now, images are displayed locally but not saved to database
+        console.warn('Image preview loaded. Note: Image storage not yet implemented - images will not be saved.');
       };
       reader.readAsDataURL(file);
     }
@@ -384,6 +387,11 @@ export default function OffersPage() {
         const now = new Date();
         const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
 
+        // Only send imageUrl if it's a URL (not base64)
+        // Base64 images are too large for the database column (VARCHAR 255)
+        // TODO: Implement proper image upload to S3/cloud storage
+        const imageUrl = newImage && !newImage.startsWith('data:') ? newImage : undefined;
+
         const offerData: any = {
           merchantId: newMerchantId,
           title: newOfferName,
@@ -392,7 +400,7 @@ export default function OffersPage() {
           discountValue: parseFloat(newDiscountAmount) || 0,
           validFrom: now.toISOString(),
           validUntil: oneYearFromNow.toISOString(),
-          imageUrl: newImage || undefined,
+          imageUrl,
           // Set usageLimitPerUser to 1 for one-time offers, null for reusable
           usageLimitPerUser: newUseType === 'one-time' ? 1 : null,
         };
@@ -1590,6 +1598,17 @@ style={{
                  >
 Upload Image / Barcode
                  </label>
+                  <p style={{
+                    fontSize: '12px',
+                    color: '#b45309',
+                    backgroundColor: '#fef3c7',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    marginBottom: themeSpace.sm,
+                  }}
+                  >
+                    Note: Image upload to cloud storage is not yet configured. Images will be displayed locally but will not be saved to the database.
+                  </p>
                   <div style={{
                    border: `2px dashed ${themeColors.gray200}`, borderRadius: themeRadius.sm, padding: themeSpace.lg, textAlign: 'center', cursor: 'pointer', backgroundColor: themeColors.gray50, transition: 'border-color 0.2s',
                  }}
