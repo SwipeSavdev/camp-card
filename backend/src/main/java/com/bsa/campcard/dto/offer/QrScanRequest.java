@@ -55,6 +55,11 @@ public class QrScanRequest {
     private BigDecimal purchaseAmount;
 
     /**
+     * Merchant ID performing the scan (for merchant abuse tracking)
+     */
+    private Long merchantId;
+
+    /**
      * Merchant location ID (if applicable)
      */
     private Long merchantLocationId;

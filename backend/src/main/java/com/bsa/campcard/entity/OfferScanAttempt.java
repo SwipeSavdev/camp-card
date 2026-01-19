@@ -87,6 +87,13 @@ public class OfferScanAttempt {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    // Merchant tracking fields for merchant-side abuse detection
+    @Column(name = "merchant_id")
+    private Long merchantId;
+
+    @Column(name = "merchant_location_id")
+    private Long merchantLocationId;
+
     @PrePersist
     protected void onCreate() {
         if (uuid == null) {

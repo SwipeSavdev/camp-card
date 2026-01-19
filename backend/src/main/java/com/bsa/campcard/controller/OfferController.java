@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -200,17 +202,21 @@ public class OfferController {
     // ==================== QR Code Endpoints ====================
 
     /**
-     * Generate a unique QR code for a user to redeem an offer.
+     * Generate a unique QR code for the authenticated user to redeem an offer.
      * The QR code contains an HMAC-signed token that prevents forgery and enables abuse detection.
+     *
+     * Flow: Parent → Offers → Click Redeem → Shows QR Code → Merchant Scans
      */
     @PostMapping("/{offerId}/qr-code")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Generate QR code for offer",
-               description = "Generate a unique, signed QR code token for a user to redeem a one-time offer. " +
-                           "The token includes abuse detection tracking.")
-    public ResponseEntity<QrCodeData> generateQrCode(
-            @PathVariable Long offerId,
-            @RequestParam UUID userId) {
+    @PreAuthorize("hasAnyRole('PARENT', 'SCOUT', 'UNIT_LEADER')")
+    @Operation(summary = "Generate QR code for offer redemption",
+               description = "Generate a unique, signed QR code token for the logged-in user (Parent/Scout) " +
+                           "to redeem a one-time offer. The token includes abuse detection tracking.")
+    public ResponseEntity<QrCodeData> generateQrCode(@PathVariable Long offerId) {
+        // Get the authenticated user's ID from the security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = UUID.fromString(authentication.getName());
+
         QrCodeData qrData = offerQrService.generateQrCode(offerId, userId);
         return ResponseEntity.ok(qrData);
     }

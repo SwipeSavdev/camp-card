@@ -57,6 +57,10 @@ public class OfferQrService {
     private static final double MAX_DISTANCE_KM_PER_MINUTE = 2.0; // ~120 km/h max speed
     private static final int ABUSE_FLAG_THRESHOLD = 3; // Auto-suspend after this many flags
 
+    // Merchant abuse detection thresholds
+    private static final int MAX_MERCHANT_SCANS_PER_MINUTE = 10; // Velocity limit
+    private static final int MAX_MERCHANT_SCANS_SAME_USER = 3; // Same user repeat scan limit
+
     /**
      * Generate a unique QR code data payload for a user to redeem an offer.
      * The QR code contains an HMAC-signed token that cannot be forged.
@@ -127,7 +131,7 @@ public class OfferQrService {
         // Parse and validate token
         QrValidationResult validation = validateToken(request.getToken());
 
-        // Create scan attempt record
+        // Create scan attempt record (includes merchant tracking)
         OfferScanAttempt scanAttempt = OfferScanAttempt.builder()
                 .offerId(validation.getOfferId())
                 .userId(validation.getUserId())
@@ -138,6 +142,8 @@ public class OfferQrService {
                 .userAgent(request.getUserAgent())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
+                .merchantId(request.getMerchantId())
+                .merchantLocationId(request.getMerchantLocationId())
                 .build();
 
         // Check for abuse patterns
@@ -326,6 +332,39 @@ public class OfferQrService {
             return AbuseCheckResult.abusive(
                     "User has multiple prior suspicious scan attempts"
             );
+        }
+
+        // Check 5: Merchant velocity check (too many scans in short time)
+        if (request.getMerchantId() != null) {
+            long merchantScansLastMinute = scanAttemptRepository.countMerchantScansInWindow(
+                    request.getMerchantId(), LocalDateTime.now().minusMinutes(1)
+            );
+            if (merchantScansLastMinute >= MAX_MERCHANT_SCANS_PER_MINUTE) {
+                return AbuseCheckResult.abusive(
+                        String.format("Merchant scanning too rapidly: %d scans in last minute (limit: %d)",
+                                merchantScansLastMinute + 1, MAX_MERCHANT_SCANS_PER_MINUTE)
+                );
+            }
+
+            // Check 6: Merchant scanning same user repeatedly
+            long merchantUserScans = scanAttemptRepository.countMerchantScansForUser(
+                    request.getMerchantId(), validation.getUserId()
+            );
+            if (merchantUserScans >= MAX_MERCHANT_SCANS_SAME_USER) {
+                return AbuseCheckResult.abusive(
+                        String.format("Merchant has scanned this user's QR codes %d times (limit: %d)",
+                                merchantUserScans + 1, MAX_MERCHANT_SCANS_SAME_USER)
+                );
+            }
+
+            // Check 7: Merchant has history of suspicious scans
+            long merchantSuspiciousCount = scanAttemptRepository.countByMerchantIdAndIsSuspiciousTrue(
+                    request.getMerchantId()
+            );
+            if (merchantSuspiciousCount >= 5) {
+                log.warn("Merchant {} has {} suspicious scans on record",
+                        request.getMerchantId(), merchantSuspiciousCount);
+            }
         }
 
         return AbuseCheckResult.ok();

@@ -118,4 +118,53 @@ public interface OfferScanAttemptRepository extends JpaRepository<OfferScanAttem
         @Param("endDate") LocalDateTime endDate,
         Pageable pageable
     );
+
+    // ==================== Merchant Abuse Detection Queries ====================
+
+    /**
+     * Count scans by a merchant within a time window (velocity check)
+     */
+    @Query("SELECT COUNT(s) FROM OfferScanAttempt s " +
+           "WHERE s.merchantId = :merchantId AND s.scannedAt >= :since")
+    long countMerchantScansInWindow(
+        @Param("merchantId") Long merchantId,
+        @Param("since") LocalDateTime since
+    );
+
+    /**
+     * Count how many times a merchant scanned the same user's QR codes
+     */
+    @Query("SELECT COUNT(s) FROM OfferScanAttempt s " +
+           "WHERE s.merchantId = :merchantId AND s.userId = :userId")
+    long countMerchantScansForUser(
+        @Param("merchantId") Long merchantId,
+        @Param("userId") UUID userId
+    );
+
+    /**
+     * Count distinct users scanned by a merchant in a time window
+     */
+    @Query("SELECT COUNT(DISTINCT s.userId) FROM OfferScanAttempt s " +
+           "WHERE s.merchantId = :merchantId AND s.scannedAt >= :since")
+    long countDistinctUsersScannedByMerchant(
+        @Param("merchantId") Long merchantId,
+        @Param("since") LocalDateTime since
+    );
+
+    /**
+     * Find suspicious scans by a merchant
+     */
+    Page<OfferScanAttempt> findByMerchantIdAndIsSuspiciousTrueOrderByScannedAtDesc(
+        Long merchantId, Pageable pageable
+    );
+
+    /**
+     * Count suspicious scans by a merchant
+     */
+    long countByMerchantIdAndIsSuspiciousTrue(Long merchantId);
+
+    /**
+     * Find all scans by a merchant
+     */
+    Page<OfferScanAttempt> findByMerchantIdOrderByScannedAtDesc(Long merchantId, Pageable pageable);
 }
