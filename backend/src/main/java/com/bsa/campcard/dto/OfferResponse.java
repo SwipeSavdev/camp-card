@@ -39,7 +39,8 @@ public class OfferResponse {
     private Boolean locationSpecific;
     private Long merchantLocationId;
     private String locationName;
-    private String barcode; // Optional barcode for one-time use offers tracking
+    // TODO: Uncomment after DBA adds barcode column
+    // private String barcode; // Optional barcode for one-time use offers tracking
     private LocalDateTime createdAt;
     private Boolean isValid;
     private Integer remainingRedemptions;
@@ -79,7 +80,8 @@ public class OfferResponse {
         response.setRequiresQrVerification(offer.getRequiresQrVerification());
         response.setLocationSpecific(offer.getLocationSpecific());
         response.setMerchantLocationId(offer.getMerchantLocationId());
-        response.setBarcode(offer.getBarcode());
+        // TODO: Uncomment after DBA adds barcode column
+        // response.setBarcode(offer.getBarcode());
         response.setCreatedAt(offer.getCreatedAt());
         response.setIsValid(offer.isValid());
 

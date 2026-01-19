@@ -30,5 +30,6 @@ public class CreateOfferRequest {
     private Boolean requiresQrVerification;
     private Boolean locationSpecific;
     private Long merchantLocationId;
-    private String barcode; // Optional barcode for one-time use offers tracking
+    // TODO: Uncomment after DBA adds barcode column
+    // private String barcode; // Optional barcode for one-time use offers tracking
 }
