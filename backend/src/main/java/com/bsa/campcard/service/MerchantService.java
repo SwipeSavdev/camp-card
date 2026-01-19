@@ -282,6 +282,33 @@ public class MerchantService {
     }
     
     /**
+     * Delete location (soft delete)
+     */
+    @Transactional
+    public void deleteLocation(Long merchantId, Long locationId) {
+        log.info("Deleting location {} for merchant: {}", locationId, merchantId);
+
+        // Validate merchant exists
+        merchantRepository.findByIdAndDeletedAtIsNull(merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"));
+
+        MerchantLocation location = locationRepository.findById(locationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Location not found"));
+
+        // Verify location belongs to this merchant
+        if (!location.getMerchantId().equals(merchantId)) {
+            throw new IllegalArgumentException("Location does not belong to this merchant");
+        }
+
+        // Soft delete the location
+        location.setDeletedAt(LocalDateTime.now());
+        location.setActive(false);
+        locationRepository.save(location);
+
+        log.info("Location deleted: {}", locationId);
+    }
+
+    /**
      * Find nearby merchant locations
      */
     public List<MerchantLocationResponse> findNearbyLocations(

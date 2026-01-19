@@ -170,12 +170,25 @@ public class MerchantController {
     public ResponseEntity<List<MerchantLocationResponse>> getMerchantLocations(
             @PathVariable Long merchantId) {
         log.info("Fetching locations for merchant: {}", merchantId);
-        
+
         List<MerchantLocationResponse> locations = merchantService.getMerchantLocations(merchantId);
-        
+
         return ResponseEntity.ok(locations);
     }
-    
+
+    @DeleteMapping("/{merchantId}/locations/{locationId}")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
+    @Operation(summary = "Delete location", description = "Soft delete a merchant location")
+    public ResponseEntity<Void> deleteLocation(
+            @PathVariable Long merchantId,
+            @PathVariable Long locationId) {
+        log.info("Deleting location {} for merchant: {}", locationId, merchantId);
+
+        merchantService.deleteLocation(merchantId, locationId);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/locations/nearby")
     @Operation(summary = "Find nearby locations", description = "Find merchant locations near coordinates")
     public ResponseEntity<List<MerchantLocationResponse>> findNearbyLocations(

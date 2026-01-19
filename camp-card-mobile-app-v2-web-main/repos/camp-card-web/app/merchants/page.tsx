@@ -937,6 +937,36 @@ export default function MerchantsPage() {
                    {location.streetAddress ? `${location.streetAddress}, ${location.city}, ${location.state} ${location.zipCode}` : 'No address'}
                  </div>
                  </div>
+                   <button
+                     type="button"
+                     onClick={async () => {
+                       if (window.confirm('Are you sure you want to delete this location?')) {
+                         try {
+                           await api.deleteMerchantLocation(String(merchant.id), String(location.id), session);
+                           // Update local state to remove the location
+                           setItems(items.map((m) => (m.id === merchant.id
+                             ? { ...m, locations: (m.locations || []).filter((l) => l.id !== location.id) }
+                             : m)));
+                         } catch (err) {
+                           console.error('Failed to delete location:', err);
+                           setError('Failed to delete location');
+                         }
+                       }
+                     }}
+                     style={{
+                       background: 'none',
+                       border: 'none',
+                       color: themeColors.error500,
+                       cursor: 'pointer',
+                       padding: themeSpace.xs,
+                       display: 'flex',
+                       alignItems: 'center',
+                       justifyContent: 'center',
+                     }}
+                     title="Delete location"
+                   >
+                     <Icon name="x" size={16} color={themeColors.error500} />
+                   </button>
                  </div>
                  </div>
                ))}
