@@ -127,7 +127,7 @@ public class ScoutController {
     }
     
     @PostMapping("/{id}/transfer")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> transferScout(
             @PathVariable Long id,
             @RequestParam Long newTroopId) {
@@ -136,14 +136,14 @@ public class ScoutController {
     }
     
     @PostMapping("/mark-top-sellers")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> markTopSellers(@RequestParam int topCount) {
         scoutService.markTopSellers(topCount);
         return ResponseEntity.ok().build();
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> deleteScout(@PathVariable Long id) {
         scoutService.deleteScout(id);
         return ResponseEntity.ok().build();

@@ -92,7 +92,7 @@ public class MerchantController {
     }
     
     @PutMapping("/{merchantId}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Update merchant", description = "Update merchant information")
     public ResponseEntity<MerchantResponse> updateMerchant(
             @PathVariable Long merchantId,
@@ -106,7 +106,7 @@ public class MerchantController {
     }
     
     @PostMapping("/{merchantId}/approve")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Approve/Reject merchant", description = "Process merchant application")
     public ResponseEntity<MerchantResponse> approveMerchant(
             @PathVariable Long merchantId,
@@ -125,7 +125,7 @@ public class MerchantController {
     }
     
     @PatchMapping("/{merchantId}/status")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Update merchant status", description = "Suspend or reactivate merchant")
     public ResponseEntity<MerchantResponse> updateMerchantStatus(
             @PathVariable Long merchantId,
@@ -140,7 +140,7 @@ public class MerchantController {
     }
     
     @DeleteMapping("/{merchantId}")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Delete merchant", description = "Soft delete merchant")
     public ResponseEntity<Void> deleteMerchant(@PathVariable Long merchantId) {
         log.info("Deleting merchant: {}", merchantId);
@@ -153,7 +153,7 @@ public class MerchantController {
     // Location endpoints
     
     @PostMapping("/{merchantId}/locations")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Add location", description = "Add location to merchant")
     public ResponseEntity<MerchantLocationResponse> createLocation(
             @PathVariable Long merchantId,
@@ -192,7 +192,7 @@ public class MerchantController {
     }
     
     @GetMapping("/stats")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Get merchant statistics", description = "Get aggregate merchant stats")
     public ResponseEntity<MerchantService.MerchantStats> getMerchantStats() {
         log.info("Fetching merchant statistics");

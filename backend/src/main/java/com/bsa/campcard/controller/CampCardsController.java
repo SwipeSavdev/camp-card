@@ -30,7 +30,7 @@ public class CampCardsController {
     private final UserRepository userRepository;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Get all camp cards",
                description = "List all issued camp cards with user information")
     public ResponseEntity<Map<String, Object>> getAllCards(
@@ -107,7 +107,7 @@ public class CampCardsController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Get card by ID",
                description = "Get a specific camp card details")
     public ResponseEntity<Map<String, Object>> getCardById(@PathVariable String id) {
@@ -142,7 +142,7 @@ public class CampCardsController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Revoke/Delete a card",
                description = "Revoke a camp card (cancels subscription)")
     public ResponseEntity<Void> deleteCard(@PathVariable String id) {

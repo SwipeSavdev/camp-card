@@ -19,14 +19,14 @@ public class TroopController {
     private final TroopService troopService;
     
     @PostMapping
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<TroopResponse> createTroop(@RequestBody CreateTroopRequest request) {
         TroopResponse troop = troopService.createTroop(request);
         return ResponseEntity.ok(troop);
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<TroopResponse> updateTroop(
             @PathVariable Long id,
             @RequestBody CreateTroopRequest request) {
@@ -108,7 +108,7 @@ public class TroopController {
     }
     
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> updateTroopStatus(
             @PathVariable Long id,
             @RequestParam String status) {
@@ -117,14 +117,14 @@ public class TroopController {
     }
     
     @PostMapping("/{id}/update-stats")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> updateTroopStats(@PathVariable Long id) {
         troopService.updateTroopStats(id);
         return ResponseEntity.ok().build();
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     public ResponseEntity<Void> deleteTroop(@PathVariable Long id) {
         troopService.deleteTroop(id);
         return ResponseEntity.ok().build();
