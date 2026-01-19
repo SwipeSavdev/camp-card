@@ -44,7 +44,7 @@ public class OfferScanAttempt {
     @Column(name = "redemption_id")
     private Long redemptionId;
 
-    @Column(name = "redemption_token", nullable = false, length = 64)
+    @Column(name = "redemption_token", nullable = false, length = 255)
     private String redemptionToken;
 
     @Column(name = "scanned_at", nullable = false)
