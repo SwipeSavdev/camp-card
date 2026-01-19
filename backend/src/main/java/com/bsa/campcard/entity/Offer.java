@@ -81,7 +81,11 @@ public class Offer {
     
     @Column(name = "merchant_location_id")
     private Long merchantLocationId;
-    
+
+    // Optional barcode for one-time use offers tracking
+    @Column(name = "barcode")
+    private String barcode;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     

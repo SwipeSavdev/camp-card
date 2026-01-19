@@ -133,6 +133,7 @@ export default function OffersPage() {
   const [newUseType, setNewUseType] = useState<'one-time' | 'reusable'>('reusable');
   const [newImage, setNewImage] = useState<string | null>(null);
   const [newImageName, setNewImageName] = useState('');
+  const [newBarcode, setNewBarcode] = useState('');
   const [multipleOffers, setMultipleOffers] = useState(false);
   const [tempOffers, setTempOffers] = useState<OfferItem[]>([]);
   const [showAddMultiple, setShowAddMultiple] = useState(false);
@@ -150,6 +151,7 @@ export default function OffersPage() {
   const [editDiscountAmount, setEditDiscountAmount] = useState('');
   const [editMinSpend, setEditMinSpend] = useState('');
   const [editUseType, setEditUseType] = useState<'one-time' | 'reusable'>('reusable');
+  const [editBarcode, setEditBarcode] = useState('');
 
   const discountTypes = ['$', '%', 'BOGO', 'Free Item', 'Points', 'Buy One Get', '$ off when $ spent', '% off when $ spent'];
   const usageTypes = ['one-time', 'reusable'];
@@ -266,7 +268,7 @@ export default function OffersPage() {
             discountAmount: String(offer.discountValue || offer.value || ''),
             useType: (offer.usage_type === 'LIMITED' ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
             image: offer.imageUrl || offer.image,
-            barcode: offer.imageUrl || offer.barcode,
+            barcode: offer.barcode,
           });
         });
         offersData = Array.from(grouped.values());
@@ -371,7 +373,7 @@ export default function OffersPage() {
         minimumSpend: newMinSpend || undefined,
         useType: newUseType,
         image: newImage || undefined,
-        barcode: newImage || undefined,
+        barcode: newBarcode || undefined,
       };
 
       if (!multipleOffers) {
@@ -400,6 +402,11 @@ export default function OffersPage() {
           offerData.minPurchaseAmount = parseFloat(newMinSpend) || 0;
         }
 
+        // Add barcode if provided (optional, for one-time use offer tracking)
+        if (newBarcode.trim()) {
+          offerData.barcode = newBarcode.trim();
+        }
+
         console.log('[PAGE] Creating offer:', offerData);
         const createdOffer = await api.createOffer(offerData, session);
         console.log('[PAGE] Offer created successfully:', createdOffer);
@@ -423,9 +430,9 @@ export default function OffersPage() {
             merchantName,
             discountType: createdOffer.discountType || newDiscountType,
             discountAmount: String(createdOffer.discountValue || newDiscountAmount),
-            useType: 'reusable',
+            useType: newUseType,
             image: createdOffer.imageUrl,
-            barcode: createdOffer.imageUrl,
+            barcode: createdOffer.barcode,
           };
 
           // Check if merchant group exists (compare as strings)
@@ -531,7 +538,7 @@ export default function OffersPage() {
           discountAmount: String(offer.discountValue),
           useType: 'reusable' as const,
           image: offer.imageUrl,
-          barcode: offer.imageUrl,
+          barcode: offer.barcode,
         }));
 
         // Check if merchant group exists (compare as strings)
@@ -579,6 +586,7 @@ export default function OffersPage() {
     setNewUseType('reusable');
     setNewImage(null);
     setNewImageName('');
+    setNewBarcode('');
     setMultipleOffers(false);
     setTempOffers([]);
     setShowAddMultiple(false);
@@ -612,6 +620,7 @@ export default function OffersPage() {
     setEditDiscountAmount(offer.discountAmount || '');
     setEditMinSpend(offer.minimumSpend || '');
     setEditUseType(offer.useType || 'reusable');
+    setEditBarcode(offer.barcode || '');
     setShowEditForm(true);
     setError(null);
   };
@@ -640,6 +649,11 @@ export default function OffersPage() {
       // Add minimum spend threshold for "X off when Y spent" discount types
       if ((editDiscountType === '$ off when $ spent' || editDiscountType === '% off when $ spent') && editMinSpend) {
         offerData.minPurchaseAmount = parseFloat(editMinSpend) || 0;
+      }
+
+      // Add barcode if provided (optional, for one-time use offer tracking)
+      if (editBarcode.trim()) {
+        offerData.barcode = editBarcode.trim();
       }
 
       console.log('[PAGE] Updating offer:', editingOffer.id, offerData);
@@ -1530,6 +1544,35 @@ style={{
                  </div>
                 </div>
 
+                {/* Barcode field - shown for one-time use offers */}
+                {newUseType === 'one-time' && (
+                <div>
+                  <label style={{
+                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                  }}
+                  >
+                    Barcode (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newBarcode}
+                    onChange={(e) => setNewBarcode(e.target.value)}
+                    placeholder="e.g., 123456789012"
+                    style={{
+                      width: '100%',
+                      padding: `${themeSpace.sm} ${themeSpace.md}`,
+                      border: `1px solid ${themeColors.gray200}`,
+                      borderRadius: themeRadius.sm,
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <p style={{ fontSize: '12px', color: themeColors.gray500, marginTop: themeSpace.xs }}>
+                    Optional barcode for tracking one-time use offers
+                  </p>
+                </div>
+                )}
+
                 <div>
                   <label style={{
                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
@@ -1890,6 +1933,35 @@ Upload Image / Barcode
                 ))}
               </div>
             </div>
+
+            {/* Barcode field - shown for one-time use offers */}
+            {editUseType === 'one-time' && (
+            <div>
+              <label style={{
+                display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+              }}
+              >
+                Barcode (Optional)
+              </label>
+              <input
+                type="text"
+                value={editBarcode}
+                onChange={(e) => setEditBarcode(e.target.value)}
+                placeholder="e.g., 123456789012"
+                style={{
+                  width: '100%',
+                  padding: `${themeSpace.sm} ${themeSpace.md}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <p style={{ fontSize: '12px', color: themeColors.gray500, marginTop: themeSpace.xs }}>
+                Optional barcode for tracking one-time use offers
+              </p>
+            </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>

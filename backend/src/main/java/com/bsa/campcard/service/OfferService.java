@@ -113,6 +113,7 @@ public class OfferService {
         offer.setRequiresQrVerification(request.getRequiresQrVerification() != null ? request.getRequiresQrVerification() : true);
         offer.setLocationSpecific(request.getLocationSpecific() != null ? request.getLocationSpecific() : false);
         offer.setMerchantLocationId(request.getMerchantLocationId());
+        offer.setBarcode(request.getBarcode());
         offer.setStatus(OfferStatus.ACTIVE);
         
         Offer savedOffer = offerRepository.save(offer);
@@ -143,6 +144,7 @@ public class OfferService {
         if (request.getUsageLimitPerUser() != null) offer.setUsageLimitPerUser(request.getUsageLimitPerUser());
         if (request.getFeatured() != null) offer.setFeatured(request.getFeatured());
         if (request.getScoutExclusive() != null) offer.setScoutExclusive(request.getScoutExclusive());
+        if (request.getBarcode() != null) offer.setBarcode(request.getBarcode());
 
         Offer updatedOffer = offerRepository.save(offer);
         Merchant merchant = merchantRepository.findById(updatedOffer.getMerchantId()).orElse(null);
