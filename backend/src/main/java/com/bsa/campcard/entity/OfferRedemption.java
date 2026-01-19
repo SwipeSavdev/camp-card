@@ -72,27 +72,29 @@ public class OfferRedemption {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // QR code tracking fields
-    @Column(name = "redemption_token", length = 64)
+    // NOTE: These fields are temporarily disabled until DBA adds columns to RDS
+    // See V019 migration file for the required ALTER TABLE statements
+    @Transient
     private String redemptionToken;
 
-    @Column(name = "token_expires_at")
+    @Transient
     private LocalDateTime tokenExpiresAt;
 
-    @Column(name = "scan_count")
+    @Transient
     @Builder.Default
     private Integer scanCount = 0;
 
-    @Column(name = "last_scanned_at")
+    @Transient
     private LocalDateTime lastScannedAt;
 
-    @Column(name = "last_scan_device_fingerprint", length = 255)
+    @Transient
     private String lastScanDeviceFingerprint;
 
-    @Column(name = "flagged_for_abuse")
+    @Transient
     @Builder.Default
     private Boolean flaggedForAbuse = false;
 
-    @Column(name = "abuse_flag_reason", columnDefinition = "TEXT")
+    @Transient
     private String abuseFlagReason;
 
     public enum RedemptionStatus {
