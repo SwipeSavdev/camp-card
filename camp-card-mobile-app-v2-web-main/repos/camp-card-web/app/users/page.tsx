@@ -626,7 +626,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
 # - Email: Valid email address (must be unique)
 # - Role: NATIONAL_ADMIN, COUNCIL_ADMIN, UNIT_LEADER, PARENT, or SCOUT
 # - Status: active or inactive
-# - CouncilName: Required for UNIT_LEADER, PARENT, SCOUT (must match existing council exactly)
+# - CouncilName: Required for COUNCIL_ADMIN only (must match existing council exactly)
 # - UnitNumber: Required for UNIT_LEADER and SCOUT (e.g., 123, 456)
 # - UnitType: Required for SCOUT. Options: PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, FAMILY_SCOUTING
 #
@@ -723,9 +723,9 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
         if (!validRoles.includes(role)) rowErrors.push(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
         if (!validStatuses.includes(status)) rowErrors.push('Invalid status. Must be: active or inactive');
 
-        // Validate council-related fields based on role
-        if (['UNIT_LEADER', 'PARENT', 'SCOUT'].includes(role) && !councilName) {
-          rowErrors.push('CouncilName is required for UNIT_LEADER, PARENT, and SCOUT roles');
+        // Validate council-related fields based on role - only required for COUNCIL_ADMIN
+        if (role === 'COUNCIL_ADMIN' && !councilName) {
+          rowErrors.push('CouncilName is required for COUNCIL_ADMIN role');
         }
         if (['UNIT_LEADER', 'SCOUT'].includes(role) && !unitNumber) {
           rowErrors.push('UnitNumber is required for UNIT_LEADER and SCOUT roles');
@@ -1514,100 +1514,102 @@ Role
                 </select>
               </div>
 
-              {/* Council dropdown with search */}
-              <div style={{ position: 'relative' }}>
-                <label style={{
-                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
-                }}
-                >
-                  Council
-                </label>
+              {/* Council dropdown with search - shown only for Council Admin */}
+              {newUserRole === 'COUNCIL_ADMIN' && (
                 <div style={{ position: 'relative' }}>
-                  <input
-                    type="text"
-                    value={councilSearchTerm}
-                    onChange={(e) => {
-                      setCouncilSearchTerm(e.target.value);
-                      setShowCouncilDropdown(true);
-                    }}
-                    onFocus={() => setShowCouncilDropdown(true)}
-                    placeholder={newUserCouncilId ? councils.find(c => c.uuid === newUserCouncilId)?.name || 'Search councils...' : 'Search councils...'}
-                    style={{
-                      width: '100%',
-                      padding: `${themeSpace.sm} ${themeSpace.md}`,
+                  <label style={{
+                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                  }}
+                  >
+                    Council
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={councilSearchTerm}
+                      onChange={(e) => {
+                        setCouncilSearchTerm(e.target.value);
+                        setShowCouncilDropdown(true);
+                      }}
+                      onFocus={() => setShowCouncilDropdown(true)}
+                      placeholder={newUserCouncilId ? councils.find(c => c.uuid === newUserCouncilId)?.name || 'Search councils...' : 'Search councils...'}
+                      style={{
+                        width: '100%',
+                        padding: `${themeSpace.sm} ${themeSpace.md}`,
+                        border: `1px solid ${themeColors.gray200}`,
+                        borderRadius: themeRadius.sm,
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    {councilsLoading && (
+                      <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: themeColors.gray500 }}>
+                        Loading...
+                      </div>
+                    )}
+                  </div>
+                  {showCouncilDropdown && councils.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      backgroundColor: themeColors.white,
                       border: `1px solid ${themeColors.gray200}`,
                       borderRadius: themeRadius.sm,
-                      fontSize: '14px',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  {councilsLoading && (
-                    <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: themeColors.gray500 }}>
-                      Loading...
+                      boxShadow: themeShadow.md,
+                      zIndex: 10,
+                    }}>
+                      {councils
+                        .filter(c => !councilSearchTerm || c.name.toLowerCase().includes(councilSearchTerm.toLowerCase()))
+                        .map((council) => (
+                          <div
+                            key={council.uuid}
+                            onClick={() => {
+                              setNewUserCouncilId(council.uuid);
+                              setCouncilSearchTerm(council.name);
+                              setShowCouncilDropdown(false);
+                            }}
+                            style={{
+                              padding: `${themeSpace.sm} ${themeSpace.md}`,
+                              cursor: 'pointer',
+                              backgroundColor: newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent',
+                              borderBottom: `1px solid ${themeColors.gray100}`,
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColors.gray50)}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent')}
+                          >
+                            {council.name}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                  {newUserCouncilId && (
+                    <div style={{ marginTop: themeSpace.xs, fontSize: '12px', color: themeColors.primary600 }}>
+                      Selected: {councils.find(c => c.uuid === newUserCouncilId)?.name || 'Loading...'}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewUserCouncilId('');
+                          setCouncilSearchTerm('');
+                        }}
+                        style={{
+                          marginLeft: themeSpace.sm,
+                          background: 'none',
+                          border: 'none',
+                          color: themeColors.error500,
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                        }}
+                      >
+                        Clear
+                      </button>
                     </div>
                   )}
                 </div>
-                {showCouncilDropdown && councils.length > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                    backgroundColor: themeColors.white,
-                    border: `1px solid ${themeColors.gray200}`,
-                    borderRadius: themeRadius.sm,
-                    boxShadow: themeShadow.md,
-                    zIndex: 10,
-                  }}>
-                    {councils
-                      .filter(c => !councilSearchTerm || c.name.toLowerCase().includes(councilSearchTerm.toLowerCase()))
-                      .map((council) => (
-                        <div
-                          key={council.uuid}
-                          onClick={() => {
-                            setNewUserCouncilId(council.uuid);
-                            setCouncilSearchTerm(council.name);
-                            setShowCouncilDropdown(false);
-                          }}
-                          style={{
-                            padding: `${themeSpace.sm} ${themeSpace.md}`,
-                            cursor: 'pointer',
-                            backgroundColor: newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent',
-                            borderBottom: `1px solid ${themeColors.gray100}`,
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColors.gray50)}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent')}
-                        >
-                          {council.name}
-                        </div>
-                      ))}
-                  </div>
-                )}
-                {newUserCouncilId && (
-                  <div style={{ marginTop: themeSpace.xs, fontSize: '12px', color: themeColors.primary600 }}>
-                    Selected: {councils.find(c => c.uuid === newUserCouncilId)?.name || 'Loading...'}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNewUserCouncilId('');
-                        setCouncilSearchTerm('');
-                      }}
-                      style={{
-                        marginLeft: themeSpace.sm,
-                        background: 'none',
-                        border: 'none',
-                        color: themeColors.error500,
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                      }}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-              </div>
+              )}
 
               {/* Unit Type and Unit Number fields - shown only for Scouts */}
               {newUserRole === 'SCOUT' && (
@@ -2061,7 +2063,7 @@ Unit Number
                   <tbody>
                    <tr>
                    <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>CouncilName</strong></td>
-                   <td style={{ padding: '4px 8px', background: themeColors.white }}>Council name (required for UNIT_LEADER, PARENT, SCOUT)</td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>Council name (required for COUNCIL_ADMIN only)</td>
                  </tr>
                    <tr>
                    <td style={{ padding: '4px 8px' }}><strong>UnitNumber</strong></td>
