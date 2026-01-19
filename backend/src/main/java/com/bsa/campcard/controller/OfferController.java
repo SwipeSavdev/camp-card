@@ -208,7 +208,7 @@ public class OfferController {
      * Flow: Parent → Offers → Click Redeem → Shows QR Code → Merchant Scans
      */
     @PostMapping("/{offerId}/qr-code")
-    @PreAuthorize("hasAnyRole('PARENT', 'SCOUT', 'UNIT_LEADER')")
+    @PreAuthorize("hasAnyRole('PARENT', 'SCOUT', 'UNIT_LEADER', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Generate QR code for offer redemption",
                description = "Generate a unique, signed QR code token for the logged-in user (Parent/Scout) " +
                            "to redeem a one-time offer. The token includes abuse detection tracking.")
