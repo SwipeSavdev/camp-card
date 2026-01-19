@@ -1,14 +1,9 @@
 -- V019: Add QR code scan tracking for anti-abuse detection
--- This migration adds:
--- 1. offer_scan_attempts table to track every QR scan
--- 2. Abuse flag fields on users table
--- 3. Redemption token field on offer_redemptions for QR verification
-
--- Add abuse tracking fields to users table
-ALTER TABLE campcard.users
-ADD COLUMN IF NOT EXISTS abuse_flag_count INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS abuse_flagged_at TIMESTAMP,
-ADD COLUMN IF NOT EXISTS abuse_flag_reason TEXT;
+-- NOTE: User table alterations must be run manually by DBA due to RDS permissions
+-- The following columns need to be added to campcard.users manually:
+--   ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS abuse_flag_count INTEGER DEFAULT 0;
+--   ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS abuse_flagged_at TIMESTAMP;
+--   ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS abuse_flag_reason TEXT;
 
 -- Create offer_scan_attempts table for tracking QR scans
 CREATE TABLE IF NOT EXISTS campcard.offer_scan_attempts (
@@ -69,8 +64,6 @@ CREATE INDEX IF NOT EXISTS idx_offer_scan_attempts_is_suspicious ON campcard.off
 CREATE INDEX IF NOT EXISTS idx_offer_redemptions_redemption_token ON campcard.offer_redemptions(redemption_token);
 CREATE INDEX IF NOT EXISTS idx_offer_redemptions_flagged_for_abuse ON campcard.offer_redemptions(flagged_for_abuse) WHERE flagged_for_abuse = TRUE;
 
-CREATE INDEX IF NOT EXISTS idx_users_abuse_flag_count ON campcard.users(abuse_flag_count) WHERE abuse_flag_count > 0;
-
 -- Grant permissions to application user
 GRANT SELECT, INSERT, UPDATE ON campcard.offer_scan_attempts TO campcard_app;
 GRANT USAGE, SELECT ON SEQUENCE campcard.offer_scan_attempts_id_seq TO campcard_app;
@@ -79,5 +72,4 @@ COMMENT ON TABLE campcard.offer_scan_attempts IS 'Tracks all QR code scan attemp
 COMMENT ON COLUMN campcard.offer_scan_attempts.redemption_token IS 'Unique HMAC-signed token embedded in QR code';
 COMMENT ON COLUMN campcard.offer_scan_attempts.device_fingerprint IS 'Hash of device characteristics for duplicate detection';
 COMMENT ON COLUMN campcard.offer_scan_attempts.is_suspicious IS 'Flag set when scan patterns indicate potential abuse';
-COMMENT ON COLUMN campcard.users.abuse_flag_count IS 'Number of times user has been flagged for suspicious activity';
 COMMENT ON COLUMN campcard.offer_redemptions.scan_count IS 'Number of times this redemption QR was scanned';
