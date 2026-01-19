@@ -392,6 +392,7 @@ export default function OffersPage() {
           discountValue: parseFloat(newDiscountAmount) || 0,
           validFrom: now.toISOString(),
           validUntil: oneYearFromNow.toISOString(),
+          imageUrl: newImage || undefined,
         };
 
         // Add location if selected
