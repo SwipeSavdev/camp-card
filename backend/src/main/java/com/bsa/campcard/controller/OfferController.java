@@ -1,7 +1,15 @@
 package com.bsa.campcard.controller;
 
 import com.bsa.campcard.dto.*;
+import com.bsa.campcard.dto.offer.QrCodeData;
+import com.bsa.campcard.dto.offer.QrScanRequest;
+import com.bsa.campcard.dto.offer.QrScanResponse;
+import com.bsa.campcard.service.OfferQrService;
 import com.bsa.campcard.service.OfferService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,9 +24,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/offers")
 @RequiredArgsConstructor
+@Tag(name = "Offers", description = "Offer management and QR code redemption endpoints")
 public class OfferController {
-    
+
     private final OfferService offerService;
+    private final OfferQrService offerQrService;
     
     @PostMapping
     @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
@@ -181,9 +191,72 @@ public class OfferController {
             @PathVariable Long merchantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<OfferRedemptionResponse> redemptions = offerService.getMerchantRedemptions(merchantId, pageable);
         return ResponseEntity.ok(redemptions);
+    }
+
+    // ==================== QR Code Endpoints ====================
+
+    /**
+     * Generate a unique QR code for a user to redeem an offer.
+     * The QR code contains an HMAC-signed token that prevents forgery and enables abuse detection.
+     */
+    @PostMapping("/{offerId}/qr-code")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Generate QR code for offer",
+               description = "Generate a unique, signed QR code token for a user to redeem a one-time offer. " +
+                           "The token includes abuse detection tracking.")
+    public ResponseEntity<QrCodeData> generateQrCode(
+            @PathVariable Long offerId,
+            @RequestParam UUID userId) {
+        QrCodeData qrData = offerQrService.generateQrCode(offerId, userId);
+        return ResponseEntity.ok(qrData);
+    }
+
+    /**
+     * Scan and validate a QR code for offer redemption.
+     * This endpoint is called by merchants when scanning a customer's QR code.
+     * It tracks scan attempts and detects potential abuse (screenshot sharing, multiple devices, etc.)
+     */
+    @PostMapping("/qr-code/scan")
+    @Operation(summary = "Scan QR code for redemption",
+               description = "Validate and process a QR code scan. Tracks scan attempts and detects abuse patterns " +
+                           "like screenshot sharing, multiple device scans, and impossible travel.")
+    public ResponseEntity<QrScanResponse> scanQrCode(
+            @Valid @RequestBody QrScanRequest request,
+            HttpServletRequest httpRequest) {
+
+        // Auto-populate IP address if not provided
+        if (request.getIpAddress() == null) {
+            request.setIpAddress(getClientIpAddress(httpRequest));
+        }
+
+        // Auto-populate user agent if not provided
+        if (request.getUserAgent() == null) {
+            request.setUserAgent(httpRequest.getHeader("User-Agent"));
+        }
+
+        QrScanResponse response = offerQrService.processScan(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get the client's real IP address, handling proxies and load balancers.
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            // X-Forwarded-For can contain multiple IPs; the first one is the client
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty()) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
     }
 }

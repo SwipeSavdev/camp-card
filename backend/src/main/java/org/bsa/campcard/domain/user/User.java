@@ -98,6 +98,17 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // Abuse tracking fields
+    @Column(name = "abuse_flag_count")
+    @Builder.Default
+    private Integer abuseFlagCount = 0;
+
+    @Column(name = "abuse_flagged_at")
+    private LocalDateTime abuseFlaggedAt;
+
+    @Column(name = "abuse_flag_reason", columnDefinition = "TEXT")
+    private String abuseFlagReason;
+
     public enum UserRole {
         // System-level roles (only assignable by GLOBAL_SYSTEM_ADMIN)
         GLOBAL_SYSTEM_ADMIN,
