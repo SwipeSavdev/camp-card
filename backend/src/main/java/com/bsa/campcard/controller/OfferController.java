@@ -50,7 +50,24 @@ public class OfferController {
     
     @GetMapping("/{id}")
     public ResponseEntity<OfferResponse> getOffer(@PathVariable Long id) {
-        OfferResponse offer = offerService.getOffer(id);
+        // Try to get user context for personalized offer data (redemption status)
+        UUID userId = null;
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof org.bsa.campcard.domain.user.User) {
+                org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User) authentication.getPrincipal();
+                userId = user.getId();
+            }
+        } catch (Exception ignored) {
+            // No authenticated user, continue without user context
+        }
+
+        OfferResponse offer;
+        if (userId != null) {
+            offer = offerService.getOfferForUser(id, userId);
+        } else {
+            offer = offerService.getOffer(id);
+        }
         return ResponseEntity.ok(offer);
     }
     
@@ -160,9 +177,26 @@ public class OfferController {
     }
     
     // Redemption endpoints
-    
+
     @PostMapping("/redeem")
     public ResponseEntity<OfferRedemptionResponse> redeemOffer(@RequestBody RedeemOfferRequest request) {
+        // If userId is not provided in request, get it from the authenticated user
+        if (request.getUserId() == null) {
+            try {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication != null && authentication.getPrincipal() instanceof org.bsa.campcard.domain.user.User) {
+                    org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User) authentication.getPrincipal();
+                    request.setUserId(user.getId());
+                }
+            } catch (Exception ignored) {
+                // If we can't get user from auth, the service will handle the null userId
+            }
+        }
+
+        if (request.getUserId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         OfferRedemptionResponse redemption = offerService.redeemOffer(request);
         return ResponseEntity.ok(redemption);
     }

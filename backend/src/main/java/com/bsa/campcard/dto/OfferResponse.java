@@ -49,6 +49,11 @@ public class OfferResponse {
     private Integer userRedemptionCount;
     private Boolean userHasReachedLimit;
 
+    // Mobile app compatibility fields
+    private String usageType; // "one_time" or "unlimited" - derived from usageLimitPerUser
+    private Integer maxRedemptionsPerUser; // Alias for usageLimitPerUser for mobile compatibility
+    private Boolean isRedeemed; // Whether the current user has reached their limit
+
     public static OfferResponse fromEntity(Offer offer) {
         return fromEntity(offer, null, null);
     }
@@ -90,6 +95,20 @@ public class OfferResponse {
             response.setRemainingRedemptions(Math.max(0, remaining));
         }
 
+        // Set mobile app compatibility fields
+        Integer userLimit = offer.getUsageLimitPerUser();
+        response.setMaxRedemptionsPerUser(userLimit);
+
+        // Determine usage type: one_time if usageLimitPerUser is 1, otherwise unlimited
+        if (userLimit != null && userLimit == 1) {
+            response.setUsageType("one_time");
+        } else {
+            response.setUsageType("unlimited");
+        }
+
+        // isRedeemed will be set in fromEntityWithUserData when user context is available
+        response.setIsRedeemed(false);
+
         return response;
     }
 
@@ -100,9 +119,13 @@ public class OfferResponse {
         // Determine if user has reached their personal limit for this offer
         Integer userLimit = offer.getUsageLimitPerUser();
         if (userLimit != null) {
-            response.setUserHasReachedLimit(userRedemptionCount >= userLimit);
+            boolean hasReachedLimit = userRedemptionCount >= userLimit;
+            response.setUserHasReachedLimit(hasReachedLimit);
+            // Set isRedeemed to true if this is a one-time offer and user has redeemed it
+            response.setIsRedeemed(hasReachedLimit);
         } else {
             response.setUserHasReachedLimit(false);
+            response.setIsRedeemed(false);
         }
 
         return response;

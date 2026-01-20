@@ -241,6 +241,31 @@ public class OfferService {
         return response;
     }
 
+    /**
+     * Get offer with user-specific redemption data
+     */
+    public OfferResponse getOfferForUser(Long offerId, UUID userId) {
+        Offer offer = offerRepository.findById(offerId)
+            .orElseThrow(() -> new IllegalArgumentException("Offer not found"));
+        Merchant merchant = merchantRepository.findById(offer.getMerchantId()).orElse(null);
+
+        // Get user redemption count for this offer
+        int userRedemptionCount = userId != null
+            ? redemptionRepository.countUserRedemptions(userId, offerId)
+            : 0;
+
+        String businessName = merchant != null ? merchant.getBusinessName() : null;
+        String logoUrl = merchant != null ? merchant.getLogoUrl() : null;
+        OfferResponse response = OfferResponse.fromEntityWithUserData(offer, businessName, logoUrl, userRedemptionCount);
+
+        // Check for image in separate table
+        if (response.getImageUrl() == null) {
+            offerImageRepository.findByOfferId(offerId)
+                .ifPresent(img -> response.setImageUrl(img.getImageData()));
+        }
+        return response;
+    }
+
     public Page<OfferResponse> getActiveOffers(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         Page<Offer> offerPage = offerRepository.findActiveOffers(OfferStatus.ACTIVE, now, pageable);
