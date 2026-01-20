@@ -2,6 +2,14 @@
 
 A multi-repository platform for digitalizing Boy Scouts of America fundraising through Camp Card sales.
 
+## Production URLs
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Static Website** | https://www.campcardapp.org | Marketing/landing page |
+| **API** | https://api.campcardapp.org | Backend REST API |
+| **Admin Portal** | https://admin.campcardapp.org | Web portal for admins/councils |
+
 ## Platform Components
 
 | Component | Technology | Port | Description |
@@ -33,10 +41,10 @@ npm install && npm run dev
 
 ```bash
 # SSH to EC2
-ssh -i ~/.ssh/campcard-ec2 ubuntu@18.190.69.205
+ssh -i ~/.ssh/campcard-github-actions ubuntu@18.190.69.205
 
 # Deploy backend
-cd /home/ec2-user/camp-card/backend
+cd /home/ubuntu/camp-card/backend
 sudo git pull origin main
 sudo docker build -t campcard-backend:latest .
 # See full deployment commands in AWS guide
@@ -113,7 +121,18 @@ SCOUT           - Scout member (default)
 |-----------|---------|
 | EC2 Server | 18.190.69.205 (Ubuntu) |
 | RDS Database | PostgreSQL 16 |
-| Domain | https://bsa.swipesavvy.com |
+| Domain | campcardapp.org |
+| DNS | AWS Route 53 |
+| SSL | Let's Encrypt (auto-renewal) |
+| Email | AWS SES (DKIM verified) |
+
+### Domain Structure
+
+| Subdomain | Service | SSL |
+|-----------|---------|-----|
+| www.campcardapp.org | Static website | ✓ |
+| api.campcardapp.org | Backend API | ✓ |
+| admin.campcardapp.org | Admin portal | ✓ |
 
 ## License
 

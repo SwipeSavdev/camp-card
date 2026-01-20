@@ -183,12 +183,34 @@ Closes #123
 
 ## AWS Deployment
 
+### Production URLs (campcardapp.org)
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Static Website** | https://www.campcardapp.org | Marketing/landing page |
+| **API** | https://api.campcardapp.org | Backend REST API for mobile app |
+| **Admin Portal** | https://admin.campcardapp.org | Web portal for admins/councils |
+| **Root Domain** | https://campcardapp.org | Redirects to www |
+
 ### EC2 Server Details
 - **IP Address**: 18.190.69.205
 - **SSH User**: ubuntu
 - **SSH Key**: `~/.ssh/campcard-github-actions`
-- **Domain**: https://bsa.swipesavvy.com
 - **SSH Command**: `ssh -i ~/.ssh/campcard-github-actions ubuntu@18.190.69.205`
+
+### DNS Configuration (Route 53)
+
+| Record | Type | Value |
+|--------|------|-------|
+| campcardapp.org | A | 18.190.69.205 |
+| www.campcardapp.org | A | 18.190.69.205 |
+| api.campcardapp.org | A | 18.190.69.205 |
+| admin.campcardapp.org | A | 18.190.69.205 |
+
+### SSL Certificates (Let's Encrypt)
+- Certificate for `campcardapp.org`, `www.campcardapp.org`, `admin.campcardapp.org`
+- Separate certificate for `api.campcardapp.org`
+- Auto-renewal configured via Certbot
 
 ### Docker Containers on EC2
 | Container | Image | Ports | Network |
@@ -200,14 +222,22 @@ Closes #123
 | campcard-kafka | confluentinc/cp-kafka:7.5.0 | 9092 | campcard_campcard-network |
 | campcard-zookeeper | confluentinc/cp-zookeeper:7.5.0 | 2181 | campcard_campcard-network |
 
+### Nginx Configuration
+
+The Nginx configuration (`/etc/nginx/sites-available/campcardapp`) routes traffic:
+- `www.campcardapp.org` → Static files at `/var/www/campcard`
+- `api.campcardapp.org` → Backend at port 7010
+- `admin.campcardapp.org` → Web portal at port 7020 (with `/api/v1/` proxied to backend)
+- `campcardapp.org` → Redirects to `www.campcardapp.org`
+
 ### Deployment Commands
 
 ```bash
 # SSH to EC2
-ssh -i ~/.ssh/campcard-ec2 ubuntu@18.190.69.205
+ssh -i ~/.ssh/campcard-github-actions ubuntu@18.190.69.205
 
 # Backend deployment
-cd /home/ec2-user/camp-card/backend
+cd /home/ubuntu/camp-card/backend
 sudo git pull origin main
 sudo docker build -t campcard-backend:latest .
 sudo docker stop campcard-backend && sudo docker rm campcard-backend
@@ -226,22 +256,22 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e SMTP_PORT=587 \
   -e SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX \
   -e SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV \
-  -e CAMPCARD_BASE_URL=https://bsa.swipesavvy.com \
-  -e CAMPCARD_WEB_PORTAL_URL=https://bsa.swipesavvy.com \
+  -e CAMPCARD_BASE_URL=https://api.campcardapp.org \
+  -e CAMPCARD_WEB_PORTAL_URL=https://admin.campcardapp.org \
   -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
   -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
   -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
   --network campcard_campcard-network campcard-backend:latest
 
 # Frontend deployment
-cd /home/ec2-user/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
+cd /home/ubuntu/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
 sudo git pull origin main
-sudo docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://bsa.swipesavvy.com/api/v1 -t campcard-web:latest .
+sudo docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1 -t campcard-web:latest .
 sudo docker stop campcard-web && sudo docker rm campcard-web
 sudo docker run -d --name campcard-web --restart unless-stopped -p 7020:7020 \
-  -e NEXTAUTH_URL=https://bsa.swipesavvy.com \
-  -e NEXTAUTH_SECRET='<nextauth-secret>' \
-  -e NEXT_PUBLIC_API_URL=https://bsa.swipesavvy.com/api/v1 \
+  -e NEXTAUTH_URL=https://admin.campcardapp.org \
+  -e NEXTAUTH_SECRET='bsa-campcard-nextauth-secret-key-2025-very-long' \
+  -e NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1 \
   --network campcard_campcard-network campcard-web:latest
 
 # Check container status
@@ -333,8 +363,8 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e SMTP_PORT=587 \
   -e SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX \
   -e SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV \
-  -e CAMPCARD_BASE_URL=https://bsa.swipesavvy.com \
-  -e CAMPCARD_WEB_PORTAL_URL=https://bsa.swipesavvy.com \
+  -e CAMPCARD_BASE_URL=https://api.campcardapp.org \
+  -e CAMPCARD_WEB_PORTAL_URL=https://admin.campcardapp.org \
   -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
   -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
   -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
@@ -413,8 +443,8 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
    ```
 
 3. **Verified domain and sender**:
-   - Domain: `bsa.swipesavvy.com` (verified in SES)
-   - Sender: `no-reply@bsa.swipesavvy.com` (verified)
+   - Domain: `campcardapp.org` (verified in SES with DKIM)
+   - Sender: `no-reply@campcardapp.org` (verified)
 
 **Test Results**:
 - Backend health check: Mail service UP ✓
@@ -424,6 +454,28 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
 **Files Modified**:
 - `.env.aws` - Added SMTP configuration
 - Backend container command updated with SMTP environment variables
+
+### Domain Migration to campcardapp.org (January 2026)
+
+**Migrated from**: `bsa.swipesavvy.com` → **To**: `campcardapp.org`
+
+**New Domain Structure**:
+| URL | Service |
+|-----|---------|
+| https://www.campcardapp.org | Static marketing website |
+| https://api.campcardapp.org | Backend REST API |
+| https://admin.campcardapp.org | Admin portal (Next.js) |
+
+**Configuration Changes**:
+1. **Route 53**: Created hosted zone for `campcardapp.org` with A records for all subdomains
+2. **Nginx**: Updated `/etc/nginx/sites-available/campcardapp` with routing for all subdomains
+3. **SSL**: Let's Encrypt certificates for all domains via Certbot
+4. **AWS SES**: Domain verified with DKIM for email sending from `campcardapp.org`
+
+**Files Updated**:
+- `mobile/src/config/constants.ts`: `API_BASE_URL` → `https://api.campcardapp.org`
+- `.env.aws`: Updated `PUBLIC_API_URL`, `CAMPCARD_BASE_URL`, `CAMPCARD_WEB_PORTAL_URL`
+- Docker containers rebuilt with new environment variables
 
 ### Expo Go Mobile Testing
 

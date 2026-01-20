@@ -1,10 +1,10 @@
 import Constants from 'expo-constants';
 
 // API Configuration
-// Production API at campcardapp.org
+// Production API at api.campcardapp.org
 // Falls back to EC2 IP for development
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || 'https://campcardapp.org';
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.campcardapp.org';
 
 // Authorize.net Configuration
 export const AUTHORIZENET_PUBLIC_CLIENT_KEY =
