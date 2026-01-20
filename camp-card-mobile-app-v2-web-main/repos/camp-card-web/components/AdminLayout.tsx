@@ -27,24 +27,45 @@ import {
   X,
 } from '@/components/Icons';
 
-const menuItems = [
+// Define which roles can access each menu item
+// If not specified, all roles can access the item
+type MenuItemConfig = {
+  name: string;
+  href: string;
+  Icon: any;
+  allowedRoles?: string[];
+};
+
+const allMenuItems: MenuItemConfig[] = [
   { name: 'Dashboard', href: '/dashboard', Icon: Dashboard },
-  { name: 'Users', href: '/users', Icon: Users },
-  { name: 'Bulk Create Users', href: '/bulk-users', Icon: Users },
-  { name: 'Organizations', href: '/organizations', Icon: Building },
+  { name: 'Users', href: '/users', Icon: Users, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Bulk Create Users', href: '/bulk-users', Icon: Users, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Organizations', href: '/organizations', Icon: Building, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
   { name: 'Scouts', href: '/scouts', Icon: Award },
   { name: 'Referrals', href: '/referrals', Icon: Share2 },
-  { name: 'Merchants', href: '/merchants', Icon: ShoppingBag },
-  { name: 'Offers', href: '/offers', Icon: Tag },
-  { name: 'Camp Cards', href: '/camp-cards', Icon: Ticket },
-  { name: 'Redemptions', href: '/redemptions', Icon: CheckCircle },
-  { name: 'Subscriptions', href: '/subscriptions', Icon: CreditCard },
-  { name: 'Geofences', href: '/geofences', Icon: MapPin },
-  { name: 'Notifications', href: '/notifications', Icon: Bell },
-  { name: 'Health', href: '/health', Icon: Activity },
-  { name: 'Feature Config', href: '/config', Icon: Settings },
+  { name: 'Merchants', href: '/merchants', Icon: ShoppingBag, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Offers', href: '/offers', Icon: Tag, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Camp Cards', href: '/camp-cards', Icon: Ticket, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Redemptions', href: '/redemptions', Icon: CheckCircle, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Subscriptions', href: '/subscriptions', Icon: CreditCard, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Geofences', href: '/geofences', Icon: MapPin, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Notifications', href: '/notifications', Icon: Bell, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'] },
+  { name: 'Health', href: '/health', Icon: Activity, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'] },
+  { name: 'Feature Config', href: '/config', Icon: Settings, allowedRoles: ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'] },
   { name: 'Settings', href: '/settings', Icon: Settings },
 ];
+
+// Helper function to filter menu items based on user role
+function getMenuItemsForRole(role: string | undefined): MenuItemConfig[] {
+  if (!role) return allMenuItems;
+
+  return allMenuItems.filter(item => {
+    // If no allowedRoles specified, all roles can access
+    if (!item.allowedRoles) return true;
+    // Otherwise, check if user's role is in the allowed list
+    return item.allowedRoles.includes(role);
+  });
+}
 
 function MenuItem({ item, isActive, sidebarExpanded }: any) {
   const [isHovered, setIsHovered] = useState(false);
@@ -91,6 +112,10 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const sidebarWidth = sidebarExpanded ? '260px' : '80px';
+
+  // Get menu items filtered by user role
+  const userRole = (session?.user as any)?.role;
+  const menuItems = getMenuItemsForRole(userRole);
 
   return (
     <div

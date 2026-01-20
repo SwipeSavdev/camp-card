@@ -7,6 +7,25 @@ const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/verify-
 // Roles that are NOT allowed to access the admin portal
 const blockedRoles = ['SCOUT', 'PARENT'];
 
+// Routes restricted by role - only these roles can access
+const routeRestrictions: Record<string, string[]> = {
+  '/councils': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/organizations': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/users': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/bulk-users': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/merchants': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/offers': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/camp-cards': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/subscriptions': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/health': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'],
+  '/config': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'],
+  '/feature-flags': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'],
+  '/devices': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/ai-marketing': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/notifications': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+  '/redemptions': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
+};
+
 /**
  * Add cache control headers to prevent browser caching of dynamic content
  */
@@ -62,6 +81,18 @@ export async function middleware(request: NextRequest) {
     url.searchParams.set('message', 'This account cannot access the admin portal. Please use the mobile app.');
     const response = NextResponse.redirect(url);
     return addNoCacheHeaders(response);
+  }
+
+  // Check route-based restrictions for specific roles (e.g., UNIT_LEADER)
+  for (const [restrictedPath, allowedRoles] of Object.entries(routeRestrictions)) {
+    if (pathname.startsWith(restrictedPath) && !allowedRoles.includes(userRole)) {
+      // Redirect to dashboard with access denied message
+      const url = new URL('/dashboard', request.url);
+      url.searchParams.set('error', 'AccessDenied');
+      url.searchParams.set('message', 'You do not have permission to access this page.');
+      const response = NextResponse.redirect(url);
+      return addNoCacheHeaders(response);
+    }
   }
 
   const response = NextResponse.next();
