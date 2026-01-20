@@ -49,6 +49,22 @@ android/fastlane/test_output
 .env
 .env.local
 .env.*.local
+.env.production
+
+# Firebase config files (contain API keys)
+google-services.json
+GoogleService-Info.plist
+
+# App Store credentials (NEVER commit these)
+google-service-account.json
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+AuthKey_*.p8
+
+# EAS local credentials
+.easignore
 
 # Testing
 coverage/

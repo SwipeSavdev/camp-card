@@ -1,0 +1,100 @@
+{
+  "app": {
+    "name": "Camp Card",
+    "subtitle": "Scout Fundraising Discounts",
+    "bundleId": "org.bsa.campcard",
+    "packageName": "org.bsa.campcard"
+  },
+  "ios": {
+    "primaryCategory": "LIFESTYLE",
+    "secondaryCategory": "SHOPPING",
+    "ageRating": "4+",
+    "price": "Free",
+    "sku": "campcard-ios"
+  },
+  "android": {
+    "category": "LIFESTYLE",
+    "contentRating": "Everyone",
+    "price": "Free"
+  },
+  "description": {
+    "short": "BSA Scout fundraising app - exclusive merchant discounts & offers",
+    "full": "Camp Card is the official BSA (Boy Scouts of America) digital discount subscription app that makes fundraising easier and more rewarding for Scouts, families, and communities.\n\nFEATURES:\n• Browse exclusive merchant offers and discounts\n• Scan QR codes for instant offer redemptions\n• Track your fundraising progress\n• Support your local Scout troop with every purchase\n• Find participating merchants near you\n• Manage your subscription and account\n\nFOR SCOUTS & FAMILIES:\nAccess hundreds of local and national discounts from participating merchants. Every redemption supports Scout programs and activities.\n\nFOR TROOP LEADERS:\nTrack your troop's fundraising progress, manage Scout accounts, and see redemption analytics all in one place.\n\nFOR MERCHANTS:\nPartner with Camp Card to reach engaged Scout families and support youth development in your community.\n\nDownload Camp Card today and start saving while supporting Scouts!"
+  },
+  "keywords": "scouts,bsa,fundraising,discounts,coupons,camping,youth,family,savings,merchant",
+  "urls": {
+    "support": "https://campcardapp.org/support",
+    "privacy": "https://campcardapp.org/privacy",
+    "marketing": "https://campcardapp.org",
+    "termsOfService": "https://campcardapp.org/terms"
+  },
+  "contact": {
+    "email": "support@campcardapp.org",
+    "phone": "",
+    "firstName": "Camp Card",
+    "lastName": "Support"
+  },
+  "screenshots": {
+    "ios": {
+      "iphone65": {
+        "required": true,
+        "size": "1284x2778",
+        "count": 10,
+        "suggestedScreens": [
+          "Login/Welcome screen",
+          "Home dashboard with offers",
+          "Offer detail with redemption button",
+          "QR code scanner",
+          "Merchant map view",
+          "Profile and subscription",
+          "Troop leader dashboard",
+          "Scout management screen",
+          "Redemption success screen",
+          "Settings screen"
+        ]
+      },
+      "iphone55": {
+        "required": true,
+        "size": "1242x2208",
+        "count": 10,
+        "note": "Same screens as 6.5 inch"
+      },
+      "ipad129": {
+        "required": false,
+        "size": "2048x2732",
+        "count": 5
+      }
+    },
+    "android": {
+      "phone": {
+        "required": true,
+        "size": "1080x1920 or 1440x2560",
+        "count": 8,
+        "note": "Same screens as iOS"
+      },
+      "tablet7": {
+        "required": true,
+        "size": "1024x600",
+        "count": 1
+      },
+      "tablet10": {
+        "required": true,
+        "size": "1280x800",
+        "count": 1
+      },
+      "featureGraphic": {
+        "required": true,
+        "size": "1024x500",
+        "description": "Featured banner for Play Store listing"
+      }
+    }
+  },
+  "releaseNotes": {
+    "version": "1.0.0",
+    "notes": "Initial release of Camp Card!\n\n• Browse and redeem exclusive merchant offers\n• Support Scout fundraising with every purchase\n• Find participating merchants near you\n• Track your redemptions and savings\n• Secure login with biometric authentication"
+  },
+  "reviewInformation": {
+    "notes": "Test account credentials:\nEmail: test@campcard.org\nPassword: Password123\n\nThe app requires an active subscription to access merchant offers. The test account has an active subscription for review purposes.",
+    "demoAccountRequired": true
+  }
+}
