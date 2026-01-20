@@ -83,7 +83,17 @@ public class SecurityConfig {
             "https://api.campcardapp.org"        // API (prod)
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "Origin",
+            "X-Requested-With",
+            "X-User-Id",
+            "X-Council-Id",
+            "Cache-Control",
+            "Pragma"
+        ));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Total-Count"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
