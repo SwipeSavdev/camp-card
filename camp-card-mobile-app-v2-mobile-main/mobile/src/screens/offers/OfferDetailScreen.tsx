@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiClient } from '../../utils/api';
 import { COLORS } from '../../config/constants';
+import { useAuthStore } from '../../store/authStore';
 
 interface Offer {
   id: number;
@@ -60,6 +61,7 @@ export default function OfferDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { offerId } = route.params as { offerId: number };
+  const { user } = useAuthStore();
 
   useEffect(() => {
     loadOffer();
@@ -163,6 +165,7 @@ export default function OfferDetailScreen() {
       // Call redemption API - POST /api/v1/offers/redeem
       const response = await apiClient.post('/api/v1/offers/redeem', {
         offerId: offer.id,
+        userId: user?.id,
         merchantLocationId: offer.merchantId || null,
         purchaseAmount: null,
         redemptionMethod: selectedMethod, // Track which method was used
