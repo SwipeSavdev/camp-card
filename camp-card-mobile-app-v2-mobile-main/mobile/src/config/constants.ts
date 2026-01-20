@@ -1,10 +1,10 @@
 import Constants from 'expo-constants';
 
 // API Configuration
-// Default port 7010 matches the backend Spring Boot server
-// AWS EC2 backend for production
+// Production API at campcardapp.org
+// Falls back to EC2 IP for development
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://18.190.69.205:7010';
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'https://campcardapp.org';
 
 // Authorize.net Configuration
 export const AUTHORIZENET_PUBLIC_CLIENT_KEY =
