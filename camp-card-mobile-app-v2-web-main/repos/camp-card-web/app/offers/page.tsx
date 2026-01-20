@@ -174,10 +174,15 @@ export default function OffersPage() {
   };
 
   useEffect(() => {
-    // Load data on mount, don't redirect if unauthenticated
-    fetchMerchants();
-    fetchData();
-  }, []);
+    // Wait for session to be authenticated before fetching data
+    if (status === 'authenticated' && session) {
+      fetchMerchants();
+      fetchData();
+    } else if (status === 'unauthenticated') {
+      // If not authenticated, still set loading to false to show proper message
+      setLoading(false);
+    }
+  }, [status, session]);
 
   const fetchMerchants = async () => {
     try {
