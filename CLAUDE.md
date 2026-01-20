@@ -561,3 +561,76 @@ The `subscriptionStatus` field must be returned by the backend `/api/v1/auth/log
 - **Parent**: Create via web portal with role `PARENT`
 
 Use the web admin portal (`/users` page) to create test users with specific roles.
+
+### Mobile App Store Deployment (January 2026)
+
+The mobile app is configured for deployment to iOS App Store and Google Play Store using Expo Application Services (EAS).
+
+#### App Identifiers
+- **iOS Bundle ID**: `org.bsa.campcard`
+- **Android Package**: `org.bsa.campcard`
+- **App Name**: Camp Card
+
+#### Build Profiles (eas.json)
+
+| Profile | Purpose | iOS Output | Android Output |
+|---------|---------|------------|----------------|
+| development | Testing with simulators | Simulator build | APK |
+| preview | Internal testing (TestFlight/Internal) | IPA | APK |
+| production | App Store/Play Store submission | IPA | AAB |
+
+#### Build Commands
+
+```bash
+cd camp-card-mobile-app-v2-mobile-main/mobile
+
+# Development builds
+npm run eas:build:dev
+
+# Production builds for both platforms
+npm run eas:build:prod
+
+# iOS only
+npm run eas:build:ios
+
+# Android only
+npm run eas:build:android
+
+# Submit to stores
+npm run eas:submit:ios      # App Store
+npm run eas:submit:android  # Play Store
+npm run eas:submit:all      # Both stores
+```
+
+#### Required Setup Before First Build
+
+1. **EAS Login**: `eas login`
+2. **Initialize Project**: `eas init` (updates app.json with projectId)
+3. **Firebase Config Files**:
+   - `GoogleService-Info.plist` (iOS) - from Firebase Console
+   - `google-services.json` (Android) - from Firebase Console
+4. **App Store Listings**:
+   - Apple App Store Connect: Create app with bundle ID `org.bsa.campcard`
+   - Google Play Console: Create app with package name `org.bsa.campcard`
+
+#### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `app.json` | Expo app configuration (icons, permissions, deep linking) |
+| `eas.json` | EAS Build profiles and submit configuration |
+| `APP_STORE_DEPLOYMENT.md` | Detailed deployment guide |
+| `store-assets/app-store-metadata.json` | App store listing metadata |
+
+#### Secrets Required (not in git)
+
+- `google-services.json` - Android Firebase config
+- `GoogleService-Info.plist` - iOS Firebase config
+- `google-service-account.json` - Google Play upload credentials
+
+#### Deep Linking
+
+The app is configured for deep linking with the following URLs:
+- `campcard://` - Custom URL scheme
+- `https://campcardapp.org/app/*` - Universal links (iOS)
+- `https://www.campcardapp.org/app/*` - App links (Android)
