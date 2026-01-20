@@ -29,16 +29,25 @@ public class OfferService {
     private final OfferRedemptionRepository redemptionRepository;
     private final MerchantRepository merchantRepository;
     private final OfferScanAttemptRepository scanAttemptRepository;
+    private final OfferImageRepository offerImageRepository;
 
     /**
-     * Helper method to enrich an offer with merchant data
+     * Helper method to enrich an offer with merchant data and image from separate table
      */
     private OfferResponse enrichWithMerchant(Offer offer, Map<Long, Merchant> merchantCache) {
         Merchant merchant = merchantCache.get(offer.getMerchantId());
+        OfferResponse response;
         if (merchant != null) {
-            return OfferResponse.fromEntity(offer, merchant.getBusinessName(), merchant.getLogoUrl());
+            response = OfferResponse.fromEntity(offer, merchant.getBusinessName(), merchant.getLogoUrl());
+        } else {
+            response = OfferResponse.fromEntity(offer);
         }
-        return OfferResponse.fromEntity(offer);
+        // If no imageUrl in offer, check separate images table
+        if (response.getImageUrl() == null) {
+            offerImageRepository.findByOfferId(offer.getId())
+                .ifPresent(img -> response.setImageUrl(img.getImageData()));
+        }
+        return response;
     }
 
     /**
@@ -49,7 +58,13 @@ public class OfferService {
         int userRedemptionCount = userRedemptionCache.getOrDefault(offer.getId(), 0);
         String businessName = merchant != null ? merchant.getBusinessName() : null;
         String logoUrl = merchant != null ? merchant.getLogoUrl() : null;
-        return OfferResponse.fromEntityWithUserData(offer, businessName, logoUrl, userRedemptionCount);
+        OfferResponse response = OfferResponse.fromEntityWithUserData(offer, businessName, logoUrl, userRedemptionCount);
+        // If no imageUrl in offer, check separate images table
+        if (response.getImageUrl() == null) {
+            offerImageRepository.findByOfferId(offer.getId())
+                .ifPresent(img -> response.setImageUrl(img.getImageData()));
+        }
+        return response;
     }
 
     /**
@@ -103,7 +118,12 @@ public class OfferService {
         offer.setMaxDiscountAmount(request.getMaxDiscountAmount());
         offer.setCategory(request.getCategory());
         offer.setTerms(request.getTerms());
-        offer.setImageUrl(request.getImageUrl());
+        // Handle image URL - if it's base64, store in separate table; if URL, store directly
+        String imageUrl = request.getImageUrl();
+        boolean isBase64 = imageUrl != null && imageUrl.startsWith("data:");
+        if (!isBase64) {
+            offer.setImageUrl(imageUrl);
+        }
         offer.setValidFrom(request.getValidFrom());
         offer.setValidUntil(request.getValidUntil());
         offer.setUsageLimit(request.getUsageLimit());
@@ -119,10 +139,24 @@ public class OfferService {
         
         Offer savedOffer = offerRepository.save(offer);
 
+        // If base64 image, store in separate table
+        if (isBase64) {
+            OfferImage offerImage = OfferImage.builder()
+                .offerId(savedOffer.getId())
+                .imageData(imageUrl)
+                .build();
+            offerImageRepository.save(offerImage);
+        }
+
         // Update merchant offer counts
         updateMerchantOfferCounts(merchant.getId());
 
-        return OfferResponse.fromEntity(savedOffer, merchant.getBusinessName(), merchant.getLogoUrl());
+        // Return response with image data if stored separately
+        OfferResponse response = OfferResponse.fromEntity(savedOffer, merchant.getBusinessName(), merchant.getLogoUrl());
+        if (isBase64) {
+            response.setImageUrl(imageUrl);
+        }
+        return response;
     }
     
     @Transactional
@@ -138,7 +172,12 @@ public class OfferService {
         if (request.getMaxDiscountAmount() != null) offer.setMaxDiscountAmount(request.getMaxDiscountAmount());
         if (request.getCategory() != null) offer.setCategory(request.getCategory());
         if (request.getTerms() != null) offer.setTerms(request.getTerms());
-        if (request.getImageUrl() != null) offer.setImageUrl(request.getImageUrl());
+        // Handle image URL - if base64, store in separate table; if URL, store directly
+        String imageUrl = request.getImageUrl();
+        boolean isBase64Image = imageUrl != null && imageUrl.startsWith("data:");
+        if (imageUrl != null && !isBase64Image) {
+            offer.setImageUrl(imageUrl);
+        }
         if (request.getValidFrom() != null) offer.setValidFrom(request.getValidFrom());
         if (request.getValidUntil() != null) offer.setValidUntil(request.getValidUntil());
         if (request.getUsageLimit() != null) offer.setUsageLimit(request.getUsageLimit());
@@ -149,21 +188,51 @@ public class OfferService {
         // if (request.getBarcode() != null) offer.setBarcode(request.getBarcode());
 
         Offer updatedOffer = offerRepository.save(offer);
-        Merchant merchant = merchantRepository.findById(updatedOffer.getMerchantId()).orElse(null);
-        if (merchant != null) {
-            return OfferResponse.fromEntity(updatedOffer, merchant.getBusinessName(), merchant.getLogoUrl());
+
+        // Handle base64 image storage in separate table
+        if (isBase64Image) {
+            // Delete existing image if any, then save new one
+            offerImageRepository.findByOfferId(offerId).ifPresent(offerImageRepository::delete);
+            OfferImage offerImage = OfferImage.builder()
+                .offerId(offerId)
+                .imageData(imageUrl)
+                .build();
+            offerImageRepository.save(offerImage);
         }
-        return OfferResponse.fromEntity(updatedOffer);
+
+        Merchant merchant = merchantRepository.findById(updatedOffer.getMerchantId()).orElse(null);
+        OfferResponse response;
+        if (merchant != null) {
+            response = OfferResponse.fromEntity(updatedOffer, merchant.getBusinessName(), merchant.getLogoUrl());
+        } else {
+            response = OfferResponse.fromEntity(updatedOffer);
+        }
+        // Include image from separate table if base64 was stored
+        if (isBase64Image) {
+            response.setImageUrl(imageUrl);
+        } else if (response.getImageUrl() == null) {
+            offerImageRepository.findByOfferId(offerId)
+                .ifPresent(img -> response.setImageUrl(img.getImageData()));
+        }
+        return response;
     }
-    
+
     public OfferResponse getOffer(Long offerId) {
         Offer offer = offerRepository.findById(offerId)
             .orElseThrow(() -> new IllegalArgumentException("Offer not found"));
         Merchant merchant = merchantRepository.findById(offer.getMerchantId()).orElse(null);
+        OfferResponse response;
         if (merchant != null) {
-            return OfferResponse.fromEntity(offer, merchant.getBusinessName(), merchant.getLogoUrl());
+            response = OfferResponse.fromEntity(offer, merchant.getBusinessName(), merchant.getLogoUrl());
+        } else {
+            response = OfferResponse.fromEntity(offer);
         }
-        return OfferResponse.fromEntity(offer);
+        // Check for image in separate table
+        if (response.getImageUrl() == null) {
+            offerImageRepository.findByOfferId(offerId)
+                .ifPresent(img -> response.setImageUrl(img.getImageData()));
+        }
+        return response;
     }
 
     public Page<OfferResponse> getActiveOffers(Pageable pageable) {

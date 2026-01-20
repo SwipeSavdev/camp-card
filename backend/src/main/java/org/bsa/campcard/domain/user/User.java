@@ -98,13 +98,7 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    // Abuse tracking fields
-    // NOTE: These fields are temporarily disabled until DBA adds columns to RDS
-    // Run the following SQL as postgres user:
-    //   ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS abuse_flag_count INTEGER DEFAULT 0;
-    //   ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS abuse_flagged_at TIMESTAMP;
-    //   ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS abuse_flag_reason TEXT;
-    // Then remove @Transient annotations below
+    // Abuse tracking fields - temporarily disabled until DBA adds columns to RDS
     @Transient
     @Builder.Default
     private Integer abuseFlagCount = 0;

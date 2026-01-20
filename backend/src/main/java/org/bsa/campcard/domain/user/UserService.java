@@ -23,6 +23,8 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class UserService {
 
+    private static final String USER_NOT_FOUND = "User not found: ";
+    
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -157,7 +159,7 @@ public class UserService {
         log.info("Updating user with ID: {}", id);
 
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+            .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND + id));
 
         if (user.isDeleted()) {
             throw new IllegalStateException("Cannot update deleted user: " + id);
@@ -195,7 +197,7 @@ public class UserService {
         log.info("Deleting user with ID: {}", id);
 
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+            .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND + id));
 
         userRepository.delete(user);
         log.info("Deleted user with ID: {}", id);
@@ -261,7 +263,7 @@ public class UserService {
         log.info("Assigning user {} to troop {}", userId, troopId);
 
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+            .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND + userId));
 
         if (user.isDeleted()) {
             throw new IllegalStateException("Cannot assign deleted user: " + userId);
@@ -283,7 +285,7 @@ public class UserService {
         log.info("Removing user {} from troop", userId);
 
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+            .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND + userId));
 
         if (user.isDeleted()) {
             throw new IllegalStateException("Cannot modify deleted user: " + userId);

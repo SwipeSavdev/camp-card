@@ -23,6 +23,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SubscriptionService {
 
+    private static final String PLAN_NOT_FOUND = "Subscription plan not found";
+    private static final String SUBSCRIPTION_NOT_FOUND = "No subscription found";
+    
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
