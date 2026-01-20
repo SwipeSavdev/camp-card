@@ -152,6 +152,8 @@ export default function OffersPage() {
   const [editMinSpend, setEditMinSpend] = useState('');
   const [editUseType, setEditUseType] = useState<'one-time' | 'reusable'>('reusable');
   const [editBarcode, setEditBarcode] = useState('');
+  const [editImage, setEditImage] = useState<string | null>(null);
+  const [editImageName, setEditImageName] = useState('');
 
   const discountTypes = ['$', '%', 'BOGO', 'Free Item', 'Points', 'Buy One Get', '$ off when $ spent', '% off when $ spent'];
   const usageTypes = ['one-time', 'reusable'];
@@ -353,6 +355,18 @@ export default function OffersPage() {
       reader.onloadend = () => {
         setNewImage(reader.result as string);
         setNewImageName(file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditImage(reader.result as string);
+        setEditImageName(file.name);
       };
       reader.readAsDataURL(file);
     }
@@ -628,6 +642,8 @@ export default function OffersPage() {
     setEditDiscountAmount(offer.discountAmount || '');
     setEditMinSpend(offer.minimumSpend || '');
     setEditUseType(offer.useType || 'reusable');
+    setEditImage(offer.image || null);
+    setEditImageName(offer.image ? 'Current image' : '');
     setEditBarcode(offer.barcode || '');
     setShowEditForm(true);
     setError(null);
@@ -654,6 +670,8 @@ export default function OffersPage() {
         validUntil: oneYearFromNow.toISOString(),
         // Set usageLimitPerUser to 1 for one-time offers, null for reusable
         usageLimitPerUser: editUseType === 'one-time' ? 1 : null,
+        // Include image if provided
+        imageUrl: editImage || undefined,
       };
 
       // Add minimum spend threshold for "X off when Y spent" discount types
@@ -682,12 +700,15 @@ export default function OffersPage() {
             discountAmount: editDiscountAmount,
             minimumSpend: editMinSpend || undefined,
             useType: editUseType,
+            image: editImage || undefined,
           }
           : item)),
       })));
 
       setShowEditForm(false);
       setEditingOffer(null);
+      setEditImage(null);
+      setEditImageName('');
       setError(null);
     } catch (err) {
       setError(`Failed to update offer: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -1972,6 +1993,69 @@ Upload Image / Barcode
               </p>
             </div>
             )}
+
+            {/* Image Upload for Edit */}
+            <div>
+              <label style={{
+                display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+              }}
+              >
+                Offer Image
+              </label>
+              <div style={{
+                border: `2px dashed ${themeColors.gray200}`, borderRadius: themeRadius.sm, padding: themeSpace.lg, textAlign: 'center', cursor: 'pointer', backgroundColor: themeColors.gray50, transition: 'border-color 0.2s',
+              }}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditImageUpload}
+                  style={{ display: 'none' }}
+                  id="editImageUpload"
+                />
+                <label htmlFor="editImageUpload" style={{ display: 'block', cursor: 'pointer' }}>
+                  <Icon name="upload" size={32} color={themeColors.primary600} />
+                  <div style={{
+                    fontSize: '14px', fontWeight: '500', color: themeColors.text, marginTop: themeSpace.sm,
+                  }}
+                  >
+                    {editImageName || 'Click to upload image'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: themeColors.gray600, marginTop: themeSpace.xs }}>
+                    PNG, JPG, GIF up to 10MB
+                  </div>
+                </label>
+              </div>
+              {editImage && (
+                <div style={{ marginTop: themeSpace.md, textAlign: 'center' }}>
+                  <img
+                    src={editImage}
+                    alt="Preview"
+                    style={{
+                      maxWidth: '150px', maxHeight: '150px', borderRadius: themeRadius.sm, border: `1px solid ${themeColors.gray200}`,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setEditImage(null); setEditImageName(''); }}
+                    style={{
+                      marginTop: themeSpace.sm,
+                      marginLeft: themeSpace.sm,
+                      background: 'none',
+                      border: `1px solid ${themeColors.error500}`,
+                      color: themeColors.error500,
+                      padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                      borderRadius: themeRadius.sm,
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Remove Image
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
@@ -1980,6 +2064,8 @@ Upload Image / Barcode
               onClick={() => {
                 setShowEditForm(false);
                 setEditingOffer(null);
+                setEditImage(null);
+                setEditImageName('');
                 setError(null);
               }}
               style={{
