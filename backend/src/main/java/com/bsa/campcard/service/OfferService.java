@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,11 +104,14 @@ public class OfferService {
             throw new IllegalStateException("Only approved merchants can create offers");
         }
         
-        // Validate dates
-        if (request.getValidUntil().isBefore(request.getValidFrom())) {
-            throw new IllegalArgumentException("Valid until date must be after valid from date");
+        // Calculate expiration date - all offers expire on December 31st of current year
+        LocalDateTime expirationDate = calculateExpirationDate();
+
+        // Validate that validFrom is before the expiration date
+        if (request.getValidFrom().isAfter(expirationDate)) {
+            throw new IllegalArgumentException("Valid from date must be before December 31st of the current year");
         }
-        
+
         Offer offer = new Offer();
         offer.setMerchantId(request.getMerchantId());
         offer.setTitle(request.getTitle());
@@ -125,7 +129,8 @@ public class OfferService {
             offer.setImageUrl(imageUrl);
         }
         offer.setValidFrom(request.getValidFrom());
-        offer.setValidUntil(request.getValidUntil());
+        // All offers expire on December 31st of the current year
+        offer.setValidUntil(expirationDate);
         offer.setUsageLimit(request.getUsageLimit());
         offer.setUsageLimitPerUser(request.getUsageLimitPerUser());
         offer.setFeatured(request.getFeatured() != null ? request.getFeatured() : false);
@@ -179,7 +184,8 @@ public class OfferService {
             offer.setImageUrl(imageUrl);
         }
         if (request.getValidFrom() != null) offer.setValidFrom(request.getValidFrom());
-        if (request.getValidUntil() != null) offer.setValidUntil(request.getValidUntil());
+        // Always set expiration to December 31st of current year (ignore any provided validUntil)
+        offer.setValidUntil(calculateExpirationDate());
         if (request.getUsageLimit() != null) offer.setUsageLimit(request.getUsageLimit());
         if (request.getUsageLimitPerUser() != null) offer.setUsageLimitPerUser(request.getUsageLimitPerUser());
         if (request.getFeatured() != null) offer.setFeatured(request.getFeatured());
@@ -453,5 +459,14 @@ public class OfferService {
     
     private String generateVerificationCode() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+    }
+
+    /**
+     * Calculate the expiration date as December 31st at 23:59:59 of the current year.
+     * All offers expire on December 31st of each year.
+     */
+    private LocalDateTime calculateExpirationDate() {
+        int currentYear = LocalDateTime.now().getYear();
+        return LocalDateTime.of(currentYear, Month.DECEMBER, 31, 23, 59, 59);
     }
 }
