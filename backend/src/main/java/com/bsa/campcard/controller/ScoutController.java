@@ -1,25 +1,32 @@
 package com.bsa.campcard.controller;
 
 import com.bsa.campcard.dto.*;
+import com.bsa.campcard.entity.Troop;
+import com.bsa.campcard.repository.TroopRepository;
 import com.bsa.campcard.service.ScoutService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.bsa.campcard.domain.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/scouts")
 @RequiredArgsConstructor
 public class ScoutController {
-    
+
     private final ScoutService scoutService;
+    private final TroopRepository troopRepository;
     
     @PostMapping
     public ResponseEntity<ScoutResponse> createScout(@RequestBody CreateScoutRequest request) {
@@ -71,30 +78,56 @@ public class ScoutController {
     
     @GetMapping("/search")
     public ResponseEntity<Page<ScoutResponse>> searchScouts(
+            Authentication authentication,
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("lastName"));
+
+        // RBAC: Unit Leaders can only search scouts in their own troop
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            if (user.getRole() == User.UserRole.UNIT_LEADER && user.getTroopId() != null) {
+                log.info("Unit Leader user {} - filtering scouts search to troop {}", user.getEmail(), user.getTroopId());
+                // Get the Troop's Long id from its UUID
+                Troop troop = troopRepository.findByUuid(user.getTroopId())
+                    .orElseThrow(() -> new IllegalArgumentException("Troop not found for Unit Leader"));
+                Page<ScoutResponse> scouts = scoutService.searchScoutsInTroop(query, troop.getId(), pageable);
+                return ResponseEntity.ok(scouts);
+            }
+        }
+
         Page<ScoutResponse> scouts = scoutService.searchScouts(query, pageable);
         return ResponseEntity.ok(scouts);
     }
     
     @GetMapping("/top-sellers")
     public ResponseEntity<Page<ScoutResponse>> getTopSellers(
+            Authentication authentication,
             @RequestParam(required = false) Long troopId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size);
-        
+
+        // RBAC: Unit Leaders can only see top sellers in their own troop
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            if (user.getRole() == User.UserRole.UNIT_LEADER && user.getTroopId() != null) {
+                log.info("Unit Leader user {} - filtering top sellers to troop {}", user.getEmail(), user.getTroopId());
+                Troop troop = troopRepository.findByUuid(user.getTroopId())
+                    .orElseThrow(() -> new IllegalArgumentException("Troop not found for Unit Leader"));
+                Page<ScoutResponse> scouts = scoutService.getTopSellersByTroop(troop.getId(), pageable);
+                return ResponseEntity.ok(scouts);
+            }
+        }
+
         Page<ScoutResponse> scouts;
         if (troopId != null) {
             scouts = scoutService.getTopSellersByTroop(troopId, pageable);
         } else {
             scouts = scoutService.getTopSellers(pageable);
         }
-        
+
         return ResponseEntity.ok(scouts);
     }
     

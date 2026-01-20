@@ -3,14 +3,21 @@ package com.bsa.campcard.controller;
 import com.bsa.campcard.dto.*;
 import com.bsa.campcard.service.TroopService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.bsa.campcard.domain.user.User;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/troops")
 @RequiredArgsConstructor
@@ -48,6 +55,7 @@ public class TroopController {
     
     @GetMapping
     public ResponseEntity<Page<TroopResponse>> getTroops(
+            Authentication authentication,
             @RequestParam(required = false) Long councilId,
             @RequestParam(required = false) String search,
             @RequestParam(required = false, defaultValue = "false") boolean topPerformers,
@@ -55,12 +63,26 @@ public class TroopController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "troopNumber") String sortBy,
             @RequestParam(defaultValue = "ASC") String sortDir) {
-        
+
+        // RBAC: Unit Leaders can only see their own troop
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            if (user.getRole() == User.UserRole.UNIT_LEADER && user.getTroopId() != null) {
+                log.info("Unit Leader user {} - filtering to troop {}", user.getEmail(), user.getTroopId());
+                TroopResponse troop = troopService.getTroopByUuid(user.getTroopId());
+                Page<TroopResponse> singleTroopPage = new PageImpl<>(
+                    Collections.singletonList(troop),
+                    PageRequest.of(0, 1),
+                    1
+                );
+                return ResponseEntity.ok(singleTroopPage);
+            }
+        }
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        
+
         Page<TroopResponse> troops;
-        
+
         if (search != null && !search.trim().isEmpty()) {
             troops = troopService.searchTroops(search, pageable);
         } else if (topPerformers) {
@@ -74,7 +96,7 @@ public class TroopController {
         } else {
             troops = troopService.getAllTroops(pageable);
         }
-        
+
         return ResponseEntity.ok(troops);
     }
     

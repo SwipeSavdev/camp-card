@@ -34,19 +34,26 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "Get all users", description = "Retrieve paginated list of users. National Admins see all users, Council Admins see only users in their council.")
+    @Operation(summary = "Get all users", description = "Retrieve paginated list of users. National Admins see all users, Council Admins see users in their council, Unit Leaders see users in their troop.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
         @ApiResponse(responseCode = "403", description = "Access denied", content = @Content)
     })
     @GetMapping
-    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> getAllUsers(
         Authentication authentication,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        // RBAC: Council Admins can only see users in their council
+        // RBAC: Filter based on user role
         if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            // UNIT_LEADER: Can only see users in their troop
+            if (user.getRole() == User.UserRole.UNIT_LEADER && user.getTroopId() != null) {
+                Page<User> users = userService.getUsersByTroop(user.getTroopId(), pageable);
+                Page<UserResponse> response = users.map(this::toResponse);
+                return ResponseEntity.ok(response);
+            }
+            // COUNCIL_ADMIN: Can only see users in their council
             if (user.getRole() == User.UserRole.COUNCIL_ADMIN && user.getCouncilId() != null) {
                 Page<User> users = userService.getUsersByCouncil(user.getCouncilId(), pageable);
                 Page<UserResponse> response = users.map(this::toResponse);
@@ -59,16 +66,23 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Search users", description = "Search users by name or email. Council Admins only see users in their council.")
+    @Operation(summary = "Search users", description = "Search users by name or email. Council Admins only see users in their council, Unit Leaders only see users in their troop.")
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<Page<UserResponse>> searchUsers(
         Authentication authentication,
         @Parameter(description = "Search term") @RequestParam String q,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        // RBAC: Council Admins can only search users in their council
+        // RBAC: Filter based on user role
         if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            // UNIT_LEADER: Can only search users in their troop
+            if (user.getRole() == User.UserRole.UNIT_LEADER && user.getTroopId() != null) {
+                Page<User> users = userService.searchUsersInTroop(q, user.getTroopId(), pageable);
+                Page<UserResponse> response = users.map(this::toResponse);
+                return ResponseEntity.ok(response);
+            }
+            // COUNCIL_ADMIN: Can only search users in their council
             if (user.getRole() == User.UserRole.COUNCIL_ADMIN && user.getCouncilId() != null) {
                 Page<User> users = userService.searchUsersInCouncil(q, user.getCouncilId(), pageable);
                 Page<UserResponse> response = users.map(this::toResponse);

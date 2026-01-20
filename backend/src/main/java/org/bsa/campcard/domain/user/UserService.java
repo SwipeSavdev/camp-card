@@ -75,6 +75,13 @@ public class UserService {
     }
 
     /**
+     * Search users by name or email within a specific troop
+     */
+    public Page<User> searchUsersInTroop(String searchTerm, UUID troopId, Pageable pageable) {
+        return userRepository.searchUsersInTroop(searchTerm, troopId, pageable);
+    }
+
+    /**
      * Get users by council
      */
     public Page<User> getUsersByCouncil(UUID councilId, Pageable pageable) {

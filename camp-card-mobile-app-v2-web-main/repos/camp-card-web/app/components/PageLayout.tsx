@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, ReactNode } from 'react';
 import { useIsMobile } from '@/lib/hooks';
@@ -233,7 +233,7 @@ export default function PageLayout({ children, title, currentPath }: PageLayoutP
             );
           })}
           <div
-            onClick={() => router.push('/login')}
+            onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
             style={{
               padding: themeSpace.md,
               display: 'flex',

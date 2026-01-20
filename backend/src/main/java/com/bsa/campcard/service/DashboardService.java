@@ -33,7 +33,15 @@ public class DashboardService {
     private final ReferralRepository referralRepository;
 
     public DashboardResponse getDashboardData() {
-        log.info("Fetching dashboard data");
+        return getDashboardData(null);
+    }
+
+    /**
+     * Get dashboard data filtered by troop ID (for Unit Leaders)
+     * @param troopId Optional troop ID to filter data - if null, returns all data
+     */
+    public DashboardResponse getDashboardData(Long troopId) {
+        log.info("Fetching dashboard data" + (troopId != null ? " for troop " + troopId : ""));
 
         // Get summary metrics
         long totalTroops = troopRepository.count();

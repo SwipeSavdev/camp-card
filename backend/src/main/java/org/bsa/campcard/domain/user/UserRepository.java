@@ -111,6 +111,21 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     );
 
     /**
+     * Search users by name or email within a specific troop (for unit leader search)
+     */
+    @Query("SELECT u FROM User u WHERE " +
+        "u.troopId = :troopId AND " +
+        "(LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+        "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+        "LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
+        "u.deletedAt IS NULL")
+    Page<User> searchUsersInTroop(
+        @Param("searchTerm") String searchTerm,
+        @Param("troopId") UUID troopId,
+        Pageable pageable
+    );
+
+    /**
      * Find user by referral code
      */
     Optional<User> findByReferralCode(String referralCode);

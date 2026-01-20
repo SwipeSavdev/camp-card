@@ -39,6 +39,12 @@ public interface ScoutRepository extends JpaRepository<Scout, Long> {
            "OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(s.bsaMemberId) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Scout> searchScouts(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT s FROM Scout s WHERE s.troopId = :troopId AND " +
+           "(LOWER(s.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.bsaMemberId) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Scout> searchScoutsInTroop(@Param("search") String search, @Param("troopId") Long troopId, Pageable pageable);
     
     @Query("SELECT s FROM Scout s WHERE s.troopId = :troopId " +
            "ORDER BY s.totalSales DESC")

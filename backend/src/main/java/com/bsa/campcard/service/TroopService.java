@@ -79,6 +79,12 @@ public class TroopService {
             .orElseThrow(() -> new IllegalArgumentException("Troop not found"));
         return TroopResponse.fromEntity(troop);
     }
+
+    public TroopResponse getTroopByUuid(java.util.UUID uuid) {
+        Troop troop = troopRepository.findByUuid(uuid)
+            .orElseThrow(() -> new IllegalArgumentException("Troop not found"));
+        return TroopResponse.fromEntity(troop);
+    }
     
     public Page<TroopResponse> getAllTroops(Pageable pageable) {
         return troopRepository.findAll(pageable)

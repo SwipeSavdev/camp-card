@@ -113,6 +113,11 @@ public class ScoutService {
         return scoutRepository.searchScouts(search, pageable)
             .map(ScoutResponse::fromEntity);
     }
+
+    public Page<ScoutResponse> searchScoutsInTroop(String search, Long troopId, Pageable pageable) {
+        return scoutRepository.searchScoutsInTroop(search, troopId, pageable)
+            .map(ScoutResponse::fromEntity);
+    }
     
     public Page<ScoutResponse> getTopSellers(Pageable pageable) {
         return scoutRepository.findTopSellersGlobal(pageable)

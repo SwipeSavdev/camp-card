@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -306,7 +306,7 @@ export default function Dashboard() {
             </div>
           ))}
           <div
-            onClick={() => router.push('/login')}
+            onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
             style={{
               padding: themeSpace.md,
               display: 'flex',

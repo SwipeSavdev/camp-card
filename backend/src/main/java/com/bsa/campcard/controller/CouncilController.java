@@ -68,8 +68,20 @@ public class CouncilController {
         log.info("GET /councils - search={}, status={}, region={}, page={}, size={}",
             search, status, region, page, size);
 
-        // RBAC: Council Admins can only see their own council
+        // RBAC: Council Admins and Unit Leaders can only see their own council
         if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            // UNIT_LEADER: Can only see their own council
+            if (user.getRole() == User.UserRole.UNIT_LEADER && user.getCouncilId() != null) {
+                log.info("Unit Leader user {} - filtering to council {}", user.getEmail(), user.getCouncilId());
+                CouncilResponse council = councilService.getCouncilByUuid(user.getCouncilId());
+                Page<CouncilResponse> singleCouncilPage = new PageImpl<>(
+                    Collections.singletonList(council),
+                    PageRequest.of(0, 1),
+                    1
+                );
+                return ResponseEntity.ok(singleCouncilPage);
+            }
+            // COUNCIL_ADMIN: Can only see their own council
             if (user.getRole() == User.UserRole.COUNCIL_ADMIN && user.getCouncilId() != null) {
                 log.info("Council Admin user {} - filtering to council {}", user.getEmail(), user.getCouncilId());
                 CouncilResponse council = councilService.getCouncilByUuid(user.getCouncilId());
