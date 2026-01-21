@@ -14,7 +14,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -61,7 +60,7 @@ public class PushNotificationService {
      * Notify user of successful email verification
      */
     @Async
-    public void sendEmailVerifiedNotification(UUID userId) {
+    public void sendEmailVerifiedNotification(Long userId) {
         sendPushNotification(
             userId,
             "Email Verified!",
@@ -78,7 +77,7 @@ public class PushNotificationService {
      * Notify user of password change
      */
     @Async
-    public void sendPasswordChangedNotification(UUID userId) {
+    public void sendPasswordChangedNotification(Long userId) {
         sendPushNotification(
             userId,
             "Password Changed",
@@ -95,7 +94,7 @@ public class PushNotificationService {
      * Notify user of new device login
      */
     @Async
-    public void sendNewDeviceLoginNotification(UUID userId, String deviceInfo) {
+    public void sendNewDeviceLoginNotification(Long userId, String deviceInfo) {
         sendPushNotification(
             userId,
             "New Login Detected",
@@ -113,7 +112,7 @@ public class PushNotificationService {
      * Notify user their account was locked
      */
     @Async
-    public void sendAccountLockedNotification(UUID userId) {
+    public void sendAccountLockedNotification(Long userId) {
         sendPushNotification(
             userId,
             "Account Temporarily Locked",
@@ -134,7 +133,7 @@ public class PushNotificationService {
      * Welcome notification for new users
      */
     @Async
-    public void sendWelcomeNotification(UUID userId, String firstName) {
+    public void sendWelcomeNotification(Long userId, String firstName) {
         sendPushNotification(
             userId,
             "Welcome to BSA Camp Card, " + firstName + "!",
@@ -151,7 +150,7 @@ public class PushNotificationService {
      * Welcome notification for new Scouts
      */
     @Async
-    public void sendScoutWelcomeNotification(UUID userId, String scoutName, String referralCode) {
+    public void sendScoutWelcomeNotification(Long userId, String scoutName, String referralCode) {
         sendPushNotification(
             userId,
             "Welcome, Scout " + scoutName + "!",
@@ -169,7 +168,7 @@ public class PushNotificationService {
      * Welcome notification for Troop Leaders
      */
     @Async
-    public void sendTroopLeaderWelcomeNotification(UUID userId, String firstName, String troopNumber) {
+    public void sendTroopLeaderWelcomeNotification(Long userId, String firstName, String troopNumber) {
         sendPushNotification(
             userId,
             "Welcome, Troop " + troopNumber + " Leader!",
@@ -187,7 +186,7 @@ public class PushNotificationService {
      * Onboarding reminder after 24 hours of inactivity
      */
     @Async
-    public void sendOnboardingReminderNotification(UUID userId, String firstName) {
+    public void sendOnboardingReminderNotification(Long userId, String firstName) {
         sendPushNotification(
             userId,
             "Don't Miss Out, " + firstName + "!",
@@ -208,7 +207,7 @@ public class PushNotificationService {
      * Notify Scout of new referral signup
      */
     @Async
-    public void sendReferralNotification(UUID userId, String customerName) {
+    public void sendReferralNotification(Long userId, String customerName) {
         sendPushNotification(
             userId,
             "New Referral! 🎉",
@@ -226,7 +225,7 @@ public class PushNotificationService {
      * Notify Scout of referral click (engagement tracking)
      */
     @Async
-    public void sendReferralClickNotification(UUID userId, int totalClicks) {
+    public void sendReferralClickNotification(Long userId, int totalClicks) {
         sendPushNotification(
             userId,
             "Someone Clicked Your Link!",
@@ -248,7 +247,7 @@ public class PushNotificationService {
      * Notify Scout of sales milestone achievement
      */
     @Async
-    public void sendMilestoneNotification(UUID userId, String scoutName, int salesCount, String milestoneName) {
+    public void sendMilestoneNotification(Long userId, String scoutName, int salesCount, String milestoneName) {
         sendPushNotification(
             userId,
             "Milestone Achieved! 🏆",
@@ -267,7 +266,7 @@ public class PushNotificationService {
      * Notify Scout they're close to next milestone
      */
     @Async
-    public void sendMilestoneProgressNotification(UUID userId, String milestoneName, int remaining) {
+    public void sendMilestoneProgressNotification(Long userId, String milestoneName, int remaining) {
         sendPushNotification(
             userId,
             "Almost There!",
@@ -286,7 +285,7 @@ public class PushNotificationService {
      * Weekly progress summary for Scouts
      */
     @Async
-    public void sendWeeklyProgressNotification(UUID userId, int weeklySales, int totalSales, int troopRank) {
+    public void sendWeeklyProgressNotification(Long userId, int weeklySales, int totalSales, int troopRank) {
         String rankSuffix = getRankSuffix(troopRank);
         sendPushNotification(
             userId,
@@ -311,7 +310,7 @@ public class PushNotificationService {
      * Confirm subscription activation
      */
     @Async
-    public void sendSubscriptionActiveNotification(UUID userId, String planName) {
+    public void sendSubscriptionActiveNotification(Long userId, String planName) {
         sendPushNotification(
             userId,
             "Subscription Active! ✅",
@@ -329,7 +328,7 @@ public class PushNotificationService {
      * Subscription expiring reminder
      */
     @Async
-    public void sendSubscriptionExpiringNotification(UUID userId, int daysRemaining) {
+    public void sendSubscriptionExpiringNotification(Long userId, int daysRemaining) {
         String urgency = daysRemaining <= 1 ? "⚠️ " : "";
         String timeText = daysRemaining == 1 ? "tomorrow" : "in " + daysRemaining + " days";
 
@@ -350,7 +349,7 @@ public class PushNotificationService {
      * Subscription expired notification
      */
     @Async
-    public void sendSubscriptionExpiredNotification(UUID userId) {
+    public void sendSubscriptionExpiredNotification(Long userId) {
         sendPushNotification(
             userId,
             "Subscription Expired",
@@ -367,7 +366,7 @@ public class PushNotificationService {
      * Subscription renewed confirmation
      */
     @Async
-    public void sendSubscriptionRenewedNotification(UUID userId, LocalDate expirationDate) {
+    public void sendSubscriptionRenewedNotification(Long userId, LocalDate expirationDate) {
         String dateStr = expirationDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy"));
         sendPushNotification(
             userId,
@@ -390,7 +389,7 @@ public class PushNotificationService {
      * Payment successful confirmation
      */
     @Async
-    public void sendPaymentSuccessNotification(UUID userId, BigDecimal amount) {
+    public void sendPaymentSuccessNotification(Long userId, BigDecimal amount) {
         String amountStr = String.format("$%.2f", amount);
         sendPushNotification(
             userId,
@@ -409,7 +408,7 @@ public class PushNotificationService {
      * Payment failed notification
      */
     @Async
-    public void sendPaymentFailedNotification(UUID userId) {
+    public void sendPaymentFailedNotification(Long userId) {
         sendPushNotification(
             userId,
             "Payment Failed",
@@ -430,7 +429,7 @@ public class PushNotificationService {
      * New offer available near user
      */
     @Async
-    public void sendNewOfferNotification(UUID userId, String merchantName, String offerTitle) {
+    public void sendNewOfferNotification(Long userId, String merchantName, String offerTitle) {
         sendPushNotification(
             userId,
             "New Offer Available! 🎁",
@@ -448,7 +447,7 @@ public class PushNotificationService {
      * Favorite merchant has new offer
      */
     @Async
-    public void sendFavoriteMerchantOfferNotification(UUID userId, String merchantName, String offerTitle) {
+    public void sendFavoriteMerchantOfferNotification(Long userId, String merchantName, String offerTitle) {
         sendPushNotification(
             userId,
             "From Your Favorites ❤️",
@@ -466,7 +465,7 @@ public class PushNotificationService {
      * Offer expiring soon reminder
      */
     @Async
-    public void sendOfferExpiringNotification(UUID userId, String merchantName, String offerTitle, int hoursRemaining) {
+    public void sendOfferExpiringNotification(Long userId, String merchantName, String offerTitle, int hoursRemaining) {
         sendPushNotification(
             userId,
             "Offer Expiring Soon! ⏰",
@@ -485,7 +484,7 @@ public class PushNotificationService {
      * Redemption successful confirmation
      */
     @Async
-    public void sendRedemptionConfirmationNotification(UUID userId, String merchantName, String offerTitle) {
+    public void sendRedemptionConfirmationNotification(Long userId, String merchantName, String offerTitle) {
         sendPushNotification(
             userId,
             "Offer Redeemed! 🎫",
@@ -507,7 +506,7 @@ public class PushNotificationService {
      * Notify Troop Leader of new Scout registration
      */
     @Async
-    public void sendNewScoutJoinedNotification(UUID leaderId, String scoutName, String troopNumber) {
+    public void sendNewScoutJoinedNotification(Long leaderId, String scoutName, String troopNumber) {
         sendPushNotification(
             leaderId,
             "New Scout Joined! 👋",
@@ -525,7 +524,7 @@ public class PushNotificationService {
      * Troop milestone achieved
      */
     @Async
-    public void sendTroopMilestoneNotification(UUID userId, String troopNumber, String milestoneName, int totalSales) {
+    public void sendTroopMilestoneNotification(Long userId, String troopNumber, String milestoneName, int totalSales) {
         sendPushNotification(
             userId,
             "Troop " + troopNumber + " Milestone! 🎉",
@@ -543,7 +542,7 @@ public class PushNotificationService {
      * Weekly troop leaderboard update
      */
     @Async
-    public void sendTroopLeaderboardNotification(UUID userId, int currentRank, int previousRank, String troopNumber) {
+    public void sendTroopLeaderboardNotification(Long userId, int currentRank, int previousRank, String troopNumber) {
         String movement;
         if (currentRank < previousRank) {
             movement = "You moved up to #" + currentRank + "!";
@@ -574,7 +573,7 @@ public class PushNotificationService {
      * Merchant account approved
      */
     @Async
-    public void sendMerchantApprovedNotification(UUID userId, String businessName) {
+    public void sendMerchantApprovedNotification(Long userId, String businessName) {
         sendPushNotification(
             userId,
             "Merchant Account Approved! ✅",
@@ -591,7 +590,7 @@ public class PushNotificationService {
      * New redemption at merchant location
      */
     @Async
-    public void sendMerchantRedemptionNotification(UUID merchantUserId, String offerTitle, String customerName) {
+    public void sendMerchantRedemptionNotification(Long merchantUserId, String offerTitle, String customerName) {
         sendPushNotification(
             merchantUserId,
             "New Redemption! 💰",
@@ -612,8 +611,8 @@ public class PushNotificationService {
      * Send notification to multiple users
      */
     @Async
-    public void sendBulkNotification(List<UUID> userIds, String title, String body, String channel, Map<String, String> data) {
-        for (UUID userId : userIds) {
+    public void sendBulkNotification(List<Long> userIds, String title, String body, String channel, Map<String, String> data) {
+        for (Long userId : userIds) {
             sendPushNotification(userId, title, body, channel, data);
         }
     }
@@ -636,7 +635,7 @@ public class PushNotificationService {
     /**
      * Send push notification to a specific user via all their registered devices
      */
-    private void sendPushNotification(UUID userId, String title, String body, String channel, Map<String, String> data) {
+    private void sendPushNotification(Long userId, String title, String body, String channel, Map<String, String> data) {
         try {
             // Get all active device tokens for user
             List<DeviceToken> tokens = deviceTokenRepository.findByUserIdAndActiveTrue(userId);

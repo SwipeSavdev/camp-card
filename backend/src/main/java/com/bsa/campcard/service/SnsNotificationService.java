@@ -41,16 +41,20 @@ public class SnsNotificationService {
 
     /**
      * Register a device token with AWS SNS and store in database
+     * Note: Takes UUID from controller but converts to Long for database storage (temporary until DBA migration)
      */
     @Transactional
     public String registerDeviceToken(UUID userId, DeviceTokenRequest request) {
         log.info("Registering device token for user: {} on platform: {}", userId, request.getDeviceType());
 
+        // Convert UUID to Long for database storage (temporary until DBA migration)
+        Long userIdAsLong = userId.getMostSignificantBits() & Long.MAX_VALUE;
+
         String platformArn = getPlatformArn(request.getDeviceType());
         if (platformArn == null || platformArn.isEmpty()) {
             log.warn("Platform ARN not configured for device type: {}", request.getDeviceType());
             // Still save the token locally even if SNS is not configured
-            saveDeviceTokenLocally(userId, request, null);
+            saveDeviceTokenLocally(userIdAsLong, request, null);
             return null;
         }
 
@@ -68,18 +72,18 @@ public class SnsNotificationService {
             log.info("Created SNS endpoint: {} for user: {}", endpointArn, userId);
 
             // Save to database with endpoint ARN
-            saveDeviceTokenLocally(userId, request, endpointArn);
+            saveDeviceTokenLocally(userIdAsLong, request, endpointArn);
 
             return endpointArn;
 
         } catch (InvalidParameterException e) {
             // Token already exists, update it
             log.info("Token already registered, updating existing endpoint");
-            return handleExistingEndpoint(userId, request, platformArn);
+            return handleExistingEndpoint(userId, userIdAsLong, request, platformArn);
         } catch (SnsException e) {
             log.error("Error creating SNS endpoint for user: {}", userId, e);
             // Still save the token locally
-            saveDeviceTokenLocally(userId, request, null);
+            saveDeviceTokenLocally(userIdAsLong, request, null);
             return null;
         }
     }
@@ -87,7 +91,7 @@ public class SnsNotificationService {
     /**
      * Handle case where endpoint already exists
      */
-    private String handleExistingEndpoint(UUID userId, DeviceTokenRequest request, String platformArn) {
+    private String handleExistingEndpoint(UUID userId, Long userIdAsLong, DeviceTokenRequest request, String platformArn) {
         try {
             // List endpoints to find the existing one
             ListEndpointsByPlatformApplicationRequest listRequest = ListEndpointsByPlatformApplicationRequest.builder()
@@ -108,7 +112,7 @@ public class SnsNotificationService {
                             .build();
                     snsClient.setEndpointAttributes(setAttrRequest);
 
-                    saveDeviceTokenLocally(userId, request, endpoint.endpointArn());
+                    saveDeviceTokenLocally(userIdAsLong, request, endpoint.endpointArn());
                     return endpoint.endpointArn();
                 }
             }
@@ -116,14 +120,14 @@ public class SnsNotificationService {
             log.error("Error handling existing endpoint", e);
         }
 
-        saveDeviceTokenLocally(userId, request, null);
+        saveDeviceTokenLocally(userIdAsLong, request, null);
         return null;
     }
 
     /**
      * Save device token to local database
      */
-    private void saveDeviceTokenLocally(UUID userId, DeviceTokenRequest request, String endpointArn) {
+    private void saveDeviceTokenLocally(Long userId, DeviceTokenRequest request, String endpointArn) {
         var existingToken = deviceTokenRepository.findByToken(request.getToken());
 
         if (existingToken.isPresent()) {
@@ -195,8 +199,8 @@ public class SnsNotificationService {
         }
 
         // Save to database if requested
-        if (request.getSaveToDatabase()) {
-            for (UUID userId : request.getUserIds()) {
+        if (Boolean.TRUE.equals(request.getSaveToDatabase())) {
+            for (Long userId : request.getUserIds()) {
                 Notification notification = Notification.builder()
                         .userId(userId)
                         .title(request.getTitle())
@@ -344,17 +348,21 @@ public class SnsNotificationService {
 
     /**
      * Get user notifications
+     * Note: Takes UUID from controller but converts to Long for database query (temporary until DBA migration)
      */
     public Page<NotificationResponse> getUserNotifications(UUID userId, Pageable pageable) {
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+        Long userIdAsLong = userId.getMostSignificantBits() & Long.MAX_VALUE;
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userIdAsLong, pageable)
                 .map(this::toResponse);
     }
 
     /**
      * Get unread notifications count
+     * Note: Takes UUID from controller but converts to Long for database query (temporary until DBA migration)
      */
     public Long getUnreadCount(UUID userId) {
-        return notificationRepository.countByUserIdAndReadFalse(userId);
+        Long userIdAsLong = userId.getMostSignificantBits() & Long.MAX_VALUE;
+        return notificationRepository.countByUserIdAndReadFalse(userIdAsLong);
     }
 
     /**
@@ -371,11 +379,13 @@ public class SnsNotificationService {
 
     /**
      * Mark all notifications as read for a user
+     * Note: Takes UUID from controller but converts to Long for database query (temporary until DBA migration)
      */
     @Transactional
     public void markAllAsRead(UUID userId) {
+        Long userIdAsLong = userId.getMostSignificantBits() & Long.MAX_VALUE;
         List<Notification> notifications = notificationRepository
-                .findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
+                .findByUserIdAndReadFalseOrderByCreatedAtDesc(userIdAsLong);
 
         notifications.forEach(notification -> {
             notification.setRead(true);

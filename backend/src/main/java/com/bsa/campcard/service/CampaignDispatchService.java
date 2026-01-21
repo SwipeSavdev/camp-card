@@ -384,9 +384,12 @@ public class CampaignDispatchService {
         recipientRepository.save(recipient);
 
         try {
+            // Convert UUID to Long for notification service (temporary until DBA migration)
+            Long userIdAsLong = user.getId().getMostSignificantBits() & Long.MAX_VALUE;
+
             // Create push notification request
             NotificationRequest pushRequest = NotificationRequest.builder()
-                .userIds(List.of(user.getId()))
+                .userIds(List.of(userIdAsLong))
                 .title(campaign.getSubjectLine() != null ? campaign.getSubjectLine() : campaign.getName())
                 .body(campaign.getContentText() != null ?
                     truncate(campaign.getContentText(), 200) :
@@ -425,9 +428,12 @@ public class CampaignDispatchService {
         recipientRepository.save(recipient);
 
         try {
+            // Convert UUID to Long for notification entity (temporary until DBA migration)
+            Long userIdAsLong = user.getId().getMostSignificantBits() & Long.MAX_VALUE;
+
             // Create in-app notification record
             Notification notification = Notification.builder()
-                .userId(user.getId())
+                .userId(userIdAsLong)
                 .title(campaign.getSubjectLine() != null ? campaign.getSubjectLine() : campaign.getName())
                 .body(campaign.getContentText() != null ? campaign.getContentText() : campaign.getDescription())
                 .type(Notification.NotificationType.MARKETING)

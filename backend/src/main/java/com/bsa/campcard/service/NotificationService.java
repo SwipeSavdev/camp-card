@@ -18,23 +18,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
-    
+
     private final NotificationRepository notificationRepository;
     private final DeviceTokenRepository deviceTokenRepository;
     private final ObjectMapper objectMapper;
-    
+
     /**
      * Register a new device token for push notifications
      */
     @Transactional
-    public void registerDeviceToken(UUID userId, DeviceTokenRequest request) {
+    public void registerDeviceToken(Long userId, DeviceTokenRequest request) {
         log.info("Registering device token for user: {}", userId);
 
         // Check if token already exists
@@ -65,7 +64,7 @@ public class NotificationService {
             deviceTokenRepository.save(token);
         }
     }
-    
+
     /**
      * Unregister a device token
      */
@@ -77,25 +76,25 @@ public class NotificationService {
             deviceTokenRepository.save(deviceToken);
         });
     }
-    
+
     /**
      * Send push notification to specific users
      */
     @Transactional
     public void sendNotification(NotificationRequest request) {
         log.info("Sending notification to {} users", request.getUserIds().size());
-        
+
         // Get all active device tokens for target users
         List<DeviceToken> tokens = deviceTokenRepository.findByUserIdInAndActiveTrue(request.getUserIds());
-        
+
         if (tokens.isEmpty()) {
             log.warn("No active device tokens found for users: {}", request.getUserIds());
             return;
         }
-        
+
         // Save to database if requested
-        if (request.getSaveToDatabase()) {
-            for (UUID userId : request.getUserIds()) {
+        if (Boolean.TRUE.equals(request.getSaveToDatabase())) {
+            for (Long userId : request.getUserIds()) {
                 Notification notification = Notification.builder()
                         .userId(userId)
                         .title(request.getTitle())
@@ -109,53 +108,53 @@ public class NotificationService {
                 notificationRepository.save(notification);
             }
         }
-        
+
         // Send FCM notifications
         sendFCMNotifications(tokens, request);
     }
-    
+
     /**
      * Send FCM push notifications
      */
     private void sendFCMNotifications(List<DeviceToken> tokens, NotificationRequest request) {
         try {
             // Build notification message
-            com.google.firebase.messaging.Notification notification = 
+            com.google.firebase.messaging.Notification notification =
                 com.google.firebase.messaging.Notification.builder()
                     .setTitle(request.getTitle())
                     .setBody(request.getBody())
                     .setImage(request.getImageUrl())
                     .build();
-            
+
             // Build data payload
-            Map<String, String> data = request.getData() != null 
-                    ? request.getData() 
+            Map<String, String> data = request.getData() != null
+                    ? request.getData()
                     : Map.of();
-            
+
             // Group tokens by platform for efficient sending
             Map<DeviceToken.DeviceType, List<String>> tokensByPlatform = tokens.stream()
                     .collect(Collectors.groupingBy(
                             DeviceToken::getDeviceType,
                             Collectors.mapping(DeviceToken::getToken, Collectors.toList())
                     ));
-            
+
             // Send to iOS devices
             if (tokensByPlatform.containsKey(DeviceToken.DeviceType.IOS)) {
                 sendToIOS(tokensByPlatform.get(DeviceToken.DeviceType.IOS), notification, data);
             }
-            
+
             // Send to Android devices
             if (tokensByPlatform.containsKey(DeviceToken.DeviceType.ANDROID)) {
                 sendToAndroid(tokensByPlatform.get(DeviceToken.DeviceType.ANDROID), notification, data);
             }
-            
+
             log.info("Successfully sent notifications to {} devices", tokens.size());
-            
+
         } catch (Exception e) {
             log.error("Error sending FCM notifications", e);
         }
     }
-    
+
     /**
      * Send notifications to iOS devices
      */
@@ -167,14 +166,14 @@ public class NotificationService {
                             .setBadge(1)
                             .build())
                     .build();
-            
+
             MulticastMessage message = MulticastMessage.builder()
                     .setNotification(notification)
                     .putAllData(data)
                     .setApnsConfig(apnsConfig)
                     .addAllTokens(tokens)
                     .build();
-            
+
             BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
             log.info("iOS notifications sent. Success: {}, Failure: {}",
                     response.getSuccessCount(), response.getFailureCount());
@@ -207,16 +206,16 @@ public class NotificationService {
             BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
             log.info("Android notifications sent. Success: {}, Failure: {}",
                     response.getSuccessCount(), response.getFailureCount());
-            
+
         } catch (FirebaseMessagingException e) {
             log.error("Error sending to Android devices", e);
         }
     }
-    
+
     /**
      * Get user notifications
      */
-    public Page<NotificationResponse> getUserNotifications(UUID userId, Pageable pageable) {
+    public Page<NotificationResponse> getUserNotifications(Long userId, Pageable pageable) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
                 .map(this::toResponse);
     }
@@ -224,10 +223,10 @@ public class NotificationService {
     /**
      * Get unread notifications count
      */
-    public Long getUnreadCount(UUID userId) {
+    public Long getUnreadCount(Long userId) {
         return notificationRepository.countByUserIdAndReadFalse(userId);
     }
-    
+
     /**
      * Mark notification as read
      */
@@ -239,23 +238,23 @@ public class NotificationService {
             notificationRepository.save(notification);
         });
     }
-    
+
     /**
      * Mark all notifications as read for a user
      */
     @Transactional
-    public void markAllAsRead(UUID userId) {
+    public void markAllAsRead(Long userId) {
         List<Notification> notifications = notificationRepository
                 .findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
-        
+
         notifications.forEach(notification -> {
             notification.setRead(true);
             notification.setReadAt(LocalDateTime.now());
         });
-        
+
         notificationRepository.saveAll(notifications);
     }
-    
+
     private String serializeData(Map<String, String> data) {
         if (data == null || data.isEmpty()) {
             return null;
@@ -267,7 +266,7 @@ public class NotificationService {
             return null;
         }
     }
-    
+
     private NotificationResponse toResponse(Notification notification) {
         return NotificationResponse.builder()
                 .id(notification.getId())

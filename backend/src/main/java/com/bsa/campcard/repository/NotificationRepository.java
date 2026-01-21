@@ -7,16 +7,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    Page<Notification> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
-    List<Notification> findByUserIdAndReadFalseOrderByCreatedAtDesc(UUID userId);
+    List<Notification> findByUserIdAndReadFalseOrderByCreatedAtDesc(Long userId);
 
-    Long countByUserIdAndReadFalse(UUID userId);
+    Long countByUserIdAndReadFalse(Long userId);
 
     List<Notification> findBySentFalse();
 }

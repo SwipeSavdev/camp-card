@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -19,7 +18,7 @@ import java.util.UUID;
 public class NotificationRequest {
 
     @NotNull(message = "User IDs are required")
-    private List<UUID> userIds;
+    private List<Long> userIds;
     
     @NotBlank(message = "Title is required")
     private String title;
