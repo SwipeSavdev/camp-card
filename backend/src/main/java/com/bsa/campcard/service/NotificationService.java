@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -33,12 +34,12 @@ public class NotificationService {
      * Register a new device token for push notifications
      */
     @Transactional
-    public void registerDeviceToken(Long userId, DeviceTokenRequest request) {
+    public void registerDeviceToken(UUID userId, DeviceTokenRequest request) {
         log.info("Registering device token for user: {}", userId);
-        
+
         // Check if token already exists
         var existingToken = deviceTokenRepository.findByToken(request.getToken());
-        
+
         if (existingToken.isPresent()) {
             // Update existing token
             DeviceToken token = existingToken.get();
@@ -94,7 +95,7 @@ public class NotificationService {
         
         // Save to database if requested
         if (request.getSaveToDatabase()) {
-            for (Long userId : request.getUserIds()) {
+            for (UUID userId : request.getUserIds()) {
                 Notification notification = Notification.builder()
                         .userId(userId)
                         .title(request.getTitle())
@@ -215,15 +216,15 @@ public class NotificationService {
     /**
      * Get user notifications
      */
-    public Page<NotificationResponse> getUserNotifications(Long userId, Pageable pageable) {
+    public Page<NotificationResponse> getUserNotifications(UUID userId, Pageable pageable) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
                 .map(this::toResponse);
     }
-    
+
     /**
      * Get unread notifications count
      */
-    public Long getUnreadCount(Long userId) {
+    public Long getUnreadCount(UUID userId) {
         return notificationRepository.countByUserIdAndReadFalse(userId);
     }
     
@@ -243,7 +244,7 @@ public class NotificationService {
      * Mark all notifications as read for a user
      */
     @Transactional
-    public void markAllAsRead(Long userId) {
+    public void markAllAsRead(UUID userId) {
         List<Notification> notifications = notificationRepository
                 .findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
         

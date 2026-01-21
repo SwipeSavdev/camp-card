@@ -386,7 +386,7 @@ public class CampaignDispatchService {
         try {
             // Create push notification request
             NotificationRequest pushRequest = NotificationRequest.builder()
-                .userIds(List.of(user.getId().hashCode() % Long.MAX_VALUE)) // Convert UUID to Long
+                .userIds(List.of(user.getId()))
                 .title(campaign.getSubjectLine() != null ? campaign.getSubjectLine() : campaign.getName())
                 .body(campaign.getContentText() != null ?
                     truncate(campaign.getContentText(), 200) :
@@ -427,7 +427,7 @@ public class CampaignDispatchService {
         try {
             // Create in-app notification record
             Notification notification = Notification.builder()
-                .userId(user.getId().hashCode() % Long.MAX_VALUE) // Convert UUID to Long
+                .userId(user.getId())
                 .title(campaign.getSubjectLine() != null ? campaign.getSubjectLine() : campaign.getName())
                 .body(campaign.getContentText() != null ? campaign.getContentText() : campaign.getDescription())
                 .type(Notification.NotificationType.MARKETING)
