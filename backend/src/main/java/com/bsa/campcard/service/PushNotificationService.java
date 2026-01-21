@@ -507,7 +507,7 @@ public class PushNotificationService {
      * Notify Troop Leader of new Scout registration
      */
     @Async
-    public void sendNewScoutJoinedNotification(Long leaderId, String scoutName, String troopNumber) {
+    public void sendNewScoutJoinedNotification(UUID leaderId, String scoutName, String troopNumber) {
         sendPushNotification(
             leaderId,
             "New Scout Joined! 👋",
@@ -591,7 +591,7 @@ public class PushNotificationService {
      * New redemption at merchant location
      */
     @Async
-    public void sendMerchantRedemptionNotification(Long merchantUserId, String offerTitle, String customerName) {
+    public void sendMerchantRedemptionNotification(UUID merchantUserId, String offerTitle, String customerName) {
         sendPushNotification(
             merchantUserId,
             "New Redemption! 💰",
