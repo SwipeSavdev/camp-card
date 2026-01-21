@@ -35,11 +35,13 @@ This guide covers the complete process for deploying the Camp Card mobile app to
 ### 1. EAS (Expo Application Services) Setup
 
 ```bash
+# Navigate to the mobile app directory from project root
+cd camp-card-mobile-app-v2-mobile-main/mobile
+
 # Login to Expo
 eas login
 
-# Initialize EAS for the project (run in mobile/ directory)
-cd mobile
+# Initialize EAS for the project
 eas init
 
 # This will create a project in Expo and update app.json with the projectId
@@ -76,7 +78,7 @@ Update `app.json` with the generated project ID:
    - Create a new service account
    - Grant "Release manager" permissions
    - Download the JSON key file
-   - Save as `google-service-account.json` in the mobile directory (DO NOT commit to git)
+   - Save as `google-service-account.json` in `camp-card-mobile-app-v2-mobile-main/mobile/` directory (DO NOT commit to git)
 
 ---
 
@@ -295,14 +297,14 @@ BSA Scout fundraising app - exclusive merchant discounts & offers
 1. Go to Firebase Console > Project Settings
 2. Add iOS app with bundle ID: `org.bsa.campcard`
 3. Download `GoogleService-Info.plist`
-4. Place in `mobile/` directory
+4. Place in `camp-card-mobile-app-v2-mobile-main/mobile/` directory
 
 ### Android Setup
 
 1. Go to Firebase Console > Project Settings
 2. Add Android app with package name: `org.bsa.campcard`
 3. Download `google-services.json`
-4. Place in `mobile/` directory
+4. Place in `camp-card-mobile-app-v2-mobile-main/mobile/` directory
 5. Add SHA-1 certificate fingerprint:
 ```bash
 # Get SHA-1 from EAS
@@ -428,12 +430,26 @@ eas build --platform all --clear-cache
 
 ## Quick Commands Reference
 
+All commands should be run from the mobile directory:
+
 ```bash
+# Navigate to mobile directory first
+cd camp-card-mobile-app-v2-mobile-main/mobile
+
 # Login to EAS
 eas login
 
+# Initialize project (first time only)
+eas init
+
 # Build for all platforms
 eas build --platform all --profile production
+
+# Build iOS only
+eas build --platform ios --profile production
+
+# Build Android only
+eas build --platform android --profile production
 
 # Submit to stores
 eas submit --platform all --latest
@@ -446,4 +462,9 @@ eas credentials
 
 # Update OTA (no new build required)
 eas update --branch production --message "Bug fix"
+
+# Run locally for development
+npm start
+npm run ios    # iOS simulator
+npm run android  # Android emulator
 ```

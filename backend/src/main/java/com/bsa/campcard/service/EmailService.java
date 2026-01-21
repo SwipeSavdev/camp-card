@@ -832,6 +832,551 @@ public class EmailService {
     }
 
     // ========================================================================
+    // GIFT CARD EMAILS
+    // ========================================================================
+
+    /**
+     * Send gift card notification to the recipient
+     */
+    @Async
+    public void sendGiftCardNotification(String recipientEmail, String senderName, String recipientName,
+                                         String giftMessage, String claimToken, String cardNumber,
+                                         LocalDate expirationDate) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send gift card notification to: {}", recipientEmail);
+            return;
+        }
+
+        String subject = senderName + " sent you a BSA Camp Card gift!";
+        String claimUrl = webPortalUrl + "/claim-gift?token=" + claimToken;
+        String formattedExpiry = expirationDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
+
+        String giftMessageHtml = (giftMessage != null && !giftMessage.isBlank())
+            ? """
+                <div style="background-color: #fff8e1; border-left: 4px solid %s; padding: 16px; margin: 24px 0; font-style: italic;">
+                    <p style="margin: 0; color: #5d4037;">&ldquo;%s&rdquo;</p>
+                    <p style="margin: 8px 0 0 0; color: #8d6e63; font-size: 14px; text-align: right;">— %s</p>
+                </div>
+                """.formatted(BSA_GOLD, giftMessage, senderName)
+            : "";
+
+        String htmlBody = buildEmailTemplate(
+            "You've Received a Gift!",
+            BSA_GOLD,
+            """
+            <div style="text-align: center; padding: 24px 0;">
+                <span style="font-size: 64px;">🎁</span>
+            </div>
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;"><strong>%s</strong> has sent you a BSA Camp Card as a gift!</p>
+
+            %s
+
+            <div style="background-color: #f8f9fa; border: 2px solid %s; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+                <h3 style="color: %s; margin: 0 0 16px 0;">Your Gift Card</h3>
+                <p style="margin: 0; font-size: 14px; color: #666666;">Card Number</p>
+                <p style="margin: 4px 0 16px 0; font-size: 20px; font-weight: bold; font-family: monospace; letter-spacing: 2px;">%s</p>
+                <p style="margin: 0; font-size: 14px; color: #666666;">Valid Until</p>
+                <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: bold; color: %s;">%s</p>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">With your Camp Card, you'll get access to exclusive discounts at local merchants while supporting Scouts in your community!</p>
+
+            """ + buildButton("Claim Your Gift", claimUrl, BSA_GOLD) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Or copy and paste this link into your browser:</p>
+            <p style="font-size: 12px; color: #999999; word-break: break-all;">%s</p>
+
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #856404;"><strong>Important:</strong> Claim your gift before %s to activate your card.</p>
+            </div>
+            """.formatted(
+                recipientName != null && !recipientName.isBlank() ? recipientName : "there",
+                senderName,
+                giftMessageHtml,
+                BSA_NAVY,
+                BSA_NAVY,
+                cardNumber,
+                WARNING_ORANGE,
+                formattedExpiry,
+                claimUrl,
+                formattedExpiry
+            )
+        );
+
+        String textBody = """
+            You've Received a Gift!
+
+            Hi %s,
+
+            %s has sent you a BSA Camp Card as a gift!
+
+            %s
+
+            Your Gift Card:
+            - Card Number: %s
+            - Valid Until: %s
+
+            With your Camp Card, you'll get access to exclusive discounts at local merchants while supporting Scouts in your community!
+
+            Claim your gift here: %s
+
+            Important: Claim your gift before %s to activate your card.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(
+                recipientName != null && !recipientName.isBlank() ? recipientName : "there",
+                senderName,
+                giftMessage != null && !giftMessage.isBlank() ? "\"" + giftMessage + "\" — " + senderName : "",
+                cardNumber,
+                formattedExpiry,
+                claimUrl,
+                formattedExpiry
+            );
+
+        sendEmail(recipientEmail, subject, htmlBody, textBody);
+        log.info("Gift card notification sent to: {}", recipientEmail);
+    }
+
+    /**
+     * Send confirmation to the gift sender that the gift was sent
+     */
+    @Async
+    public void sendGiftSentConfirmation(String senderEmail, String senderName, String recipientEmail,
+                                         String recipientName, String cardNumber, LocalDate expirationDate) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send gift sent confirmation to: {}", senderEmail);
+            return;
+        }
+
+        String subject = "Your Camp Card Gift Has Been Sent!";
+        String formattedExpiry = expirationDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
+
+        String htmlBody = buildEmailTemplate(
+            "Gift Sent Successfully!",
+            SUCCESS_GREEN,
+            """
+            <div style="text-align: center; padding: 24px 0;">
+                <span style="font-size: 64px;">✉️</span>
+            </div>
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your Camp Card gift has been sent to <strong>%s</strong>!</p>
+
+            <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <table style="width: 100%%;">
+                    <tr>
+                        <td style="padding: 8px 0; color: #155724;">Recipient:</td>
+                        <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #155724;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #155724;">Card Number:</td>
+                        <td style="padding: 8px 0; text-align: right; font-family: monospace; color: #155724;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #155724;">Expires:</td>
+                        <td style="padding: 8px 0; text-align: right; color: #155724;">%s</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">We've sent an email to %s with instructions to claim their gift.</p>
+
+            <div style="background-color: #e2e3e5; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #383d41;"><strong>Note:</strong> You can track the gift status in your Camp Card app. If the gift hasn't been claimed after a few days, you can resend the notification or cancel the gift.</p>
+            </div>
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Thank you for spreading the Scout spirit! 🏕️</p>
+            """.formatted(
+                senderName,
+                recipientEmail,
+                recipientName != null && !recipientName.isBlank() ? recipientName : recipientEmail,
+                cardNumber,
+                formattedExpiry,
+                recipientEmail
+            )
+        );
+
+        String textBody = """
+            Gift Sent Successfully!
+
+            Hi %s,
+
+            Your Camp Card gift has been sent to %s!
+
+            Gift Details:
+            - Recipient: %s
+            - Card Number: %s
+            - Expires: %s
+
+            We've sent an email to %s with instructions to claim their gift.
+
+            Note: You can track the gift status in your Camp Card app. If the gift hasn't been claimed after a few days, you can resend the notification or cancel the gift.
+
+            Thank you for spreading the Scout spirit!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(
+                senderName,
+                recipientEmail,
+                recipientName != null && !recipientName.isBlank() ? recipientName : recipientEmail,
+                cardNumber,
+                formattedExpiry,
+                recipientEmail
+            );
+
+        sendEmail(senderEmail, subject, htmlBody, textBody);
+        log.info("Gift sent confirmation sent to sender: {}", senderEmail);
+    }
+
+    /**
+     * Send notification to sender that their gift was claimed
+     */
+    @Async
+    public void sendGiftClaimedNotification(String senderEmail, String senderName, String recipientName,
+                                             String recipientEmail, String cardNumber) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send gift claimed notification to: {}", senderEmail);
+            return;
+        }
+
+        String subject = recipientName + " claimed your Camp Card gift!";
+
+        String htmlBody = buildEmailTemplate(
+            "Gift Claimed!",
+            SUCCESS_GREEN,
+            """
+            <div style="text-align: center; padding: 24px 0;">
+                <span style="font-size: 64px;">🎉</span>
+            </div>
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Great news! <strong>%s</strong> has claimed the Camp Card gift you sent!</p>
+
+            <div style="background-color: #d4edda; border: 2px solid %s; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #155724;">Card Claimed</p>
+                <p style="margin: 0; font-size: 20px; font-weight: bold; font-family: monospace; color: #155724;">%s</p>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">%s can now use the card to redeem exclusive offers at participating merchants.</p>
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Thank you for supporting Scouts and sharing the Camp Card experience!</p>
+            """.formatted(senderName, recipientName, SUCCESS_GREEN, cardNumber, recipientName)
+        );
+
+        String textBody = """
+            Gift Claimed!
+
+            Hi %s,
+
+            Great news! %s has claimed the Camp Card gift you sent!
+
+            Card Number: %s
+
+            %s can now use the card to redeem exclusive offers at participating merchants.
+
+            Thank you for supporting Scouts and sharing the Camp Card experience!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(senderName, recipientName, cardNumber, recipientName);
+
+        sendEmail(senderEmail, subject, htmlBody, textBody);
+        log.info("Gift claimed notification sent to sender: {}", senderEmail);
+    }
+
+    /**
+     * Send reminder to recipient about unclaimed gift
+     */
+    @Async
+    public void sendGiftClaimReminder(String recipientEmail, String senderName, String recipientName,
+                                       String claimToken, String cardNumber, int daysPending,
+                                       LocalDate expirationDate) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send gift claim reminder to: {}", recipientEmail);
+            return;
+        }
+
+        String subject = "Reminder: " + senderName + "'s Camp Card gift is waiting for you!";
+        String claimUrl = webPortalUrl + "/claim-gift?token=" + claimToken;
+        String formattedExpiry = expirationDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
+
+        String urgencyMessage = daysPending >= 14
+            ? "Don't let this thoughtful gift go unclaimed!"
+            : daysPending >= 7
+                ? "Your gift has been waiting for a week. Claim it today!"
+                : "A quick reminder about your pending gift.";
+
+        String headerColor = daysPending >= 14 ? WARNING_ORANGE : BSA_GOLD;
+
+        String htmlBody = buildEmailTemplate(
+            "Gift Waiting for You!",
+            headerColor,
+            """
+            <div style="text-align: center; padding: 24px 0;">
+                <span style="font-size: 64px;">⏳</span>
+            </div>
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">%s</p>
+            <p style="font-size: 16px; color: #333333;"><strong>%s</strong> sent you a BSA Camp Card gift %d days ago, and it's still waiting to be claimed!</p>
+
+            <div style="background-color: #fff3cd; border: 2px solid %s; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #856404;">Card Number</p>
+                <p style="margin: 0 0 16px 0; font-size: 20px; font-weight: bold; font-family: monospace; color: #333;">%s</p>
+                <p style="margin: 0; font-size: 14px; color: #856404;">Must claim by <strong>%s</strong></p>
+            </div>
+
+            """ + buildButton("Claim Your Gift Now", claimUrl, headerColor) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">With your Camp Card, you'll unlock:</p>
+            <ul style="color: #666666; font-size: 14px;">
+                <li>Exclusive discounts at local merchants</li>
+                <li>Support for Scouts in your community</li>
+                <li>One-time use offers that refresh when you activate another card</li>
+            </ul>
+            """.formatted(
+                recipientName != null && !recipientName.isBlank() ? recipientName : "there",
+                urgencyMessage,
+                senderName,
+                daysPending,
+                WARNING_ORANGE,
+                cardNumber,
+                formattedExpiry,
+                claimUrl
+            )
+        );
+
+        String textBody = """
+            Gift Waiting for You!
+
+            Hi %s,
+
+            %s
+
+            %s sent you a BSA Camp Card gift %d days ago, and it's still waiting to be claimed!
+
+            Card Number: %s
+            Must claim by: %s
+
+            Claim your gift here: %s
+
+            With your Camp Card, you'll unlock:
+            - Exclusive discounts at local merchants
+            - Support for Scouts in your community
+            - One-time use offers that refresh when you activate another card
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(
+                recipientName != null && !recipientName.isBlank() ? recipientName : "there",
+                urgencyMessage,
+                senderName,
+                daysPending,
+                cardNumber,
+                formattedExpiry,
+                claimUrl
+            );
+
+        sendEmail(recipientEmail, subject, htmlBody, textBody);
+        log.info("Gift claim reminder ({} days) sent to: {}", daysPending, recipientEmail);
+    }
+
+    /**
+     * Notify sender that their unclaimed gift has expired
+     */
+    @Async
+    public void sendGiftExpiredNotification(String senderEmail, String senderName, String recipientEmail,
+                                             String cardNumber) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send gift expired notification to: {}", senderEmail);
+            return;
+        }
+
+        String subject = "Your Camp Card Gift to " + recipientEmail + " Has Expired";
+
+        String htmlBody = buildEmailTemplate(
+            "Gift Expired",
+            BSA_RED,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Unfortunately, the Camp Card gift you sent to <strong>%s</strong> was not claimed before the expiration date.</p>
+
+            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <table style="width: 100%%;">
+                    <tr>
+                        <td style="padding: 8px 0; color: #721c24;">Recipient:</td>
+                        <td style="padding: 8px 0; text-align: right; color: #721c24;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #721c24;">Card Number:</td>
+                        <td style="padding: 8px 0; text-align: right; font-family: monospace; color: #721c24;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #721c24;">Status:</td>
+                        <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #721c24;">Expired</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">All Camp Cards expire on December 31st of the purchase year. We sent multiple reminders to the recipient, but the gift was not claimed in time.</p>
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">If you'd like to give a Camp Card gift in the future, consider purchasing during the beginning of the year to give recipients more time to claim and use their offers.</p>
+
+            <p style="font-size: 14px; color: #666666;">Thank you for supporting Scouts!</p>
+            """.formatted(senderName, recipientEmail, recipientEmail, cardNumber)
+        );
+
+        String textBody = """
+            Gift Expired
+
+            Hi %s,
+
+            Unfortunately, the Camp Card gift you sent to %s was not claimed before the expiration date.
+
+            Gift Details:
+            - Recipient: %s
+            - Card Number: %s
+            - Status: Expired
+
+            All Camp Cards expire on December 31st of the purchase year. We sent multiple reminders to the recipient, but the gift was not claimed in time.
+
+            If you'd like to give a Camp Card gift in the future, consider purchasing during the beginning of the year to give recipients more time to claim and use their offers.
+
+            Thank you for supporting Scouts!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(senderName, recipientEmail, recipientEmail, cardNumber);
+
+        sendEmail(senderEmail, subject, htmlBody, textBody);
+        log.info("Gift expired notification sent to sender: {}", senderEmail);
+    }
+
+    /**
+     * Send card expiry reminder to card owner
+     */
+    @Async
+    public void sendCardExpiryReminder(String ownerEmail, String ownerName, String cardNumber,
+                                        int daysRemaining, LocalDate expirationDate,
+                                        int unusedOffersCount) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send card expiry reminder to: {}", ownerEmail);
+            return;
+        }
+
+        String subject = daysRemaining <= 3
+            ? "⚠️ URGENT: Your Camp Card expires in " + daysRemaining + " days!"
+            : "Your Camp Card expires in " + daysRemaining + " days";
+
+        String formattedExpiry = expirationDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
+        String headerColor = daysRemaining <= 7 ? BSA_RED : WARNING_ORANGE;
+
+        String urgencyBanner = daysRemaining <= 3
+            ? """
+                <div style="background-color: #f8d7da; border: 2px solid #f5c6cb; border-radius: 12px; padding: 16px; margin: 24px 0; text-align: center;">
+                    <p style="margin: 0; font-size: 24px; color: #721c24; font-weight: bold;">⚠️ %d DAYS LEFT ⚠️</p>
+                </div>
+                """.formatted(daysRemaining)
+            : """
+                <div style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; padding: 16px; margin: 24px 0; text-align: center;">
+                    <p style="margin: 0; font-size: 24px; color: #856404; font-weight: bold;">%d Days Remaining</p>
+                </div>
+                """.formatted(daysRemaining);
+
+        String unusedOffersMessage = unusedOffersCount > 0
+            ? """
+                <div style="background-color: #e2e3e5; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                    <p style="margin: 0; font-size: 14px; color: #383d41;">
+                        <strong>You have %d unused offer%s!</strong> Use them before they expire, or gift your card to someone who can.
+                    </p>
+                </div>
+                """.formatted(unusedOffersCount, unusedOffersCount == 1 ? "" : "s")
+            : "";
+
+        String htmlBody = buildEmailTemplate(
+            "Card Expiring Soon",
+            headerColor,
+            """
+            <p style="font-size: 18px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your BSA Camp Card is expiring soon!</p>
+
+            %s
+
+            <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <table style="width: 100%%;">
+                    <tr>
+                        <td style="padding: 8px 0; color: #666666;">Card Number:</td>
+                        <td style="padding: 8px 0; text-align: right; font-family: monospace; font-weight: bold;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666666;">Expires:</td>
+                        <td style="padding: 8px 0; text-align: right; font-weight: bold; color: %s;">%s</td>
+                    </tr>
+                </table>
+            </div>
+
+            %s
+
+            <p style="font-size: 16px; color: #333333;">Here's what you can do before it expires:</p>
+            <ul style="color: #333333; font-size: 14px;">
+                <li><strong>Use remaining offers</strong> at participating merchants</li>
+                <li><strong>Gift unused cards</strong> to friends or family</li>
+                <li><strong>Purchase new cards</strong> for next year</li>
+            </ul>
+
+            """ + buildButton("Open Camp Card App", baseUrl, BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">All Camp Cards expire on December 31st. Thank you for supporting Scouts!</p>
+            """.formatted(ownerName, urgencyBanner, cardNumber, headerColor, formattedExpiry, unusedOffersMessage)
+        );
+
+        String textBody = """
+            Card Expiring Soon
+
+            Hi %s,
+
+            Your BSA Camp Card is expiring soon!
+
+            %d DAYS REMAINING
+
+            Card Number: %s
+            Expires: %s
+
+            %s
+
+            Here's what you can do before it expires:
+            - Use remaining offers at participating merchants
+            - Gift unused cards to friends or family
+            - Purchase new cards for next year
+
+            Open your Camp Card app: %s
+
+            All Camp Cards expire on December 31st. Thank you for supporting Scouts!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(
+                ownerName,
+                daysRemaining,
+                cardNumber,
+                formattedExpiry,
+                unusedOffersCount > 0
+                    ? "You have " + unusedOffersCount + " unused offer" + (unusedOffersCount == 1 ? "" : "s") + "!"
+                    : "",
+                baseUrl
+            );
+
+        sendEmail(ownerEmail, subject, htmlBody, textBody);
+        log.info("Card expiry reminder ({} days) sent to: {}", daysRemaining, ownerEmail);
+    }
+
+    // ========================================================================
     // REDEMPTION EMAILS
     // ========================================================================
 

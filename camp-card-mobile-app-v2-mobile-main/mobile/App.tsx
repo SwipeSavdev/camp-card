@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import RootNavigator from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
+import { useNotifications } from './src/utils/notifications';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -24,6 +25,9 @@ const queryClient = new QueryClient({
  */
 export default function App() {
   const { initialize } = useAuthStore();
+
+  // Initialize push notifications (automatically registers when authenticated)
+  useNotifications();
 
   // Initialize auth on app start
   React.useEffect(() => {

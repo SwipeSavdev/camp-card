@@ -6,7 +6,10 @@
     "orientation": "portrait",
     "description": "BSA Camp Card - Digital discount subscriptions supporting Scout fundraising. Access exclusive merchant offers, track redemptions, and support your local Scout troop.",
     "sdkVersion": "54.0.0",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "campcard",
@@ -15,10 +18,12 @@
       "resizeMode": "contain",
       "backgroundColor": "#003F87"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "1",
+      "buildNumber": "6",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -30,7 +35,10 @@
         "NSLocationWhenInUseUsageDescription": "Camp Card needs your location to find nearby merchants and offers in your area.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Camp Card uses your location to notify you of nearby merchant offers.",
         "NSFaceIDUsageDescription": "Camp Card uses Face ID for secure authentication.",
-        "UIBackgroundModes": ["remote-notification", "fetch"],
+        "UIBackgroundModes": [
+          "remote-notification",
+          "fetch"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
@@ -43,7 +51,8 @@
     },
     "android": {
       "package": "org.bsa.campcard",
-      "versionCode": 1,
+      "versionCode": 6,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#003F87"
@@ -59,7 +68,9 @@
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "intentFilters": [
         {
@@ -77,7 +88,10 @@
               "pathPrefix": "/app"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
@@ -86,7 +100,10 @@
               "scheme": "campcard"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -105,20 +122,17 @@
           "locationWhenInUsePermission": "Camp Card uses your location to show nearby merchants and offers."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ],
-    "extra": {
-      "eas": {
-        "projectId": "your-eas-project-id"
-      }
-    },
-    "owner": "bsa-campcard",
     "runtimeVersion": {
       "policy": "sdkVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/your-eas-project-id",
-      "fallbackToCacheTimeout": 0
-    }
+    "extra": {
+      "eas": {
+        "projectId": "e0a38408-1955-4965-80f6-e93635aac5b7"
+      }
+    },
+    "owner": "swipesavvyapp"
   }
 }

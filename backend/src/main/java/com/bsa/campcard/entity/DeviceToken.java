@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "device_tokens")
@@ -15,13 +16,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeviceToken {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false)
-    private Long userId;
+    private UUID userId;
     
     @Column(nullable = false, unique = true, length = 512)
     private String token;
@@ -38,6 +39,9 @@ public class DeviceToken {
     
     @Column(length = 20)
     private String appVersion;
+
+    @Column(length = 512)
+    private String endpointArn;
 
     @Column(nullable = false)
     @Builder.Default

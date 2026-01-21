@@ -16,6 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import ExpiryAlertBanner from '../../components/ExpiryAlertBanner';
+import { useCardExpiry } from '../../hooks/useCardExpiry';
 
 // ============================================================================
 // TROOP LEADER DASHBOARD
@@ -467,6 +469,7 @@ function CustomerDashboard() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
+  const { expiryInfo, dismissed, dismissAlert, refresh: refreshExpiry } = useCardExpiry();
   const [stats] = useState<ParentStats>({
     totalSavings: 127.50,
     offersRedeemed: 15,
@@ -484,8 +487,7 @@ function CustomerDashboard() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await refreshExpiry();
     setRefreshing(false);
   };
 
@@ -497,6 +499,15 @@ function CustomerDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Card Expiry Alert */}
+        {!dismissed && expiryInfo && expiryInfo.daysUntilExpiry <= 30 && (
+          <ExpiryAlertBanner
+            daysUntilExpiry={expiryInfo.daysUntilExpiry}
+            cardCount={expiryInfo.expiringCardCount}
+            onDismiss={dismissAlert}
+          />
+        )}
+
         {/* Header */}
         <View style={[styles.header, { backgroundColor: '#F59E0B' }]}>
           <View style={styles.headerContent}>

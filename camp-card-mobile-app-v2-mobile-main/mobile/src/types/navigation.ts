@@ -83,6 +83,9 @@ export type ScoutStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  CardInventory: undefined;
+  GiftCard: { cardId: number };
+  ReplenishCard: undefined;
   Settings: undefined;
   HelpSupport: undefined;
 };
@@ -113,6 +116,9 @@ export type TroopLeaderStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  CardInventory: undefined;
+  GiftCard: { cardId: number };
+  ReplenishCard: undefined;
   Settings: undefined;
   HelpSupport: undefined;
 };
@@ -139,6 +145,9 @@ export type CustomerStackParamList = {
   QRScanner: undefined;
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
+  CardInventory: undefined;
+  GiftCard: { cardId: number };
+  ReplenishCard: undefined;
   Settings: undefined;
   HelpSupport: undefined;
 };
@@ -149,8 +158,25 @@ export type CustomerStackParamList = {
 
 export type AuthStackParamList = {
   Login: undefined;
-  Signup: undefined;
+  SubscriptionSelection: { scoutCode?: string } | undefined;
+  QuantitySelection: {
+    selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
+    scoutCode?: string;
+  };
+  Payment: {
+    selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
+    quantity: number;
+    scoutCode?: string;
+  };
+  Signup: {
+    selectedPlan?: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
+    paymentCompleted?: boolean;
+    quantity?: number;
+    scoutCode?: string;
+  } | undefined;
   ForgotPassword: undefined;
+  ResetPassword: { token: string };
+  EmailVerification: { token: string };
 };
 
 // ============================================================================

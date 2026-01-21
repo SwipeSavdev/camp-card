@@ -111,6 +111,15 @@ together:
     base-url: https://api.together.xyz/v1
     default-model: meta-llama/Llama-3.3-70B-Instruct-Turbo
 
+# AWS SNS Push Notifications
+aws:
+  region: ${AWS_REGION:us-east-2}
+  sns:
+    region: ${AWS_SNS_REGION:us-east-1}
+    platform-application-arn:
+      ios: ${SNS_PLATFORM_ARN_IOS:arn:aws:sns:us-east-1:858955002750:app/APNS/camp-card-mobile-app}
+      android: ${SNS_PLATFORM_ARN_ANDROID:arn:aws:sns:us-east-1:858955002750:app/GCM/camp-card-mobile-android}
+
 # Actuator
 management:
   endpoints:

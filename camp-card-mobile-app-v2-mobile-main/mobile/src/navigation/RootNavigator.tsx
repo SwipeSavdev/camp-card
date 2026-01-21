@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/authStore';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import SubscriptionSelectionScreen from '../screens/auth/SubscriptionSelectionScreen';
+import QuantitySelectionScreen from '../screens/auth/QuantitySelectionScreen';
 import PaymentScreen from '../screens/auth/PaymentScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
@@ -47,6 +48,9 @@ import TermsOfServiceScreen from '../screens/profile/TermsOfServiceScreen';
 import HelpSupportScreen from '../screens/profile/HelpSupportScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 import RedemptionHistoryScreen from '../screens/wallet/RedemptionHistoryScreen';
+import CardInventoryScreen from '../screens/wallet/CardInventoryScreen';
+import GiftCardScreen from '../screens/wallet/GiftCardScreen';
+import ReplenishCardScreen from '../screens/wallet/ReplenishCardScreen';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -54,9 +58,22 @@ import RedemptionHistoryScreen from '../screens/wallet/RedemptionHistoryScreen';
 
 export type AuthStackParamList = {
   Login: undefined;
-  SubscriptionSelection: undefined;
-  Payment: { selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string } };
-  Signup: { selectedPlan?: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string }; paymentCompleted?: boolean } | undefined;
+  SubscriptionSelection: { scoutCode?: string } | undefined;
+  QuantitySelection: {
+    selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
+    scoutCode?: string;
+  };
+  Payment: {
+    selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
+    quantity: number;
+    scoutCode?: string;
+  };
+  Signup: {
+    selectedPlan?: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
+    paymentCompleted?: boolean;
+    quantity?: number;
+    scoutCode?: string;
+  } | undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
   EmailVerification: { token: string };
@@ -88,6 +105,9 @@ export type ScoutStackParamList = {
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
   RedemptionHistory: undefined;
+  CardInventory: undefined;
+  GiftCard: { cardId: number };
+  ReplenishCard: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -120,6 +140,9 @@ export type TroopLeaderStackParamList = {
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
   RedemptionHistory: undefined;
+  CardInventory: undefined;
+  GiftCard: { cardId: number };
+  ReplenishCard: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -148,6 +171,9 @@ export type CustomerStackParamList = {
   ShareOffer: { offer: any };
   RedemptionSuccess: { redemption: any; offer: any };
   RedemptionHistory: undefined;
+  CardInventory: undefined;
+  GiftCard: { cardId: number };
+  ReplenishCard: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -184,6 +210,7 @@ function AuthNavigator() {
     <AuthStack.Navigator id="AuthStack" screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SubscriptionSelection" component={SubscriptionSelectionScreen} />
+      <AuthStack.Screen name="QuantitySelection" component={QuantitySelectionScreen} />
       <AuthStack.Screen name="Payment" component={PaymentScreen} />
       <AuthStack.Screen name="Signup" component={SignupScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
@@ -256,6 +283,9 @@ function ScoutMainNavigator() {
         <ScoutStack.Screen name="ViewOffers" component={OffersScreen} options={{ headerShown: true, title: 'Available Offers' }} />
         <ScoutStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="CardInventory" component={CardInventoryScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="GiftCard" component={GiftCardScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="ReplenishCard" component={ReplenishCardScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
@@ -334,6 +364,9 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
         <TroopLeaderStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="CardInventory" component={CardInventoryScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="GiftCard" component={GiftCardScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="ReplenishCard" component={ReplenishCardScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
@@ -396,6 +429,9 @@ function CustomerMainNavigator() {
         <CustomerStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <CustomerStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="CardInventory" component={CardInventoryScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="GiftCard" component={GiftCardScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="ReplenishCard" component={ReplenishCardScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />

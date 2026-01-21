@@ -1,16 +1,16 @@
-import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
+import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native';
-
-const rnBiometrics = new ReactNativeBiometrics({ allowDeviceCredentials: true });
 
 // SecureStore keys
 const BIOMETRIC_ENABLED_KEY = 'biometric_auth_enabled';
 const BIOMETRIC_CREDENTIALS_KEY = 'biometric_credentials';
 
+export type BiometryType = 'FaceID' | 'TouchID' | 'Fingerprint' | 'Iris' | null;
+
 export interface BiometricCapability {
   available: boolean;
-  biometryType: BiometryTypes | null;
+  biometryType: BiometryType;
   error?: string;
 }
 
@@ -20,11 +20,32 @@ export interface BiometricCredentials {
 }
 
 /**
+ * Map Expo authentication types to friendly biometry types
+ */
+const mapAuthenticationType = (types: LocalAuthentication.AuthenticationType[]): BiometryType => {
+  if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+    return 'FaceID';
+  }
+  if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+    return 'TouchID';
+  }
+  if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
+    return 'Iris';
+  }
+  return null;
+};
+
+/**
  * Check if biometric authentication is available on this device
  */
 export const checkBiometricAvailability = async (): Promise<BiometricCapability> => {
   try {
-    const { available, biometryType } = await rnBiometrics.isSensorAvailable();
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+    const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+
+    const available = hasHardware && isEnrolled;
+    const biometryType = mapAuthenticationType(supportedTypes);
 
     return {
       available,
@@ -43,14 +64,16 @@ export const checkBiometricAvailability = async (): Promise<BiometricCapability>
 /**
  * Get user-friendly name for biometric type
  */
-export const getBiometricTypeName = (biometryType: BiometryTypes | null): string => {
+export const getBiometricTypeName = (biometryType: BiometryType): string => {
   switch (biometryType) {
-    case BiometryTypes.FaceID:
+    case 'FaceID':
       return 'Face ID';
-    case BiometryTypes.TouchID:
+    case 'TouchID':
       return 'Touch ID';
-    case BiometryTypes.Biometrics:
-      return 'Biometric Authentication';
+    case 'Fingerprint':
+      return 'Fingerprint';
+    case 'Iris':
+      return 'Iris Scanner';
     default:
       return 'Biometric Login';
   }
@@ -88,13 +111,14 @@ export const enableBiometricAuth = async (
       };
     }
 
-    // Create a biometric signature to verify user identity
-    const { success } = await rnBiometrics.simplePrompt({
+    // Prompt for biometric authentication to verify user identity
+    const result = await LocalAuthentication.authenticateAsync({
       promptMessage: `Enable ${getBiometricTypeName(capability.biometryType)}`,
-      cancelButtonText: 'Cancel',
+      cancelLabel: 'Cancel',
+      disableDeviceFallback: false,
     });
 
-    if (!success) {
+    if (!result.success) {
       return {
         success: false,
         error: 'Biometric authentication was cancelled',
@@ -104,7 +128,7 @@ export const enableBiometricAuth = async (
     // Store credentials securely
     const credentials: BiometricCredentials = {
       email,
-      encryptedToken: accessToken, // In production, this should be additionally encrypted
+      encryptedToken: accessToken,
     };
 
     await SecureStore.setItemAsync(
@@ -171,12 +195,13 @@ export const authenticateWithBiometrics = async (): Promise<{
     }
 
     // Prompt for biometric authentication
-    const { success } = await rnBiometrics.simplePrompt({
+    const result = await LocalAuthentication.authenticateAsync({
       promptMessage: `Sign in with ${getBiometricTypeName(capability.biometryType)}`,
-      cancelButtonText: 'Cancel',
+      cancelLabel: 'Cancel',
+      disableDeviceFallback: false,
     });
 
-    if (!success) {
+    if (!result.success) {
       return {
         success: false,
         error: 'Biometric authentication was cancelled or failed',

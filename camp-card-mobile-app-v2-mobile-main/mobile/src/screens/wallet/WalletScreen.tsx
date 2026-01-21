@@ -402,22 +402,22 @@ export default function WalletScreen() {
 
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={() => navigation.navigate('Subscription')}
+              onPress={() => (navigation as any).navigate('CardInventory')}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
-                <Ionicons name="refresh" size={24} color="#F57C00" />
+                <Ionicons name="layers" size={24} color="#F57C00" />
               </View>
-              <Text style={styles.actionLabel}>Renew Card</Text>
+              <Text style={styles.actionLabel}>Manage Cards</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={() => navigation.navigate('HelpSupport')}
+              onPress={() => (navigation as any).navigate('ReplenishCard')}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#FCE4EC' }]}>
-                <Ionicons name="help-circle" size={24} color={COLORS.primary} />
+                <Ionicons name="refresh" size={24} color={COLORS.primary} />
               </View>
-              <Text style={styles.actionLabel}>Get Help</Text>
+              <Text style={styles.actionLabel}>Replenish</Text>
             </TouchableOpacity>
           </View>
         </View>

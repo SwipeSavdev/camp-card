@@ -71,8 +71,8 @@ export default function SubscriptionSelectionScreen() {
       return;
     }
 
-    // Navigate to payment screen with the selected plan
-    (navigation as any).navigate('Payment', {
+    // Navigate to quantity selection screen with the selected plan
+    (navigation as any).navigate('QuantitySelection', {
       selectedPlan: {
         id: selectedPlan.id,
         uuid: selectedPlan.uuid,

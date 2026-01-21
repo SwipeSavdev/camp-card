@@ -15,6 +15,9 @@ public class AwsConfig {
     @Value("${aws.region:us-east-2}")
     private String awsRegion;
 
+    @Value("${aws.sns.region:us-east-1}")
+    private String snsRegion;
+
     @Bean
     public SesClient sesClient() {
         return SesClient.builder()
@@ -26,7 +29,7 @@ public class AwsConfig {
     @Bean
     public SnsClient snsClient() {
         return SnsClient.builder()
-                .region(Region.of(awsRegion))
+                .region(Region.of(snsRegion))
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
     }

@@ -26,8 +26,14 @@ type PaymentScreenRouteProp = RouteProp<AuthStackParamList, 'Payment'>;
 export default function PaymentScreen() {
   const navigation = useNavigation();
   const route = useRoute<PaymentScreenRouteProp>();
-  const { selectedPlan } = route.params;
+  const { selectedPlan, quantity = 1, scoutCode } = route.params;
   const { width } = useWindowDimensions();
+
+  // Calculate totals
+  const unitPrice = selectedPlan.priceCents;
+  const subtotal = unitPrice * quantity;
+  const bulkDiscount = quantity > 1 ? Math.round(subtotal * 0.05) : 0; // 5% bulk discount for 2+ cards
+  const totalPrice = subtotal - bulkDiscount;
 
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -124,6 +130,8 @@ export default function PaymentScreen() {
       (navigation as any).navigate('Signup', {
         selectedPlan: selectedPlan,
         paymentCompleted: true,
+        quantity: quantity,
+        scoutCode: scoutCode,
       });
     } catch (error) {
       console.error('Payment error:', error);
@@ -175,15 +183,26 @@ export default function PaymentScreen() {
               <View style={styles.orderItemLeft}>
                 <Text style={styles.planName}>{selectedPlan.name}</Text>
                 <Text style={styles.planInterval}>
-                  {selectedPlan.billingInterval === 'ANNUAL' ? 'Annual Subscription' : 'Monthly Subscription'}
+                  {quantity} Camp Card{quantity > 1 ? 's' : ''} × {formatPrice(unitPrice)}
                 </Text>
               </View>
-              <Text style={styles.planPrice}>{formatPrice(selectedPlan.priceCents)}</Text>
+              <Text style={styles.planPrice}>{formatPrice(subtotal)}</Text>
             </View>
+            {bulkDiscount > 0 ? (
+              <View style={styles.discountRow}>
+                <Text style={styles.discountLabel}>Bulk Discount (5%)</Text>
+                <Text style={styles.discountAmount}>-{formatPrice(bulkDiscount)}</Text>
+              </View>
+            ) : null}
+            {scoutCode ? (
+              <View style={styles.scoutRow}>
+                <Text style={styles.scoutLabel}>Scout Referral: {scoutCode}</Text>
+              </View>
+            ) : null}
             <View style={styles.divider} />
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total Due Today</Text>
-              <Text style={styles.totalAmount}>{formatPrice(selectedPlan.priceCents)}</Text>
+              <Text style={styles.totalAmount}>{formatPrice(totalPrice)}</Text>
             </View>
           </View>
 
@@ -304,7 +323,7 @@ export default function PaymentScreen() {
               <>
                 <Ionicons name="lock-closed" size={20} color="#fff" />
                 <Text style={styles.payButtonText}>
-                  Pay {formatPrice(selectedPlan.priceCents)}
+                  Pay {formatPrice(totalPrice)}
                 </Text>
               </>
             )}
@@ -399,6 +418,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
+  },
+  discountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  discountLabel: {
+    fontSize: 14,
+    color: '#4CAF50',
+  },
+  discountAmount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+  scoutRow: {
+    marginTop: 12,
+  },
+  scoutLabel: {
+    fontSize: 13,
+    color: '#1565C0',
+    fontStyle: 'italic',
   },
   divider: {
     height: 1,
