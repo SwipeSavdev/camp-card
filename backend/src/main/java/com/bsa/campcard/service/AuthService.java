@@ -1,7 +1,9 @@
 package com.bsa.campcard.service;
 
 import com.bsa.campcard.dto.auth.*;
+import com.bsa.campcard.entity.ParentalConsent;
 import com.bsa.campcard.exception.AuthenticationException;
+import com.bsa.campcard.repository.ParentalConsentRepository;
 import com.bsa.campcard.repository.SubscriptionRepository;
 import com.bsa.campcard.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class AuthService {
     private final EmailService emailService;
     private final SmsService smsService;
     private final SubscriptionRepository subscriptionRepository;
+    private final ParentalConsentRepository parentalConsentRepository;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -283,6 +286,25 @@ public class AuthService {
             }
         }
 
+        // Get COPPA parental consent status
+        String consentStatus = "NOT_REQUIRED";
+        boolean locationAllowed = true;
+        boolean requiresPasswordChange = Boolean.TRUE.equals(user.getRequiresPasswordChange());
+
+        // Check if user is a minor who needs consent
+        if (user.requiresParentalConsent()) {
+            var consent = parentalConsentRepository.findByMinorUserId(user.getId());
+            if (consent.isPresent()) {
+                ParentalConsent pc = consent.get();
+                consentStatus = pc.getConsentStatus().name();
+                locationAllowed = pc.isLocationAllowed();
+            } else {
+                // Minor without consent record defaults to PENDING
+                consentStatus = "PENDING";
+                locationAllowed = false;
+            }
+        }
+
         return AuthResponse.UserInfo.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -292,6 +314,9 @@ public class AuthService {
                 .emailVerified(user.getEmailVerified())
                 .cardNumber(cardNumber)
                 .subscriptionStatus(subscriptionStatus)
+                .consentStatus(consentStatus)
+                .locationAllowed(locationAllowed)
+                .requiresPasswordChange(requiresPasswordChange)
                 .build();
     }
 

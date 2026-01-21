@@ -196,6 +196,11 @@ export default function UsersPage() {
   const [newUserUnitType, setNewUserUnitType] = useState<UnitType>(null);
   const [newUserUnitNumber, setNewUserUnitNumber] = useState('');
   const [newUserCouncilId, setNewUserCouncilId] = useState<string>('');
+  // COPPA compliance fields for Scouts
+  const [newUserDateOfBirth, setNewUserDateOfBirth] = useState('');
+  const [newUserParentName, setNewUserParentName] = useState('');
+  const [newUserParentEmail, setNewUserParentEmail] = useState('');
+  const [newUserParentPhone, setNewUserParentPhone] = useState('');
   const [councilSearchTerm, setCouncilSearchTerm] = useState('');
   const [councils, setCouncils] = useState<Array<{ id: string; uuid: string; name: string }>>([]);
   const [councilsLoading, setCouncilsLoading] = useState(false);
@@ -438,6 +443,28 @@ export default function UsersPage() {
       return;
     }
 
+    // COPPA compliance validation for Scouts
+    if (newUserRole === 'SCOUT') {
+      if (!newUserDateOfBirth) {
+        setError('Date of birth is required for Scout accounts (COPPA compliance)');
+        return;
+      }
+      if (!newUserParentName.trim()) {
+        setError('Parent/guardian name is required for Scout accounts');
+        return;
+      }
+      if (!newUserParentEmail.trim()) {
+        setError('Parent/guardian email is required for Scout accounts');
+        return;
+      }
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newUserParentEmail)) {
+        setError('Please enter a valid parent/guardian email address');
+        return;
+      }
+    }
+
     try {
       // Split name into firstName and lastName
       const nameParts = newUserName.trim().split(' ');
@@ -461,10 +488,17 @@ export default function UsersPage() {
         userData.councilId = newUserCouncilId;
       }
 
-      // Include unit type and number only for Scouts
+      // Include unit type, number, and COPPA fields for Scouts
       if (newUserRole === 'SCOUT') {
         userData.unitType = newUserUnitType;
         userData.unitNumber = newUserUnitNumber;
+        // COPPA compliance fields
+        userData.dateOfBirth = newUserDateOfBirth;
+        userData.parentName = newUserParentName.trim();
+        userData.parentEmail = newUserParentEmail.trim();
+        if (newUserParentPhone.trim()) {
+          userData.parentPhone = newUserParentPhone.trim();
+        }
       }
 
       console.log('[PAGE] Submitting user data:', userData);
@@ -494,6 +528,10 @@ export default function UsersPage() {
       setNewUserRole('SCOUT');
       setNewUserUnitType(null);
       setNewUserUnitNumber('');
+      setNewUserDateOfBirth('');
+      setNewUserParentName('');
+      setNewUserParentEmail('');
+      setNewUserParentPhone('');
       setNewUserCouncilId('');
       setCouncilSearchTerm('');
       setShowCouncilDropdown(false);
@@ -1489,10 +1527,14 @@ Role
                   value={newUserRole}
                   onChange={(e) => {
                     setNewUserRole(e.target.value as UserRole);
-                    // Clear unit fields when switching away from Scout
+                    // Clear Scout-specific fields when switching away from Scout
                     if (e.target.value !== 'SCOUT') {
                       setNewUserUnitType(null);
                       setNewUserUnitNumber('');
+                      setNewUserDateOfBirth('');
+                      setNewUserParentName('');
+                      setNewUserParentEmail('');
+                      setNewUserParentPhone('');
                     }
                   }}
                   style={{
@@ -1665,6 +1707,126 @@ Unit Number
                      }}
                     />
                   </div>
+
+                  {/* COPPA Compliance: Date of Birth field */}
+                  <div>
+                    <label style={{
+                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                    }}
+                    >
+                      Date of Birth <span style={{ color: themeColors.error500 }}>*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={newUserDateOfBirth}
+                      onChange={(e) => setNewUserDateOfBirth(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                      style={{
+                        width: '100%',
+                        padding: `${themeSpace.sm} ${themeSpace.md}`,
+                        border: `1px solid ${themeColors.gray200}`,
+                        borderRadius: themeRadius.sm,
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <p style={{ fontSize: '11px', color: themeColors.gray500, marginTop: '4px', margin: '4px 0 0 0' }}>
+                      Required for COPPA compliance. Minors require parental consent.
+                    </p>
+                  </div>
+
+                  {/* COPPA Compliance: Parent/Guardian Information */}
+                  <div style={{
+                    backgroundColor: themeColors.info50,
+                    border: `1px solid ${themeColors.info600}`,
+                    borderRadius: themeRadius.sm,
+                    padding: themeSpace.md,
+                    marginTop: themeSpace.sm,
+                  }}>
+                    <h4 style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: themeColors.info600,
+                      marginBottom: themeSpace.md,
+                      margin: `0 0 ${themeSpace.md} 0`,
+                    }}>
+                      Parent/Guardian Information
+                    </h4>
+                    <p style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.md, margin: `0 0 ${themeSpace.md} 0` }}>
+                      A consent request email will be sent to the parent/guardian. The scout will have limited access until consent is granted.
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
+                      <div>
+                        <label style={{
+                          display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                        }}
+                        >
+                          Parent/Guardian Name <span style={{ color: themeColors.error500 }}>*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newUserParentName}
+                          onChange={(e) => setNewUserParentName(e.target.value)}
+                          placeholder="Enter parent/guardian full name"
+                          style={{
+                            width: '100%',
+                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            border: `1px solid ${themeColors.gray200}`,
+                            borderRadius: themeRadius.sm,
+                            fontSize: '14px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{
+                          display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                        }}
+                        >
+                          Parent/Guardian Email <span style={{ color: themeColors.error500 }}>*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={newUserParentEmail}
+                          onChange={(e) => setNewUserParentEmail(e.target.value)}
+                          placeholder="Enter parent/guardian email"
+                          style={{
+                            width: '100%',
+                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            border: `1px solid ${themeColors.gray200}`,
+                            borderRadius: themeRadius.sm,
+                            fontSize: '14px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{
+                          display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                        }}
+                        >
+                          Parent/Guardian Phone (Optional)
+                        </label>
+                        <input
+                          type="tel"
+                          value={newUserParentPhone}
+                          onChange={(e) => setNewUserParentPhone(e.target.value)}
+                          placeholder="Enter parent/guardian phone"
+                          style={{
+                            width: '100%',
+                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            border: `1px solid ${themeColors.gray200}`,
+                            borderRadius: themeRadius.sm,
+                            fontSize: '14px',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -1679,6 +1841,10 @@ Unit Number
                   setNewUserRole('SCOUT');
                   setNewUserUnitType(null);
                   setNewUserUnitNumber('');
+                  setNewUserDateOfBirth('');
+                  setNewUserParentName('');
+                  setNewUserParentEmail('');
+                  setNewUserParentPhone('');
                   setNewUserCouncilId('');
                   setCouncilSearchTerm('');
                   setShowCouncilDropdown(false);

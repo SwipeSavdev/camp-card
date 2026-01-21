@@ -33,6 +33,11 @@ public class AuthResponse {
         private String profileImageUrl;
         private String cardNumber;
         private String subscriptionStatus;
+
+        // COPPA compliance fields
+        private String consentStatus;      // NOT_REQUIRED, PENDING, GRANTED, DENIED, REVOKED
+        private boolean locationAllowed;   // True if location access is permitted
+        private boolean requiresPasswordChange; // True if user must change password
     }
 
     public static AuthResponse of(String accessToken, String refreshToken, Long expiresIn, UserInfo user) {

@@ -14,6 +14,7 @@ import PaymentScreen from '../screens/auth/PaymentScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
+import ConsentPendingScreen from '../screens/auth/ConsentPendingScreen';
 
 // Main Screens
 import HomeScreen from '../screens/home/HomeScreen';
@@ -455,10 +456,17 @@ function CustomerMainNavigator() {
 export default function RootNavigator() {
   const { isAuthenticated, user } = useAuthStore();
   const userRole = user?.role;
+  const consentStatus = user?.consentStatus;
 
   // Not authenticated - show login/signup
   if (!isAuthenticated) {
     return <AuthNavigator />;
+  }
+
+  // COPPA Compliance: Check if parental consent is pending or denied
+  // This applies to minors (SCOUT role and PARENT role under 18)
+  if (consentStatus === 'PENDING' || consentStatus === 'DENIED' || consentStatus === 'REVOKED') {
+    return <ConsentPendingScreen />;
   }
 
   // Role-based navigation

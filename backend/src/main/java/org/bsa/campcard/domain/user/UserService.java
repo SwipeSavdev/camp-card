@@ -1,5 +1,6 @@
 package org.bsa.campcard.domain.user;
 
+import com.bsa.campcard.service.ParentalConsentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -10,7 +11,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,9 +27,10 @@ import java.util.UUID;
 public class UserService {
 
     private static final String USER_NOT_FOUND = "User not found: ";
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ParentalConsentService parentalConsentService;
 
     /**
      * Find user by ID
@@ -98,6 +102,7 @@ public class UserService {
     /**
      * Create new user (admin-initiated)
      * Generates verification token and sends verification email
+     * For Scout accounts, also handles COPPA compliance by creating parental consent request
      */
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
@@ -113,6 +118,23 @@ public class UserService {
         // Generate verification token
         String verificationToken = UUID.randomUUID().toString();
         log.info("Generated verification token for {}: {}", request.email(), verificationToken);
+
+        // Determine if user is a minor (for COPPA compliance)
+        boolean isMinor = false;
+        boolean isUnder13 = false;
+        User.ConsentStatus consentStatus = User.ConsentStatus.NOT_REQUIRED;
+
+        if (request.dateOfBirth() != null) {
+            int age = Period.between(request.dateOfBirth(), LocalDate.now()).getYears();
+            isMinor = age < 18;
+            isUnder13 = age < 13;
+
+            // Scouts who are minors require parental consent
+            if (request.role() == User.UserRole.SCOUT && isMinor) {
+                consentStatus = User.ConsentStatus.PENDING;
+                log.info("User is a minor (age {}), parental consent will be required", age);
+            }
+        }
 
         User user = User.builder()
             .email(request.email().toLowerCase())
@@ -130,15 +152,37 @@ public class UserService {
             .emailVerified(false)
             .emailVerificationToken(verificationToken)
             .emailVerificationExpiresAt(LocalDateTime.now().plusDays(7))
-            // Disabled until DB columns exist - uncomment when DBA adds columns:
-            // .passwordSetupRequired(true)
-            // .passwordSetupToken(passwordSetupToken)
-            // .passwordSetupExpiresAt(LocalDateTime.now().plusDays(7))
+            // COPPA fields - @Transient until DB columns exist
+            .dateOfBirth(request.dateOfBirth())
+            .isMinor(isMinor)
+            .isUnder13(isUnder13)
+            .consentStatus(consentStatus)
+            .parentEmail(request.parentEmail())
+            .parentName(request.parentName())
+            .requiresPasswordChange(true) // Admin-created accounts require password change
             .referralCode(generateReferralCode())
             .build();
 
         User savedUser = userRepository.save(user);
         log.info("Created user with ID: {}", savedUser.getId());
+
+        // Create parental consent request for minor scouts
+        if (request.role() == User.UserRole.SCOUT && isMinor
+                && request.parentEmail() != null && request.parentName() != null) {
+            try {
+                parentalConsentService.createConsentRequest(
+                    savedUser.getId(),
+                    request.parentEmail(),
+                    request.parentName(),
+                    request.parentPhone()
+                );
+                log.info("Parental consent request created for minor scout: {}", savedUser.getId());
+            } catch (Exception e) {
+                log.error("Failed to create parental consent request for scout {}: {}",
+                    savedUser.getId(), e.getMessage());
+                // Don't fail user creation if consent request fails
+            }
+        }
 
         // Send verification email notification via async service
         log.info("Verification email notification queued for: {}", savedUser.getEmail());
@@ -316,7 +360,12 @@ public class UserService {
         UUID councilId,
         UUID troopId,
         User.UnitType unitType,
-        String unitNumber
+        String unitNumber,
+        // COPPA compliance fields
+        java.time.LocalDate dateOfBirth,
+        String parentName,
+        String parentEmail,
+        String parentPhone
     ) {}
 
     public record UserUpdateRequest(

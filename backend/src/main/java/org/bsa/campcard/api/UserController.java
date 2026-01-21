@@ -109,14 +109,14 @@ public class UserController {
             .orElse(ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Create user", description = "Create a new user. Council Admins can only create users in their own council.")
+    @Operation(summary = "Create user", description = "Create a new user. Council Admins can only create users in their own council. Unit Leaders can only create Scout accounts in their troop.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "User created successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
         @ApiResponse(responseCode = "409", description = "Email already exists", content = @Content)
     })
     @PostMapping
-    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     public ResponseEntity<UserResponse> createUser(
         Authentication authentication,
         @Valid @RequestBody UserService.UserCreateRequest request
@@ -128,8 +128,33 @@ public class UserController {
                     "Only Global System Admin can assign system-level roles (Admin, Support Representative, System Analyst, System QA, Security Analyst)");
             }
 
+            // RBAC: Unit Leaders can only create Scout accounts in their troop
+            if (currentUser.getRole() == User.UserRole.UNIT_LEADER) {
+                if (request.role() != User.UserRole.SCOUT) {
+                    throw new org.springframework.security.access.AccessDeniedException(
+                        "Unit Leaders can only create Scout accounts");
+                }
+                // Force the scout to be in the Unit Leader's council and troop
+                request = new UserService.UserCreateRequest(
+                    request.email(),
+                    request.password(),
+                    request.firstName(),
+                    request.lastName(),
+                    request.phoneNumber(),
+                    User.UserRole.SCOUT,
+                    currentUser.getCouncilId(),
+                    currentUser.getTroopId(),
+                    request.unitType(),
+                    request.unitNumber(),
+                    // COPPA compliance fields
+                    request.dateOfBirth(),
+                    request.parentName(),
+                    request.parentEmail(),
+                    request.parentPhone()
+                );
+            }
             // RBAC: Council Admins can only create users in their own council
-            if (currentUser.getRole() == User.UserRole.COUNCIL_ADMIN && currentUser.getCouncilId() != null) {
+            else if (currentUser.getRole() == User.UserRole.COUNCIL_ADMIN && currentUser.getCouncilId() != null) {
                 // Force the new user to be in the Council Admin's council
                 request = new UserService.UserCreateRequest(
                     request.email(),
@@ -141,7 +166,12 @@ public class UserController {
                     currentUser.getCouncilId(), // Force to Council Admin's council
                     request.troopId(),
                     request.unitType(),
-                    request.unitNumber()
+                    request.unitNumber(),
+                    // COPPA compliance fields
+                    request.dateOfBirth(),
+                    request.parentName(),
+                    request.parentEmail(),
+                    request.parentPhone()
                 );
             }
         }
@@ -275,7 +305,11 @@ public class UserController {
             user.getEmailVerified(),
             user.getLastLoginAt(),
             user.getCreatedAt(),
-            user.getUpdatedAt()
+            user.getUpdatedAt(),
+            // COPPA compliance fields
+            user.getDateOfBirth(),
+            user.getConsentStatus() != null ? user.getConsentStatus().name() : null,
+            user.getIsMinor()
         );
     }
 
@@ -293,6 +327,10 @@ public class UserController {
         Boolean emailVerified,
         java.time.LocalDateTime lastLoginAt,
         java.time.LocalDateTime createdAt,
-        java.time.LocalDateTime updatedAt
+        java.time.LocalDateTime updatedAt,
+        // COPPA compliance fields
+        java.time.LocalDate dateOfBirth,
+        String consentStatus,
+        Boolean isMinor
     ) {}
 }

@@ -9,7 +9,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.UUID;
 
 /**
@@ -109,6 +111,75 @@ public class User {
     @Transient
     private String abuseFlagReason;
 
+    // ========================================================================
+    // COPPA Compliance fields - temporarily @Transient until DBA adds columns
+    // See migration V027__coppa_parental_consent.sql for column definitions
+    // ========================================================================
+
+    /**
+     * User's date of birth for age verification
+     */
+    @Transient
+    private LocalDate dateOfBirth;
+
+    /**
+     * True if user is under 18 years old (state privacy law restrictions)
+     */
+    @Transient
+    @Builder.Default
+    private Boolean isMinor = false;
+
+    /**
+     * True if user is under 13 (COPPA full compliance required)
+     */
+    @Transient
+    @Builder.Default
+    private Boolean isUnder13 = false;
+
+    /**
+     * Parental consent status: NOT_REQUIRED, PENDING, GRANTED, DENIED, REVOKED
+     */
+    @Transient
+    @Builder.Default
+    private ConsentStatus consentStatus = ConsentStatus.NOT_REQUIRED;
+
+    /**
+     * Parent has granted location tracking permission
+     */
+    @Transient
+    @Builder.Default
+    private Boolean locationConsent = false;
+
+    /**
+     * True if user must change password on next login (e.g., admin-created accounts)
+     */
+    @Transient
+    @Builder.Default
+    private Boolean requiresPasswordChange = false;
+
+    /**
+     * Parent/guardian email for consent verification
+     */
+    @Transient
+    private String parentEmail;
+
+    /**
+     * Parent/guardian full name
+     */
+    @Transient
+    private String parentName;
+
+    /**
+     * Consent status values for COPPA compliance tracking
+     */
+    public enum ConsentStatus {
+        NOT_REQUIRED,
+        PENDING,
+        GRANTED,
+        DENIED,
+        REVOKED
+    }
+
     public enum UserRole {
         // System-level roles (only assignable by GLOBAL_SYSTEM_ADMIN)
         GLOBAL_SYSTEM_ADMIN,
@@ -155,5 +226,63 @@ public class User {
 
     public boolean isDeleted() {
         return deletedAt != null;
+    }
+
+    // ========================================================================
+    // COPPA Compliance helper methods
+    // ========================================================================
+
+    /**
+     * Calculate age from date of birth
+     */
+    public int getAge() {
+        if (dateOfBirth == null) {
+            return 0;
+        }
+        return Period.between(dateOfBirth, LocalDate.now()).getYears();
+    }
+
+    /**
+     * Update minor status flags based on date of birth
+     */
+    public void updateMinorStatus() {
+        if (dateOfBirth == null) {
+            this.isMinor = false;
+            this.isUnder13 = false;
+            return;
+        }
+        int age = getAge();
+        this.isMinor = age < 18;
+        this.isUnder13 = age < 13;
+    }
+
+    /**
+     * Check if user requires parental consent based on role and age
+     */
+    public boolean requiresParentalConsent() {
+        // Only SCOUT and PARENT roles for minors require consent
+        if (role != UserRole.SCOUT && role != UserRole.PARENT) {
+            return false;
+        }
+        return Boolean.TRUE.equals(isMinor);
+    }
+
+    /**
+     * Check if location access is allowed for this user
+     */
+    public boolean isLocationAccessAllowed() {
+        // Adults and unit leaders always have location access
+        if (!Boolean.TRUE.equals(isMinor) || role == UserRole.UNIT_LEADER) {
+            return true;
+        }
+        // Minors need parental consent for location
+        return consentStatus == ConsentStatus.GRANTED && Boolean.TRUE.equals(locationConsent);
+    }
+
+    /**
+     * Check if user has full app access (consent granted or not required)
+     */
+    public boolean hasFullAppAccess() {
+        return consentStatus == ConsentStatus.NOT_REQUIRED || consentStatus == ConsentStatus.GRANTED;
     }
 }

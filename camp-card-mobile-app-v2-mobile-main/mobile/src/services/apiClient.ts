@@ -300,3 +300,30 @@ export const qrCodeApi = {
   validateQRCode: (code: string) =>
     apiClient.get(`/api/v1/qr-codes/validate/${code}`),
 };
+
+// COPPA Parental Consent API
+export const consentApi = {
+  // Get current user's consent status
+  getMyConsentStatus: () =>
+    apiClient.get('/api/v1/consent/my-status'),
+
+  // Resend consent request email to parent
+  resendConsentRequest: () =>
+    apiClient.post('/api/v1/consent/resend'),
+
+  // Update parent email and resend consent request
+  updateParentAndResend: (parentEmail: string, parentName: string) =>
+    apiClient.post('/api/v1/consent/update-parent', { parentEmail, parentName }),
+
+  // Get consent verification details by token (public endpoint)
+  getConsentVerification: (token: string) =>
+    apiClient.get(`/api/v1/consent/verify/${token}`),
+
+  // Submit consent decision (public endpoint, used by parent via web link)
+  submitConsentDecision: (token: string, data: {
+    granted: boolean;
+    locationConsent: boolean;
+    marketingConsent: boolean;
+  }) =>
+    apiClient.post(`/api/v1/consent/verify/${token}`, data),
+};

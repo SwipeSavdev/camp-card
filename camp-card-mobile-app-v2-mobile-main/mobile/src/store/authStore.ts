@@ -6,6 +6,8 @@ import * as SecureStore from 'expo-secure-store';
 import { apiClient } from '../services/apiClient';
 import { API_BASE_URL } from '../config/constants';
 
+export type ConsentStatus = 'NOT_REQUIRED' | 'PENDING' | 'GRANTED' | 'DENIED' | 'REVOKED';
+
 interface User {
   id: string;
   email: string;
@@ -16,6 +18,10 @@ interface User {
   troopId?: string;
   subscriptionStatus?: 'active' | 'inactive' | 'expired' | 'none';
   subscriptionExpiresAt?: string;
+  // COPPA compliance fields
+  consentStatus?: ConsentStatus;
+  locationAllowed?: boolean;
+  requiresPasswordChange?: boolean;
 }
 
 interface AuthState {

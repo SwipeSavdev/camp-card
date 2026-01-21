@@ -2486,6 +2486,227 @@ public class EmailService {
     }
 
     // ========================================================================
+    // COPPA PARENTAL CONSENT EMAILS
+    // ========================================================================
+
+    /**
+     * Send consent request email to parent/guardian for a minor user.
+     */
+    @Async
+    public void sendParentalConsentRequestEmail(
+            String parentEmail,
+            String parentName,
+            String minorName,
+            LocalDate minorDateOfBirth,
+            String verificationToken
+    ) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send consent request email to: {}", parentEmail);
+            return;
+        }
+
+        String subject = "Parental Consent Required - BSA Camp Card Account for " + minorName;
+        String consentUrl = webPortalUrl + "/consent/verify?token=" + verificationToken;
+
+        String minorAge = minorDateOfBirth != null
+                ? String.valueOf(java.time.Period.between(minorDateOfBirth, LocalDate.now()).getYears())
+                : "under 18";
+
+        String htmlBody = buildEmailTemplate(
+            "Parental Consent Required",
+            WARNING_ORANGE,
+            """
+            <p style="font-size: 16px; color: #333333;">Hello %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your child, <strong>%s</strong> (age %s), has been registered for a BSA Camp Card account by their Unit Leader.</p>
+
+            <div style="background-color: #e7f3ff; border: 1px solid #b3d7ff; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #004085;"><strong>What is BSA Camp Card?</strong></p>
+                <p style="margin: 0; font-size: 14px; color: #004085;">BSA Camp Card is a digital fundraising platform that helps Scouts raise money by offering exclusive discounts at local merchants.</p>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">As required by federal (COPPA) and state privacy laws, we need your consent before your child can use the app.</p>
+
+            <p style="font-size: 16px; color: #333333;"><strong>Please review and approve your child's account:</strong></p>
+            """ + buildButton("Review Consent Request", consentUrl, BSA_NAVY) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Or copy and paste this link into your browser:</p>
+            <p style="font-size: 12px; color: #999999; word-break: break-all;">%s</p>
+
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #856404;"><strong>What you'll be asked to approve:</strong></p>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #856404;">
+                    <li>Basic account access (viewing offers, earning rewards)</li>
+                    <li>Location services (optional - for finding nearby merchants)</li>
+                    <li>Marketing communications (optional)</li>
+                </ul>
+            </div>
+
+            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 16px;">
+                <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>This link expires in 7 days.</strong></p>
+            </div>
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">If you have questions, please contact your child's Unit Leader or email us at support@bsa.swipesavvy.com.</p>
+            """.formatted(parentName, minorName, minorAge, consentUrl)
+        );
+
+        String textBody = """
+            Parental Consent Required - BSA Camp Card Account
+
+            Hello %s,
+
+            Your child, %s (age %s), has been registered for a BSA Camp Card account by their Unit Leader.
+
+            What is BSA Camp Card?
+            BSA Camp Card is a digital fundraising platform that helps Scouts raise money by offering exclusive discounts at local merchants.
+
+            As required by federal (COPPA) and state privacy laws, we need your consent before your child can use the app.
+
+            Please review and approve your child's account by visiting:
+            %s
+
+            What you'll be asked to approve:
+            - Basic account access (viewing offers, earning rewards)
+            - Location services (optional - for finding nearby merchants)
+            - Marketing communications (optional)
+
+            This link expires in 7 days.
+
+            If you have questions, please contact your child's Unit Leader or email us at support@bsa.swipesavvy.com.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(parentName, minorName, minorAge, consentUrl);
+
+        sendEmail(parentEmail, subject, htmlBody, textBody);
+        log.info("Parental consent request email sent to: {} for minor: {}", parentEmail, minorName);
+    }
+
+    /**
+     * Send email to minor when consent is granted.
+     */
+    @Async
+    public void sendConsentGrantedEmail(String to, String firstName, boolean locationEnabled) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send consent granted email to: {}", to);
+            return;
+        }
+
+        String subject = "Welcome to BSA Camp Card - Your Account is Ready!";
+        String loginUrl = webPortalUrl + "/login";
+
+        String locationStatus = locationEnabled
+                ? "<li>📍 Location services: <strong style=\"color: #28a745;\">Enabled</strong> - Find nearby merchants easily!</li>"
+                : "<li>📍 Location services: <strong style=\"color: #dc3545;\">Disabled</strong> - You can still browse all offers</li>";
+
+        String htmlBody = buildEmailTemplate(
+            "Account Approved!",
+            SUCCESS_GREEN,
+            """
+            <p style="font-size: 16px; color: #333333;">Great news, %s!</p>
+            <p style="font-size: 16px; color: #333333;">Your parent or guardian has approved your BSA Camp Card account. You're all set to start discovering exclusive offers and supporting your unit's fundraising efforts!</p>
+
+            <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #155724;"><strong>✅ Your account permissions:</strong></p>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #155724;">
+                    <li>View and redeem exclusive merchant offers</li>
+                    <li>Track your fundraising progress</li>
+                    %s
+                </ul>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;"><strong>Ready to get started?</strong></p>
+            """ + buildButton("Open Camp Card", loginUrl, SUCCESS_GREEN) + """
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Download the Camp Card app from the App Store or Google Play to start exploring offers in your area.</p>
+            """.formatted(firstName, locationStatus)
+        );
+
+        String textBody = """
+            Welcome to BSA Camp Card!
+
+            Great news, %s!
+
+            Your parent or guardian has approved your BSA Camp Card account. You're all set to start discovering exclusive offers and supporting your unit's fundraising efforts!
+
+            Your account permissions:
+            - View and redeem exclusive merchant offers
+            - Track your fundraising progress
+            - Location services: %s
+
+            Ready to get started? Log in at: %s
+
+            Download the Camp Card app from the App Store or Google Play to start exploring offers in your area.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName, locationEnabled ? "Enabled" : "Disabled", loginUrl);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Consent granted email sent to: {}", to);
+    }
+
+    /**
+     * Send email to minor when consent is denied.
+     */
+    @Async
+    public void sendConsentDeniedEmail(String to, String firstName) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send consent denied email to: {}", to);
+            return;
+        }
+
+        String subject = "BSA Camp Card - Account Access Restricted";
+
+        String htmlBody = buildEmailTemplate(
+            "Account Access Restricted",
+            BSA_RED,
+            """
+            <p style="font-size: 16px; color: #333333;">Hello %s,</p>
+            <p style="font-size: 16px; color: #333333;">We wanted to let you know that your parent or guardian has chosen not to grant consent for your BSA Camp Card account at this time.</p>
+
+            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>What this means:</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 14px; color: #721c24;">
+                    <li>You won't be able to access the Camp Card app at this time</li>
+                    <li>Your account information has been kept secure</li>
+                    <li>Your parent can change their decision at any time</li>
+                </ul>
+            </div>
+
+            <p style="font-size: 16px; color: #333333;">If you have questions, please talk to your parent or guardian about their decision.</p>
+
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">You can still participate in traditional BSA fundraising activities with your unit!</p>
+            """.formatted(firstName)
+        );
+
+        String textBody = """
+            BSA Camp Card - Account Access Restricted
+
+            Hello %s,
+
+            We wanted to let you know that your parent or guardian has chosen not to grant consent for your BSA Camp Card account at this time.
+
+            What this means:
+            - You won't be able to access the Camp Card app at this time
+            - Your account information has been kept secure
+            - Your parent can change their decision at any time
+
+            If you have questions, please talk to your parent or guardian about their decision.
+
+            You can still participate in traditional BSA fundraising activities with your unit!
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName);
+
+        sendEmail(to, subject, htmlBody, textBody);
+        log.info("Consent denied email sent to: {}", to);
+    }
+
+    // ========================================================================
     // HELPER METHODS
     // ========================================================================
 

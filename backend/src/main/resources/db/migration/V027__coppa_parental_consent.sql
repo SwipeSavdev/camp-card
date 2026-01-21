@@ -1,0 +1,99 @@
+-- V027: COPPA Compliance - Parental Consent System
+-- Implements Children's Online Privacy Protection Act (COPPA) requirements
+-- and state privacy laws for minors' location data.
+--
+-- NOTE: This migration requires DBA/owner privileges to run on RDS.
+-- The campcard_app user does not have CREATE TABLE or ALTER TABLE permissions.
+--
+-- DBA should run the following SQL manually as the postgres user:
+--
+-- ============================================================================
+-- PART 1: Add COPPA fields to users table
+-- ============================================================================
+--
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS is_minor BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS is_under_13 BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS consent_status VARCHAR(20) DEFAULT 'NOT_REQUIRED';
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS location_consent BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS requires_password_change BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS parent_email VARCHAR(255);
+-- ALTER TABLE campcard.users ADD COLUMN IF NOT EXISTS parent_name VARCHAR(255);
+--
+-- -- Index for querying minors pending consent
+-- CREATE INDEX IF NOT EXISTS idx_users_consent_status ON campcard.users(consent_status) WHERE consent_status IS NOT NULL;
+--
+-- COMMENT ON COLUMN campcard.users.date_of_birth IS 'Date of birth for age verification';
+-- COMMENT ON COLUMN campcard.users.is_minor IS 'True if user is under 18 years old';
+-- COMMENT ON COLUMN campcard.users.is_under_13 IS 'True if user is under 13 (COPPA full compliance)';
+-- COMMENT ON COLUMN campcard.users.consent_status IS 'Parental consent status: NOT_REQUIRED, PENDING, GRANTED, DENIED, REVOKED';
+-- COMMENT ON COLUMN campcard.users.location_consent IS 'Parent has granted location tracking permission';
+-- COMMENT ON COLUMN campcard.users.requires_password_change IS 'True if user must change password on next login';
+-- COMMENT ON COLUMN campcard.users.parent_email IS 'Parent/guardian email for consent verification';
+-- COMMENT ON COLUMN campcard.users.parent_name IS 'Parent/guardian full name';
+--
+-- ============================================================================
+-- PART 2: Create parental_consents table
+-- ============================================================================
+--
+-- CREATE TABLE IF NOT EXISTS campcard.parental_consents (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--     minor_user_id UUID NOT NULL REFERENCES campcard.users(id) ON DELETE CASCADE,
+--     parent_user_id UUID REFERENCES campcard.users(id) ON DELETE SET NULL,
+--     parent_email VARCHAR(255) NOT NULL,
+--     parent_name VARCHAR(255) NOT NULL,
+--     parent_phone VARCHAR(20),
+--
+--     -- Consent status
+--     consent_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+--     location_consent BOOLEAN DEFAULT FALSE,
+--     marketing_consent BOOLEAN DEFAULT FALSE,
+--     data_collection_consent BOOLEAN DEFAULT FALSE,
+--
+--     -- Verification
+--     verification_token VARCHAR(255) UNIQUE,
+--     verification_expires_at TIMESTAMP WITH TIME ZONE,
+--
+--     -- Consent grant tracking (for COPPA audit compliance)
+--     consent_granted_at TIMESTAMP WITH TIME ZONE,
+--     consent_ip_address VARCHAR(45),
+--     consent_user_agent TEXT,
+--
+--     -- Revocation tracking
+--     revoked_at TIMESTAMP WITH TIME ZONE,
+--     revocation_reason TEXT,
+--
+--     -- Timestamps
+--     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+--     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+--
+--     -- Only one active consent record per minor
+--     UNIQUE(minor_user_id)
+-- );
+--
+-- -- Indexes
+-- CREATE INDEX IF NOT EXISTS idx_parental_consents_token ON campcard.parental_consents(verification_token) WHERE verification_token IS NOT NULL;
+-- CREATE INDEX IF NOT EXISTS idx_parental_consents_parent_email ON campcard.parental_consents(parent_email);
+-- CREATE INDEX IF NOT EXISTS idx_parental_consents_status ON campcard.parental_consents(consent_status);
+--
+-- -- Table comment
+-- COMMENT ON TABLE campcard.parental_consents IS 'Tracks parental consent for minor users (COPPA compliance)';
+--
+-- ============================================================================
+-- PART 3: Grant permissions to campcard_app user
+-- ============================================================================
+--
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON campcard.parental_consents TO campcard_app;
+--
+-- ============================================================================
+-- CONSENT STATUS VALUES:
+--   NOT_REQUIRED - User is 18+ or role doesn't require consent
+--   PENDING      - Consent requested, awaiting parent response
+--   GRANTED      - Parent approved, full access granted
+--   DENIED       - Parent denied consent, access restricted
+--   REVOKED      - Parent revoked previously granted consent
+-- ============================================================================
+
+-- Placeholder to mark migration as complete (does nothing)
+-- Actual schema changes must be run by DBA as documented above
+SELECT 1;
