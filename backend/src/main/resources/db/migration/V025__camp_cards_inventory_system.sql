@@ -130,6 +130,7 @@ CREATE INDEX IF NOT EXISTS idx_card_notification_log_sent_at ON campcard.card_no
 -- ============================================================================
 -- MIGRATE EXISTING SUBSCRIPTIONS TO CAMP_CARDS
 -- Convert active subscriptions to the new card system
+-- Only migrate subscriptions that have valid user_id references
 -- ============================================================================
 
 INSERT INTO campcard.camp_cards (
@@ -152,13 +153,14 @@ SELECT
     COALESCE(s.current_period_start, s.created_at),
     COALESCE(s.current_period_end,
              (DATE_TRUNC('year', COALESCE(s.created_at, NOW())) + INTERVAL '1 year - 1 day')::TIMESTAMP WITH TIME ZONE),
-    s.root_scout_id,
+    CASE WHEN EXISTS (SELECT 1 FROM campcard.users u WHERE u.id = s.root_scout_id) THEN s.root_scout_id ELSE NULL END,
     COALESCE(s.referral_depth, 0),
     COALESCE(s.created_at, NOW()),
     NOW()
 FROM campcard.subscriptions s
 WHERE s.status = 'ACTIVE'
   AND s.card_number IS NOT NULL
+  AND EXISTS (SELECT 1 FROM campcard.users u WHERE u.id = s.user_id)  -- Only valid user references
   AND NOT EXISTS (
       SELECT 1 FROM campcard.camp_cards cc WHERE cc.card_number = s.card_number
   );
