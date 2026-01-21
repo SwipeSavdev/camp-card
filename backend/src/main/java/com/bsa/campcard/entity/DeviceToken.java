@@ -40,8 +40,12 @@ public class DeviceToken {
     @Column(length = 20)
     private String appVersion;
 
-    @Column(length = 512)
-    private String endpointArn;
+    // Note: endpointArn column requires DBA to grant table ownership first
+    // Uncomment after DBA runs: ALTER TABLE campcard.device_tokens OWNER TO campcard_app;
+    // @Column(length = 512)
+    // private String endpointArn;
+    @Transient
+    private String endpointArn;  // Temporary: not persisted until DB column exists
 
     @Column(nullable = false)
     @Builder.Default
