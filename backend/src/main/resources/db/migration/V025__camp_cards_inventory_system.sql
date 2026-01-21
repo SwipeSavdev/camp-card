@@ -98,12 +98,15 @@ CREATE INDEX IF NOT EXISTS idx_camp_cards_purchase_order ON campcard.camp_cards(
 -- ============================================================================
 -- MODIFY OFFER_REDEMPTIONS
 -- Link redemptions to specific camp cards
+-- NOTE: Requires DBA to grant ownership or run as superuser:
+--   ALTER TABLE campcard.offer_redemptions OWNER TO campcard_app;
+-- Then uncomment the following:
 -- ============================================================================
 
-ALTER TABLE campcard.offer_redemptions
-ADD COLUMN IF NOT EXISTS camp_card_id BIGINT REFERENCES campcard.camp_cards(id) ON DELETE SET NULL;
-
-CREATE INDEX IF NOT EXISTS idx_offer_redemptions_camp_card_id ON campcard.offer_redemptions(camp_card_id);
+-- ALTER TABLE campcard.offer_redemptions
+-- ADD COLUMN IF NOT EXISTS camp_card_id BIGINT REFERENCES campcard.camp_cards(id) ON DELETE SET NULL;
+--
+-- CREATE INDEX IF NOT EXISTS idx_offer_redemptions_camp_card_id ON campcard.offer_redemptions(camp_card_id);
 
 -- ============================================================================
 -- CARD NOTIFICATION LOG
@@ -163,14 +166,15 @@ WHERE s.status = 'ACTIVE'
 -- ============================================================================
 -- UPDATE EXISTING OFFER_REDEMPTIONS
 -- Link existing redemptions to migrated cards
+-- NOTE: Run this after DBA grants ownership to campcard_app
 -- ============================================================================
 
-UPDATE campcard.offer_redemptions r
-SET camp_card_id = cc.id
-FROM campcard.camp_cards cc
-WHERE r.user_id = cc.owner_user_id
-  AND cc.status = 'ACTIVE'
-  AND r.camp_card_id IS NULL;
+-- UPDATE campcard.offer_redemptions r
+-- SET camp_card_id = cc.id
+-- FROM campcard.camp_cards cc
+-- WHERE r.user_id = cc.owner_user_id
+--   AND cc.status = 'ACTIVE'
+--   AND r.camp_card_id IS NULL;
 
 -- ============================================================================
 -- HELPER FUNCTION: Generate unique card number
