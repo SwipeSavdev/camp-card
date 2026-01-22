@@ -1,7 +1,7 @@
 // BuyMoreCardsScreen - Allows existing users to purchase additional Camp Cards
 // Supports quantity selection (1-10) with bulk discount
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -46,19 +46,43 @@ export default function BuyMoreCardsScreen() {
     }
   };
 
-  const handlePurchase = () => {
-    // Navigate to payment screen with the selected quantity
-    navigation.navigate('Payment' as never, {
-      selectedPlan: {
-        id: 1,
-        uuid: 'camp-card-standard',
-        name: 'Camp Card',
-        priceCents: CARD_PRICE_CENTS,
-        billingInterval: 'one_time',
-      },
-      quantity,
-      fromBuyMore: true, // Flag to indicate this is an additional purchase
-    } as never);
+  const handlePurchase = async () => {
+    // Confirm purchase before processing
+    Alert.alert(
+      'Confirm Purchase',
+      `Purchase ${quantity} Camp Card${quantity !== 1 ? 's' : ''} for ${formatPrice(totalPrice)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Purchase',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              // Call the cards purchase API
+              // In production, paymentToken would come from Authorize.net Accept.js
+              await cardsApi.purchaseCards({
+                quantity,
+                paymentToken: 'mock_token', // TODO: Integrate with Authorize.net Accept.js
+              });
+
+              Alert.alert(
+                'Purchase Successful!',
+                `You have purchased ${quantity} Camp Card${quantity !== 1 ? 's' : ''}. Check your Card Inventory to view and activate them.`,
+                [{ text: 'OK', onPress: () => navigation.goBack() }]
+              );
+            } catch (error: any) {
+              console.error('Purchase error:', error);
+              Alert.alert(
+                'Purchase Failed',
+                error.response?.data?.message || 'Failed to complete purchase. Please try again.'
+              );
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const formatPrice = (cents: number) => {
