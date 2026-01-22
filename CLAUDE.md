@@ -254,14 +254,16 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e KAFKA_BOOTSTRAP_SERVERS=campcard-kafka:9092 \
   -e SMTP_HOST=email-smtp.us-east-2.amazonaws.com \
   -e SMTP_PORT=587 \
-  -e SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX \
-  -e SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV \
+  -e SMTP_USERNAME=${SMTP_USERNAME} \
+  -e SMTP_PASSWORD=${SMTP_PASSWORD} \
   -e CAMPCARD_BASE_URL=https://api.campcardapp.org \
   -e CAMPCARD_WEB_PORTAL_URL=https://admin.campcardapp.org \
-  -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
-  -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
+  -e AUTHORIZE_NET_API_LOGIN_ID=${AUTHORIZE_NET_API_LOGIN_ID} \
+  -e AUTHORIZE_NET_TRANSACTION_KEY=${AUTHORIZE_NET_TRANSACTION_KEY} \
   -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
   --network campcard_campcard-network campcard-backend:latest
+
+# NOTE: SMTP and Authorize.net credentials stored in AWS Secrets Manager or .env.aws (not in git)
 
 # Frontend deployment
 cd /home/ubuntu/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
@@ -361,15 +363,17 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
   -e KAFKA_BOOTSTRAP_SERVERS=campcard-kafka:9092 \
   -e SMTP_HOST=email-smtp.us-east-2.amazonaws.com \
   -e SMTP_PORT=587 \
-  -e SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX \
-  -e SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV \
+  -e SMTP_USERNAME=${SMTP_USERNAME} \
+  -e SMTP_PASSWORD=${SMTP_PASSWORD} \
   -e CAMPCARD_BASE_URL=https://api.campcardapp.org \
   -e CAMPCARD_WEB_PORTAL_URL=https://admin.campcardapp.org \
-  -e AUTHORIZE_NET_API_LOGIN_ID=7adF5E2X \
-  -e AUTHORIZE_NET_TRANSACTION_KEY=38Y9qzHR34Y36BgM \
+  -e AUTHORIZE_NET_API_LOGIN_ID=${AUTHORIZE_NET_API_LOGIN_ID} \
+  -e AUTHORIZE_NET_TRANSACTION_KEY=${AUTHORIZE_NET_TRANSACTION_KEY} \
   -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
   --network campcard_campcard-network campcard-backend:latest
 ```
+
+**NOTE**: Credentials (SMTP_USERNAME, SMTP_PASSWORD, AUTHORIZE_NET_*) are stored in `.env.aws` file on EC2 server, NOT in version control.
 
 **Important**: `REDIS_SSL=false` is required because the local Redis container on EC2 doesn't use TLS (the AWS profile defaults to SSL enabled).
 
@@ -429,17 +433,17 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
 - Backend expected `SMTP_USERNAME` and `SMTP_PASSWORD` but they were missing
 
 **Solution**:
-1. **Created new AWS SES SMTP credentials**:
-   - IAM User: `ses-smtp-user.20250815-034311`
-   - Access Key ID: `AKIA4P7NVGN7DPQTMHCX`
+1. **Created AWS SES SMTP credentials**:
+   - IAM User: Created dedicated SES SMTP user
+   - Access Key: Stored in `.env.aws` on EC2 (NOT in version control)
    - Converted IAM secret key to SES SMTP password using AWS algorithm
 
-2. **Updated environment variables** (`.env.aws`):
+2. **Updated environment variables** (`.env.aws` on EC2):
    ```bash
    SMTP_HOST=email-smtp.us-east-2.amazonaws.com
    SMTP_PORT=587
-   SMTP_USERNAME=AKIA4P7NVGN7DPQTMHCX
-   SMTP_PASSWORD=BFyY1A5LvRNm4UultlbOh2zhq0l2mNsBt7VYXrqCVhvV
+   SMTP_USERNAME=<stored in .env.aws>
+   SMTP_PASSWORD=<stored in .env.aws>
    ```
 
 3. **Verified domain and sender**:
