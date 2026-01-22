@@ -26,8 +26,8 @@ import java.util.UUID;
  * REST controller for managing council-specific payment gateway configurations.
  *
  * Security:
- * - NATIONAL_ADMIN: Full access to all councils
- * - COUNCIL_ADMIN: View and verify their own council's config
+ * - GLOBAL_SYSTEM_ADMIN, ADMIN, SUPPORT_REPRESENTATIVE, NATIONAL_ADMIN: Full access to all councils
+ * - COUNCIL_ADMIN: View and verify their own council's config only
  */
 @Slf4j
 @RestController
@@ -64,7 +64,7 @@ public class CouncilPaymentConfigController {
     @ApiResponse(responseCode = "200", description = "Configuration found")
     @ApiResponse(responseCode = "404", description = "Configuration not found")
     @GetMapping
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<CouncilPaymentConfigResponse> getConfig(
             @Parameter(description = "Council ID") @PathVariable Long councilId) {
 
@@ -90,7 +90,7 @@ public class CouncilPaymentConfigController {
     @ApiResponse(responseCode = "400", description = "Invalid request")
     @ApiResponse(responseCode = "409", description = "Configuration already exists")
     @PostMapping
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'NATIONAL_ADMIN')")
     public ResponseEntity<CouncilPaymentConfigResponse> createConfig(
             @Parameter(description = "Council ID") @PathVariable Long councilId,
             @Valid @RequestBody CouncilPaymentConfigRequest request) {
@@ -116,7 +116,7 @@ public class CouncilPaymentConfigController {
     @ApiResponse(responseCode = "400", description = "Invalid request")
     @ApiResponse(responseCode = "404", description = "Configuration not found")
     @PutMapping
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'NATIONAL_ADMIN')")
     public ResponseEntity<CouncilPaymentConfigResponse> updateConfig(
             @Parameter(description = "Council ID") @PathVariable Long councilId,
             @Valid @RequestBody CouncilPaymentConfigRequest request) {
@@ -140,7 +140,7 @@ public class CouncilPaymentConfigController {
     @ApiResponse(responseCode = "200", description = "Verification completed (check success field)")
     @ApiResponse(responseCode = "404", description = "Configuration not found")
     @PostMapping("/verify")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<PaymentConfigVerificationResult> verifyConfig(
             @Parameter(description = "Council ID") @PathVariable Long councilId) {
 
@@ -163,7 +163,7 @@ public class CouncilPaymentConfigController {
     @ApiResponse(responseCode = "204", description = "Configuration deactivated")
     @ApiResponse(responseCode = "404", description = "Configuration not found")
     @DeleteMapping
-    @PreAuthorize("hasRole('NATIONAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'NATIONAL_ADMIN')")
     public ResponseEntity<Void> deactivateConfig(
             @Parameter(description = "Council ID") @PathVariable Long councilId) {
 
@@ -185,7 +185,7 @@ public class CouncilPaymentConfigController {
     )
     @ApiResponse(responseCode = "200", description = "Check completed")
     @GetMapping("/status")
-    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN')")
     public ResponseEntity<Map<String, Object>> checkConfigStatus(
             @Parameter(description = "Council ID") @PathVariable Long councilId) {
 
