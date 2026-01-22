@@ -33,8 +33,8 @@ CREATE TABLE campcard.council_payment_configs (
     -- Audit fields
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by BIGINT REFERENCES campcard.users(id),
-    updated_by BIGINT REFERENCES campcard.users(id),
+    created_by UUID REFERENCES campcard.users(id),
+    updated_by UUID REFERENCES campcard.users(id),
 
     -- Ensure one active config per council per gateway type
     CONSTRAINT uk_council_gateway UNIQUE (council_id, gateway_type)
