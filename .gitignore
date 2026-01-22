@@ -15,10 +15,22 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.env.aws
 *.pem
 *.key
 secrets/
 .aws/
+
+# ==== Firebase/Google Credentials (use EAS Secrets or GitHub Secrets) ====
+google-services.json
+GoogleService-Info.plist
+*-firebase-adminsdk-*.json
+firebase-adminsdk*.json
+google-service-account.json
+
+# ==== Duplicate root config files (use mobile/ versions) ====
+/app.json
+/eas.json
 
 # ==== Node.js ====
 node_modules/

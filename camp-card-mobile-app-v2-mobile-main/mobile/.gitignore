@@ -51,10 +51,11 @@ android/fastlane/test_output
 .env.*.local
 .env.production
 
-# Firebase config files
-# Note: google-services.json is safe to commit (public config, restricted by app signature)
-# google-services.json
+# Firebase config files (managed via EAS Secrets)
+google-services.json
 GoogleService-Info.plist
+*-firebase-adminsdk-*.json
+firebase-adminsdk*.json
 
 # App Store credentials (NEVER commit these)
 google-service-account.json
