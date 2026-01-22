@@ -25,10 +25,11 @@ public class SubscriptionService {
 
     private static final String PLAN_NOT_FOUND = "Subscription plan not found";
     private static final String SUBSCRIPTION_NOT_FOUND = "No subscription found";
-    
+
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
+    private final PaymentService paymentService;
     
     /**
      * Get all active subscription plans
@@ -67,26 +68,34 @@ public class SubscriptionService {
     @Transactional
     public SubscriptionResponse createSubscription(UUID userId, CreateSubscriptionRequest request) {
         log.info("Creating subscription for user: {} with plan: {}", userId, request.getPlanId());
-        
+
         // Validate plan exists
         SubscriptionPlan plan = subscriptionPlanRepository.findByIdAndDeletedAtIsNull(request.getPlanId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
-        
+
         // Check if user already has active subscription
         subscriptionRepository.findByUserIdAndStatusAndDeletedAtIsNull(
                 userId, Subscription.SubscriptionStatus.ACTIVE
         ).ifPresent(sub -> {
             throw new IllegalStateException("User already has an active subscription");
         });
-        
+
+        // Get council ID for payment gateway routing
+        Long councilId = plan.getCouncilId();
+
+        // Verify payment if transactionId provided (Authorize.net Accept Hosted flow)
+        if (request.getTransactionId() != null && !request.getTransactionId().isBlank()) {
+            verifyPayment(councilId, request.getTransactionId());
+        }
+
         // Calculate period dates
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime periodEnd = calculatePeriodEnd(now, plan.getBillingInterval());
-        
+
         // Create subscription
         Subscription subscription = Subscription.builder()
                 .userId(userId)
-                .councilId(plan.getCouncilId())
+                .councilId(councilId)
                 .planId(plan.getId())
                 .referralCode(request.getReferralCode())
                 .currentPeriodStart(now)
@@ -94,11 +103,12 @@ public class SubscriptionService {
                 .status(Subscription.SubscriptionStatus.PENDING) // Will be activated after payment
                 .cancelAtPeriodEnd(false)
                 .build();
-        
+
         subscription = subscriptionRepository.save(subscription);
-        
+
         log.info("Subscription created: {}", subscription.getId());
 
+        // Activate subscription (payment already verified or will be processed separately)
         subscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
         subscription = subscriptionRepository.save(subscription);
 
@@ -106,6 +116,26 @@ public class SubscriptionService {
         sendSubscriptionConfirmationEmail(userId);
 
         return toSubscriptionResponse(subscription, plan);
+    }
+
+    /**
+     * Verify payment via Authorize.net using council-specific gateway
+     */
+    private void verifyPayment(Long councilId, String transactionId) {
+        try {
+            com.bsa.campcard.dto.payment.PaymentResponse paymentResponse =
+                    paymentService.verifySubscriptionPayment(councilId, transactionId);
+
+            if ("SUCCESS".equals(paymentResponse.getStatus())) {
+                log.info("Payment verified via council {} gateway: {}", councilId, transactionId);
+            } else {
+                log.error("Payment verification failed: {}", paymentResponse.getErrorMessage());
+                throw new IllegalStateException("Payment verification failed: " + paymentResponse.getErrorMessage());
+            }
+        } catch (com.bsa.campcard.exception.PaymentException e) {
+            log.error("Payment processing failed: {}", e.getMessage());
+            throw new IllegalStateException("Payment processing failed: " + e.getMessage());
+        }
     }
 
     /**

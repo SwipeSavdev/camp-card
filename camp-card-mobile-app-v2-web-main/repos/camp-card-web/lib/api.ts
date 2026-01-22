@@ -1074,4 +1074,88 @@ export const api = {
       return [];
     }
   },
+
+  // ============ COUNCIL PAYMENT CONFIGURATION ============
+  getCouncilPaymentConfig: async (councilId: string, session?: Session | null) => {
+    try {
+      return await apiCall<any>(`/councils/${councilId}/payment-config`, {}, session);
+    } catch (error) {
+      console.error('Failed to fetch council payment config:', error);
+      return null;
+    }
+  },
+
+  createCouncilPaymentConfig: async (councilId: string, data: {
+    apiLoginId: string;
+    transactionKey: string;
+    environment: 'SANDBOX' | 'PRODUCTION';
+    gatewayType?: 'AUTHORIZE_NET';
+  }, session?: Session | null) => {
+    try {
+      return await apiCall<any>(`/councils/${councilId}/payment-config`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }, session);
+    } catch (error) {
+      console.error('Failed to create council payment config:', error);
+      throw error;
+    }
+  },
+
+  updateCouncilPaymentConfig: async (councilId: string, data: {
+    apiLoginId: string;
+    transactionKey: string;
+    environment: 'SANDBOX' | 'PRODUCTION';
+  }, session?: Session | null) => {
+    try {
+      return await apiCall<any>(`/councils/${councilId}/payment-config`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }, session);
+    } catch (error) {
+      console.error('Failed to update council payment config:', error);
+      throw error;
+    }
+  },
+
+  verifyCouncilPaymentConfig: async (councilId: string, session?: Session | null) => {
+    try {
+      return await apiCall<{
+        success: boolean;
+        message: string;
+        errorCode?: string;
+        verifiedAt?: string;
+      }>(`/councils/${councilId}/payment-config/verify`, {
+        method: 'POST',
+      }, session);
+    } catch (error) {
+      console.error('Failed to verify council payment config:', error);
+      throw error;
+    }
+  },
+
+  deleteCouncilPaymentConfig: async (councilId: string, session?: Session | null) => {
+    try {
+      await apiCall<any>(`/councils/${councilId}/payment-config`, {
+        method: 'DELETE',
+      }, session);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to delete council payment config:', error);
+      throw error;
+    }
+  },
+
+  getCouncilPaymentConfigStatus: async (councilId: string, session?: Session | null) => {
+    try {
+      return await apiCall<{
+        hasConfig: boolean;
+        isActive: boolean;
+        isVerified: boolean;
+      }>(`/councils/${councilId}/payment-config/status`, {}, session);
+    } catch (error) {
+      console.error('Failed to fetch council payment config status:', error);
+      return { hasConfig: false, isActive: false, isVerified: false };
+    }
+  },
 };

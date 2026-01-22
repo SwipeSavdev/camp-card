@@ -90,6 +90,22 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
       <path d="m21 21-4.35-4.35" />
             </svg>,
     filter: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
+    creditCard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+           </svg>,
+    settings: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+           </svg>,
+    check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <polyline points="20 6 9 17 4 12" />
+           </svg>,
+    alertCircle: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+           </svg>,
   };
   return icons[name] || null;
 }
@@ -135,16 +151,23 @@ interface TroopUnit {
   scoutCount: number;
 }
 
+interface PaymentConfigStatus {
+  hasConfig: boolean;
+  isActive: boolean;
+  isVerified: boolean;
+}
+
 interface Council {
   id: string;
   name: string;
   location: string;
   troopUnits: TroopUnit[];
+  paymentConfig?: PaymentConfigStatus;
 }
 
 export default function CouncilsPage() {
   const { data: session, status } = useSession();
-  const _router = useRouter();
+  const router = useRouter();
   const [councils, setCouncils] = useState<Council[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -237,6 +260,7 @@ export default function CouncilsPage() {
       );
       setAvailableScouts(scouts);
 
+      // Build councils array with troop units
       const councilsArray = (councilData.content || councilData || []).map((council: any) => ({
         id: council.id?.toString() || council.uuid,
         name: council.name,
@@ -245,6 +269,7 @@ export default function CouncilsPage() {
         status: council.status,
         totalTroops: council.totalTroops || 0,
         totalScouts: council.totalScouts || 0,
+        paymentConfig: undefined as PaymentConfigStatus | undefined,
         troopUnits: (troopsData.content || troopsData || [])
           .filter((troop: any) => {
             // Match by councilId (number) or by council name
@@ -288,7 +313,19 @@ export default function CouncilsPage() {
           }),
       }));
 
-      setCouncils(councilsArray);
+      // Fetch payment config status for each council (in parallel)
+      const councilsWithPaymentStatus = await Promise.all(
+        councilsArray.map(async (council: Council) => {
+          try {
+            const paymentStatus = await api.getCouncilPaymentConfigStatus(council.id, session);
+            return { ...council, paymentConfig: paymentStatus };
+          } catch {
+            return { ...council, paymentConfig: { hasConfig: false, isActive: false, isVerified: false } };
+          }
+        }),
+      );
+
+      setCouncils(councilsWithPaymentStatus);
     } catch (err) {
       console.error('Failed to load councils and troops:', err);
     } finally {
@@ -955,12 +992,50 @@ export default function CouncilsPage() {
                    {expandedCouncils.has(council.id) ? <Icon name="chevronDown" size={22} /> : <Icon name="chevronRight" size={22} />}
                  </div>
                   <div style={{ flex: 1 }}>
-                   <h3 style={{
-                   margin: 0, color: themeColors.text, fontWeight: '700', fontSize: '16px',
-                 }}
-                 >
-                   {council.name}
-                 </h3>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
+                     <h3 style={{
+                       margin: 0, color: themeColors.text, fontWeight: '700', fontSize: '16px',
+                     }}
+                     >
+                       {council.name}
+                     </h3>
+                     {/* Payment Status Badge */}
+                     {council.paymentConfig?.hasConfig ? (
+                       <span
+                         style={{
+                           display: 'inline-flex',
+                           alignItems: 'center',
+                           gap: '4px',
+                           padding: '2px 8px',
+                           borderRadius: '12px',
+                           fontSize: '11px',
+                           fontWeight: '600',
+                           backgroundColor: council.paymentConfig.isVerified ? themeColors.success50 : themeColors.warning50,
+                           color: council.paymentConfig.isVerified ? themeColors.success600 : themeColors.warning600,
+                         }}
+                       >
+                         <Icon name={council.paymentConfig.isVerified ? 'check' : 'alertCircle'} size={12} />
+                         {council.paymentConfig.isVerified ? 'Payment Ready' : 'Payment Not Verified'}
+                       </span>
+                     ) : (
+                       <span
+                         style={{
+                           display: 'inline-flex',
+                           alignItems: 'center',
+                           gap: '4px',
+                           padding: '2px 8px',
+                           borderRadius: '12px',
+                           fontSize: '11px',
+                           fontWeight: '600',
+                           backgroundColor: themeColors.gray100,
+                           color: themeColors.gray600,
+                         }}
+                       >
+                         <Icon name="creditCard" size={12} />
+                         No Payment Config
+                       </span>
+                     )}
+                   </div>
                    <p style={{ margin: `${themeSpace.xs} 0 0 0`, fontSize: '13px', color: themeColors.gray600 }}>
                    {council.location}
                    {' '}
@@ -971,47 +1046,96 @@ export default function CouncilsPage() {
                  </p>
                  </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                   e.stopPropagation();
-                   deleteCouncil(council.id);
-                 }}
-                  style={{
-                   background: 'none',
-                   border: 'none',
-                   cursor: 'pointer',
-                   color: themeColors.error500,
-                   padding: themeSpace.sm,
-                 }}
-                >
-                  <Icon name="trash" size={18} />
-                </button>
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/councils/${council.id}/payment-settings`);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                      backgroundColor: themeColors.primary50,
+                      color: themeColors.primary600,
+                      border: `1px solid ${themeColors.primary200}`,
+                      borderRadius: themeRadius.sm,
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                    }}
+                    title="Configure Payment Gateway"
+                  >
+                    <Icon name="creditCard" size={14} />
+                    Payment
+                  </button>
+                  <button
+                    onClick={(e) => {
+                     e.stopPropagation();
+                     deleteCouncil(council.id);
+                   }}
+                    style={{
+                     background: 'none',
+                     border: 'none',
+                     cursor: 'pointer',
+                     color: themeColors.error500,
+                     padding: themeSpace.sm,
+                   }}
+                  >
+                    <Icon name="trash" size={18} />
+                  </button>
+                </div>
               </div>
 
               {/* Expanded Content */}
               {expandedCouncils.has(council.id) && (
               <div style={{ padding: themeSpace.lg, backgroundColor: themeColors.gray50, borderTop: `1px solid ${themeColors.gray200}` }}>
-                {/* Add Troop Button */}
-                <button
-                 onClick={() => setShowAddTroop(showAddTroop === council.id ? null : council.id)}
-                 style={{
-                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
-                 backgroundColor: themeColors.info600,
-                 color: themeColors.white,
-                 border: 'none',
-                 borderRadius: themeRadius.sm,
-                 cursor: 'pointer',
-                 fontWeight: '600',
-                 fontSize: '13px',
-                 display: 'flex',
-                 alignItems: 'center',
-                 gap: themeSpace.sm,
-                 marginBottom: themeSpace.lg,
-               }}
-               >
-                 <Icon name="plus" size={16} />
-                 Add Troop Unit
-           </button>
+                {/* Action Buttons Row */}
+                <div style={{ display: 'flex', gap: themeSpace.md, marginBottom: themeSpace.lg, flexWrap: 'wrap' }}>
+                  {/* Add Troop Button */}
+                  <button
+                   onClick={() => setShowAddTroop(showAddTroop === council.id ? null : council.id)}
+                   style={{
+                   padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                   backgroundColor: themeColors.info600,
+                   color: themeColors.white,
+                   border: 'none',
+                   borderRadius: themeRadius.sm,
+                   cursor: 'pointer',
+                   fontWeight: '600',
+                   fontSize: '13px',
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: themeSpace.sm,
+                 }}
+                 >
+                   <Icon name="plus" size={16} />
+                   Add Troop Unit
+                  </button>
+
+                  {/* Payment Settings Button */}
+                  <button
+                   onClick={() => router.push(`/councils/${council.id}/payment-settings`)}
+                   style={{
+                   padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                   backgroundColor: council.paymentConfig?.isVerified ? themeColors.success600 : themeColors.warning600,
+                   color: themeColors.white,
+                   border: 'none',
+                   borderRadius: themeRadius.sm,
+                   cursor: 'pointer',
+                   fontWeight: '600',
+                   fontSize: '13px',
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: themeSpace.sm,
+                 }}
+                 >
+                   <Icon name="creditCard" size={16} />
+                   {council.paymentConfig?.hasConfig ? 'Payment Settings' : 'Configure Payment'}
+                  </button>
+                </div>
 
                 {/* Add Troop Form */}
                 {showAddTroop === council.id && (

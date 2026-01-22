@@ -33,9 +33,11 @@ public class CampCardService {
     private final CardOrderRepository cardOrderRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final UserRepository userRepository;
+    private final CouncilRepository councilRepository;
     private final OfferRepository offerRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
     private final EmailService emailService;
+    private final PaymentService paymentService;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String CLAIM_TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -55,6 +57,15 @@ public class CampCardService {
 
         int unitPriceCents = plan.getPriceCents();
         int totalPriceCents = unitPriceCents * request.getQuantity();
+
+        // Get user's council for payment gateway routing
+        User user = userRepository.findById(userId).orElse(null);
+        Long councilId = null;
+        if (user != null && user.getCouncilId() != null) {
+            councilId = councilRepository.findByUuid(user.getCouncilId())
+                    .map(com.bsa.campcard.entity.Council::getId)
+                    .orElse(null);
+        }
 
         // Look up scout by referral code if provided
         UUID scoutId = null;
@@ -79,14 +90,29 @@ public class CampCardService {
         order = cardOrderRepository.save(order);
         log.info("Card order created: {}", order.getId());
 
-        // Process payment (if payment token provided)
-        // For now, we'll mark as paid - integrate with Authorize.net in production
+        // Process payment (if payment token/transaction ID provided)
+        // The paymentToken is actually the transactionId from Accept Hosted flow
         if (request.getPaymentToken() != null && !request.getPaymentToken().isBlank()) {
-            // TODO: Process payment via Authorize.net
-            order.markAsPaid("TXN-" + System.currentTimeMillis());
-            order = cardOrderRepository.save(order);
+            try {
+                // Verify the payment via Authorize.net using council-specific gateway
+                com.bsa.campcard.dto.payment.PaymentResponse paymentResponse =
+                        paymentService.verifySubscriptionPayment(councilId, request.getPaymentToken());
+
+                if ("SUCCESS".equals(paymentResponse.getStatus())) {
+                    order.markAsPaid(paymentResponse.getTransactionId());
+                    order = cardOrderRepository.save(order);
+                    log.info("Payment verified for order {} via council {} gateway", order.getId(), councilId);
+                } else {
+                    log.error("Payment verification failed for order {}: {}", order.getId(), paymentResponse.getErrorMessage());
+                    throw new IllegalStateException("Payment verification failed: " + paymentResponse.getErrorMessage());
+                }
+            } catch (com.bsa.campcard.exception.PaymentException e) {
+                log.error("Payment processing failed for order {}: {}", order.getId(), e.getMessage());
+                throw new IllegalStateException("Payment processing failed: " + e.getMessage());
+            }
         } else {
-            // Mark as paid for now (testing)
+            // No payment token - mark as paid for testing (remove in production)
+            log.warn("No payment token provided for order {}. Marking as paid for testing.", order.getId());
             order.markAsPaid("TEST-" + System.currentTimeMillis());
             order = cardOrderRepository.save(order);
         }

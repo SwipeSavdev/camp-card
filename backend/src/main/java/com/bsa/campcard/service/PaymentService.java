@@ -1,6 +1,7 @@
 package com.bsa.campcard.service;
 
 import com.bsa.campcard.dto.payment.*;
+import com.bsa.campcard.entity.GatewayEnvironment;
 import com.bsa.campcard.exception.PaymentException;
 import lombok.extern.slf4j.Slf4j;
 import net.authorize.Environment;
@@ -8,13 +9,22 @@ import net.authorize.api.contract.v1.*;
 import net.authorize.api.controller.CreateTransactionController;
 import net.authorize.api.controller.GetHostedPaymentPageController;
 import net.authorize.api.controller.GetTransactionDetailsController;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Payment service supporting council-specific Authorize.net gateway configurations.
+ *
+ * Gateway Resolution:
+ * 1. If councilId is provided and council has active, verified config → use council gateway
+ * 2. Otherwise → fall back to default gateway (environment variables)
+ */
 @Slf4j
 @Service
 public class PaymentService {
@@ -23,39 +33,115 @@ public class PaymentService {
     public static final BigDecimal WEB_SUBSCRIPTION_PRICE = new BigDecimal("10.00");
     public static final String WEB_SUBSCRIPTION_DESCRIPTION = "Camp Card Annual Subscription";
 
+    // Default gateway credentials (fallback)
     @Value("${authorize.net.api.login.id}")
-    private String apiLoginId;
+    private String defaultApiLoginId;
 
     @Value("${authorize.net.transaction.key}")
-    private String transactionKey;
+    private String defaultTransactionKey;
 
     @Value("${authorize.net.environment:SANDBOX}")
-    private String environment;
+    private String defaultEnvironment;
 
-    @Value("${campcard.base-url:https://bsa.swipesavvy.com}")
+    @Value("${campcard.base-url:https://campcardapp.org}")
     private String baseUrl;
-    
+
+    private final CouncilPaymentConfigService councilPaymentConfigService;
+
+    @Autowired
+    public PaymentService(CouncilPaymentConfigService councilPaymentConfigService) {
+        this.councilPaymentConfigService = councilPaymentConfigService;
+    }
+
     /**
-     * Process a credit card charge using Authorize.net
+     * Internal class to hold resolved gateway credentials.
      */
-    public PaymentResponse charge(ChargeRequest request) {
-        log.info("Processing charge for amount: {} for user: {}", request.getAmount(), request.getUserId());
-        
+    private static class GatewayCredentials {
+        String apiLoginId;
+        String transactionKey;
+        String environment;
+        boolean isCouncilGateway;
+        Long councilId;
+
+        GatewayCredentials(String apiLoginId, String transactionKey, String environment, boolean isCouncilGateway, Long councilId) {
+            this.apiLoginId = apiLoginId;
+            this.transactionKey = transactionKey;
+            this.environment = environment;
+            this.isCouncilGateway = isCouncilGateway;
+            this.councilId = councilId;
+        }
+    }
+
+    /**
+     * Resolve gateway credentials for a council.
+     * Returns council-specific credentials if available, otherwise default.
+     */
+    private GatewayCredentials resolveGateway(Long councilId) {
+        if (councilId != null) {
+            Optional<CouncilPaymentConfigService.DecryptedCredentials> councilCreds =
+                    councilPaymentConfigService.getDecryptedCredentials(councilId);
+
+            if (councilCreds.isPresent()) {
+                CouncilPaymentConfigService.DecryptedCredentials creds = councilCreds.get();
+                log.info("Using council-specific gateway for council {}", councilId);
+                return new GatewayCredentials(
+                        creds.getApiLoginId(),
+                        creds.getTransactionKey(),
+                        creds.getEnvironment() == GatewayEnvironment.PRODUCTION ? "PRODUCTION" : "SANDBOX",
+                        true,
+                        councilId
+                );
+            } else {
+                log.warn("Council {} has no active verified payment config, using default gateway", councilId);
+            }
+        }
+
+        log.debug("Using default gateway");
+        return new GatewayCredentials(defaultApiLoginId, defaultTransactionKey, defaultEnvironment, false, null);
+    }
+
+    /**
+     * Build MerchantAuthenticationType from credentials.
+     */
+    private MerchantAuthenticationType buildMerchantAuth(GatewayCredentials creds) {
+        MerchantAuthenticationType merchantAuth = new MerchantAuthenticationType();
+        merchantAuth.setName(creds.apiLoginId);
+        merchantAuth.setTransactionKey(creds.transactionKey);
+        return merchantAuth;
+    }
+
+    /**
+     * Get Authorize.net environment from string.
+     */
+    private Environment getEnvironmentFromString(String env) {
+        return "PRODUCTION".equalsIgnoreCase(env) ? Environment.PRODUCTION : Environment.SANDBOX;
+    }
+
+    /**
+     * Process a credit card charge using Authorize.net.
+     * Uses council-specific gateway if available.
+     *
+     * @param councilId Optional council ID for gateway routing
+     * @param request Charge request details
+     */
+    public PaymentResponse charge(Long councilId, ChargeRequest request) {
+        log.info("Processing charge for amount: {} for user: {} (council: {})",
+                request.getAmount(), request.getUserId(), councilId);
+
+        GatewayCredentials creds = resolveGateway(councilId);
+
         try {
-            // Set up merchant authentication
-            MerchantAuthenticationType merchantAuth = new MerchantAuthenticationType();
-            merchantAuth.setName(apiLoginId);
-            merchantAuth.setTransactionKey(transactionKey);
-            
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
             // Set up payment information
             CreditCardType creditCard = new CreditCardType();
             creditCard.setCardNumber(request.getCardNumber());
             creditCard.setExpirationDate(request.getExpirationDate());
             creditCard.setCardCode(request.getCvv());
-            
+
             PaymentType payment = new PaymentType();
             payment.setCreditCard(creditCard);
-            
+
             // Set up customer information
             CustomerDataType customer = new CustomerDataType();
             customer.setType(CustomerTypeEnum.INDIVIDUAL);
@@ -100,26 +186,28 @@ public class PaymentService {
             OrderType order = new OrderType();
             order.setDescription(request.getDescription() != null ? request.getDescription() : "Camp Card Purchase");
             txnRequest.setOrder(order);
-            
+
             // Create the API request
             CreateTransactionRequest apiRequest = new CreateTransactionRequest();
             apiRequest.setMerchantAuthentication(merchantAuth);
             apiRequest.setTransactionRequest(txnRequest);
-            
+
             // Execute the request
             CreateTransactionController controller = new CreateTransactionController(apiRequest);
-            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
             controller.execute();
-            
+
             CreateTransactionResponse response = controller.getApiResponse();
-            
+
             if (response != null) {
                 if (response.getMessages().getResultCode() == MessageTypeEnum.OK) {
                     TransactionResponse txnResponse = response.getTransactionResponse();
-                    
+
                     if (txnResponse != null && txnResponse.getMessages() != null) {
-                        log.info("Successfully charged card. Transaction ID: {}", txnResponse.getTransId());
-                        
+                        log.info("Successfully charged card via {} gateway. Transaction ID: {}",
+                                creds.isCouncilGateway ? "council " + creds.councilId : "default",
+                                txnResponse.getTransId());
+
                         return PaymentResponse.builder()
                                 .transactionId(txnResponse.getTransId())
                                 .status("SUCCESS")
@@ -132,18 +220,18 @@ public class PaymentService {
                                 .timestamp(LocalDateTime.now())
                                 .build();
                     } else {
-                        log.error("Transaction failed with errors: {}", 
-                                txnResponse != null && txnResponse.getErrors() != null 
-                                        ? txnResponse.getErrors().getError().get(0).getErrorText() 
+                        log.error("Transaction failed with errors: {}",
+                                txnResponse != null && txnResponse.getErrors() != null
+                                        ? txnResponse.getErrors().getError().get(0).getErrorText()
                                         : "Unknown error");
-                        
-                        String errorMessage = txnResponse != null && txnResponse.getErrors() != null 
-                                ? txnResponse.getErrors().getError().get(0).getErrorText() 
+
+                        String errorMessage = txnResponse != null && txnResponse.getErrors() != null
+                                ? txnResponse.getErrors().getError().get(0).getErrorText()
                                 : "Transaction failed";
-                        String errorCode = txnResponse != null && txnResponse.getErrors() != null 
-                                ? txnResponse.getErrors().getError().get(0).getErrorCode() 
+                        String errorCode = txnResponse != null && txnResponse.getErrors() != null
+                                ? txnResponse.getErrors().getError().get(0).getErrorCode()
                                 : "UNKNOWN";
-                        
+
                         return PaymentResponse.builder()
                                 .status("FAILED")
                                 .amount(request.getAmount())
@@ -155,68 +243,82 @@ public class PaymentService {
                     }
                 } else {
                     log.error("API request failed with result code: {}", response.getMessages().getResultCode());
-                    
+
                     String errorMessage = response.getMessages().getMessage().get(0).getText();
                     String errorCode = response.getMessages().getMessage().get(0).getCode();
-                    
+
                     throw new PaymentException("Payment failed: " + errorMessage, errorCode);
                 }
             }
-            
+
             throw new PaymentException("No response received from payment gateway", "NO_RESPONSE");
-            
+
+        } catch (PaymentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error processing payment", e);
             throw new PaymentException("Failed to process payment: " + e.getMessage(), e);
         }
     }
-    
+
     /**
-     * Process a refund for a previous transaction
+     * Process a credit card charge using default gateway (backward compatibility).
      */
-    public PaymentResponse refund(RefundRequest request) {
-        log.info("Processing refund for transaction: {}", request.getTransactionId());
-        
+    public PaymentResponse charge(ChargeRequest request) {
+        return charge(null, request);
+    }
+
+    /**
+     * Process a refund for a previous transaction.
+     * Uses council-specific gateway if available.
+     *
+     * @param councilId Optional council ID for gateway routing
+     * @param request Refund request details
+     */
+    public PaymentResponse refund(Long councilId, RefundRequest request) {
+        log.info("Processing refund for transaction: {} (council: {})", request.getTransactionId(), councilId);
+
+        GatewayCredentials creds = resolveGateway(councilId);
+
         try {
-            // Set up merchant authentication
-            MerchantAuthenticationType merchantAuth = new MerchantAuthenticationType();
-            merchantAuth.setName(apiLoginId);
-            merchantAuth.setTransactionKey(transactionKey);
-            
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
             // Set up payment information (last 4 digits required for refund)
             CreditCardType creditCard = new CreditCardType();
             creditCard.setCardNumber(request.getCardNumberLast4());
             creditCard.setExpirationDate("XXXX"); // Not required for refund
-            
+
             PaymentType payment = new PaymentType();
             payment.setCreditCard(creditCard);
-            
+
             // Set up transaction request
             TransactionRequestType txnRequest = new TransactionRequestType();
             txnRequest.setTransactionType(TransactionTypeEnum.REFUND_TRANSACTION.value());
             txnRequest.setAmount(request.getAmount());
             txnRequest.setPayment(payment);
             txnRequest.setRefTransId(request.getTransactionId());
-            
+
             // Create the API request
             CreateTransactionRequest apiRequest = new CreateTransactionRequest();
             apiRequest.setMerchantAuthentication(merchantAuth);
             apiRequest.setTransactionRequest(txnRequest);
-            
+
             // Execute the request
             CreateTransactionController controller = new CreateTransactionController(apiRequest);
-            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
             controller.execute();
-            
+
             CreateTransactionResponse response = controller.getApiResponse();
-            
+
             if (response != null) {
                 if (response.getMessages().getResultCode() == MessageTypeEnum.OK) {
                     TransactionResponse txnResponse = response.getTransactionResponse();
-                    
+
                     if (txnResponse != null && txnResponse.getMessages() != null) {
-                        log.info("Successfully processed refund. Transaction ID: {}", txnResponse.getTransId());
-                        
+                        log.info("Successfully processed refund via {} gateway. Transaction ID: {}",
+                                creds.isCouncilGateway ? "council " + creds.councilId : "default",
+                                txnResponse.getTransId());
+
                         return PaymentResponse.builder()
                                 .transactionId(txnResponse.getTransId())
                                 .status("REFUNDED")
@@ -226,59 +328,71 @@ public class PaymentService {
                                 .timestamp(LocalDateTime.now())
                                 .build();
                     } else {
-                        String errorMessage = txnResponse != null && txnResponse.getErrors() != null 
-                                ? txnResponse.getErrors().getError().get(0).getErrorText() 
+                        String errorMessage = txnResponse != null && txnResponse.getErrors() != null
+                                ? txnResponse.getErrors().getError().get(0).getErrorText()
                                 : "Refund failed";
-                        String errorCode = txnResponse != null && txnResponse.getErrors() != null 
-                                ? txnResponse.getErrors().getError().get(0).getErrorCode() 
+                        String errorCode = txnResponse != null && txnResponse.getErrors() != null
+                                ? txnResponse.getErrors().getError().get(0).getErrorCode()
                                 : "UNKNOWN";
-                        
+
                         throw new PaymentException("Refund failed: " + errorMessage, errorCode);
                     }
                 } else {
                     String errorMessage = response.getMessages().getMessage().get(0).getText();
                     String errorCode = response.getMessages().getMessage().get(0).getCode();
-                    
+
                     throw new PaymentException("Refund failed: " + errorMessage, errorCode);
                 }
             }
-            
+
             throw new PaymentException("No response received from payment gateway", "NO_RESPONSE");
-            
+
+        } catch (PaymentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error processing refund", e);
             throw new PaymentException("Failed to process refund: " + e.getMessage(), e);
         }
     }
-    
+
     /**
-     * Query transaction details
+     * Process a refund using default gateway (backward compatibility).
      */
-    public PaymentResponse getTransactionDetails(TransactionQueryRequest request) {
-        log.info("Querying transaction details for: {}", request.getTransactionId());
-        
+    public PaymentResponse refund(RefundRequest request) {
+        return refund(null, request);
+    }
+
+    /**
+     * Query transaction details.
+     * Uses council-specific gateway if available.
+     *
+     * @param councilId Optional council ID for gateway routing
+     * @param request Transaction query request
+     */
+    public PaymentResponse getTransactionDetails(Long councilId, TransactionQueryRequest request) {
+        log.info("Querying transaction details for: {} (council: {})", request.getTransactionId(), councilId);
+
+        GatewayCredentials creds = resolveGateway(councilId);
+
         try {
-            // Set up merchant authentication
-            MerchantAuthenticationType merchantAuth = new MerchantAuthenticationType();
-            merchantAuth.setName(apiLoginId);
-            merchantAuth.setTransactionKey(transactionKey);
-            
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
             // Create the API request
             GetTransactionDetailsRequest apiRequest = new GetTransactionDetailsRequest();
             apiRequest.setMerchantAuthentication(merchantAuth);
             apiRequest.setTransId(request.getTransactionId());
-            
+
             // Execute the request
             GetTransactionDetailsController controller = new GetTransactionDetailsController(apiRequest);
-            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
             controller.execute();
-            
+
             GetTransactionDetailsResponse response = controller.getApiResponse();
-            
+
             if (response != null) {
                 if (response.getMessages().getResultCode() == MessageTypeEnum.OK) {
                     TransactionDetailsType transaction = response.getTransaction();
-                    
+
                     return PaymentResponse.builder()
                             .transactionId(transaction.getTransId())
                             .status(mapTransactionStatus(transaction.getTransactionStatus()))
@@ -293,28 +407,31 @@ public class PaymentService {
                     throw new PaymentException("Failed to query transaction: " + errorMessage);
                 }
             }
-            
+
             throw new PaymentException("No response received from payment gateway", "NO_RESPONSE");
-            
+
+        } catch (PaymentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error querying transaction details", e);
             throw new PaymentException("Failed to query transaction: " + e.getMessage(), e);
         }
     }
-    
-    private Environment getEnvironment() {
-        return "PRODUCTION".equalsIgnoreCase(environment) 
-                ? Environment.PRODUCTION 
-                : Environment.SANDBOX;
+
+    /**
+     * Query transaction details using default gateway (backward compatibility).
+     */
+    public PaymentResponse getTransactionDetails(TransactionQueryRequest request) {
+        return getTransactionDetails(null, request);
     }
-    
+
     private String getLastFourDigits(String cardNumber) {
         if (cardNumber != null && cardNumber.length() >= 4) {
             return cardNumber.substring(cardNumber.length() - 4);
         }
         return "";
     }
-    
+
     private String mapTransactionStatus(String status) {
         if (status == null) return "UNKNOWN";
 
@@ -331,20 +448,23 @@ public class PaymentService {
 
     /**
      * Get Accept Hosted payment page token for web subscription purchase.
-     * Uses static $10 price for annual subscription.
+     * Uses council-specific gateway if available.
+     *
+     * @param councilId Optional council ID for gateway routing
+     * @param request Accept Hosted token request
      */
-    public AcceptHostedTokenResponse getAcceptHostedToken(AcceptHostedTokenRequest request) {
-        log.info("Generating Accept Hosted token for subscription purchase");
+    public AcceptHostedTokenResponse getAcceptHostedToken(Long councilId, AcceptHostedTokenRequest request) {
+        log.info("Generating Accept Hosted token for subscription purchase (council: {})", councilId);
+
+        GatewayCredentials creds = resolveGateway(councilId);
+
         log.debug("Using API Login ID: {} (length: {}), Environment: {}",
-            apiLoginId != null ? apiLoginId.substring(0, 4) + "****" : "null",
-            apiLoginId != null ? apiLoginId.length() : 0,
-            environment);
+                creds.apiLoginId != null ? creds.apiLoginId.substring(0, Math.min(4, creds.apiLoginId.length())) + "****" : "null",
+                creds.apiLoginId != null ? creds.apiLoginId.length() : 0,
+                creds.environment);
 
         try {
-            // Set up merchant authentication
-            MerchantAuthenticationType merchantAuth = new MerchantAuthenticationType();
-            merchantAuth.setName(apiLoginId);
-            merchantAuth.setTransactionKey(transactionKey);
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
 
             // Set up transaction request with static $10 amount
             TransactionRequestType txnRequest = new TransactionRequestType();
@@ -438,18 +558,19 @@ public class PaymentService {
 
             // Execute the request
             GetHostedPaymentPageController controller = new GetHostedPaymentPageController(apiRequest);
-            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironment());
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
             controller.execute();
 
             GetHostedPaymentPageResponse response = controller.getApiResponse();
 
             if (response != null) {
                 if (response.getMessages().getResultCode() == MessageTypeEnum.OK) {
-                    String formUrl = "PRODUCTION".equalsIgnoreCase(environment)
+                    String formUrl = "PRODUCTION".equalsIgnoreCase(creds.environment)
                             ? "https://accept.authorize.net/payment/payment"
                             : "https://test.authorize.net/payment/payment";
 
-                    log.info("Accept Hosted token generated successfully");
+                    log.info("Accept Hosted token generated successfully via {} gateway",
+                            creds.isCouncilGateway ? "council " + creds.councilId : "default");
 
                     return AcceptHostedTokenResponse.builder()
                             .token(response.getToken())
@@ -487,21 +608,31 @@ public class PaymentService {
     }
 
     /**
-     * Verify a completed transaction for subscription purchase.
-     * Returns transaction details if valid, throws exception if not.
+     * Get Accept Hosted token using default gateway (backward compatibility).
      */
-    public PaymentResponse verifySubscriptionPayment(String transactionId) {
-        log.info("Verifying subscription payment transaction: {}", transactionId);
+    public AcceptHostedTokenResponse getAcceptHostedToken(AcceptHostedTokenRequest request) {
+        return getAcceptHostedToken(null, request);
+    }
+
+    /**
+     * Verify a completed transaction for subscription purchase.
+     * Uses council-specific gateway if available.
+     *
+     * @param councilId Optional council ID for gateway routing
+     * @param transactionId Transaction ID to verify
+     */
+    public PaymentResponse verifySubscriptionPayment(Long councilId, String transactionId) {
+        log.info("Verifying subscription payment transaction: {} (council: {})", transactionId, councilId);
 
         TransactionQueryRequest queryRequest = new TransactionQueryRequest();
         queryRequest.setTransactionId(transactionId);
 
-        PaymentResponse response = getTransactionDetails(queryRequest);
+        PaymentResponse response = getTransactionDetails(councilId, queryRequest);
 
         // Verify the amount matches our subscription price
         if (response.getAmount() != null &&
-            response.getAmount().compareTo(WEB_SUBSCRIPTION_PRICE) == 0 &&
-            "SUCCESS".equals(response.getStatus())) {
+                response.getAmount().compareTo(WEB_SUBSCRIPTION_PRICE) == 0 &&
+                "SUCCESS".equals(response.getStatus())) {
             log.info("Subscription payment verified: {} for ${}", transactionId, WEB_SUBSCRIPTION_PRICE);
             return response;
         }
@@ -510,5 +641,12 @@ public class PaymentService {
                 transactionId, response.getAmount(), response.getStatus());
 
         throw new PaymentException("Payment verification failed. Invalid transaction.", "INVALID_TRANSACTION");
+    }
+
+    /**
+     * Verify subscription payment using default gateway (backward compatibility).
+     */
+    public PaymentResponse verifySubscriptionPayment(String transactionId) {
+        return verifySubscriptionPayment(null, transactionId);
     }
 }

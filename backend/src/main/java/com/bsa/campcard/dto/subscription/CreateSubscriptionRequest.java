@@ -9,24 +9,27 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateSubscriptionRequest {
-    
+
     @NotNull(message = "Plan ID is required")
     private Long planId;
-    
+
     private String referralCode;
-    
-    @NotNull(message = "Payment method is required")
+
+    // Payment method for mobile (Stripe/Apple Pay/Google Pay)
     private PaymentMethod paymentMethod;
-    
+
     private String idempotencyKey;
-    
+
+    // Authorize.net transaction ID from Accept Hosted (for web portal)
+    private String transactionId;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class PaymentMethod {
         @NotNull(message = "Payment type is required")
-        private String type; // STRIPE, APPLE_PAY, GOOGLE_PAY
-        
+        private String type; // STRIPE, APPLE_PAY, GOOGLE_PAY, AUTHORIZE_NET
+
         private String stripePaymentMethodId;
         private String applePayToken;
         private String googlePayToken;
