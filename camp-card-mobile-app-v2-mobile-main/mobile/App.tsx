@@ -1,9 +1,10 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as Linking from 'expo-linking';
 
 import RootNavigator from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
@@ -18,6 +19,57 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Deep linking configuration for multi-card system
+const linking: LinkingOptions<any> = {
+  prefixes: [
+    Linking.createURL('/'),
+    'campcard://',
+    'https://campcardapp.org/app',
+    'https://www.campcardapp.org/app',
+  ],
+  config: {
+    screens: {
+      // Gift claim deep link: campcard://claim/TOKEN or https://campcardapp.org/app/claim/TOKEN
+      ClaimGift: {
+        path: 'claim/:token',
+        parse: {
+          token: (token: string) => token,
+        },
+      },
+      // Card inventory
+      CardInventory: 'cards',
+      // Offer details
+      OfferDetail: {
+        path: 'offer/:offerId',
+        parse: {
+          offerId: (offerId: string) => Number.parseInt(offerId, 10),
+        },
+      },
+      // Merchant details
+      MerchantDetail: {
+        path: 'merchant/:merchantId',
+        parse: {
+          merchantId: (merchantId: string) => Number.parseInt(merchantId, 10),
+        },
+      },
+      // Password reset
+      ResetPassword: {
+        path: 'reset-password/:token',
+        parse: {
+          token: (token: string) => token,
+        },
+      },
+      // Email verification
+      EmailVerification: {
+        path: 'verify-email/:token',
+        parse: {
+          token: (token: string) => token,
+        },
+      },
+    },
+  },
+};
 
 /**
  * Main App Component
@@ -38,7 +90,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <NavigationContainer>
+          <NavigationContainer linking={linking}>
             <RootNavigator />
             <StatusBar style="auto" />
           </NavigationContainer>

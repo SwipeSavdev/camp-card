@@ -303,7 +303,7 @@ export default function CardInventoryScreen() {
         <Text style={styles.headerTitle}>My Cards</Text>
         <TouchableOpacity
           style={styles.buyMoreButton}
-          onPress={() => (navigation as any).navigate('SubscriptionSelection')}
+          onPress={() => (navigation as any).navigate('BuyMoreCards')}
         >
           <Ionicons name="add" size={20} color={COLORS.primary} />
           <Text style={styles.buyMoreText}>Buy More</Text>
@@ -385,7 +385,7 @@ export default function CardInventoryScreen() {
             </Text>
             <TouchableOpacity
               style={styles.purchaseButton}
-              onPress={() => (navigation as any).navigate('SubscriptionSelection')}
+              onPress={() => (navigation as any).navigate('BuyMoreCards')}
             >
               <Text style={styles.purchaseButtonText}>Purchase Cards</Text>
             </TouchableOpacity>

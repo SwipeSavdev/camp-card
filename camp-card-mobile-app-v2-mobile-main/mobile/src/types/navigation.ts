@@ -86,6 +86,8 @@ export type ScoutStackParamList = {
   CardInventory: undefined;
   GiftCard: { cardId: number };
   ReplenishCard: undefined;
+  ClaimGift: { token: string };
+  BuyMoreCards: undefined;
   Settings: undefined;
   HelpSupport: undefined;
 };
@@ -119,6 +121,8 @@ export type TroopLeaderStackParamList = {
   CardInventory: undefined;
   GiftCard: { cardId: number };
   ReplenishCard: undefined;
+  ClaimGift: { token: string };
+  BuyMoreCards: undefined;
   Settings: undefined;
   HelpSupport: undefined;
 };
@@ -148,6 +152,8 @@ export type CustomerStackParamList = {
   CardInventory: undefined;
   GiftCard: { cardId: number };
   ReplenishCard: undefined;
+  ClaimGift: { token: string };
+  BuyMoreCards: undefined;
   Settings: undefined;
   HelpSupport: undefined;
 };

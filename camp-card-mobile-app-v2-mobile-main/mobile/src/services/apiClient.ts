@@ -301,6 +301,52 @@ export const qrCodeApi = {
     apiClient.get(`/api/v1/qr-codes/validate/${code}`),
 };
 
+// Camp Cards API (Multi-Card System)
+export const cardsApi = {
+  // Purchase 1-10 cards
+  purchaseCards: (data: {
+    quantity: number;
+    planId?: string;
+    scoutCode?: string;
+    paymentToken: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  }) => apiClient.post('/api/v1/cards/purchase', data),
+
+  // Get user's card inventory (active, unused, gifted, historical)
+  getMyCards: () => apiClient.get('/api/v1/cards/my-cards'),
+
+  // Get single card by ID
+  getCard: (cardId: number) => apiClient.get(`/api/v1/cards/${cardId}`),
+
+  // Get card by UUID
+  getCardByUuid: (uuid: string) => apiClient.get(`/api/v1/cards/uuid/${uuid}`),
+
+  // Get expiry status for notifications
+  getExpiryStatus: () => apiClient.get('/api/v1/cards/expiry-status'),
+
+  // Activate/replenish - replace current card with unused card
+  activateCard: (cardId: number) => apiClient.post(`/api/v1/cards/${cardId}/activate`),
+
+  // Gift a card to someone
+  giftCard: (cardId: number, data: { recipientEmail: string; recipientName?: string; message?: string }) =>
+    apiClient.post(`/api/v1/cards/${cardId}/gift`, data),
+
+  // Cancel a pending gift
+  cancelGift: (cardId: number) => apiClient.post(`/api/v1/cards/${cardId}/cancel-gift`),
+
+  // Resend gift notification email
+  resendGiftEmail: (cardId: number) => apiClient.post(`/api/v1/cards/${cardId}/resend-gift`),
+
+  // Get gift details by claim token (public - no auth required)
+  getGiftDetails: (token: string) => apiClient.get(`/api/v1/cards/claim/${token}`),
+
+  // Claim a gifted card (can be public or authenticated)
+  claimGift: (token: string, data?: { email?: string; password?: string; firstName?: string; lastName?: string }) =>
+    apiClient.post(`/api/v1/cards/claim/${token}`, data || {}),
+};
+
 // COPPA Parental Consent API
 export const consentApi = {
   // Get current user's consent status

@@ -52,6 +52,8 @@ import RedemptionHistoryScreen from '../screens/wallet/RedemptionHistoryScreen';
 import CardInventoryScreen from '../screens/wallet/CardInventoryScreen';
 import GiftCardScreen from '../screens/wallet/GiftCardScreen';
 import ReplenishCardScreen from '../screens/wallet/ReplenishCardScreen';
+import ClaimGiftScreen from '../screens/wallet/ClaimGiftScreen';
+import BuyMoreCardsScreen from '../screens/wallet/BuyMoreCardsScreen';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -109,6 +111,8 @@ export type ScoutStackParamList = {
   CardInventory: undefined;
   GiftCard: { cardId: number };
   ReplenishCard: undefined;
+  ClaimGift: { token: string };
+  BuyMoreCards: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -144,6 +148,8 @@ export type TroopLeaderStackParamList = {
   CardInventory: undefined;
   GiftCard: { cardId: number };
   ReplenishCard: undefined;
+  ClaimGift: { token: string };
+  BuyMoreCards: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -175,6 +181,8 @@ export type CustomerStackParamList = {
   CardInventory: undefined;
   GiftCard: { cardId: number };
   ReplenishCard: undefined;
+  ClaimGift: { token: string };
+  BuyMoreCards: undefined;
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -287,6 +295,8 @@ function ScoutMainNavigator() {
         <ScoutStack.Screen name="CardInventory" component={CardInventoryScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="GiftCard" component={GiftCardScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="ReplenishCard" component={ReplenishCardScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="ClaimGift" component={ClaimGiftScreen} options={{ headerShown: false }} />
+        <ScoutStack.Screen name="BuyMoreCards" component={BuyMoreCardsScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <ScoutStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
@@ -368,6 +378,8 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="CardInventory" component={CardInventoryScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="GiftCard" component={GiftCardScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="ReplenishCard" component={ReplenishCardScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="ClaimGift" component={ClaimGiftScreen} options={{ headerShown: false }} />
+        <TroopLeaderStack.Screen name="BuyMoreCards" component={BuyMoreCardsScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
@@ -433,6 +445,8 @@ function CustomerMainNavigator() {
         <CustomerStack.Screen name="CardInventory" component={CardInventoryScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="GiftCard" component={GiftCardScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="ReplenishCard" component={ReplenishCardScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="ClaimGift" component={ClaimGiftScreen} options={{ headerShown: false }} />
+        <CustomerStack.Screen name="BuyMoreCards" component={BuyMoreCardsScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
         <CustomerStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />

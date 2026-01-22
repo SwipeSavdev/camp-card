@@ -17,6 +17,13 @@ export default function ProfileScreen() {
   // Filter menu items based on user role (Troop Leaders don't have referrals)
   const allMenuItems = [
     {
+      icon: 'wallet-outline',
+      title: 'My Cards',
+      subtitle: 'View and manage your Camp Cards',
+      onPress: () => navigation.navigate('CardInventory'),
+      showFor: ['SCOUT', 'PARENT', 'UNIT_LEADER'],
+    },
+    {
       icon: 'card-outline',
       title: 'Subscription',
       subtitle: 'Manage your subscription',
