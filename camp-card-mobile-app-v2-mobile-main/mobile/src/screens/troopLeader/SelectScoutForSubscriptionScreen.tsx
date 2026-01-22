@@ -176,7 +176,7 @@ export default function SelectScoutForSubscriptionScreen() {
                 referralCode: selectedScout.id, // Use scout ID as referral for attribution
                 paymentMethod: {
                   type: 'AUTHORIZE_NET',
-                  stripePaymentMethodId: 'mock_token' // TODO: Integrate with Authorize.net
+                  paymentNonce: 'mock_token' // TODO: Integrate with Authorize.net Accept.js
                 }
               });
 

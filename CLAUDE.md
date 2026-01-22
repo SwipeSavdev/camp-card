@@ -10,7 +10,26 @@ BSA Camp Card is a multi-repository platform for digitalizing Boy Scouts of Amer
 - **Web Portal**: Next.js 14.1 admin/council dashboard (port 7020)
 - **Mobile App**: React Native 0.81 / Expo 54
 
-Supporting services: PostgreSQL 16, Redis 7, Apache Kafka 3.6, Firebase (push notifications), Stripe & Authorize.Net (payments).
+Supporting services: PostgreSQL 16, Redis 7, Apache Kafka 3.6, Firebase (push notifications), Authorize.Net (payments).
+
+## Payment Processing (IMPORTANT)
+
+**This project uses Authorize.net exclusively for payment processing - NOT Stripe.**
+
+- **Payment Gateway**: Authorize.net
+- **Integration Method**: Accept Hosted / Accept.js for tokenization
+- **Environment Variables**:
+  - `AUTHORIZE_NET_API_LOGIN_ID` - Authorize.net API Login ID
+  - `AUTHORIZE_NET_TRANSACTION_KEY` - Authorize.net Transaction Key
+  - `AUTHORIZE_NET_ENVIRONMENT` - SANDBOX or PRODUCTION
+
+- **Council-Specific Payment Configs**: Each council can have its own Authorize.net gateway credentials stored encrypted (AES-256-GCM) in the `council_payment_configs` table.
+
+- **Backend Service**: `PaymentService.java` handles all Authorize.net API calls
+- **Mobile Integration**: Uses Authorize.net Accept.js for card tokenization (not Stripe)
+- **Web Portal Integration**: Uses Authorize.net Accept Hosted for PCI-compliant checkout
+
+**DO NOT use Stripe APIs, SDKs, or payment method references in this codebase.**
 
 ## Repository Structure
 

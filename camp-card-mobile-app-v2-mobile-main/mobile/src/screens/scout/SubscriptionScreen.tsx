@@ -109,14 +109,14 @@ export default function SubscriptionScreen() {
             try {
               setLoading(true);
 
-              // In production, this would integrate with Authorize.net
+              // In production, this would integrate with Authorize.net Accept.js
               // Backend expects camelCase property names
               await apiClient.post('/api/v1/subscriptions', {
                 planId: plan.id,
                 paymentMethod: {
                   type: 'AUTHORIZE_NET',
-                  // This would come from Authorize.net Accept.js
-                  stripePaymentMethodId: 'mock_token'
+                  // This would come from Authorize.net Accept.js tokenization
+                  paymentNonce: 'mock_token'
                 }
               });
 

@@ -15,7 +15,7 @@ public class CreateSubscriptionRequest {
 
     private String referralCode;
 
-    // Payment method for mobile (Stripe/Apple Pay/Google Pay)
+    // Payment method for mobile (Authorize.net Accept.js / Apple Pay / Google Pay)
     private PaymentMethod paymentMethod;
 
     private String idempotencyKey;
@@ -28,10 +28,15 @@ public class CreateSubscriptionRequest {
     @AllArgsConstructor
     public static class PaymentMethod {
         @NotNull(message = "Payment type is required")
-        private String type; // STRIPE, APPLE_PAY, GOOGLE_PAY, AUTHORIZE_NET
+        private String type; // AUTHORIZE_NET, APPLE_PAY, GOOGLE_PAY
 
-        private String stripePaymentMethodId;
+        // Authorize.net payment nonce from Accept.js tokenization
+        private String paymentNonce;
+
+        // Apple Pay token (for Apple Pay integration)
         private String applePayToken;
+
+        // Google Pay token (for Google Pay integration)
         private String googlePayToken;
     }
 }
