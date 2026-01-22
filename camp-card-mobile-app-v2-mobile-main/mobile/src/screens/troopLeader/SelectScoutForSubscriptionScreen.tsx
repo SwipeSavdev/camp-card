@@ -14,9 +14,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
 import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
+import { apiClient } from '../../utils/api';
+import { useAuthStore } from '../../store/authStore';
 
 interface Scout {
   id: string;
@@ -68,28 +71,59 @@ const mockScouts: Scout[] = [
 ];
 
 export default function SelectScoutForSubscriptionScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<TroopLeaderStackParamList>>();
   const route = useRoute<SelectScoutRouteProp>();
   const { planId } = route.params;
+  const { user } = useAuthStore();
 
   const [loading, setLoading] = useState(true);
   const [scouts, setScouts] = useState<Scout[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedScout, setSelectedScout] = useState<Scout | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [processingSubscription, setProcessingSubscription] = useState(false);
 
   useEffect(() => {
     loadScouts();
+    loadPlan();
   }, []);
+
+  const loadPlan = async () => {
+    try {
+      const response = await apiClient.get('/api/v1/subscription-plans');
+      const plans = response.data.data || [];
+      // Find the plan by UUID
+      const plan = plans.find((p: any) => p.uuid === planId || p.id?.toString() === planId);
+      if (plan) {
+        setSelectedPlan(plan);
+      }
+    } catch (error) {
+      console.error('Error loading plan:', error);
+    }
+  };
 
   const loadScouts = async () => {
     try {
-      // TODO: Replace with actual API call
-      // GET /api/v1/troops/{troopId}/scouts
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setScouts(mockScouts);
+      // Get scouts from the user's troop
+      const troopId = user?.troopId;
+      if (troopId) {
+        const response = await apiClient.get(`/api/v1/troops/${troopId}/scouts`);
+        const scoutsData = response.data.content || response.data || [];
+        setScouts(scoutsData.map((scout: any) => ({
+          id: scout.id?.toString() || scout.uuid,
+          firstName: scout.firstName,
+          lastName: scout.lastName,
+          email: scout.email,
+          subscriptionStatus: scout.subscriptionStatus || 'inactive',
+        })));
+      } else {
+        // Fallback to mock data if no troop ID
+        setScouts(mockScouts);
+      }
     } catch (error) {
       console.error('Error loading scouts:', error);
-      Alert.alert('Error', 'Failed to load scouts');
+      // Fallback to mock data on error
+      setScouts(mockScouts);
     } finally {
       setLoading(false);
     }
@@ -119,23 +153,47 @@ export default function SelectScoutForSubscriptionScreen() {
       return;
     }
 
-    // Navigate to checkout with the selected scout
-    // In production, this would go to a payment screen
+    if (!selectedPlan) {
+      Alert.alert('Error', 'Subscription plan not loaded. Please try again.');
+      return;
+    }
+
+    // Confirm and create subscription
+    const planPrice = selectedPlan.priceCents ? `$${(selectedPlan.priceCents / 100).toFixed(2)}` : '';
     Alert.alert(
-      'Confirm Selection',
-      `This subscription will be attributed to ${selectedScout.firstName} ${selectedScout.lastName}. Continue to checkout?`,
+      'Confirm Subscription',
+      `Subscribe ${selectedScout.firstName} ${selectedScout.lastName} to ${selectedPlan.name} for ${planPrice}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Continue',
-          onPress: () => {
-            // TODO: Navigate to checkout screen with planId and scoutId
-            // For now, show success and go back
-            Alert.alert(
-              'Success',
-              `Proceeding to checkout for ${selectedScout.firstName}'s subscription...`,
-              [{ text: 'OK', onPress: () => navigation.goBack() }]
-            );
+          text: 'Subscribe',
+          onPress: async () => {
+            setProcessingSubscription(true);
+            try {
+              // Create subscription with scout attribution
+              await apiClient.post('/api/v1/subscriptions', {
+                planId: selectedPlan.id,
+                referralCode: selectedScout.id, // Use scout ID as referral for attribution
+                paymentMethod: {
+                  type: 'AUTHORIZE_NET',
+                  stripePaymentMethodId: 'mock_token' // TODO: Integrate with Authorize.net
+                }
+              });
+
+              Alert.alert(
+                'Success!',
+                `Subscription created for ${selectedScout.firstName} ${selectedScout.lastName}`,
+                [{ text: 'OK', onPress: () => navigation.goBack() }]
+              );
+            } catch (error: any) {
+              console.error('Subscription error:', error);
+              Alert.alert(
+                'Subscription Failed',
+                error.response?.data?.message || 'Failed to create subscription. Please try again.'
+              );
+            } finally {
+              setProcessingSubscription(false);
+            }
           },
         },
       ]
@@ -273,17 +331,23 @@ export default function SelectScoutForSubscriptionScreen() {
         <TouchableOpacity
           style={[
             styles.continueButton,
-            !selectedScout && styles.continueButtonDisabled,
+            (!selectedScout || processingSubscription) && styles.continueButtonDisabled,
           ]}
           onPress={handleContinue}
-          disabled={!selectedScout}
+          disabled={!selectedScout || processingSubscription}
         >
-          <Text style={styles.continueButtonText}>
-            {selectedScout
-              ? `Continue with ${selectedScout.firstName}`
-              : 'Select a Scout to Continue'}
-          </Text>
-          <Ionicons name="arrow-forward" size={20} color={COLORS.surface} />
+          {processingSubscription ? (
+            <ActivityIndicator size="small" color={COLORS.surface} />
+          ) : (
+            <>
+              <Text style={styles.continueButtonText}>
+                {selectedScout
+                  ? `Subscribe ${selectedScout.firstName}`
+                  : 'Select a Scout to Continue'}
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color={COLORS.surface} />
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
