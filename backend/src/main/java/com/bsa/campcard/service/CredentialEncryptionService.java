@@ -33,7 +33,7 @@ public class CredentialEncryptionService {
     private final SecureRandom secureRandom;
 
     public CredentialEncryptionService(
-            @Value("${campcard.encryption.key:#{null}}") String encryptionKey) {
+            @Value("${CREDENTIAL_ENCRYPTION_KEY:#{null}}") String encryptionKey) {
 
         if (encryptionKey == null || encryptionKey.isEmpty()) {
             // Use a default key for development - MUST be overridden in production
