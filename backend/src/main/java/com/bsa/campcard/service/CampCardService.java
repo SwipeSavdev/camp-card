@@ -44,6 +44,9 @@ public class CampCardService {
 
     // ==================== PURCHASE OPERATIONS ====================
 
+    // In-app direct purchase price: $15/card
+    private static final int IN_APP_PRICE_CENTS = 1500;
+
     /**
      * Purchase multiple camp cards
      */
@@ -51,12 +54,25 @@ public class CampCardService {
     public PurchaseCardsResponse purchaseCards(UUID userId, PurchaseCardsRequest request) {
         log.info("Processing card purchase for user: {}, quantity: {}", userId, request.getQuantity());
 
-        // Validate plan and get price
-        SubscriptionPlan plan = subscriptionPlanRepository.findByIdAndDeletedAtIsNull(request.getPlanId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+        int unitPriceCents;
+        int totalPriceCents;
 
-        int unitPriceCents = plan.getPriceCents();
-        int totalPriceCents = unitPriceCents * request.getQuantity();
+        // If paymentToken is provided, payment was already processed at in-app price
+        // Otherwise, look up plan for price
+        if (request.getPaymentToken() != null && !request.getPaymentToken().isBlank() && request.getPlanId() == null) {
+            // Direct in-app purchase with pre-processed payment
+            unitPriceCents = IN_APP_PRICE_CENTS;
+            totalPriceCents = unitPriceCents * request.getQuantity();
+            log.info("Processing direct in-app purchase at ${}/card", unitPriceCents / 100.0);
+        } else if (request.getPlanId() != null) {
+            // Plan-based purchase
+            SubscriptionPlan plan = subscriptionPlanRepository.findByIdAndDeletedAtIsNull(request.getPlanId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+            unitPriceCents = plan.getPriceCents();
+            totalPriceCents = unitPriceCents * request.getQuantity();
+        } else {
+            throw new IllegalArgumentException("Either planId or paymentToken is required");
+        }
 
         // Get user's council for payment gateway routing
         User user = userRepository.findById(userId).orElse(null);

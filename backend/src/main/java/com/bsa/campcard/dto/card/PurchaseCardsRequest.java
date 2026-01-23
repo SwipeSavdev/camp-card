@@ -33,7 +33,6 @@ public class PurchaseCardsRequest {
     private String firstName;
     private String lastName;
 
-    // Plan ID (determines price)
-    @NotNull(message = "Plan ID is required")
+    // Plan ID (determines price) - optional if paymentToken is provided (payment already processed)
     private Long planId;
 }
