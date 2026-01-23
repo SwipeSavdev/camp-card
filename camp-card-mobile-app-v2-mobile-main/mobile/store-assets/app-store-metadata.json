@@ -3,7 +3,9 @@
     "name": "Camp Card",
     "subtitle": "Scout Fundraising Discounts",
     "bundleId": "org.bsa.campcard",
-    "packageName": "org.bsa.campcard"
+    "packageName": "org.bsa.campcard",
+    "publisher": "Swipe Savvy, LLC",
+    "developerName": "Swipe Savvy, LLC"
   },
   "ios": {
     "primaryCategory": "LIFESTYLE",
@@ -23,10 +25,10 @@
   },
   "keywords": "scouts,bsa,fundraising,discounts,coupons,camping,youth,family,savings,merchant",
   "urls": {
-    "support": "https://campcardapp.org/support",
-    "privacy": "https://campcardapp.org/privacy",
-    "marketing": "https://campcardapp.org",
-    "termsOfService": "https://campcardapp.org/terms"
+    "support": "https://www.campcardapp.org/support",
+    "privacy": "https://www.campcardapp.org/privacy",
+    "marketing": "https://www.campcardapp.org",
+    "termsOfService": "https://www.campcardapp.org/terms"
   },
   "contact": {
     "email": "support@campcardapp.org",

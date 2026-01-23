@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "14",
+      "buildNumber": "15",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -131,8 +131,14 @@
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"
-      }
+      },
+      "privacyPolicyUrl": "https://www.campcardapp.org/privacy",
+      "termsOfServiceUrl": "https://www.campcardapp.org/terms",
+      "supportEmail": "support@campcardapp.org",
+      "publisher": "Swipe Savvy, LLC"
     },
-    "owner": "swipesavvy2026"
+    "owner": "swipesavvy2026",
+    "githubUrl": "https://github.com/swipesavdev/camp-card",
+    "privacy": "public"
   }
 }

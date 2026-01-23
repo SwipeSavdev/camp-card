@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#003F87"/>
+      <stop offset="100%" style="stop-color:#001a3a"/>
+    </linearGradient>
+    <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="40" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg2)"/>
+
+  <!-- Headline -->
+  <text x="540" y="140" font-family="SF Pro Display, Roboto, Arial" font-size="56" font-weight="bold" fill="#fff" text-anchor="middle">
+    Exclusive Local Offers
+  </text>
+  <text x="540" y="200" font-family="SF Pro, Roboto, Arial" font-size="28" fill="#fff" fill-opacity="0.8" text-anchor="middle">
+    Discounts from merchants you love
+  </text>
+
+  <!-- Phone Frame -->
+  <g transform="translate(90, 280)" filter="url(#shadow2)">
+    <rect width="900" height="1500" rx="60" fill="#1a1a1a"/>
+    <rect x="12" y="12" width="876" height="1476" rx="52" fill="#000"/>
+
+    <!-- Screen -->
+    <rect x="16" y="16" width="868" height="1468" rx="50" fill="#f5f5f5"/>
+    <rect x="320" y="24" width="260" height="32" rx="16" fill="#1a1a1a"/>
+
+    <!-- Header -->
+    <rect x="16" y="60" width="868" height="100" fill="#003F87"/>
+    <text x="80" y="125" font-family="SF Pro Display, Roboto" font-size="32" font-weight="bold" fill="#fff">Offers Near You</text>
+    <circle cx="800" cy="110" r="24" fill="rgba(255,255,255,0.2)"/>
+    <text x="800" y="118" font-family="SF Pro, Roboto" font-size="20" fill="#fff" text-anchor="middle">🔍</text>
+
+    <!-- Category Pills -->
+    <g transform="translate(40, 180)">
+      <rect x="0" y="0" width="120" height="44" rx="22" fill="#003F87"/>
+      <text x="60" y="30" font-family="SF Pro, Roboto" font-size="16" fill="#fff" text-anchor="middle">All</text>
+
+      <rect x="135" y="0" width="130" height="44" rx="22" fill="#e8f0fe"/>
+      <text x="200" y="30" font-family="SF Pro, Roboto" font-size="16" fill="#003F87" text-anchor="middle">Food</text>
+
+      <rect x="280" y="0" width="160" height="44" rx="22" fill="#e8f0fe"/>
+      <text x="360" y="30" font-family="SF Pro, Roboto" font-size="16" fill="#003F87" text-anchor="middle">Shopping</text>
+
+      <rect x="455" y="0" width="180" height="44" rx="22" fill="#e8f0fe"/>
+      <text x="545" y="30" font-family="SF Pro, Roboto" font-size="16" fill="#003F87" text-anchor="middle">Entertainment</text>
+    </g>
+
+    <!-- Offer Card 1 -->
+    <g transform="translate(40, 260)">
+      <rect width="820" height="200" rx="16" fill="#fff"/>
+      <rect x="20" y="20" width="160" height="160" rx="12" fill="#FFD700"/>
+      <text x="100" y="100" font-family="SF Pro Display, Roboto" font-size="48" fill="#fff" text-anchor="middle">🍕</text>
+
+      <text x="200" y="55" font-family="SF Pro Display, Roboto" font-size="24" font-weight="bold" fill="#1a1a1a">Joe's Pizza Palace</text>
+      <text x="200" y="85" font-family="SF Pro, Roboto" font-size="16" fill="#666">0.3 miles away</text>
+
+      <rect x="200" y="105" width="100" height="36" rx="18" fill="#4CAF50"/>
+      <text x="250" y="130" font-family="SF Pro, Roboto" font-size="18" font-weight="bold" fill="#fff" text-anchor="middle">20% OFF</text>
+
+      <text x="200" y="165" font-family="SF Pro, Roboto" font-size="14" fill="#666">Any large pizza with drink purchase</text>
+    </g>
+
+    <!-- Offer Card 2 -->
+    <g transform="translate(40, 480)">
+      <rect width="820" height="200" rx="16" fill="#fff"/>
+      <rect x="20" y="20" width="160" height="160" rx="12" fill="#003F87"/>
+      <text x="100" y="100" font-family="SF Pro Display, Roboto" font-size="48" fill="#fff" text-anchor="middle">🛒</text>
+
+      <text x="200" y="55" font-family="SF Pro Display, Roboto" font-size="24" font-weight="bold" fill="#1a1a1a">Main Street Market</text>
+      <text x="200" y="85" font-family="SF Pro, Roboto" font-size="16" fill="#666">0.8 miles away</text>
+
+      <rect x="200" y="105" width="100" height="36" rx="18" fill="#CE1126"/>
+      <text x="250" y="130" font-family="SF Pro, Roboto" font-size="18" font-weight="bold" fill="#fff" text-anchor="middle">15% OFF</text>
+
+      <text x="200" y="165" font-family="SF Pro, Roboto" font-size="14" fill="#666">Entire purchase over $25</text>
+    </g>
+
+    <!-- Offer Card 3 -->
+    <g transform="translate(40, 700)">
+      <rect width="820" height="200" rx="16" fill="#fff"/>
+      <rect x="20" y="20" width="160" height="160" rx="12" fill="#CE1126"/>
+      <text x="100" y="100" font-family="SF Pro Display, Roboto" font-size="48" fill="#fff" text-anchor="middle">🎬</text>
+
+      <text x="200" y="55" font-family="SF Pro Display, Roboto" font-size="24" font-weight="bold" fill="#1a1a1a">Cinema 12</text>
+      <text x="200" y="85" font-family="SF Pro, Roboto" font-size="16" fill="#666">1.2 miles away</text>
+
+      <rect x="200" y="105" width="100" height="36" rx="18" fill="#FFD700"/>
+      <text x="250" y="130" font-family="SF Pro, Roboto" font-size="18" font-weight="bold" fill="#333" text-anchor="middle">BOGO</text>
+
+      <text x="200" y="165" font-family="SF Pro, Roboto" font-size="14" fill="#666">Buy one ticket, get one free on Tuesdays</text>
+    </g>
+
+    <!-- Offer Card 4 (partial) -->
+    <g transform="translate(40, 920)">
+      <rect width="820" height="200" rx="16" fill="#fff"/>
+      <rect x="20" y="20" width="160" height="160" rx="12" fill="#4CAF50"/>
+      <text x="100" y="100" font-family="SF Pro Display, Roboto" font-size="48" fill="#fff" text-anchor="middle">⛳</text>
+
+      <text x="200" y="55" font-family="SF Pro Display, Roboto" font-size="24" font-weight="bold" fill="#1a1a1a">Green Valley Mini Golf</text>
+      <text x="200" y="85" font-family="SF Pro, Roboto" font-size="16" fill="#666">2.1 miles away</text>
+
+      <rect x="200" y="105" width="100" height="36" rx="18" fill="#003F87"/>
+      <text x="250" y="130" font-family="SF Pro, Roboto" font-size="18" font-weight="bold" fill="#fff" text-anchor="middle">$5 OFF</text>
+
+      <text x="200" y="165" font-family="SF Pro, Roboto" font-size="14" fill="#666">Family 4-pack admission</text>
+    </g>
+
+    <!-- Bottom Nav -->
+    <rect x="16" y="1380" width="868" height="104" fill="#fff"/>
+    <g transform="translate(16, 1380)" fill="#003F87">
+      <g transform="translate(87, 52)" text-anchor="middle">
+        <circle r="20" fill="#e8f0fe"/>
+        <text y="42" font-family="SF Pro, Roboto" font-size="12" fill="#666">Home</text>
+      </g>
+      <g transform="translate(261, 52)" text-anchor="middle">
+        <circle r="20" fill="#003F87"/>
+        <text y="42" font-family="SF Pro, Roboto" font-size="12" font-weight="600" fill="#003F87">Offers</text>
+      </g>
+      <g transform="translate(434, 52)" text-anchor="middle">
+        <circle r="20" fill="#e8f0fe"/>
+        <text y="42" font-family="SF Pro, Roboto" font-size="12" fill="#666">Scan</text>
+      </g>
+      <g transform="translate(608, 52)" text-anchor="middle">
+        <circle r="20" fill="#e8f0fe"/>
+        <text y="42" font-family="SF Pro, Roboto" font-size="12" fill="#666">Map</text>
+      </g>
+      <g transform="translate(781, 52)" text-anchor="middle">
+        <circle r="20" fill="#e8f0fe"/>
+        <text y="42" font-family="SF Pro, Roboto" font-size="12" fill="#666">Profile</text>
+      </g>
+    </g>
+
+    <rect x="360" y="1450" width="180" height="5" rx="2" fill="#1a1a1a"/>
+  </g>
+
+  <text x="540" y="1870" font-family="SF Pro, Roboto" font-size="26" fill="#FFD700" text-anchor="middle" font-weight="600">
+    100+ Participating Merchants
+  </text>
+</svg>

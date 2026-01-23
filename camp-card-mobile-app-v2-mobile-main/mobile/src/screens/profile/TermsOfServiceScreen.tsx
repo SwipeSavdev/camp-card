@@ -1,4 +1,5 @@
 // Terms of Service Screen - Display terms of service
+// Published by Swipe Savvy, LLC
 
 import React from 'react';
 import {
@@ -7,6 +8,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +17,14 @@ import { COLORS } from '../../config/constants';
 
 export default function TermsOfServiceScreen() {
   const navigation = useNavigation();
+
+  const openEmail = (email: string) => {
+    Linking.openURL(`mailto:${email}`);
+  };
+
+  const openWebsite = () => {
+    Linking.openURL('https://www.campcardapp.org');
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -32,13 +42,23 @@ export default function TermsOfServiceScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.lastUpdated}>Last Updated: January 16, 2026</Text>
+          <View style={styles.publisherBadge}>
+            <Text style={styles.publisherText}>Published by Swipe Savvy, LLC</Text>
+          </View>
+          <Text style={styles.lastUpdated}>Last Updated: January 23, 2026</Text>
 
           <View style={styles.introduction}>
             <Text style={styles.paragraph}>
-              Welcome to the BSA Camp Card mobile application. These Terms of Service ("Terms")
-              govern your use of the app and services provided by the Boy Scouts of America
-              ("BSA," "we," "us," or "our"). By using this app, you agree to these Terms.
+              Welcome to Camp Card ("App," "Service"), published and operated by Swipe Savvy, LLC
+              ("Swipe Savvy," "we," "us," or "our"). By downloading, installing, accessing, or
+              using the Camp Card mobile application, you ("User," "you," or "your") agree to be
+              bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do
+              not use the App.
+            </Text>
+            <Text style={styles.paragraph}>
+              These Terms constitute a legally binding agreement between you and Swipe Savvy, LLC.
+              The App is developed and operated by Swipe Savvy in partnership with the Boy Scouts
+              of America ("BSA") local councils and troops.
             </Text>
           </View>
 
@@ -50,16 +70,29 @@ export default function TermsOfServiceScreen() {
             </Text>
           </Section>
 
-          <Section title="2. User Eligibility">
+          <Section title="2. Description of Service">
+            <Text style={styles.paragraph}>Camp Card is a mobile application that provides:</Text>
+            <BulletPoint>Discount Offers: Access to exclusive discounts and offers from participating local merchants</BulletPoint>
+            <BulletPoint>QR Code Redemption: Digital redemption of offers at merchant locations</BulletPoint>
+            <BulletPoint>Merchant Discovery: Location-based search for participating merchants</BulletPoint>
+            <BulletPoint>Subscription Management: Annual subscription services for accessing offers</BulletPoint>
+            <BulletPoint>Scout Fundraising Support: A portion of subscription fees supports local Scout troops and councils</BulletPoint>
             <Text style={styles.paragraph}>
-              The Camp Card app is designed for Scout families and supporters of Scouting. Users
-              under 13 must have parental or guardian consent. Parents and guardians are
-              responsible for monitoring and managing their child's use of the app.
+              The Service is available only in the United States. We make no representations that the
+              Service is appropriate or available for use in other locations.
             </Text>
           </Section>
 
-          <Section title="3. Account Responsibilities">
-            <Text style={styles.paragraph}>You agree to:</Text>
+          <Section title="3. User Eligibility">
+            <Text style={styles.paragraph}>
+              Users must be at least 13 years of age to create an account. Users under 18 years of age
+              ("Minors") must have verifiable parental or legal guardian consent. Parents or guardians
+              who create accounts on behalf of Minors accept these Terms on the Minor's behalf.
+            </Text>
+          </Section>
+
+          <Section title="4. Account Registration and Security">
+            <Text style={styles.paragraph}>To access certain features, you must create an account. You agree to:</Text>
             <BulletPoint>Provide accurate and complete registration information</BulletPoint>
             <BulletPoint>Maintain the security of your account credentials</BulletPoint>
             <BulletPoint>Notify us immediately of any unauthorized access</BulletPoint>
@@ -67,119 +100,151 @@ export default function TermsOfServiceScreen() {
             <BulletPoint>Not share your account with others</BulletPoint>
           </Section>
 
-          <Section title="4. Subscription Services">
+          <Section title="5. Subscriptions and Payments">
+            <Text style={styles.sectionSubtitle}>5.1 Subscription Plans</Text>
             <Text style={styles.paragraph}>
-              The Camp Card requires an annual subscription. Subscription details:
+              Camp Card offers annual subscription plans that provide access to merchant offers.
+              Subscription pricing is displayed in the App before purchase.
             </Text>
+
+            <Text style={styles.sectionSubtitle}>5.2 Payment Processing</Text>
+            <BulletPoint>Payments are processed securely through Authorize.net</BulletPoint>
+            <BulletPoint>We accept major credit and debit cards</BulletPoint>
+            <BulletPoint>All prices are in US Dollars (USD)</BulletPoint>
+            <BulletPoint>Sales tax may be applied where required by law</BulletPoint>
+
+            <Text style={styles.sectionSubtitle}>5.3 Billing and Renewal</Text>
             <BulletPoint>Subscriptions are billed annually</BulletPoint>
-            <BulletPoint>Payment is processed through secure third-party providers</BulletPoint>
-            <BulletPoint>Subscriptions auto-renew unless cancelled</BulletPoint>
-            <BulletPoint>Proceeds support Scout fundraising activities</BulletPoint>
-            <BulletPoint>Refunds are subject to our refund policy</BulletPoint>
+            <BulletPoint>You will receive notification before renewal</BulletPoint>
+            <BulletPoint>Subscriptions automatically renew unless cancelled</BulletPoint>
+            <BulletPoint>You may cancel at any time through your account settings</BulletPoint>
+
+            <Text style={styles.sectionSubtitle}>5.4 Refund Policy</Text>
+            <BulletPoint>Refund requests must be submitted within 30 days of purchase</BulletPoint>
+            <BulletPoint>Refunds are processed at our discretion</BulletPoint>
+            <BulletPoint>Refunds for annual subscriptions are prorated based on unused time</BulletPoint>
+            <BulletPoint>Contact support@campcardapp.org for refund requests</BulletPoint>
           </Section>
 
-          <Section title="5. Merchant Offers">
-            <Text style={styles.paragraph}>
-              The app displays offers from local merchants. Please note:
-            </Text>
-            <BulletPoint>Offers are subject to merchant terms and conditions</BulletPoint>
-            <BulletPoint>BSA is not responsible for merchant products or services</BulletPoint>
-            <BulletPoint>
-              Merchants may modify or terminate offers at any time
-            </BulletPoint>
-            <BulletPoint>Some offers may require verification at time of redemption</BulletPoint>
-            <BulletPoint>Offer redemption limits may apply</BulletPoint>
-          </Section>
+          <Section title="6. User Conduct">
+            <Text style={styles.paragraph}>You agree NOT to:</Text>
+            <BulletPoint>Violate any applicable laws or regulations</BulletPoint>
+            <BulletPoint>Impersonate any person or entity</BulletPoint>
+            <BulletPoint>Interfere with or disrupt the Service</BulletPoint>
+            <BulletPoint>Attempt to gain unauthorized access to any systems</BulletPoint>
+            <BulletPoint>Use the Service for any fraudulent purpose</BulletPoint>
+            <BulletPoint>Abuse, harass, or harm other users</BulletPoint>
+            <BulletPoint>Circumvent any access restrictions or security measures</BulletPoint>
+            <BulletPoint>Resell or redistribute offers without authorization</BulletPoint>
 
-          <Section title="6. Prohibited Conduct">
-            <Text style={styles.paragraph}>You may not:</Text>
-            <BulletPoint>
-              Use the app for any illegal or unauthorized purpose
-            </BulletPoint>
-            <BulletPoint>
-              Attempt to circumvent offer redemption limits or restrictions
-            </BulletPoint>
-            <BulletPoint>
-              Interfere with or disrupt the app's functionality
-            </BulletPoint>
-            <BulletPoint>
-              Use automated systems to access the app
-            </BulletPoint>
-            <BulletPoint>
-              Reverse engineer or decompile the app
-            </BulletPoint>
-            <BulletPoint>
-              Share or resell subscription benefits
-            </BulletPoint>
-            <BulletPoint>
-              Impersonate others or provide false information
-            </BulletPoint>
+            <Text style={styles.paragraph}>When redeeming offers:</Text>
+            <BulletPoint>Present valid digital or printed offers to merchants</BulletPoint>
+            <BulletPoint>One redemption per offer unless otherwise specified</BulletPoint>
+            <BulletPoint>Offers cannot be combined unless explicitly stated</BulletPoint>
+            <BulletPoint>Merchants reserve the right to refuse invalid offers</BulletPoint>
           </Section>
 
           <Section title="7. Intellectual Property">
             <Text style={styles.paragraph}>
-              The Camp Card app, including all content, features, and functionality, is owned
-              by BSA and is protected by copyright, trademark, and other intellectual property
-              laws. You may not copy, modify, distribute, or create derivative works without
-              our permission.
+              The App, including its content, features, and functionality, is owned by Swipe Savvy, LLC
+              and its licensors. This includes software and code, text, graphics, logos, images, user
+              interface design, and trademarks.
+            </Text>
+            <Text style={styles.paragraph}>
+              We grant you a limited, non-exclusive, non-transferable, revocable license to use the App
+              for personal, non-commercial purposes in accordance with these Terms.
+            </Text>
+            <Text style={styles.paragraph}>
+              The Boy Scouts of America name, logo, and related marks are registered trademarks of the
+              Boy Scouts of America. Use of BSA marks is authorized under license.
             </Text>
           </Section>
 
-          <Section title="8. User Content">
+          <Section title="8. Third-Party Services">
             <Text style={styles.paragraph}>
-              If you submit content to the app (such as reviews or fundraising updates), you:
+              Participating merchants are independent businesses. We do not control merchant products
+              or services, guarantee merchant availability or hours, warrant merchant quality or safety,
+              or assume liability for merchant actions.
             </Text>
-            <BulletPoint>Grant BSA a license to use, display, and distribute that content</BulletPoint>
-            <BulletPoint>Confirm you have the right to share the content</BulletPoint>
-            <BulletPoint>Agree the content does not violate any laws or third-party rights</BulletPoint>
+            <Text style={styles.paragraph}>
+              Payment processing is provided by Authorize.net. Your use of payment services is subject
+              to their terms and privacy policy.
+            </Text>
           </Section>
 
-          <Section title="9. Disclaimers">
+          <Section title="9. Disclaimer of Warranties">
             <Text style={styles.paragraph}>
-              THE APP IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. BSA DOES NOT GUARANTEE:
+              THE APP IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS
+              OR IMPLIED. SWIPE SAVVY DISCLAIMS ALL WARRANTIES, INCLUDING MERCHANTABILITY, FITNESS FOR
+              A PARTICULAR PURPOSE, NON-INFRINGEMENT, ACCURACY OR RELIABILITY, AND UNINTERRUPTED OR
+              ERROR-FREE OPERATION.
             </Text>
-            <BulletPoint>The app will be uninterrupted or error-free</BulletPoint>
-            <BulletPoint>All offers will be honored by merchants</BulletPoint>
-            <BulletPoint>Specific savings or fundraising results</BulletPoint>
-            <BulletPoint>The accuracy of third-party content</BulletPoint>
+            <Text style={styles.paragraph}>We do not guarantee:</Text>
+            <BulletPoint>Specific savings amounts</BulletPoint>
+            <BulletPoint>Merchant participation or availability</BulletPoint>
+            <BulletPoint>Offer accuracy or validity</BulletPoint>
+            <BulletPoint>Continuous service availability</BulletPoint>
           </Section>
 
           <Section title="10. Limitation of Liability">
             <Text style={styles.paragraph}>
-              BSA's liability for any claims related to the app is limited to the amount you
-              paid for your subscription in the past 12 months. BSA is not liable for indirect,
-              incidental, or consequential damages.
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, SWIPE SAVVY, LLC AND ITS AFFILIATES, OFFICERS,
+              DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL,
+              CONSEQUENTIAL, OR PUNITIVE DAMAGES, LOSS OF PROFITS, DATA, OR GOODWILL, SERVICE
+              INTERRUPTION OR SYSTEM FAILURES, UNAUTHORIZED ACCESS TO YOUR DATA, OR ANY THIRD-PARTY
+              CONDUCT OR CONTENT.
+            </Text>
+            <Text style={styles.paragraph}>
+              OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID FOR THE SERVICE IN THE TWELVE
+              (12) MONTHS PRECEDING THE CLAIM.
             </Text>
           </Section>
 
           <Section title="11. Indemnification">
             <Text style={styles.paragraph}>
-              You agree to indemnify and hold BSA harmless from any claims, damages, or expenses
-              arising from your use of the app, your violation of these Terms, or your violation
-              of any rights of others.
+              You agree to indemnify and hold harmless Swipe Savvy, LLC, BSA, participating councils,
+              and their respective officers, directors, employees, and agents from any claims, damages,
+              losses, or expenses arising from your use of the App, your violation of these Terms, or
+              your violation of any rights of others.
             </Text>
           </Section>
 
           <Section title="12. Termination">
             <Text style={styles.paragraph}>
-              We may suspend or terminate your account if you violate these Terms. You may
-              cancel your account at any time through the app settings. Upon termination, your
-              right to use the app ceases immediately.
+              You may terminate your account at any time by deleting your account through the App or
+              contacting support@campcardapp.org.
+            </Text>
+            <Text style={styles.paragraph}>
+              We may suspend or terminate your account if you violate these Terms, engage in fraudulent
+              activity, or fail to pay subscription fees. Upon termination, your access to the App will
+              cease and active subscriptions will not be refunded except as required by law.
             </Text>
           </Section>
 
-          <Section title="13. Changes to Terms">
+          <Section title="13. Dispute Resolution">
             <Text style={styles.paragraph}>
-              We reserve the right to modify these Terms at any time. We will notify you of
-              material changes through the app or by email. Continued use after changes
-              constitutes acceptance of the modified Terms.
+              Before filing a formal claim, you agree to contact us at legal@campcardapp.org to attempt
+              informal resolution.
+            </Text>
+            <Text style={styles.paragraph}>
+              You and Swipe Savvy agree to resolve any disputes through binding arbitration administered
+              by the American Arbitration Association (AAA) under its Consumer Arbitration Rules, except
+              where prohibited by law.
+            </Text>
+            <Text style={[styles.paragraph, styles.bold]}>
+              YOU WAIVE ANY RIGHT TO PARTICIPATE IN A CLASS ACTION LAWSUIT OR CLASS-WIDE ARBITRATION.
+            </Text>
+            <Text style={styles.paragraph}>
+              These Terms are governed by the laws of the State of Texas, without regard to conflict of
+              law principles.
             </Text>
           </Section>
 
-          <Section title="14. Governing Law">
+          <Section title="14. Changes to Terms">
             <Text style={styles.paragraph}>
-              These Terms are governed by the laws of the State of Texas, without regard to
-              conflict of law principles. Any disputes will be resolved in the courts of Texas.
+              We may modify these Terms at any time. Material changes will be communicated through
+              in-app notifications or email to registered users. Your continued use of the App after
+              changes constitutes acceptance of the modified Terms.
             </Text>
           </Section>
 
@@ -188,19 +253,45 @@ export default function TermsOfServiceScreen() {
               For questions about these Terms, please contact us:
             </Text>
             <View style={styles.contactBox}>
-              <ContactItem icon="mail" text="legal@campcard.org" />
-              <ContactItem icon="call" text="1-800-BSA-CAMP" />
-              <ContactItem icon="location" text="Boy Scouts of America
-1325 West Walnut Hill Lane
-Irving, TX 75015" />
+              <Text style={styles.companyName}>Swipe Savvy, LLC</Text>
+              <ContactItem
+                icon="mail"
+                text="support@campcardapp.org"
+                onPress={() => openEmail('support@campcardapp.org')}
+              />
+              <ContactItem
+                icon="document-text"
+                text="legal@campcardapp.org"
+                onPress={() => openEmail('legal@campcardapp.org')}
+              />
+              <ContactItem
+                icon="globe"
+                text="www.campcardapp.org"
+                onPress={openWebsite}
+              />
             </View>
+          </Section>
+
+          <Section title="16. App Store Terms">
+            <Text style={styles.paragraph}>
+              If you downloaded the App from the Apple App Store or Google Play:
+            </Text>
+            <BulletPoint>These Terms are between you and Swipe Savvy, LLC, not Apple or Google</BulletPoint>
+            <BulletPoint>Apple/Google has no obligation to provide maintenance or support</BulletPoint>
+            <BulletPoint>Apple/Google is not responsible for any claims relating to the App</BulletPoint>
+            <BulletPoint>Apple is a third-party beneficiary of these Terms</BulletPoint>
           </Section>
 
           <View style={styles.acknowledgment}>
             <Text style={styles.acknowledgmentText}>
-              By using the BSA Camp Card app, you acknowledge that you have read and understood
-              these Terms of Service and agree to be bound by them.
+              By using the Camp Card app, you acknowledge that you have read, understood, and agree
+              to be bound by these Terms of Service.
             </Text>
+          </View>
+
+          <View style={styles.publisherFooter}>
+            <Text style={styles.footerText}>Swipe Savvy, LLC</Text>
+            <Text style={styles.footerSubtext}>Publisher of Camp Card</Text>
           </View>
         </View>
 
@@ -236,13 +327,14 @@ const BulletPoint: React.FC<BulletPointProps> = ({ children }) => (
 interface ContactItemProps {
   icon: string;
   text: string;
+  onPress?: () => void;
 }
 
-const ContactItem: React.FC<ContactItemProps> = ({ icon, text }) => (
-  <View style={styles.contactItem}>
+const ContactItem: React.FC<ContactItemProps> = ({ icon, text, onPress }) => (
+  <TouchableOpacity style={styles.contactItem} onPress={onPress} activeOpacity={0.7}>
     <Ionicons name={icon as any} size={18} color={COLORS.primary} />
-    <Text style={styles.contactText}>{text}</Text>
-  </View>
+    <Text style={[styles.contactText, onPress && styles.contactLink]}>{text}</Text>
+  </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
@@ -280,6 +372,19 @@ const styles = StyleSheet.create({
   section: {
     padding: 16,
   },
+  publisherBadge: {
+    backgroundColor: COLORS.primary + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  publisherText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
   lastUpdated: {
     fontSize: 13,
     color: COLORS.textSecondary,
@@ -298,11 +403,21 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 12,
   },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginTop: 12,
+    marginBottom: 8,
+  },
   paragraph: {
     fontSize: 15,
     color: COLORS.text,
     lineHeight: 22,
     marginBottom: 12,
+  },
+  bold: {
+    fontWeight: '600',
   },
   bulletPoint: {
     flexDirection: 'row',
@@ -330,9 +445,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+  companyName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
   contactItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
   },
   contactText: {
@@ -341,6 +462,10 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginLeft: 12,
     lineHeight: 20,
+  },
+  contactLink: {
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
   },
   acknowledgment: {
     backgroundColor: COLORS.primary + '10',
@@ -355,6 +480,23 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     lineHeight: 20,
     fontWeight: '500',
+  },
+  publisherFooter: {
+    alignItems: 'center',
+    marginTop: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  footerText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  footerSubtext: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 4,
   },
   bottomSpacer: {
     height: 40,
