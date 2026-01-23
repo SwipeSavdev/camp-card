@@ -1426,22 +1426,24 @@ Actions
 
         {showAddForm && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px',
         }}
         >
           <div style={{
-            backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.md, width: '90%', maxWidth: '420px', maxHeight: '85vh', boxShadow: themeShadow.md, display: 'flex', flexDirection: 'column',
+            backgroundColor: themeColors.white, borderRadius: themeRadius.card, width: '100%', maxWidth: '380px', maxHeight: 'calc(100vh - 40px)', boxShadow: themeShadow.md, display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}
           >
-            <h2 style={{
-              fontSize: '17px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.md, margin: 0,
-            }}
-            >
-              Add New User
-            </h2>
+            <div style={{ padding: '12px 16px', borderBottom: `1px solid ${themeColors.gray200}`, flexShrink: 0 }}>
+              <h2 style={{
+                fontSize: '16px', fontWeight: '700', color: themeColors.text, margin: 0,
+              }}
+              >
+                Add New User
+              </h2>
+            </div>
 
             <div style={{
-              display: 'flex', flexDirection: 'column', gap: themeSpace.sm, marginBottom: themeSpace.md, overflowY: 'auto', flex: 1,
+              display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 16px', overflowY: 'auto', flex: 1,
             }}
             >
               <div>
@@ -1831,7 +1833,7 @@ Unit Number
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '12px' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', padding: '12px 16px', borderTop: `1px solid ${themeColors.gray200}`, flexShrink: 0 }}>
               <button
                 onClick={() => {
                   setShowAddForm(false);
