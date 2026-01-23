@@ -1430,23 +1430,23 @@ Actions
         }}
         >
           <div style={{
-            backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, width: '90%', maxWidth: '500px', boxShadow: themeShadow.md,
+            backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.md, width: '90%', maxWidth: '420px', maxHeight: '85vh', boxShadow: themeShadow.md, display: 'flex', flexDirection: 'column',
           }}
           >
             <h2 style={{
-              fontSize: '20px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.lg, margin: 0,
+              fontSize: '17px', fontWeight: '700', color: themeColors.text, marginBottom: themeSpace.md, margin: 0,
             }}
             >
               Add New User
             </h2>
 
             <div style={{
-              display: 'flex', flexDirection: 'column', gap: themeSpace.lg, marginBottom: themeSpace.xl,
+              display: 'flex', flexDirection: 'column', gap: themeSpace.sm, marginBottom: themeSpace.md, overflowY: 'auto', flex: 1,
             }}
             >
               <div>
                 <label style={{
-                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                  display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Name
@@ -1458,10 +1458,10 @@ Name
                   placeholder="Enter user name"
                   style={{
                    width: '100%',
-                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   padding: '6px 10px',
                    border: `1px solid ${themeColors.gray200}`,
                    borderRadius: themeRadius.sm,
-                   fontSize: '14px',
+                   fontSize: '13px',
                    boxSizing: 'border-box',
                  }}
                 />
@@ -1469,7 +1469,7 @@ Name
 
               <div>
                 <label style={{
-                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                  display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Email
@@ -1481,10 +1481,10 @@ Email
                   placeholder="Enter email address"
                   style={{
                    width: '100%',
-                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   padding: '6px 10px',
                    border: `1px solid ${themeColors.gray200}`,
                    borderRadius: themeRadius.sm,
-                   fontSize: '14px',
+                   fontSize: '13px',
                    boxSizing: 'border-box',
                  }}
                 />
@@ -1492,7 +1492,7 @@ Email
 
               <div>
                 <label style={{
-                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                  display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Status
@@ -1502,10 +1502,10 @@ Status
                   onChange={(e) => setNewUserStatus(e.target.value as 'active' | 'inactive')}
                   style={{
                    width: '100%',
-                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   padding: '6px 10px',
                    border: `1px solid ${themeColors.gray200}`,
                    borderRadius: themeRadius.sm,
-                   fontSize: '14px',
+                   fontSize: '13px',
                    boxSizing: 'border-box',
                    backgroundColor: themeColors.white,
                    cursor: 'pointer',
@@ -1518,7 +1518,7 @@ Status
 
               <div>
                 <label style={{
-                  display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                  display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Role
@@ -1539,10 +1539,10 @@ Role
                   }}
                   style={{
                    width: '100%',
-                   padding: `${themeSpace.sm} ${themeSpace.md}`,
+                   padding: '6px 10px',
                    border: `1px solid ${themeColors.gray200}`,
                    borderRadius: themeRadius.sm,
-                   fontSize: '14px',
+                   fontSize: '13px',
                    boxSizing: 'border-box',
                    backgroundColor: themeColors.white,
                    cursor: 'pointer',
@@ -1560,7 +1560,7 @@ Role
               {newUserRole === 'COUNCIL_ADMIN' && (
                 <div style={{ position: 'relative' }}>
                   <label style={{
-                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                    display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                   }}
                   >
                     Council
@@ -1577,10 +1577,10 @@ Role
                       placeholder={newUserCouncilId ? councils.find(c => c.uuid === newUserCouncilId)?.name || 'Search councils...' : 'Search councils...'}
                       style={{
                         width: '100%',
-                        padding: `${themeSpace.sm} ${themeSpace.md}`,
+                        padding: '6px 10px',
                         border: `1px solid ${themeColors.gray200}`,
                         borderRadius: themeRadius.sm,
-                        fontSize: '14px',
+                        fontSize: '13px',
                         boxSizing: 'border-box',
                       }}
                     />
@@ -1658,7 +1658,7 @@ Role
                 <>
                   <div>
                     <label style={{
-                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                      display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                     }}
                     >
 Unit Type
@@ -1668,10 +1668,10 @@ Unit Type
                       onChange={(e) => setNewUserUnitType(e.target.value as UnitType || null)}
                       style={{
                        width: '100%',
-                       padding: `${themeSpace.sm} ${themeSpace.md}`,
+                       padding: '6px 10px',
                        border: `1px solid ${themeColors.gray200}`,
                        borderRadius: themeRadius.sm,
-                       fontSize: '14px',
+                       fontSize: '13px',
                        boxSizing: 'border-box',
                        backgroundColor: themeColors.white,
                        cursor: 'pointer',
@@ -1687,7 +1687,7 @@ Unit Type
 
                   <div>
                     <label style={{
-                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                      display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                     }}
                     >
 Unit Number
@@ -1699,10 +1699,10 @@ Unit Number
                       placeholder="Enter unit number"
                       style={{
                        width: '100%',
-                       padding: `${themeSpace.sm} ${themeSpace.md}`,
+                       padding: '6px 10px',
                        border: `1px solid ${themeColors.gray200}`,
                        borderRadius: themeRadius.sm,
-                       fontSize: '14px',
+                       fontSize: '13px',
                        boxSizing: 'border-box',
                      }}
                     />
@@ -1711,7 +1711,7 @@ Unit Number
                   {/* COPPA Compliance: Date of Birth field */}
                   <div>
                     <label style={{
-                      display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                      display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                     }}
                     >
                       Date of Birth <span style={{ color: themeColors.error500 }}>*</span>
@@ -1723,14 +1723,14 @@ Unit Number
                       max={new Date().toISOString().split('T')[0]}
                       style={{
                         width: '100%',
-                        padding: `${themeSpace.sm} ${themeSpace.md}`,
+                        padding: '6px 10px',
                         border: `1px solid ${themeColors.gray200}`,
                         borderRadius: themeRadius.sm,
-                        fontSize: '14px',
+                        fontSize: '13px',
                         boxSizing: 'border-box',
                       }}
                     />
-                    <p style={{ fontSize: '11px', color: themeColors.gray500, marginTop: '4px', margin: '4px 0 0 0' }}>
+                    <p style={{ fontSize: '10px', color: themeColors.gray500, marginTop: '2px', margin: '2px 0 0 0' }}>
                       Required for COPPA compliance. Minors require parental consent.
                     </p>
                   </div>
@@ -1740,26 +1740,26 @@ Unit Number
                     backgroundColor: themeColors.info50,
                     border: `1px solid ${themeColors.info600}`,
                     borderRadius: themeRadius.sm,
-                    padding: themeSpace.md,
-                    marginTop: themeSpace.sm,
+                    padding: '10px',
+                    marginTop: '4px',
                   }}>
                     <h4 style={{
-                      fontSize: '14px',
+                      fontSize: '13px',
                       fontWeight: '600',
                       color: themeColors.info600,
-                      marginBottom: themeSpace.md,
-                      margin: `0 0 ${themeSpace.md} 0`,
+                      marginBottom: '8px',
+                      margin: '0 0 8px 0',
                     }}>
                       Parent/Guardian Information
                     </h4>
-                    <p style={{ fontSize: '12px', color: themeColors.gray600, marginBottom: themeSpace.md, margin: `0 0 ${themeSpace.md} 0` }}>
+                    <p style={{ fontSize: '11px', color: themeColors.gray600, marginBottom: '8px', margin: '0 0 8px 0' }}>
                       A consent request email will be sent to the parent/guardian. The scout will have limited access until consent is granted.
                     </p>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div>
                         <label style={{
-                          display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                          display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                         }}
                         >
                           Parent/Guardian Name <span style={{ color: themeColors.error500 }}>*</span>
@@ -1771,10 +1771,10 @@ Unit Number
                           placeholder="Enter parent/guardian full name"
                           style={{
                             width: '100%',
-                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            padding: '6px 10px',
                             border: `1px solid ${themeColors.gray200}`,
                             borderRadius: themeRadius.sm,
-                            fontSize: '14px',
+                            fontSize: '13px',
                             boxSizing: 'border-box',
                           }}
                         />
@@ -1782,7 +1782,7 @@ Unit Number
 
                       <div>
                         <label style={{
-                          display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                          display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                         }}
                         >
                           Parent/Guardian Email <span style={{ color: themeColors.error500 }}>*</span>
@@ -1794,10 +1794,10 @@ Unit Number
                           placeholder="Enter parent/guardian email"
                           style={{
                             width: '100%',
-                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            padding: '6px 10px',
                             border: `1px solid ${themeColors.gray200}`,
                             borderRadius: themeRadius.sm,
-                            fontSize: '14px',
+                            fontSize: '13px',
                             boxSizing: 'border-box',
                           }}
                         />
@@ -1805,7 +1805,7 @@ Unit Number
 
                       <div>
                         <label style={{
-                          display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
+                          display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                         }}
                         >
                           Parent/Guardian Phone (Optional)
@@ -1817,10 +1817,10 @@ Unit Number
                           placeholder="Enter parent/guardian phone"
                           style={{
                             width: '100%',
-                            padding: `${themeSpace.sm} ${themeSpace.md}`,
+                            padding: '6px 10px',
                             border: `1px solid ${themeColors.gray200}`,
                             borderRadius: themeRadius.sm,
-                            fontSize: '14px',
+                            fontSize: '13px',
                             boxSizing: 'border-box',
                           }}
                         />
@@ -1831,7 +1831,7 @@ Unit Number
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '12px' }}>
               <button
                 onClick={() => {
                   setShowAddForm(false);
@@ -1851,12 +1851,12 @@ Unit Number
                   setError(null);
                 }}
                 style={{
-                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  padding: '6px 14px',
                   border: `1px solid ${themeColors.gray200}`,
                   backgroundColor: themeColors.white,
                   borderRadius: themeRadius.sm,
                   cursor: 'pointer',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '500',
                   color: themeColors.gray600,
                 }}
@@ -1866,13 +1866,13 @@ Unit Number
               <button
                 onClick={addUser}
                 style={{
-                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  padding: '6px 14px',
                   background: themeColors.primary600,
                   color: themeColors.white,
                   border: 'none',
                   borderRadius: themeRadius.sm,
                   cursor: 'pointer',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '500',
                 }}
               >
