@@ -347,6 +347,51 @@ export const cardsApi = {
     apiClient.post(`/api/v1/cards/claim/${token}`, data || {}),
 };
 
+// Payment API (Authorize.net)
+export const paymentsApi = {
+  // Process a payment charge
+  charge: (data: {
+    amount: number; // decimal amount (e.g., 15.00)
+    cardNumber: string;
+    expirationDate: string; // MMYY format
+    cvv: string;
+    description?: string;
+    customerEmail?: string;
+    customerName?: string;
+    billingZip?: string;
+  }) => apiClient.post('/api/v1/payments/charge', {
+    ...data,
+    amount: data.amount.toFixed(2), // Ensure proper decimal format
+  }),
+
+  // Get Accept Hosted token for subscription
+  getSubscriptionToken: (data?: {
+    customerEmail?: string;
+    referralCode?: string;
+    returnUrl?: string;
+    cancelUrl?: string;
+  }) => apiClient.post('/api/v1/payments/subscribe/token', data || {}),
+
+  // Process subscription checkout (combines payment + account creation)
+  subscriptionCheckout: (data: {
+    cardNumber: string;
+    expirationDate: string; // MMYY format
+    cvv: string;
+    billingZip?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    phone?: string;
+    scoutCode?: string;
+    customerRefCode?: string;
+  }) => apiClient.post('/api/v1/payments/subscribe/checkout', data),
+
+  // Verify a subscription payment transaction
+  verifyPayment: (transactionId: string) =>
+    apiClient.get(`/api/v1/payments/subscribe/verify/${transactionId}`),
+};
+
 // COPPA Parental Consent API
 export const consentApi = {
   // Get current user's consent status

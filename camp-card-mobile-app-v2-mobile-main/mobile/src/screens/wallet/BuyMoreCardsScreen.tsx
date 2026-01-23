@@ -1,5 +1,6 @@
 // BuyMoreCardsScreen - Allows existing users to purchase additional Camp Cards
 // Supports quantity selection (1-10) with bulk discount
+// In-app purchases are $15 per card (direct purchase price)
 
 import React, { useState } from 'react';
 import {
@@ -15,10 +16,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
-import { cardsApi } from '../../services/apiClient';
+import { cardsApi, paymentsApi } from '../../services/apiClient';
 import { useAuthStore } from '../../store/authStore';
+import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
 
-const CARD_PRICE_CENTS = 1000; // $10 per card
+// In-app direct purchase price is $15 per card
+const CARD_PRICE_CENTS = 1500; // $15 per card
 const BULK_DISCOUNT_PERCENT = 5; // 5% off for 2+ cards
 
 export default function BuyMoreCardsScreen() {
@@ -27,6 +30,7 @@ export default function BuyMoreCardsScreen() {
 
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const calculatePrice = (qty: number) => {
     const basePrice = qty * CARD_PRICE_CENTS;
@@ -46,43 +50,48 @@ export default function BuyMoreCardsScreen() {
     }
   };
 
-  const handlePurchase = async () => {
-    // Confirm purchase before processing
-    Alert.alert(
-      'Confirm Purchase',
-      `Purchase ${quantity} Camp Card${quantity !== 1 ? 's' : ''} for ${formatPrice(totalPrice)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Purchase',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              // Call the cards purchase API
-              // In production, paymentToken would come from Authorize.net Accept.js
-              await cardsApi.purchaseCards({
-                quantity,
-                paymentToken: 'mock_token', // TODO: Integrate with Authorize.net Accept.js
-              });
+  const handlePurchasePress = () => {
+    // Show payment modal to collect card details
+    setShowPaymentModal(true);
+  };
 
-              Alert.alert(
-                'Purchase Successful!',
-                `You have purchased ${quantity} Camp Card${quantity !== 1 ? 's' : ''}. Check your Card Inventory to view and activate them.`,
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
-              );
-            } catch (error: any) {
-              console.error('Purchase error:', error);
-              Alert.alert(
-                'Purchase Failed',
-                error.response?.data?.message || 'Failed to complete purchase. Please try again.'
-              );
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
+  const processPayment = async (cardData: CardData): Promise<{ transactionId: string }> => {
+    // Process payment via Authorize.net
+    const response = await paymentsApi.charge({
+      amount: totalPrice / 100, // Convert cents to dollars
+      cardNumber: cardData.cardNumber,
+      expirationDate: cardData.expirationDate,
+      cvv: cardData.cvv,
+      description: `Camp Card Purchase - ${quantity} card${quantity !== 1 ? 's' : ''}`,
+      customerEmail: user?.email,
+      customerName: cardData.cardholderName,
+      billingZip: cardData.billingZip,
+    });
+
+    if (response.data.status !== 'SUCCESS') {
+      throw new Error(response.data.errorMessage || 'Payment failed');
+    }
+
+    // After payment success, create the cards in the system
+    await cardsApi.purchaseCards({
+      quantity,
+      paymentToken: response.data.transactionId,
+    });
+
+    return { transactionId: response.data.transactionId };
+  };
+
+  const handlePaymentSuccess = (transactionId: string) => {
+    setShowPaymentModal(false);
+    Alert.alert(
+      'Purchase Successful!',
+      `You have purchased ${quantity} Camp Card${quantity !== 1 ? 's' : ''}. Check your Card Inventory to view and activate them.\n\nTransaction ID: ${transactionId}`,
+      [{ text: 'OK', onPress: () => navigation.goBack() }]
     );
+  };
+
+  const handlePaymentError = (error: string) => {
+    Alert.alert('Payment Failed', error);
   };
 
   const formatPrice = (cents: number) => {
@@ -243,6 +252,14 @@ export default function BuyMoreCardsScreen() {
           </View>
         </View>
 
+        {/* Pricing Note */}
+        <View style={styles.pricingNote}>
+          <Ionicons name="information-circle-outline" size={20} color={COLORS.secondary} />
+          <Text style={styles.pricingNoteText}>
+            In-app price: $15/card. Buy from a Scout for only $10/card and support their fundraising goals!
+          </Text>
+        </View>
+
         {/* Expiry Notice */}
         <View style={styles.expiryNotice}>
           <Ionicons name="calendar-outline" size={20} color={COLORS.warning} />
@@ -256,7 +273,7 @@ export default function BuyMoreCardsScreen() {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.purchaseButton, loading && styles.purchaseButtonDisabled]}
-          onPress={handlePurchase}
+          onPress={handlePurchasePress}
           disabled={loading}
         >
           {loading ? (
@@ -271,6 +288,17 @@ export default function BuyMoreCardsScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Payment Modal */}
+      <CardPaymentModal
+        visible={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentError={handlePaymentError}
+        amount={totalPrice}
+        description={`${quantity} Camp Card${quantity !== 1 ? 's' : ''}`}
+        processPayment={processPayment}
+      />
     </SafeAreaView>
   );
 }
@@ -485,6 +513,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     lineHeight: 20,
+  },
+  pricingNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  pricingNoteText: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.secondary,
+    marginLeft: 8,
+    lineHeight: 18,
   },
   expiryNotice: {
     flexDirection: 'row',

@@ -18,6 +18,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
+import { paymentsApi } from '../../services/apiClient';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
@@ -118,24 +119,36 @@ export default function PaymentScreen() {
     setProcessing(true);
 
     try {
-      // In production, this would:
-      // 1. Use Authorize.net Accept.js to tokenize the card
-      // 2. Send the token to the backend
-      // 3. Backend processes payment via Authorize.net
+      // Process payment via Authorize.net
+      const response = await paymentsApi.charge({
+        amount: totalPrice / 100, // Convert cents to dollars
+        cardNumber: cardNumber.replace(/\s/g, ''),
+        expirationDate: expiryDate.replace('/', ''), // MMYY format
+        cvv,
+        description: `Camp Card Subscription - ${selectedPlan.name}`,
+        customerName: cardholderName.trim(),
+        billingZip: zipCode,
+      });
 
-      // For now, simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (response.data.status !== 'SUCCESS') {
+        throw new Error(response.data.errorMessage || 'Payment failed');
+      }
 
-      // Navigate to signup with payment completed
+      // Navigate to signup with payment completed and transaction ID
       (navigation as any).navigate('Signup', {
         selectedPlan: selectedPlan,
         paymentCompleted: true,
         quantity: quantity,
         scoutCode: scoutCode,
+        transactionId: response.data.transactionId,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error);
-      Alert.alert('Payment Failed', 'There was an error processing your payment. Please try again.');
+      const message = error.response?.data?.errorMessage ||
+                      error.response?.data?.message ||
+                      error.message ||
+                      'There was an error processing your payment. Please try again.';
+      Alert.alert('Payment Failed', message);
     } finally {
       setProcessing(false);
     }
