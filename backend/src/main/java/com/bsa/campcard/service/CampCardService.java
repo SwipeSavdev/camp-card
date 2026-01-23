@@ -107,24 +107,32 @@ public class CampCardService {
         log.info("Card order created: {}", order.getId());
 
         // Process payment (if payment token/transaction ID provided)
-        // The paymentToken is actually the transactionId from Accept Hosted flow
+        // The paymentToken is actually the transactionId from Accept Hosted flow or direct charge
         if (request.getPaymentToken() != null && !request.getPaymentToken().isBlank()) {
-            try {
-                // Verify the payment via Authorize.net using council-specific gateway
-                com.bsa.campcard.dto.payment.PaymentResponse paymentResponse =
-                        paymentService.verifySubscriptionPayment(councilId, request.getPaymentToken());
+            // For direct in-app purchases (no planId), payment was already processed and verified
+            // The transactionId came from a successful charge, so just record it
+            if (request.getPlanId() == null) {
+                log.info("Direct in-app purchase - payment already verified. Transaction: {}", request.getPaymentToken());
+                order.markAsPaid(request.getPaymentToken());
+                order = cardOrderRepository.save(order);
+            } else {
+                // For plan-based purchases, verify the payment via Authorize.net
+                try {
+                    com.bsa.campcard.dto.payment.PaymentResponse paymentResponse =
+                            paymentService.verifySubscriptionPayment(councilId, request.getPaymentToken());
 
-                if ("SUCCESS".equals(paymentResponse.getStatus())) {
-                    order.markAsPaid(paymentResponse.getTransactionId());
-                    order = cardOrderRepository.save(order);
-                    log.info("Payment verified for order {} via council {} gateway", order.getId(), councilId);
-                } else {
-                    log.error("Payment verification failed for order {}: {}", order.getId(), paymentResponse.getErrorMessage());
-                    throw new IllegalStateException("Payment verification failed: " + paymentResponse.getErrorMessage());
+                    if ("SUCCESS".equals(paymentResponse.getStatus())) {
+                        order.markAsPaid(paymentResponse.getTransactionId());
+                        order = cardOrderRepository.save(order);
+                        log.info("Payment verified for order {} via council {} gateway", order.getId(), councilId);
+                    } else {
+                        log.error("Payment verification failed for order {}: {}", order.getId(), paymentResponse.getErrorMessage());
+                        throw new IllegalStateException("Payment verification failed: " + paymentResponse.getErrorMessage());
+                    }
+                } catch (com.bsa.campcard.exception.PaymentException e) {
+                    log.error("Payment processing failed for order {}: {}", order.getId(), e.getMessage());
+                    throw new IllegalStateException("Payment processing failed: " + e.getMessage());
                 }
-            } catch (com.bsa.campcard.exception.PaymentException e) {
-                log.error("Payment processing failed for order {}: {}", order.getId(), e.getMessage());
-                throw new IllegalStateException("Payment processing failed: " + e.getMessage());
             }
         } else {
             // No payment token - mark as paid for testing (remove in production)
