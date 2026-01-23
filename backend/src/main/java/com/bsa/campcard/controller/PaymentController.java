@@ -25,7 +25,7 @@ public class PaymentController {
     private final SubscriptionPurchaseService subscriptionPurchaseService;
 
     @PostMapping("/charge")
-    @PreAuthorize("hasAnyRole('SCOUT', 'PARENT', 'UNIT_LEADER', 'COUNCIL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SCOUT', 'PARENT', 'UNIT_LEADER', 'COUNCIL_ADMIN', 'NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN', 'TROOP_LEADER')")
     @Operation(summary = "Process a payment", description = "Charge a credit card using Authorize.net")
     public ResponseEntity<PaymentResponse> charge(@Valid @RequestBody ChargeRequest request) {
         log.info("Received charge request for amount: {}", request.getAmount());
