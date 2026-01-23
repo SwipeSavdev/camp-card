@@ -651,13 +651,13 @@ export default function UsersPage() {
 
   // Download CSV template
   const downloadTemplate = () => {
-    const csvContent = `Name,Email,Role,Status,CouncilName,UnitNumber,UnitType
+    const csvContent = `Name,Email,Role,Status,CouncilName,UnitNumber,UnitType,DateOfBirth,ParentName,ParentEmail
 # Example rows (delete these and add your own data):
-John Smith,john.smith@example.com,UNIT_LEADER,active,Greater New York Councils,123,BSA_TROOP_BOYS
-Jane Doe,jane.doe@example.com,PARENT,active,Greater New York Councils,,
-Bob Johnson,bob.johnson@example.com,SCOUT,active,Greater New York Councils,123,BSA_TROOP_BOYS
-Sarah Williams,sarah.williams@example.com,COUNCIL_ADMIN,active,Greater New York Councils,,
-Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PACK
+John Smith,john.smith@example.com,UNIT_LEADER,active,Greater New York Councils,123,BSA_TROOP_BOYS,,,
+Jane Doe,jane.doe@example.com,PARENT,active,Greater New York Councils,,,,,
+Bob Johnson,bob.johnson@example.com,SCOUT,active,Greater New York Councils,123,BSA_TROOP_BOYS,2012-05-15,Mary Johnson,mary.johnson@example.com
+Sarah Williams,sarah.williams@example.com,COUNCIL_ADMIN,active,Greater New York Councils,,,,,
+Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PACK,2014-08-22,Tom Davis,tom.davis@example.com
 #
 # COLUMN DESCRIPTIONS:
 # - Name: Full name (e.g., John Smith)
@@ -667,6 +667,14 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
 # - CouncilName: Required for COUNCIL_ADMIN only (must match existing council exactly)
 # - UnitNumber: Required for UNIT_LEADER and SCOUT (e.g., 123, 456)
 # - UnitType: Required for SCOUT. Options: PACK, BSA_TROOP_BOYS, BSA_TROOP_GIRLS, SHIP, CREW, FAMILY_SCOUTING
+#
+# COPPA COMPLIANCE FIELDS (Required for SCOUT role - children under 13):
+# - DateOfBirth: Scout's birth date in YYYY-MM-DD format (e.g., 2012-05-15)
+# - ParentName: Full name of parent/guardian who will provide consent
+# - ParentEmail: Parent/guardian email for consent verification
+#
+# NOTE: For SCOUT users, the system will send a parental consent request email.
+# The Scout account will be pending until parent provides consent.
 #
 # Lines starting with # are comments and will be ignored`;
 
@@ -719,6 +727,10 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
       const councilNameIdx = headers.indexOf('councilname');
       const unitNumberIdx = headers.indexOf('unitnumber');
       const unitTypeIdx = headers.indexOf('unittype');
+      // COPPA compliance fields for Scouts
+      const dateOfBirthIdx = headers.indexOf('dateofbirth');
+      const parentNameIdx = headers.indexOf('parentname');
+      const parentEmailIdx = headers.indexOf('parentemail');
 
       const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER', 'PARENT', 'SCOUT'];
       const validStatuses = ['active', 'inactive'];
@@ -753,6 +765,10 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
         const councilName = councilNameIdx >= 0 ? values[councilNameIdx]?.replace(/^"|"$/g, '') : '';
         const unitNumber = unitNumberIdx >= 0 ? values[unitNumberIdx]?.replace(/^"|"$/g, '') : '';
         const unitType = unitTypeIdx >= 0 ? values[unitTypeIdx]?.toUpperCase().replace(/^"|"$/g, '') : '';
+        // COPPA compliance fields
+        const dateOfBirth = dateOfBirthIdx >= 0 ? values[dateOfBirthIdx]?.replace(/^"|"$/g, '') : '';
+        const parentName = parentNameIdx >= 0 ? values[parentNameIdx]?.replace(/^"|"$/g, '') : '';
+        const parentEmail = parentEmailIdx >= 0 ? values[parentEmailIdx]?.replace(/^"|"$/g, '') : '';
 
         const rowErrors: string[] = [];
         if (!name) rowErrors.push('Name is required');
@@ -776,6 +792,32 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
           rowErrors.push(`Invalid UnitType. Must be one of: ${validUnitTypes.join(', ')}`);
         }
 
+        // COPPA compliance validation for SCOUT role
+        if (role === 'SCOUT') {
+          if (!dateOfBirth) {
+            rowErrors.push('DateOfBirth is required for SCOUT role (COPPA compliance)');
+          } else {
+            // Validate date format (YYYY-MM-DD)
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(dateOfBirth)) {
+              rowErrors.push('DateOfBirth must be in YYYY-MM-DD format');
+            } else {
+              const parsedDate = new Date(dateOfBirth);
+              if (isNaN(parsedDate.getTime())) {
+                rowErrors.push('DateOfBirth is not a valid date');
+              }
+            }
+          }
+          if (!parentName) {
+            rowErrors.push('ParentName is required for SCOUT role (COPPA compliance)');
+          }
+          if (!parentEmail) {
+            rowErrors.push('ParentEmail is required for SCOUT role (COPPA compliance)');
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(parentEmail)) {
+            rowErrors.push('Invalid ParentEmail format');
+          }
+        }
+
         if (rowErrors.length > 0) {
           errors.push(`Row ${i + 1}: ${rowErrors.join('; ')}`);
         }
@@ -789,6 +831,9 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
           councilName,
           unitNumber,
           unitType,
+          dateOfBirth,
+          parentName,
+          parentEmail,
           valid: rowErrors.length === 0,
           errors: rowErrors,
         });
@@ -841,6 +886,19 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
         }
         if (row.unitType) {
           userData.unitType = row.unitType;
+        }
+
+        // Add COPPA compliance fields for SCOUT role
+        if (row.role === 'SCOUT') {
+          if (row.dateOfBirth) {
+            userData.dateOfBirth = row.dateOfBirth;
+          }
+          if (row.parentName) {
+            userData.parentName = row.parentName;
+          }
+          if (row.parentEmail) {
+            userData.parentEmail = row.parentEmail;
+          }
         }
 
         const newUser = await api.createUser(userData, session);
@@ -2243,6 +2301,28 @@ Unit Number
                  </tr>
                  </tbody>
                 </table>
+
+                <p style={{ margin: 0, marginBottom: themeSpace.xs }}><strong>COPPA Compliance columns (required for SCOUT role):</strong></p>
+                <table style={{ width: '100%', fontSize: '12px', marginBottom: themeSpace.md }}>
+                  <tbody>
+                   <tr>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>DateOfBirth</strong></td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>Scout&apos;s birth date in YYYY-MM-DD format (e.g., 2012-05-15)</td>
+                 </tr>
+                   <tr>
+                   <td style={{ padding: '4px 8px' }}><strong>ParentName</strong></td>
+                   <td style={{ padding: '4px 8px' }}>Full name of parent/guardian who will provide consent</td>
+                 </tr>
+                   <tr>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}><strong>ParentEmail</strong></td>
+                   <td style={{ padding: '4px 8px', background: themeColors.white }}>Parent/guardian email for consent verification</td>
+                 </tr>
+                 </tbody>
+                </table>
+
+                <p style={{ margin: 0, fontSize: '12px', color: themeColors.warning600, marginBottom: themeSpace.sm }}>
+                  <strong>⚠️ COPPA Notice:</strong> For SCOUT users (children under 13), the system will send a parental consent request email. The Scout account will remain pending until the parent provides consent.
+                </p>
 
                 <p style={{ margin: 0, fontSize: '12px', color: themeColors.gray500 }}>
                   <em>Note: A temporary password will be generated for each user. They will need to reset it on first login.</em>
