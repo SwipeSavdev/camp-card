@@ -38,11 +38,10 @@ export default function ReplenishCardScreen() {
 
   const fetchUnusedCards = async () => {
     try {
-      const response = await apiClient.get('/api/v1/cards/inventory');
-      const cards = response.data?.cards || [];
-      // Filter to only show unassigned cards
-      const unassigned = cards.filter((card: UnusedCard) => card.status === 'UNASSIGNED');
-      setUnusedCards(unassigned);
+      const response = await apiClient.get('/api/v1/cards/my-cards');
+      // Backend already returns only UNASSIGNED cards in unusedCards
+      const cards = response.data?.unusedCards || [];
+      setUnusedCards(cards);
     } catch (error) {
       console.error('Failed to fetch unused cards:', error);
       Alert.alert('Error', 'Failed to load unused cards');

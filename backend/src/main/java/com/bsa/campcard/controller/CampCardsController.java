@@ -1,7 +1,8 @@
 package com.bsa.campcard.controller;
 
-import com.bsa.campcard.entity.Subscription;
-import com.bsa.campcard.repository.SubscriptionRepository;
+import com.bsa.campcard.entity.CampCard;
+import com.bsa.campcard.entity.CampCard.CampCardStatus;
+import com.bsa.campcard.repository.CampCardRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ import java.util.*;
 @Tag(name = "Camp Cards", description = "Camp Card management for admin dashboard")
 public class CampCardsController {
 
-    private final SubscriptionRepository subscriptionRepository;
+    private final CampCardRepository campCardRepository;
     private final UserRepository userRepository;
 
     @GetMapping
@@ -43,40 +44,47 @@ public class CampCardsController {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        // Get all subscriptions (which represent cards)
-        Page<Subscription> subscriptions;
+        // Get all camp cards from the camp_cards table
+        Page<CampCard> campCards;
         if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all")) {
-            subscriptions = subscriptionRepository.findByStatus(
-                Subscription.SubscriptionStatus.valueOf(status.toUpperCase()),
+            campCards = campCardRepository.findByStatus(
+                CampCardStatus.valueOf(status.toUpperCase()),
                 pageable
             );
         } else {
-            subscriptions = subscriptionRepository.findAll(pageable);
+            campCards = campCardRepository.findAll(pageable);
         }
 
-        // Map subscriptions to card responses with user info
+        // Map camp cards to response with user info
         List<Map<String, Object>> cards = new ArrayList<>();
 
-        for (Subscription sub : subscriptions.getContent()) {
+        for (CampCard campCard : campCards.getContent()) {
             Map<String, Object> card = new HashMap<>();
-            card.put("id", sub.getUuid().toString());
-            card.put("cardNumber", sub.getCardNumber());
-            card.put("status", sub.getStatus().name());
-            card.put("createdAt", sub.getCreatedAt());
-            card.put("expiresAt", sub.getCurrentPeriodEnd());
-            card.put("issuanceMethod", "PURCHASE"); // All cards from subscribe flow are purchases
+            card.put("id", campCard.getUuid().toString());
+            card.put("cardNumber", campCard.getCardNumber());
+            card.put("status", campCard.getStatus().name());
+            card.put("createdAt", campCard.getCreatedAt());
+            card.put("expiresAt", campCard.getExpiresAt());
+            card.put("activatedAt", campCard.getActivatedAt());
+            card.put("issuanceMethod", campCard.getGiftedAt() != null ? "GIFT" : "PURCHASE");
 
-            // Get user info
-            Optional<User> userOpt = userRepository.findById(sub.getUserId());
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                card.put("name", user.getFirstName() + " " + user.getLastName());
-                card.put("email", user.getEmail());
-                card.put("userId", user.getId().toString());
+            // Get user info from owner
+            if (campCard.getOwnerUserId() != null) {
+                Optional<User> userOpt = userRepository.findById(campCard.getOwnerUserId());
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    card.put("name", user.getFirstName() + " " + user.getLastName());
+                    card.put("email", user.getEmail());
+                    card.put("userId", user.getId().toString());
+                } else {
+                    card.put("name", "Unknown User");
+                    card.put("email", "");
+                    card.put("userId", campCard.getOwnerUserId().toString());
+                }
             } else {
-                card.put("name", "Unknown User");
+                card.put("name", "Unassigned");
                 card.put("email", "");
-                card.put("userId", sub.getUserId().toString());
+                card.put("userId", null);
             }
 
             // Filter by search if provided
@@ -98,8 +106,8 @@ public class CampCardsController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("content", cards);
-        response.put("totalElements", subscriptions.getTotalElements());
-        response.put("totalPages", subscriptions.getTotalPages());
+        response.put("totalElements", campCards.getTotalElements());
+        response.put("totalPages", campCards.getTotalPages());
         response.put("currentPage", page);
         response.put("size", size);
 
@@ -114,28 +122,31 @@ public class CampCardsController {
         log.info("Fetching camp card: {}", id);
 
         UUID uuid = UUID.fromString(id);
-        Optional<Subscription> subOpt = subscriptionRepository.findByUuid(uuid);
+        Optional<CampCard> cardOpt = campCardRepository.findByUuid(uuid);
 
-        if (subOpt.isEmpty()) {
+        if (cardOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        Subscription sub = subOpt.get();
+        CampCard campCard = cardOpt.get();
         Map<String, Object> card = new HashMap<>();
-        card.put("id", sub.getUuid().toString());
-        card.put("cardNumber", sub.getCardNumber());
-        card.put("status", sub.getStatus().name());
-        card.put("createdAt", sub.getCreatedAt());
-        card.put("expiresAt", sub.getCurrentPeriodEnd());
-        card.put("issuanceMethod", "PURCHASE");
+        card.put("id", campCard.getUuid().toString());
+        card.put("cardNumber", campCard.getCardNumber());
+        card.put("status", campCard.getStatus().name());
+        card.put("createdAt", campCard.getCreatedAt());
+        card.put("expiresAt", campCard.getExpiresAt());
+        card.put("activatedAt", campCard.getActivatedAt());
+        card.put("issuanceMethod", campCard.getGiftedAt() != null ? "GIFT" : "PURCHASE");
 
-        // Get user info
-        Optional<User> userOpt = userRepository.findById(sub.getUserId());
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            card.put("name", user.getFirstName() + " " + user.getLastName());
-            card.put("email", user.getEmail());
-            card.put("userId", user.getId().toString());
+        // Get user info from owner
+        if (campCard.getOwnerUserId() != null) {
+            Optional<User> userOpt = userRepository.findById(campCard.getOwnerUserId());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                card.put("name", user.getFirstName() + " " + user.getLastName());
+                card.put("email", user.getEmail());
+                card.put("userId", user.getId().toString());
+            }
         }
 
         return ResponseEntity.ok(card);
@@ -144,21 +155,20 @@ public class CampCardsController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
     @Operation(summary = "Revoke/Delete a card",
-               description = "Revoke a camp card (cancels subscription)")
+               description = "Revoke a camp card")
     public ResponseEntity<Void> deleteCard(@PathVariable String id) {
         log.info("Revoking camp card: {}", id);
 
         UUID uuid = UUID.fromString(id);
-        Optional<Subscription> subOpt = subscriptionRepository.findByUuid(uuid);
+        Optional<CampCard> cardOpt = campCardRepository.findByUuid(uuid);
 
-        if (subOpt.isEmpty()) {
+        if (cardOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        Subscription sub = subOpt.get();
-        sub.setStatus(Subscription.SubscriptionStatus.CANCELED);
-        sub.setCanceledAt(LocalDateTime.now());
-        subscriptionRepository.save(sub);
+        CampCard campCard = cardOpt.get();
+        campCard.revoke();
+        campCardRepository.save(campCard);
 
         return ResponseEntity.noContent().build();
     }

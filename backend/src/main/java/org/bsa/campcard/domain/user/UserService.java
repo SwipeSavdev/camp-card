@@ -1,5 +1,6 @@
 package org.bsa.campcard.domain.user;
 
+import com.bsa.campcard.repository.TroopRepository;
 import com.bsa.campcard.service.ParentalConsentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +28,12 @@ import java.util.UUID;
 public class UserService {
 
     private static final String USER_NOT_FOUND = "User not found: ";
+    private static final String TROOP_NOT_FOUND = "Troop not found: ";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ParentalConsentService parentalConsentService;
+    private final TroopRepository troopRepository;
 
     /**
      * Find user by ID
@@ -134,6 +137,12 @@ public class UserService {
                 consentStatus = User.ConsentStatus.PENDING;
                 log.info("User is a minor (age {}), parental consent will be required", age);
             }
+        }
+
+        // Validate troop exists if troopId is provided
+        if (request.troopId() != null) {
+            troopRepository.findByUuid(request.troopId())
+                .orElseThrow(() -> new IllegalArgumentException(TROOP_NOT_FOUND + request.troopId()));
         }
 
         User user = User.builder()
@@ -312,6 +321,10 @@ public class UserService {
     @CacheEvict(value = "users", key = "#userId")
     public User assignToTroop(UUID userId, UUID troopId) {
         log.info("Assigning user {} to troop {}", userId, troopId);
+
+        // Validate troop exists
+        troopRepository.findByUuid(troopId)
+            .orElseThrow(() -> new IllegalArgumentException(TROOP_NOT_FOUND + troopId));
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND + userId));

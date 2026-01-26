@@ -46,6 +46,7 @@ interface MyCardsResponse {
   activeCard: CampCard | null;
   unusedCards: CampCard[];
   giftedCards: CampCard[];
+  historicalCards: CampCard[];
   totalCards: number;
   activeCardOffersUsed: number;
   activeCardTotalOffers: number;
@@ -289,10 +290,11 @@ export default function CardInventoryScreen() {
     );
   }
 
-  const { activeCard, unusedCards, giftedCards, totalCards } = cardsData || {
+  const { activeCard, unusedCards, giftedCards, historicalCards, totalCards } = cardsData || {
     activeCard: null,
     unusedCards: [],
     giftedCards: [],
+    historicalCards: [],
     totalCards: 0,
   };
 
@@ -372,6 +374,19 @@ export default function CardInventoryScreen() {
               Gifted Cards ({giftedCards.length})
             </Text>
             {giftedCards.map((card) => renderCardItem(card))}
+          </View>
+        )}
+
+        {/* Card History Section - Shows replaced, expired, and revoked cards */}
+        {historicalCards.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Card History ({historicalCards.length})
+            </Text>
+            <Text style={styles.sectionHint}>
+              Previously used cards that have been replaced or expired
+            </Text>
+            {historicalCards.map((card) => renderCardItem(card, false))}
           </View>
         )}
 

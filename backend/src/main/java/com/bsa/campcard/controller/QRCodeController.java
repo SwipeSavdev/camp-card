@@ -76,4 +76,26 @@ public class QRCodeController {
         QRCodeResponse response = qrCodeService.validateUserQRCode(uniqueCode);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/cards/{cardId}/qr-code")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get card's QR code", description = "Generate or retrieve unique QR code for a specific camp card")
+    public ResponseEntity<CardQRCodeResponse> getCardQRCode(
+            @PathVariable Long cardId,
+            Authentication authentication) {
+        org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User) authentication.getPrincipal();
+        UUID userId = user.getId();
+        log.info("Generating QR code for card: {} by user: {}", cardId, userId);
+
+        CardQRCodeResponse response = qrCodeService.generateCardQRCode(cardId, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/qr/card/validate/{uniqueCode}")
+    @Operation(summary = "Validate card QR code", description = "Validate card QR code for offer redemption")
+    public ResponseEntity<CardQRCodeResponse> validateCardQRCode(@PathVariable String uniqueCode) {
+        log.info("Validating card QR code: {}", uniqueCode);
+        CardQRCodeResponse response = qrCodeService.validateCardQRCode(uniqueCode);
+        return ResponseEntity.ok(response);
+    }
 }

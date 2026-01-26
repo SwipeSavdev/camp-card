@@ -1,7 +1,9 @@
 package com.bsa.campcard.service;
 
 import com.bsa.campcard.dto.qr.*;
+import com.bsa.campcard.entity.CampCard;
 import com.bsa.campcard.exception.ResourceNotFoundException;
+import com.bsa.campcard.repository.CampCardRepository;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class QRCodeService {
 
     private final UserRepository userRepository;
+    private final CampCardRepository campCardRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
@@ -35,6 +38,7 @@ public class QRCodeService {
     private String baseUrl;
 
     private static final String QR_CODE_PREFIX = "qr:user:";
+    private static final String QR_CARD_PREFIX = "qr:card:";
     private static final String LINK_PREFIX = "link:offer:";
     private static final int CODE_LENGTH = 12;
     private static final SecureRandom random = new SecureRandom();
@@ -173,6 +177,89 @@ public class QRCodeService {
         }
 
         throw new ResourceNotFoundException("Invalid QR code");
+    }
+
+    /**
+     * Generate QR code for a specific camp card
+     * Each card gets its own unique QR code for offer redemption
+     */
+    public CardQRCodeResponse generateCardQRCode(Long cardId, UUID userId) {
+        log.info("Generating QR code for card: {} owned by user: {}", cardId, userId);
+
+        CampCard card = campCardRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found"));
+
+        // Verify ownership
+        if (!card.getOwnerUserId().equals(userId)) {
+            throw new ResourceNotFoundException("Card not found");
+        }
+
+        // Check if card is usable
+        if (!card.isUsable()) {
+            throw new IllegalStateException("Card is not active or has expired");
+        }
+
+        String cacheKey = QR_CARD_PREFIX + cardId.toString();
+        String existingCode = (String) redisTemplate.opsForValue().get(cacheKey);
+
+        String uniqueCode;
+        if (existingCode != null) {
+            uniqueCode = existingCode;
+        } else {
+            uniqueCode = generateUniqueCode();
+            // Card QR codes valid until card expiry (max 365 days)
+            redisTemplate.opsForValue().set(cacheKey, uniqueCode, 365, TimeUnit.DAYS);
+        }
+
+        Map<String, Object> qrData = new HashMap<>();
+        qrData.put("type", "campcard_redemption");
+        qrData.put("cardId", cardId);
+        qrData.put("cardNumber", card.getCardNumber());
+        qrData.put("userId", userId.toString());
+        qrData.put("uniqueCode", uniqueCode);
+        qrData.put("validUntil", card.getExpiresAt());
+
+        String qrCodeData;
+        try {
+            qrCodeData = objectMapper.writeValueAsString(qrData);
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing card QR code data", e);
+            qrCodeData = card.getCardNumber() + ":" + uniqueCode;
+        }
+
+        return CardQRCodeResponse.builder()
+                .cardId(cardId)
+                .cardNumber(card.getCardNumber())
+                .uniqueCode(uniqueCode)
+                .qrCodeData(qrCodeData)
+                .validUntil(card.getExpiresAt())
+                .status(card.getStatus().name())
+                .build();
+    }
+
+    /**
+     * Validate a card QR code for offer redemption
+     */
+    public CardQRCodeResponse validateCardQRCode(String uniqueCode) {
+        String pattern = QR_CARD_PREFIX + "*";
+        var keys = redisTemplate.keys(pattern);
+
+        if (keys != null) {
+            for (String key : keys) {
+                String storedCode = (String) redisTemplate.opsForValue().get(key);
+                if (uniqueCode.equals(storedCode)) {
+                    String cardIdStr = key.replace(QR_CARD_PREFIX, "");
+                    Long cardId = Long.parseLong(cardIdStr);
+
+                    CampCard card = campCardRepository.findById(cardId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Card not found"));
+
+                    return generateCardQRCode(cardId, card.getOwnerUserId());
+                }
+            }
+        }
+
+        throw new ResourceNotFoundException("Invalid card QR code");
     }
 
     private String generateUniqueCode() {
