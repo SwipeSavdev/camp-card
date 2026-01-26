@@ -46,6 +46,7 @@ public abstract class AbstractIntegrationTest {
      * Shared PostgreSQL container for all integration tests.
      * Uses reusable container mode for faster test execution.
      */
+    @SuppressWarnings("resource") // Container lifecycle managed by @Container annotation
     @Container
     static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("campcard_test")
@@ -89,7 +90,7 @@ public abstract class AbstractIntegrationTest {
     }
 
     @BeforeEach
-    void setUp() {
+    protected void setUp() {
         // Clear any cached entities before each test
         entityManager.clear();
     }

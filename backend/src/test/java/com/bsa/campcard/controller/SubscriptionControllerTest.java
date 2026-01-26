@@ -98,8 +98,8 @@ class SubscriptionControllerTest {
 
         // Create a valid create subscription request
         CreateSubscriptionRequest.PaymentMethod paymentMethod = new CreateSubscriptionRequest.PaymentMethod();
-        paymentMethod.setType("STRIPE");
-        paymentMethod.setStripePaymentMethodId("pm_test_123456");
+        paymentMethod.setType("AUTHORIZE_NET");
+        paymentMethod.setPaymentNonce("test_payment_nonce_123456");
 
         validCreateRequest = new CreateSubscriptionRequest();
         validCreateRequest.setPlanId(1L);
@@ -110,7 +110,7 @@ class SubscriptionControllerTest {
         // Create a valid update subscription request
         validUpdateRequest = new UpdateSubscriptionRequest();
         validUpdateRequest.setCancelAtPeriodEnd(true);
-        validUpdateRequest.setStripePaymentMethodId(null);
+        validUpdateRequest.setPaymentNonce(null);
     }
 
     // ========================================================================
@@ -416,7 +416,7 @@ class SubscriptionControllerTest {
         @DisplayName("Should update subscription with new payment method")
         void updateSubscription_PaymentMethod_Success() throws Exception {
             validUpdateRequest.setCancelAtPeriodEnd(null);
-            validUpdateRequest.setStripePaymentMethodId("pm_new_12345");
+            validUpdateRequest.setPaymentNonce("pm_new_12345");
 
             when(subscriptionService.updateSubscription(eq(testUserId), any(UpdateSubscriptionRequest.class)))
                     .thenReturn(sampleSubscriptionResponse);
@@ -696,13 +696,13 @@ class SubscriptionControllerTest {
     class PaymentIntegrationTests {
 
         @Test
-        @DisplayName("Should create subscription with Stripe payment method")
-        void payment_StripePayment_Success() throws Exception {
-            CreateSubscriptionRequest.PaymentMethod stripeMethod = new CreateSubscriptionRequest.PaymentMethod();
-            stripeMethod.setType("STRIPE");
-            stripeMethod.setStripePaymentMethodId("pm_stripe_test_123");
+        @DisplayName("Should create subscription with Authorize.net payment method")
+        void payment_AuthorizeNetPayment_Success() throws Exception {
+            CreateSubscriptionRequest.PaymentMethod authorizeNetMethod = new CreateSubscriptionRequest.PaymentMethod();
+            authorizeNetMethod.setType("AUTHORIZE_NET");
+            authorizeNetMethod.setPaymentNonce("test_payment_nonce_123");
 
-            validCreateRequest.setPaymentMethod(stripeMethod);
+            validCreateRequest.setPaymentMethod(authorizeNetMethod);
 
             when(subscriptionService.createSubscription(eq(testUserId), any(CreateSubscriptionRequest.class)))
                     .thenReturn(sampleSubscriptionResponse);

@@ -35,7 +35,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import org.springframework.context.annotation.Import;
 
 /**
  * Unit tests for UserController using @WebMvcTest.
@@ -102,7 +101,11 @@ class UserControllerTest {
                 testCouncilId,
                 testTroopId,
                 null,
-                null
+                null,
+                null,  // dateOfBirth
+                null,  // parentName
+                null,  // parentEmail
+                null   // parentPhone
         );
 
         validUpdateRequest = new UserService.UserUpdateRequest(
@@ -368,7 +371,11 @@ class UserControllerTest {
                     testCouncilId,
                     null,
                     null,
-                    null
+                    null,
+                    null,  // dateOfBirth
+                    null,  // parentName
+                    null,  // parentEmail
+                    null   // parentPhone
             );
 
             mockMvc.perform(post("/api/v1/users")

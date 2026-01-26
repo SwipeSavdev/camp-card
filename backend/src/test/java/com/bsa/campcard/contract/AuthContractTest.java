@@ -36,7 +36,9 @@ class AuthContractTest extends AbstractContractTest {
     private User testUser;
 
     @BeforeEach
-    void setUp() {
+    @Override
+    protected void setUp() {
+        super.setUp();
         // Create a test user for login tests
         testUser = TestDataBuilder.createUser(User.UserRole.SCOUT);
         testUser.setEmail("auth-contract-" + UUID.randomUUID().toString().substring(0, 8) + "@test.com");

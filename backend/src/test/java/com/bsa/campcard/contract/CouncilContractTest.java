@@ -44,7 +44,9 @@ class CouncilContractTest extends AbstractContractTest {
     private Council testCouncil;
 
     @BeforeEach
-    void setUp() throws Exception {
+    @Override
+    protected void setUp() {
+        super.setUp();
         // Create admin user
         adminUser = TestDataBuilder.createUser(User.UserRole.NATIONAL_ADMIN);
         adminUser.setEmail("council-contract-admin-" + UUID.randomUUID().toString().substring(0, 8) + "@test.com");
@@ -66,16 +68,20 @@ class CouncilContractTest extends AbstractContractTest {
         flushAndClear();
 
         // Login as admin
-        LoginRequest loginRequest = LoginRequest.builder()
-                .email(adminUser.getEmail())
-                .password("AdminPassword123!")
-                .build();
+        try {
+            LoginRequest loginRequest = LoginRequest.builder()
+                    .email(adminUser.getEmail())
+                    .password("AdminPassword123!")
+                    .build();
 
-        MvcResult loginResult = postRequest("/api/v1/auth/mobile/login", loginRequest)
-                .andExpect(status().isOk())
-                .andReturn();
+            MvcResult loginResult = postRequest("/api/v1/auth/mobile/login", loginRequest)
+                    .andExpect(status().isOk())
+                    .andReturn();
 
-        adminToken = extractToken(loginResult);
+            adminToken = extractToken(loginResult);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set up test", e);
+        }
     }
 
     @AfterEach

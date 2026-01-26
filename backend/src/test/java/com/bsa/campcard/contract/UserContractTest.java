@@ -38,7 +38,9 @@ class UserContractTest extends AbstractContractTest {
     private String adminToken;
 
     @BeforeEach
-    void setUp() throws Exception {
+    @Override
+    protected void setUp() {
+        super.setUp();
         // Create admin user
         adminUser = TestDataBuilder.createUser(User.UserRole.NATIONAL_ADMIN);
         adminUser.setEmail("user-contract-admin-" + UUID.randomUUID().toString().substring(0, 8) + "@test.com");
@@ -55,17 +57,21 @@ class UserContractTest extends AbstractContractTest {
 
         flushAndClear();
 
-        // Login as admin
-        LoginRequest loginRequest = LoginRequest.builder()
-                .email(adminUser.getEmail())
-                .password("AdminPassword123!")
-                .build();
+        try {
+            // Login as admin
+            LoginRequest loginRequest = LoginRequest.builder()
+                    .email(adminUser.getEmail())
+                    .password("AdminPassword123!")
+                    .build();
 
-        MvcResult loginResult = postRequest("/api/v1/auth/mobile/login", loginRequest)
-                .andExpect(status().isOk())
-                .andReturn();
+            MvcResult loginResult = postRequest("/api/v1/auth/mobile/login", loginRequest)
+                    .andExpect(status().isOk())
+                    .andReturn();
 
-        adminToken = extractToken(loginResult);
+            adminToken = extractToken(loginResult);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set up test", e);
+        }
     }
 
     @AfterEach
@@ -184,7 +190,11 @@ class UserContractTest extends AbstractContractTest {
                     null,  // councilId
                     null,  // troopId
                     null,  // unitType
-                    null   // unitNumber
+                    null,  // unitNumber
+                    null,  // dateOfBirth
+                    null,  // parentName
+                    null,  // parentEmail
+                    null   // parentPhone
             );
 
             postRequest("/api/v1/users", request, adminToken)
@@ -225,7 +235,11 @@ class UserContractTest extends AbstractContractTest {
                     null,  // councilId
                     null,  // troopId
                     null,  // unitType
-                    null   // unitNumber
+                    null,  // unitNumber
+                    null,  // dateOfBirth
+                    null,  // parentName
+                    null,  // parentEmail
+                    null   // parentPhone
             );
 
             postRequest("/api/v1/users", request, userToken)
@@ -365,7 +379,11 @@ class UserContractTest extends AbstractContractTest {
                         null,  // councilId
                         null,  // troopId
                         null,  // unitType
-                        null   // unitNumber
+                        null,  // unitNumber
+                        null,  // dateOfBirth
+                        null,  // parentName
+                        null,  // parentEmail
+                        null   // parentPhone
                 );
 
                 postRequest("/api/v1/users", request, adminToken)

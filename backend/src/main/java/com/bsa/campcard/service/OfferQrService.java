@@ -53,7 +53,6 @@ public class OfferQrService {
 
     // Abuse detection thresholds
     private static final int MAX_SCANS_BEFORE_FLAG = 2;
-    private static final int MAX_DIFFERENT_DEVICES = 1;
     private static final double MAX_DISTANCE_KM_PER_MINUTE = 2.0; // ~120 km/h max speed
     private static final int ABUSE_FLAG_THRESHOLD = 3; // Auto-suspend after this many flags
 

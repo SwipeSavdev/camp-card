@@ -40,7 +40,9 @@ class ErrorResponseContractTest extends AbstractContractTest {
     private String userToken;
 
     @BeforeEach
-    void setUp() throws Exception {
+    @Override
+    protected void setUp() {
+        super.setUp();
         // Create admin user
         adminUser = TestDataBuilder.createUser(User.UserRole.NATIONAL_ADMIN);
         adminUser.setEmail("error-contract-admin-" + UUID.randomUUID().toString().substring(0, 8) + "@test.com");
@@ -57,25 +59,29 @@ class ErrorResponseContractTest extends AbstractContractTest {
 
         flushAndClear();
 
-        // Login as admin
-        LoginRequest adminLogin = LoginRequest.builder()
-                .email(adminUser.getEmail())
-                .password("AdminPassword123!")
-                .build();
-        MvcResult adminResult = postRequest("/api/v1/auth/mobile/login", adminLogin)
-                .andExpect(status().isOk())
-                .andReturn();
-        adminToken = extractToken(adminResult);
+        try {
+            // Login as admin
+            LoginRequest adminLogin = LoginRequest.builder()
+                    .email(adminUser.getEmail())
+                    .password("AdminPassword123!")
+                    .build();
+            MvcResult adminResult = postRequest("/api/v1/auth/mobile/login", adminLogin)
+                    .andExpect(status().isOk())
+                    .andReturn();
+            adminToken = extractToken(adminResult);
 
-        // Login as regular user
-        LoginRequest userLogin = LoginRequest.builder()
-                .email(regularUser.getEmail())
-                .password("UserPassword123!")
-                .build();
-        MvcResult userResult = postRequest("/api/v1/auth/mobile/login", userLogin)
-                .andExpect(status().isOk())
-                .andReturn();
-        userToken = extractToken(userResult);
+            // Login as regular user
+            LoginRequest userLogin = LoginRequest.builder()
+                    .email(regularUser.getEmail())
+                    .password("UserPassword123!")
+                    .build();
+            MvcResult userResult = postRequest("/api/v1/auth/mobile/login", userLogin)
+                    .andExpect(status().isOk())
+                    .andReturn();
+            userToken = extractToken(userResult);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set up test", e);
+        }
     }
 
     @AfterEach
@@ -192,6 +198,10 @@ class ErrorResponseContractTest extends AbstractContractTest {
                             "User",
                             null,
                             User.UserRole.SCOUT,
+                            null,
+                            null,
+                            null,
+                            null,
                             null,
                             null,
                             null,

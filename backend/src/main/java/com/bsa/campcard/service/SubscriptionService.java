@@ -71,7 +71,7 @@ public class SubscriptionService {
 
         // Validate plan exists
         SubscriptionPlan plan = subscriptionPlanRepository.findByIdAndDeletedAtIsNull(request.getPlanId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PLAN_NOT_FOUND));
 
         // Check if user already has active subscription
         subscriptionRepository.findByUserIdAndStatusAndDeletedAtIsNull(
@@ -157,10 +157,10 @@ public class SubscriptionService {
         log.info("Fetching subscription for user: {}", userId);
         
         Subscription subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("No subscription found"));
+                .orElseThrow(() -> new ResourceNotFoundException(SUBSCRIPTION_NOT_FOUND));
         
         SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PLAN_NOT_FOUND));
         
         return toSubscriptionResponse(subscription, plan);
     }
@@ -173,7 +173,7 @@ public class SubscriptionService {
         log.info("Updating subscription for user: {}", userId);
         
         Subscription subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("No subscription found"));
+                .orElseThrow(() -> new ResourceNotFoundException(SUBSCRIPTION_NOT_FOUND));
         
         if (request.getCancelAtPeriodEnd() != null) {
             subscription.setCancelAtPeriodEnd(request.getCancelAtPeriodEnd());
@@ -186,14 +186,14 @@ public class SubscriptionService {
             }
         }
         
-        if (request.getStripePaymentMethodId() != null) {
-            log.info("Payment method update requested");
+        if (request.getPaymentNonce() != null) {
+            log.info("Payment method update requested via Authorize.net");
         }
         
         subscription = subscriptionRepository.save(subscription);
         
         SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PLAN_NOT_FOUND));
         
         return toSubscriptionResponse(subscription, plan);
     }
@@ -206,7 +206,7 @@ public class SubscriptionService {
         log.info("Reactivating subscription for user: {}", userId);
         
         Subscription subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("No subscription found"));
+                .orElseThrow(() -> new ResourceNotFoundException(SUBSCRIPTION_NOT_FOUND));
         
         if (!subscription.getCancelAtPeriodEnd()) {
             throw new IllegalStateException("Subscription is not canceled");
@@ -218,7 +218,7 @@ public class SubscriptionService {
         subscription = subscriptionRepository.save(subscription);
         
         SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PLAN_NOT_FOUND));
         
         log.info("Subscription reactivated: {}", subscription.getId());
         
@@ -233,7 +233,7 @@ public class SubscriptionService {
         log.info("Canceling subscription immediately for user: {}", userId);
         
         Subscription subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("No subscription found"));
+                .orElseThrow(() -> new ResourceNotFoundException(SUBSCRIPTION_NOT_FOUND));
         
         subscription.setStatus(Subscription.SubscriptionStatus.CANCELED);
         subscription.setCanceledAt(LocalDateTime.now());
@@ -251,14 +251,14 @@ public class SubscriptionService {
         log.info("Renewing subscription for user: {}", userId);
 
         Subscription subscription = subscriptionRepository.findByUserIdAndDeletedAtIsNull(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("No subscription found"));
+                .orElseThrow(() -> new ResourceNotFoundException(SUBSCRIPTION_NOT_FOUND));
 
         if (subscription.getStatus() != Subscription.SubscriptionStatus.ACTIVE) {
             throw new IllegalStateException("Can only renew active subscriptions");
         }
 
         SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PLAN_NOT_FOUND));
 
         // Extend the subscription period from current end date
         LocalDateTime newPeriodStart = subscription.getCurrentPeriodEnd();

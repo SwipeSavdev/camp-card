@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateSubscriptionRequest {
     private Boolean cancelAtPeriodEnd;
-    private String stripePaymentMethodId; // For payment method update
+    private String paymentNonce; // Authorize.net payment nonce for payment method update
 }

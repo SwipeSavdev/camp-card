@@ -4,7 +4,6 @@ import com.bsa.campcard.dto.auth.MessageResponse;
 import com.bsa.campcard.entity.ParentalConsent;
 import com.bsa.campcard.service.AuthService;
 import com.bsa.campcard.service.ParentalConsentService;
-import com.bsa.campcard.service.ParentalConsentService.ConsentVerificationDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;

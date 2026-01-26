@@ -46,7 +46,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import org.springframework.context.annotation.Import;
 
 @Disabled("Controller tests need Spring context configuration fix - temporarily disabled")
 @WebMvcTest(controllers = NotificationController.class)
