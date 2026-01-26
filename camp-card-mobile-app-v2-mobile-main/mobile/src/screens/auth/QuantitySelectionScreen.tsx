@@ -44,8 +44,9 @@ export default function QuantitySelectionScreen() {
     return `$${(priceCents / 100).toFixed(2)}`;
   };
 
-  const totalPrice = selectedPlan.priceCents * quantity;
-  const savings = quantity > 1 ? Math.round(totalPrice * 0.05) : 0; // Potential bulk discount (5%)
+  const subtotal = selectedPlan.priceCents * quantity;
+  const processingFee = Math.round(subtotal * 0.03); // 3% credit card processing fee
+  const totalPrice = subtotal + processingFee;
 
   const handleContinue = () => {
     (navigation as any).navigate('Payment', {
@@ -197,18 +198,16 @@ export default function QuantitySelectionScreen() {
         <View style={styles.orderSummary}>
           <View style={styles.orderRow}>
             <Text style={styles.orderLabel}>{quantity} Card{quantity > 1 ? 's' : ''} × {formatPrice(selectedPlan.priceCents)}</Text>
-            <Text style={styles.orderValue}>{formatPrice(totalPrice)}</Text>
+            <Text style={styles.orderValue}>{formatPrice(subtotal)}</Text>
           </View>
-          {savings > 0 && (
-            <View style={styles.orderRow}>
-              <Text style={styles.savingsLabel}>Bulk Discount</Text>
-              <Text style={styles.savingsValue}>-{formatPrice(savings)}</Text>
-            </View>
-          )}
+          <View style={styles.orderRow}>
+            <Text style={styles.feeLabel}>Processing Fee (3%)</Text>
+            <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
+          </View>
           <View style={styles.divider} />
           <View style={styles.orderRow}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>{formatPrice(totalPrice - savings)}</Text>
+            <Text style={styles.totalValue}>{formatPrice(totalPrice)}</Text>
           </View>
         </View>
 
@@ -415,13 +414,13 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontWeight: '500',
   },
-  savingsLabel: {
+  feeLabel: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: COLORS.textSecondary,
   },
-  savingsValue: {
+  feeValue: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: COLORS.text,
     fontWeight: '500',
   },
   divider: {

@@ -33,8 +33,8 @@ export default function PaymentScreen() {
   // Calculate totals
   const unitPrice = selectedPlan.priceCents;
   const subtotal = unitPrice * quantity;
-  const bulkDiscount = quantity > 1 ? Math.round(subtotal * 0.05) : 0; // 5% bulk discount for 2+ cards
-  const totalPrice = subtotal - bulkDiscount;
+  const processingFee = Math.round(subtotal * 0.03); // 3% credit card processing fee
+  const totalPrice = subtotal + processingFee;
 
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -119,13 +119,14 @@ export default function PaymentScreen() {
     setProcessing(true);
 
     try {
-      // Process payment via Authorize.net
-      const response = await paymentsApi.charge({
+      // Process payment via Authorize.net using the public mobile-charge endpoint
+      // This endpoint doesn't require authentication (for signup flow)
+      const response = await paymentsApi.mobileCharge({
         amount: totalPrice / 100, // Convert cents to dollars
         cardNumber: cardNumber.replace(/\s/g, ''),
         expirationDate: expiryDate.replace('/', ''), // MMYY format
         cvv,
-        description: `Camp Card Subscription - ${selectedPlan.name}`,
+        description: `Camp Card Purchase - ${quantity} card${quantity > 1 ? 's' : ''} (${selectedPlan.name})`,
         customerName: cardholderName.trim(),
         billingZip: zipCode,
       });
@@ -201,12 +202,10 @@ export default function PaymentScreen() {
               </View>
               <Text style={styles.planPrice}>{formatPrice(subtotal)}</Text>
             </View>
-            {bulkDiscount > 0 ? (
-              <View style={styles.discountRow}>
-                <Text style={styles.discountLabel}>Bulk Discount (5%)</Text>
-                <Text style={styles.discountAmount}>-{formatPrice(bulkDiscount)}</Text>
-              </View>
-            ) : null}
+            <View style={styles.feeRow}>
+              <Text style={styles.feeLabel}>Credit Card Processing Fee (3%)</Text>
+              <Text style={styles.feeAmount}>{formatPrice(processingFee)}</Text>
+            </View>
             {scoutCode ? (
               <View style={styles.scoutRow}>
                 <Text style={styles.scoutLabel}>Scout Referral: {scoutCode}</Text>
@@ -432,20 +431,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text,
   },
-  discountRow: {
+  feeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 12,
   },
-  discountLabel: {
+  feeLabel: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: COLORS.textSecondary,
   },
-  discountAmount: {
+  feeAmount: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#4CAF50',
+    fontWeight: '500',
+    color: COLORS.text,
   },
   scoutRow: {
     marginTop: 12,

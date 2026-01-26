@@ -1,6 +1,6 @@
 // BuyMoreCardsScreen - Allows existing users to purchase additional Camp Cards
-// Supports quantity selection (1-10) with bulk discount
-// In-app purchases are $15 per card (direct purchase price)
+// Supports quantity selection (1-10)
+// In-app purchases are $15 per card (direct purchase price) + 3% processing fee
 
 import React, { useState } from 'react';
 import {
@@ -22,7 +22,7 @@ import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
 
 // In-app direct purchase price is $15 per card
 const CARD_PRICE_CENTS = 1500; // $15 per card
-const BULK_DISCOUNT_PERCENT = 5; // 5% off for 2+ cards
+const PROCESSING_FEE_PERCENT = 3; // 3% credit card processing fee
 
 export default function BuyMoreCardsScreen() {
   const navigation = useNavigation();
@@ -32,16 +32,9 @@ export default function BuyMoreCardsScreen() {
   const [loading, setLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const calculatePrice = (qty: number) => {
-    const basePrice = qty * CARD_PRICE_CENTS;
-    if (qty >= 2) {
-      return Math.round(basePrice * (1 - BULK_DISCOUNT_PERCENT / 100));
-    }
-    return basePrice;
-  };
-
-  const totalPrice = calculatePrice(quantity);
-  const savings = quantity >= 2 ? (quantity * CARD_PRICE_CENTS) - totalPrice : 0;
+  const subtotal = quantity * CARD_PRICE_CENTS;
+  const processingFee = Math.round(subtotal * (PROCESSING_FEE_PERCENT / 100));
+  const totalPrice = subtotal + processingFee;
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
@@ -182,18 +175,16 @@ export default function BuyMoreCardsScreen() {
               <Text style={styles.priceLabel}>
                 {quantity} Camp Card{quantity !== 1 ? 's' : ''} × {formatPrice(CARD_PRICE_CENTS)}
               </Text>
-              <Text style={styles.priceValue}>{formatPrice(quantity * CARD_PRICE_CENTS)}</Text>
+              <Text style={styles.priceValue}>{formatPrice(subtotal)}</Text>
             </View>
 
-            {quantity >= 2 && (
-              <View style={styles.priceRow}>
-                <View style={styles.discountLabel}>
-                  <Ionicons name="pricetag" size={16} color={COLORS.success} />
-                  <Text style={styles.discountText}>Bulk Discount ({BULK_DISCOUNT_PERCENT}%)</Text>
-                </View>
-                <Text style={styles.discountValue}>-{formatPrice(savings)}</Text>
+            <View style={styles.priceRow}>
+              <View style={styles.feeLabel}>
+                <Ionicons name="card-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.feeText}>Processing Fee ({PROCESSING_FEE_PERCENT}%)</Text>
               </View>
-            )}
+              <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
+            </View>
 
             <View style={styles.divider} />
 
@@ -201,13 +192,6 @@ export default function BuyMoreCardsScreen() {
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalValue}>{formatPrice(totalPrice)}</Text>
             </View>
-
-            {quantity >= 2 && (
-              <View style={styles.savingsTag}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
-                <Text style={styles.savingsText}>You save {formatPrice(savings)}!</Text>
-              </View>
-            )}
           </View>
         </View>
 
@@ -437,19 +421,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.text,
   },
-  discountLabel: {
+  feeLabel: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  discountText: {
+  feeText: {
     fontSize: 16,
-    color: COLORS.success,
+    color: COLORS.textSecondary,
     marginLeft: 8,
   },
-  discountValue: {
+  feeValue: {
     fontSize: 16,
-    color: COLORS.success,
-    fontWeight: '600',
+    color: COLORS.text,
+    fontWeight: '500',
   },
   divider: {
     height: 1,
@@ -465,21 +449,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.primary,
-  },
-  savingsTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E8F5E9',
-    borderRadius: 8,
-    padding: 8,
-    marginTop: 8,
-  },
-  savingsText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.success,
-    marginLeft: 8,
   },
   benefitsSection: {
     marginBottom: 24,

@@ -85,6 +85,42 @@ public class PaymentController {
         }
     }
 
+    @PostMapping("/subscribe/mobile-charge")
+    @Operation(summary = "Process mobile subscription payment",
+            description = "Charge a credit card for Camp Card purchases via mobile app. " +
+                    "Supports $15 self-service signups and multi-card purchases (1-10+ cards). " +
+                    "No authentication required for new subscribers.")
+    public ResponseEntity<PaymentResponse> chargeMobileSubscription(@Valid @RequestBody ChargeRequest request) {
+        log.info("Processing mobile subscription charge for amount: {}", request.getAmount());
+
+        // Validate minimum amount ($10 for scout referral, $15 for self-service)
+        if (request.getAmount() == null ||
+            request.getAmount().compareTo(new java.math.BigDecimal("10.00")) < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(PaymentResponse.builder()
+                            .status("FAILED")
+                            .errorMessage("Invalid amount. Minimum is $10.00.")
+                            .build());
+        }
+
+        // Validate maximum reasonable amount (10 cards at $15 = $150, with some buffer)
+        if (request.getAmount().compareTo(new java.math.BigDecimal("200.00")) > 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(PaymentResponse.builder()
+                            .status("FAILED")
+                            .errorMessage("Amount exceeds maximum allowed for subscription purchases.")
+                            .build());
+        }
+
+        PaymentResponse response = paymentService.charge(request);
+
+        if ("SUCCESS".equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(response);
+        }
+    }
+
     @PostMapping("/subscribe/token")
     @Operation(summary = "Get Accept Hosted token",
             description = "Generate a token for Authorize.Net Accept Hosted payment form. Static $10/year subscription price.")

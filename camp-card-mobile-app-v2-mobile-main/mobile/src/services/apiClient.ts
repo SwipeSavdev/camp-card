@@ -364,6 +364,22 @@ export const paymentsApi = {
     amount: data.amount.toFixed(2), // Ensure proper decimal format
   }),
 
+  // Process mobile subscription payment (public - no auth required)
+  // Use this for signup flow and multi-card purchases ($10-$200)
+  mobileCharge: (data: {
+    amount: number;
+    cardNumber: string;
+    expirationDate: string; // MMYY format
+    cvv: string;
+    description?: string;
+    customerEmail?: string;
+    customerName?: string;
+    billingZip?: string;
+  }) => apiClient.post('/api/v1/payments/subscribe/mobile-charge', {
+    ...data,
+    amount: data.amount.toFixed(2), // Ensure proper decimal format
+  }),
+
   // Get Accept Hosted token for subscription
   getSubscriptionToken: (data?: {
     customerEmail?: string;
