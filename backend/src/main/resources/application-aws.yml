@@ -94,7 +94,7 @@ logging:
   file:
     name: /var/log/campcard/api.log
 
-# Authorize.Net Payment Gateway (Production)
+# Authorize.Net Payment Gateway (Sandbox for testing)
 authorize:
   net:
     api:
@@ -102,7 +102,7 @@ authorize:
         id: ${AUTHORIZE_NET_API_LOGIN_ID:7adF5E2X}
     transaction:
       key: ${AUTHORIZE_NET_TRANSACTION_KEY:38Y9qzHR34Y36BgM}
-    environment: ${AUTHORIZE_NET_ENVIRONMENT:PRODUCTION}
+    environment: ${AUTHORIZE_NET_ENVIRONMENT:SANDBOX}
 
 # Together.AI Configuration
 together:
