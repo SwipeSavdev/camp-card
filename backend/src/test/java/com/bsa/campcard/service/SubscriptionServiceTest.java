@@ -163,12 +163,6 @@ class SubscriptionServiceTest {
             CreateSubscriptionRequest request = new CreateSubscriptionRequest();
             request.setPlanId(1L);
 
-            User user = User.builder()
-                    .id(testUserId)
-                    .email("test@example.com")
-                    .firstName("John")
-                    .build();
-
             when(subscriptionPlanRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(annualPlan));
             when(subscriptionRepository.findByUserIdAndStatusAndDeletedAtIsNull(testUserId, Subscription.SubscriptionStatus.ACTIVE))
                     .thenReturn(Optional.empty());
@@ -177,7 +171,6 @@ class SubscriptionServiceTest {
                 sub.setUuid(UUID.randomUUID());
                 return sub;
             });
-            when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
 
             // When
             SubscriptionResponse response = subscriptionService.createSubscription(testUserId, request);
@@ -187,13 +180,6 @@ class SubscriptionServiceTest {
             assertEquals("ACTIVE", response.getStatus());
             assertNotNull(response.getCurrentPeriodEnd());
             verify(subscriptionRepository, times(2)).save(any(Subscription.class));
-            verify(emailService).sendSubscriptionConfirmation(
-                    eq("test@example.com"),
-                    eq("John"),
-                    eq("Annual Camp Card"),
-                    any(),
-                    any()
-            );
         }
 
         @Test
@@ -241,7 +227,6 @@ class SubscriptionServiceTest {
                 sub.setUuid(UUID.randomUUID());
                 return sub;
             });
-            when(userRepository.findById(testUserId)).thenReturn(Optional.empty());
 
             // When
             subscriptionService.createSubscription(testUserId, request);
@@ -271,7 +256,6 @@ class SubscriptionServiceTest {
                 sub.setUuid(UUID.randomUUID());
                 return sub;
             });
-            when(userRepository.findById(testUserId)).thenReturn(Optional.empty());
 
             // When
             subscriptionService.createSubscription(testUserId, request);

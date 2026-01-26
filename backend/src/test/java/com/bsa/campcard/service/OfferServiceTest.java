@@ -45,6 +45,12 @@ class OfferServiceTest {
     @Mock
     private MerchantRepository merchantRepository;
 
+    @Mock
+    private OfferScanAttemptRepository scanAttemptRepository;
+
+    @Mock
+    private OfferImageRepository offerImageRepository;
+
     @InjectMocks
     private OfferService offerService;
 
@@ -251,17 +257,17 @@ class OfferServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when validUntil is before validFrom")
+        @DisplayName("Should throw exception when validFrom is after December 31st of current year")
         void createOffer_InvalidDates() {
             // Arrange
             when(merchantRepository.findById(1L)).thenReturn(Optional.of(approvedMerchant));
-            validCreateRequest.setValidFrom(LocalDateTime.now().plusDays(7));
-            validCreateRequest.setValidUntil(LocalDateTime.now());
+            // Set validFrom to next year which is after the December 31st expiration
+            validCreateRequest.setValidFrom(LocalDateTime.now().plusYears(1));
 
             // Act & Assert
             assertThatThrownBy(() -> offerService.createOffer(validCreateRequest))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Valid until date must be after valid from date");
+                    .hasMessage("Valid from date must be before December 31st of the current year");
 
             verify(offerRepository, never()).save(any());
         }
@@ -582,6 +588,7 @@ class OfferServiceTest {
             when(offerRepository.findActiveOffers(eq(OfferStatus.ACTIVE), any(LocalDateTime.class), eq(defaultPageable)))
                     .thenReturn(offerPage);
             when(merchantRepository.findAllById(anySet())).thenReturn(List.of(approvedMerchant));
+            when(offerImageRepository.findByOfferId(anyLong())).thenReturn(Optional.empty());
 
             // Act
             Page<OfferResponse> result = offerService.getActiveOffers(defaultPageable);
@@ -1219,6 +1226,8 @@ class OfferServiceTest {
         void deleteOffer_Success() {
             // Arrange
             when(offerRepository.findById(1L)).thenReturn(Optional.of(validOffer));
+            doNothing().when(scanAttemptRepository).deleteByOfferId(1L);
+            doNothing().when(redemptionRepository).deleteByOfferId(1L);
             doNothing().when(offerRepository).delete(validOffer);
             when(merchantRepository.findById(1L)).thenReturn(Optional.of(approvedMerchant));
             when(offerRepository.countByMerchantIdAndStatus(anyLong(), any())).thenReturn(0L);
@@ -1229,6 +1238,8 @@ class OfferServiceTest {
             offerService.deleteOffer(1L);
 
             // Assert
+            verify(scanAttemptRepository).deleteByOfferId(1L);
+            verify(redemptionRepository).deleteByOfferId(1L);
             verify(offerRepository).delete(validOffer);
         }
 
@@ -1251,6 +1262,8 @@ class OfferServiceTest {
         void deleteOffer_UpdatesMerchantCounts() {
             // Arrange
             when(offerRepository.findById(1L)).thenReturn(Optional.of(validOffer));
+            doNothing().when(scanAttemptRepository).deleteByOfferId(1L);
+            doNothing().when(redemptionRepository).deleteByOfferId(1L);
             doNothing().when(offerRepository).delete(validOffer);
             when(merchantRepository.findById(1L)).thenReturn(Optional.of(approvedMerchant));
             when(offerRepository.countByMerchantIdAndStatus(1L, OfferStatus.ACTIVE)).thenReturn(0L);

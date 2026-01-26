@@ -297,7 +297,7 @@ class MerchantServiceTest {
             Page<Merchant> merchantPage = new PageImpl<>(List.of(savedMerchant));
             Pageable pageable = PageRequest.of(0, 10);
 
-            when(merchantRepository.findAll(pageable)).thenReturn(merchantPage);
+            when(merchantRepository.findByDeletedAtIsNull(pageable)).thenReturn(merchantPage);
             when(locationRepository.findByMerchantIdAndDeletedAtIsNull(anyLong()))
                     .thenReturn(Collections.emptyList());
 
@@ -306,7 +306,7 @@ class MerchantServiceTest {
 
             // Assert
             assertThat(result.getContent()).hasSize(1);
-            verify(merchantRepository).findAll(pageable);
+            verify(merchantRepository).findByDeletedAtIsNull(pageable);
         }
 
         @Test
@@ -374,7 +374,7 @@ class MerchantServiceTest {
             Page<Merchant> merchantPage = new PageImpl<>(List.of(savedMerchant));
             Pageable pageable = PageRequest.of(0, 10);
 
-            when(merchantRepository.findAll(pageable)).thenReturn(merchantPage);
+            when(merchantRepository.findByDeletedAtIsNull(pageable)).thenReturn(merchantPage);
             when(locationRepository.findByMerchantIdAndDeletedAtIsNull(anyLong()))
                     .thenReturn(Collections.emptyList());
 
@@ -382,7 +382,7 @@ class MerchantServiceTest {
             merchantService.getMerchants(null, "", pageable);
 
             // Assert
-            verify(merchantRepository).findAll(pageable);
+            verify(merchantRepository).findByDeletedAtIsNull(pageable);
             verify(merchantRepository, never()).searchMerchants(any(), any());
         }
     }

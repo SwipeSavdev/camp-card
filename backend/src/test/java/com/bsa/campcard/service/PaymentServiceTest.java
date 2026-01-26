@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -15,16 +16,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
-    
+
+    @Mock
+    private CouncilPaymentConfigService councilPaymentConfigService;
+
     @InjectMocks
     private PaymentService paymentService;
-    
+
     @BeforeEach
     void setUp() {
-        // Set test credentials
-        ReflectionTestUtils.setField(paymentService, "apiLoginId", "test_login");
-        ReflectionTestUtils.setField(paymentService, "transactionKey", "test_key");
-        ReflectionTestUtils.setField(paymentService, "environment", "SANDBOX");
+        // Set test credentials - field names match PaymentService class
+        ReflectionTestUtils.setField(paymentService, "defaultApiLoginId", "test_login");
+        ReflectionTestUtils.setField(paymentService, "defaultTransactionKey", "test_key");
+        ReflectionTestUtils.setField(paymentService, "defaultEnvironment", "SANDBOX");
+        ReflectionTestUtils.setField(paymentService, "baseUrl", "https://campcardapp.org");
     }
     
     @Test
