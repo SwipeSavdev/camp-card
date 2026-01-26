@@ -36,9 +36,15 @@ public interface CampCardRepository extends JpaRepository<CampCard, Long> {
     Page<CampCard> findByStatus(CampCardStatus status, Pageable pageable);
     List<CampCard> findByStatusIn(List<CampCardStatus> statuses);
 
-    // Active card for user (should be at most one)
-    @Query("SELECT c FROM CampCard c WHERE c.ownerUserId = :userId AND c.status = 'ACTIVE'")
-    Optional<CampCard> findActiveCardByUserId(@Param("userId") UUID userId);
+    // Active card for user (may have multiple - returns most recently activated)
+    @Query("SELECT c FROM CampCard c WHERE c.ownerUserId = :userId AND c.status = 'ACTIVE' ORDER BY c.activatedAt DESC")
+    List<CampCard> findActiveCardsByUserId(@Param("userId") UUID userId);
+
+    // Convenience method - get first active card (for backwards compatibility)
+    default Optional<CampCard> findActiveCardByUserId(UUID userId) {
+        List<CampCard> activeCards = findActiveCardsByUserId(userId);
+        return activeCards.isEmpty() ? Optional.empty() : Optional.of(activeCards.get(0));
+    }
 
     // Unused cards (available for gift or replenishment)
     @Query("SELECT c FROM CampCard c WHERE c.ownerUserId = :userId AND c.status = 'UNASSIGNED' " +

@@ -192,8 +192,9 @@ public class CampCardService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Get active card
-        CampCard activeCard = campCardRepository.findActiveCardByUserId(userId).orElse(null);
+        // Get all active cards (user may have multiple)
+        List<CampCard> activeCards = campCardRepository.findActiveCardsByUserId(userId);
+        CampCard primaryActiveCard = activeCards.isEmpty() ? null : activeCards.get(0);
 
         // Get unused cards
         List<CampCard> unusedCards = campCardRepository.findUnusedCardsByUserId(userId, now);
@@ -214,12 +215,12 @@ public class CampCardService {
         Long totalOffersUsed = campCardRepository.getTotalOffersUsedByUser(userId);
 
         return MyCardsResponse.builder()
-                .activeCard(activeCard != null ? toCardResponse(activeCard) : null)
+                .activeCard(primaryActiveCard != null ? toCardResponse(primaryActiveCard) : null)
                 .unusedCards(unusedCards.stream().map(this::toCardResponse).collect(Collectors.toList()))
                 .giftedCards(giftedCards.stream().map(this::toCardResponse).collect(Collectors.toList()))
                 .historicalCards(historicalCards.stream().map(this::toCardResponse).collect(Collectors.toList()))
                 .totalCards(allCards.size())
-                .activeCards(activeCard != null ? 1 : 0)
+                .activeCards(activeCards.size())
                 .unusedCardsCount(unusedCards.size())
                 .giftedCardsCount(giftedCards.size())
                 .totalSavings(totalSavingsCents != null ? totalSavingsCents / 100.0 : 0.0)
