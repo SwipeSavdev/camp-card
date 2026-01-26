@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
+import { cardsApi } from '../../services/apiClient';
 
 type SignupScreenRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
 
@@ -24,6 +25,9 @@ export default function SignupScreen() {
   const route = useRoute<SignupScreenRouteProp>();
   const selectedPlan = route.params?.selectedPlan;
   const paymentCompleted = route.params?.paymentCompleted;
+  const quantity = route.params?.quantity || 1;
+  const scoutCode = route.params?.scoutCode;
+  const transactionId = route.params?.transactionId;
   const [firstName, setFirstName] = React.useState('');
   const [lastName, setLastName] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -77,6 +81,30 @@ export default function SignupScreen() {
       }
 
       await signup(signupData);
+
+      // If payment was completed, purchase the cards now that user is authenticated
+      if (paymentCompleted && transactionId) {
+        try {
+          console.log('Purchasing cards with transaction:', transactionId);
+          await cardsApi.purchaseCards({
+            quantity: quantity,
+            planId: selectedPlan?.uuid,
+            scoutCode: scoutCode,
+            paymentToken: transactionId,
+            email: email.trim(),
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+          });
+          console.log('Cards purchased successfully');
+        } catch (cardError: any) {
+          console.error('Card purchase error:', cardError);
+          // Show warning but don't fail signup - payment was already successful
+          Alert.alert(
+            'Card Activation Issue',
+            'Your account was created and payment received, but there was an issue activating your cards. Please contact support with your transaction ID: ' + transactionId
+          );
+        }
+      }
 
       // If signup succeeds, we're automatically logged in
       // The auth store handles the navigation

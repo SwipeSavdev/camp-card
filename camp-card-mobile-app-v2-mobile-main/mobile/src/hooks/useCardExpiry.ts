@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../services/apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 interface CardExpiryInfo {
   daysUntilExpiry: number;
@@ -56,6 +57,21 @@ export function useCardExpiry(): UseCardExpiryResult {
       setLoading(true);
       setError(null);
 
+      // Check if we have a token before making the API call
+      const accessToken = await SecureStore.getItemAsync('accessToken');
+      if (!accessToken) {
+        // No token yet - user just signed up, skip the call
+        console.log('useCardExpiry: No access token yet, skipping API call');
+        setExpiryInfo({
+          daysUntilExpiry: 365,
+          expiringCardCount: 0,
+          totalActiveCards: 0,
+          earliestExpiry: null,
+        });
+        setLoading(false);
+        return;
+      }
+
       const response = await apiClient.get('/api/v1/cards/expiry-status');
       const data = response.data;
 
@@ -66,8 +82,9 @@ export function useCardExpiry(): UseCardExpiryResult {
         earliestExpiry: data.earliestExpiry ?? null,
       });
     } catch (err: any) {
-      // Don't treat 404 as error - user may not have cards yet
-      if (err.response?.status === 404) {
+      // Don't treat 404 or 401 as errors - user may not have cards yet or token is refreshing
+      if (err.response?.status === 404 || err.response?.status === 401) {
+        console.log('useCardExpiry: Got', err.response?.status, '- setting default expiry info');
         setExpiryInfo({
           daysUntilExpiry: 365,
           expiringCardCount: 0,

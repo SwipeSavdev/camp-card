@@ -76,6 +76,7 @@ export type AuthStackParamList = {
     paymentCompleted?: boolean;
     quantity?: number;
     scoutCode?: string;
+    transactionId?: string;
   } | undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
