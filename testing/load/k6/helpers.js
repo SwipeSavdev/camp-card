@@ -9,7 +9,7 @@ import http from "k6/http";
 
 // Environment variables with defaults
 export const CONFIG = {
-  BASE_URL: __ENV.BASE_URL || "https://bsa.swipesavvy.com/api/v1",
+  BASE_URL: __ENV.BASE_URL || "https://api.campcardapp.org/api/v1",
   ADMIN_EMAIL: __ENV.ADMIN_EMAIL || "admin@campcard.org",
   ADMIN_PASSWORD: __ENV.ADMIN_PASSWORD || "Password123",
   TEST_RUN_ID: __ENV.TEST_RUN_ID || `k6-${Date.now()}`,

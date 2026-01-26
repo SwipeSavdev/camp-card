@@ -32,7 +32,7 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: process.env.E2E_BASE_URL || "https://bsa.swipesavvy.com",
+    baseURL: process.env.E2E_BASE_URL || "https://campcardapp.org",
 
     // Collect trace when retrying the failed test
     trace: "on-first-retry",

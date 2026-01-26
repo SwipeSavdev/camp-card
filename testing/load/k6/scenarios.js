@@ -2,7 +2,7 @@
  * Camp Card Load Testing Scenarios
  *
  * Usage:
- *   export BASE_URL=https://bsa.swipesavvy.com/api/v1
+ *   export BASE_URL=https://api.campcardapp.org/api/v1
  *   export ADMIN_EMAIL=admin@campcard.org
  *   export ADMIN_PASSWORD=Password123
  *   k6 run scenarios.js
@@ -19,7 +19,7 @@ import { check, sleep, group } from "k6";
 import { Rate, Counter, Trend } from "k6/metrics";
 
 // Environment variables
-const BASE_URL = __ENV.BASE_URL || "https://bsa.swipesavvy.com/api/v1";
+const BASE_URL = __ENV.BASE_URL || "https://api.campcardapp.org/api/v1";
 const ADMIN_EMAIL = __ENV.ADMIN_EMAIL || "admin@campcard.org";
 const ADMIN_PASSWORD = __ENV.ADMIN_PASSWORD || "Password123";
 const TEST_RUN_ID = __ENV.TEST_RUN_ID || `k6-${Date.now()}`;

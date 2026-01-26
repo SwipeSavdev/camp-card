@@ -34,7 +34,7 @@ public class QRCodeService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${campcard.base-url:https://bsa.swipesavvy.com}")
+    @Value("${campcard.base-url:https://api.campcardapp.org}")
     private String baseUrl;
 
     private static final String QR_CODE_PREFIX = "qr:user:";

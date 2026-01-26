@@ -78,7 +78,7 @@ export default function ScoutDashboardScreen() {
       // Fallback to local generation if API fails
       const fallbackCode = `SC-${scoutId.slice(0, 8).toUpperCase()}`;
       setAffiliateCode(fallbackCode);
-      setAffiliateLink(`https://bsa.swipesavvy.com/campcard/subscribe/?scout=${fallbackCode}`);
+      setAffiliateLink(`https://campcardapp.org/subscribe/?scout=${fallbackCode}`);
     } finally {
       setIsLoadingQR(false);
     }

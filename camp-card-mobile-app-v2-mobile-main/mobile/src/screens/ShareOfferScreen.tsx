@@ -44,9 +44,9 @@ export default function ShareOfferScreen() {
       });
       
       // Use shareable link from backend API response
-      // Fallback to offers page on bsa.swipesavvy.com if not provided
+      // Fallback to offers page on campcardapp.org if not provided
       const uniqueCode = response.data.uniqueCode;
-      const link = response.data.shareableLink || `https://bsa.swipesavvy.com/campcard/offers/?offer=${uniqueCode}`;
+      const link = response.data.shareableLink || `https://campcardapp.org/offers/?offer=${uniqueCode}`;
 
       setShareableLink(link);
       setQrData({

@@ -223,20 +223,19 @@ campcard:
     default-limit: 100  # Requests per minute
     burst-capacity: 20
   
-  # Base URL for the application (production: https://bsa.swipesavvy.com)
-  base-url: ${CAMPCARD_BASE_URL:https://bsa.swipesavvy.com}
+  # Base URL for the application (production: https://api.campcardapp.org)
+  base-url: ${CAMPCARD_BASE_URL:https://api.campcardapp.org}
 
   # Web Portal URL for password reset and email verification links
-  # Production: https://bsa.swipesavvy.com/campcard
+  # Production: https://campcardapp.org
   # Development: http://localhost:3000 or http://YOUR_EC2_IP:7020
-  # This defaults to /campcard path on the base URL
-  web-portal-url: ${CAMPCARD_WEB_PORTAL_URL:https://bsa.swipesavvy.com/campcard}
+  web-portal-url: ${CAMPCARD_WEB_PORTAL_URL:https://campcardapp.org}
 
   # Notifications (AWS SES for email, AWS SNS for SMS)
   notifications:
     email:
-      from: ${SES_FROM_EMAIL:no-reply@bsa.swipesavvy.com}
-      enabled: ${EMAIL_ENABLED:true}  # SES is configured for bsa.swipesavvy.com
+      from: ${SES_FROM_EMAIL:no-reply@campcardapp.org}
+      enabled: ${EMAIL_ENABLED:true}  # SES is configured for campcardapp.org
     sms:
       enabled: ${SMS_ENABLED:false}  # Set to true when SNS is configured
       sender-id: ${SNS_SENDER_ID:CampCard}

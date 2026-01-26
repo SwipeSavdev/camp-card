@@ -72,11 +72,7 @@ public class SecurityConfig {
             "http://localhost:8085",  // Mobile Expo (dev)
             "http://18.190.69.205:7020",  // AWS Admin Portal
             "http://18.190.69.205:7010",  // AWS API
-            "https://bsa.swipesavvy.com",  // Legacy production domain
-            "http://bsa.swipesavvy.com",   // Legacy HTTP redirect
-            "https://portal.campcard.org",  // Legacy web portal
-            "https://api.campcard.org",     // Legacy API
-            // New campcardapp.org domains
+            // campcardapp.org domains
             "https://campcardapp.org",           // Root domain
             "https://www.campcardapp.org",       // Marketing site
             "https://admin.campcardapp.org",     // Admin portal (prod)

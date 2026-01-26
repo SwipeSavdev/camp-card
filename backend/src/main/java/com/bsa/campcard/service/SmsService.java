@@ -39,7 +39,7 @@ public class SmsService {
     @Value("${campcard.notifications.sms.sender-id:CampCard}")
     private String senderId;
 
-    @Value("${campcard.base-url:https://bsa.swipesavvy.com}")
+    @Value("${campcard.base-url:https://api.campcardapp.org}")
     private String baseUrl;
 
     // ========================================================================
@@ -78,7 +78,7 @@ public class SmsService {
     @Async
     public void sendPasswordChangedAlert(String phoneNumber) {
         String message = "BSA Camp Card: Your password was just changed. " +
-            "If this wasn't you, contact support@bsa.swipesavvy.com immediately.";
+            "If this wasn't you, contact support@campcardapp.org immediately.";
         sendSms(phoneNumber, message);
     }
 
@@ -313,7 +313,7 @@ public class SmsService {
         String message = String.format(
             "BSA Camp Card: Application received for %s. " +
             "We'll review it within 1-2 business days. " +
-            "Questions? Email merchants@bsa.swipesavvy.com",
+            "Questions? Email merchants@campcardapp.org",
             businessName
         );
         sendSms(phoneNumber, message);
@@ -398,7 +398,7 @@ public class SmsService {
     @Async
     public void sendAccountLockedAlert(String phoneNumber) {
         String message = "BSA Camp Card: Your account has been temporarily locked " +
-            "due to unusual activity. Contact support@bsa.swipesavvy.com to unlock.";
+            "due to unusual activity. Contact support@campcardapp.org to unlock.";
         sendSms(phoneNumber, message);
     }
 

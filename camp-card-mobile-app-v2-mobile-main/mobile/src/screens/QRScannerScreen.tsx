@@ -44,7 +44,7 @@ export default function MyQRCodeScreen() {
       
       // Use shareable link from backend API response (points to /campcard/subscribe/)
       // Fallback to manual URL construction if not provided
-      setShareableLink(data.shareableLink || `https://bsa.swipesavvy.com/campcard/subscribe/?ref=${data.uniqueCode}`);
+      setShareableLink(data.shareableLink || `https://campcardapp.org/subscribe/?ref=${data.uniqueCode}`);
     } catch (error: any) {
       Alert.alert('Error', 'Failed to load QR code');
     } finally {

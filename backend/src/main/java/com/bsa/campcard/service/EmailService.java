@@ -19,13 +19,13 @@ public class EmailService {
 
     private final SesClient sesClient;
 
-    @Value("${campcard.notifications.email.from:no-reply@bsa.swipesavvy.com}")
+    @Value("${campcard.notifications.email.from:no-reply@campcardapp.org}")
     private String fromEmail;
 
-    @Value("${campcard.base-url:https://bsa.swipesavvy.com}")
+    @Value("${campcard.base-url:https://api.campcardapp.org}")
     private String baseUrl;
 
-    @Value("${campcard.web-portal-url:${campcard.base-url:https://bsa.swipesavvy.com}}")
+    @Value("${campcard.web-portal-url:${campcard.base-url:https://campcardapp.org}}")
     private String webPortalUrl;
 
     @Value("${campcard.notifications.email.enabled:true}")
@@ -160,7 +160,7 @@ public class EmailService {
                 <p style="margin: 0; font-size: 14px; color: #155724;"><strong>If you made this change:</strong> No further action is needed.</p>
             </div>
             <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin: 24px 0;">
-                <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>If you didn't make this change:</strong> Please contact us immediately at support@bsa.swipesavvy.com or reset your password right away.</p>
+                <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>If you didn't make this change:</strong> Please contact us immediately at support@campcardapp.org or reset your password right away.</p>
             </div>
             """.formatted(firstName)
         );
@@ -174,7 +174,7 @@ public class EmailService {
 
             If you made this change: No further action is needed.
 
-            If you didn't make this change: Please contact us immediately at support@bsa.swipesavvy.com or reset your password right away.
+            If you didn't make this change: Please contact us immediately at support@campcardapp.org or reset your password right away.
 
             ---
             BSA Camp Card
@@ -673,7 +673,7 @@ public class EmailService {
 
             """ + buildButton("Renew Subscription", baseUrl + "/subscription/renew", BSA_NAVY) + """
 
-            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact us at support@bsa.swipesavvy.com</p>
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact us at support@campcardapp.org</p>
             """.formatted(firstName, formattedDate, daysRemaining, daysRemaining == 1 ? "" : "s")
         );
 
@@ -690,7 +690,7 @@ public class EmailService {
 
             Renew: %s/subscription/renew
 
-            Questions? Contact us at support@bsa.swipesavvy.com
+            Questions? Contact us at support@campcardapp.org
 
             ---
             BSA Camp Card
@@ -802,7 +802,7 @@ public class EmailService {
             </div>
 
             <p style="font-size: 14px; color: #666666;">This receipt serves as confirmation of your payment to BSA Camp Card.</p>
-            <p style="font-size: 14px; color: #666666;">Questions about your payment? Contact support@bsa.swipesavvy.com</p>
+            <p style="font-size: 14px; color: #666666;">Questions about your payment? Contact support@campcardapp.org</p>
             """.formatted(firstName, transactionId, formattedDate, description, BSA_NAVY, formattedAmount)
         );
 
@@ -820,7 +820,7 @@ public class EmailService {
 
             This receipt serves as confirmation of your payment to BSA Camp Card.
 
-            Questions about your payment? Contact support@bsa.swipesavvy.com
+            Questions about your payment? Contact support@campcardapp.org
 
             ---
             BSA Camp Card
@@ -1471,7 +1471,7 @@ public class EmailService {
                 <p style="margin: 0; font-size: 14px; color: #155724;"><strong>Approval typically takes 1-2 business days.</strong> We'll email you as soon as your account is ready!</p>
             </div>
 
-            <p style="font-size: 14px; color: #666666;">Questions? Contact our merchant support team at merchants@bsa.swipesavvy.com</p>
+            <p style="font-size: 14px; color: #666666;">Questions? Contact our merchant support team at merchants@campcardapp.org</p>
             """.formatted(contactName, businessName, BSA_NAVY)
         );
 
@@ -1490,7 +1490,7 @@ public class EmailService {
 
             Approval typically takes 1-2 business days. We'll email you as soon as your account is ready!
 
-            Questions? Contact our merchant support team at merchants@bsa.swipesavvy.com
+            Questions? Contact our merchant support team at merchants@campcardapp.org
 
             ---
             BSA Camp Card
@@ -1685,7 +1685,7 @@ public class EmailService {
 
             <p style="font-size: 16px; color: #333333;">If you believe this decision was made in error, or if you'd like to provide additional information, please contact our merchant support team.</p>
 
-            """ + buildButton("Contact Support", "mailto:merchants@bsa.swipesavvy.com", BSA_NAVY) + """
+            """ + buildButton("Contact Support", "mailto:merchants@campcardapp.org", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">We appreciate your interest in supporting Scouts and hope to work with you in the future.</p>
             """.formatted(contactName, businessName, BSA_NAVY, reason)
@@ -1702,7 +1702,7 @@ public class EmailService {
 
             Reason: %s
 
-            If you believe this decision was made in error, or if you'd like to provide additional information, please contact our merchant support team at merchants@bsa.swipesavvy.com
+            If you believe this decision was made in error, or if you'd like to provide additional information, please contact our merchant support team at merchants@campcardapp.org
 
             We appreciate your interest in supporting Scouts and hope to work with you in the future.
 
@@ -1934,7 +1934,7 @@ public class EmailService {
 
             """ + buildButton("Access Admin Dashboard", baseUrl + "/admin/dashboard", BSA_NAVY) + """
 
-            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact national support at support@bsa.swipesavvy.com</p>
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact national support at support@campcardapp.org</p>
             """.formatted(firstName, councilName, BSA_NAVY)
         );
 
@@ -1953,7 +1953,7 @@ public class EmailService {
 
             Access your dashboard: %s/admin/dashboard
 
-            Questions? Contact national support at support@bsa.swipesavvy.com
+            Questions? Contact national support at support@campcardapp.org
 
             ---
             BSA Camp Card
@@ -2122,7 +2122,7 @@ public class EmailService {
 
             <p style="font-size: 16px; color: #333333;">If you believe this was done in error, or if you have questions, please contact our support team.</p>
 
-            """ + buildButton("Contact Support", "mailto:support@bsa.swipesavvy.com", BSA_NAVY) + """
+            """ + buildButton("Contact Support", "mailto:support@campcardapp.org", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">We're here to help if you need assistance.</p>
             """.formatted(firstName, BSA_RED, reason)
@@ -2137,7 +2137,7 @@ public class EmailService {
 
             Reason: %s
 
-            If you believe this was done in error, or if you have questions, please contact our support team at support@bsa.swipesavvy.com
+            If you believe this was done in error, or if you have questions, please contact our support team at support@campcardapp.org
 
             ---
             BSA Camp Card
@@ -2236,7 +2236,7 @@ public class EmailService {
 
             <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #856404;"><strong>If you didn't make this change:</strong></p>
-                <p style="margin: 8px 0 0 0; font-size: 14px; color: #856404;">Please contact us immediately at support@bsa.swipesavvy.com to secure your account.</p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #856404;">Please contact us immediately at support@campcardapp.org to secure your account.</p>
             </div>
             """.formatted(firstName, BSA_NAVY, changedFields)
         );
@@ -2251,7 +2251,7 @@ public class EmailService {
             Updated Information:
             %s
 
-            If you didn't make this change, please contact us immediately at support@bsa.swipesavvy.com to secure your account.
+            If you didn't make this change, please contact us immediately at support@campcardapp.org to secure your account.
 
             ---
             BSA Camp Card
@@ -2286,7 +2286,7 @@ public class EmailService {
 
             <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>⚠️ Security Alert:</strong></p>
-                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">If you didn't make this change, your account may have been compromised. Please contact us immediately at support@bsa.swipesavvy.com.</p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">If you didn't make this change, your account may have been compromised. Please contact us immediately at support@campcardapp.org.</p>
             </div>
             """.formatted(firstName, oldEmail, newEmail)
         );
@@ -2302,7 +2302,7 @@ public class EmailService {
             New Email: %s
 
             ⚠️ Security Alert:
-            If you didn't make this change, your account may have been compromised. Please contact us immediately at support@bsa.swipesavvy.com.
+            If you didn't make this change, your account may have been compromised. Please contact us immediately at support@campcardapp.org.
 
             ---
             BSA Camp Card
@@ -2343,7 +2343,7 @@ public class EmailService {
 
             <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>If you didn't make this change:</strong></p>
-                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">Please contact us immediately at support@bsa.swipesavvy.com or change your password right away.</p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">Please contact us immediately at support@campcardapp.org or change your password right away.</p>
             </div>
             """.formatted(firstName, settingChanged)
         );
@@ -2359,7 +2359,7 @@ public class EmailService {
 
             If you made this change: No further action is needed.
 
-            If you didn't make this change: Please contact us immediately at support@bsa.swipesavvy.com or change your password right away.
+            If you didn't make this change: Please contact us immediately at support@campcardapp.org or change your password right away.
 
             ---
             BSA Camp Card
@@ -2405,7 +2405,7 @@ public class EmailService {
 
             <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>Didn't request this?</strong></p>
-                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">Contact us immediately at support@bsa.swipesavvy.com to secure your account.</p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">Contact us immediately at support@campcardapp.org to secure your account.</p>
             </div>
             """.formatted(firstName, BSA_RED)
         );
@@ -2428,7 +2428,7 @@ public class EmailService {
 
             To cancel deletion, visit: %s/cancel-deletion
 
-            Didn't request this? Contact us immediately at support@bsa.swipesavvy.com to secure your account.
+            Didn't request this? Contact us immediately at support@campcardapp.org to secure your account.
 
             ---
             BSA Camp Card
@@ -2545,7 +2545,7 @@ public class EmailService {
                 <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>This link expires in 7 days.</strong></p>
             </div>
 
-            <p style="font-size: 14px; color: #666666; margin-top: 24px;">If you have questions, please contact your child's Unit Leader or email us at support@bsa.swipesavvy.com.</p>
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">If you have questions, please contact your child's Unit Leader or email us at support@campcardapp.org.</p>
             """.formatted(parentName, minorName, minorAge, consentUrl)
         );
 
@@ -2571,7 +2571,7 @@ public class EmailService {
 
             This link expires in 7 days.
 
-            If you have questions, please contact your child's Unit Leader or email us at support@bsa.swipesavvy.com.
+            If you have questions, please contact your child's Unit Leader or email us at support@campcardapp.org.
 
             ---
             BSA Camp Card
@@ -2809,7 +2809,7 @@ public class EmailService {
                                                         <strong>BSA Camp Card</strong> | A Boy Scouts of America Fundraising Program
                                                     </p>
                                                     <p style="margin: 0 0 16px 0; font-size: 12px; color: #999999;">
-                                                        Questions? Contact us at <a href="mailto:support@bsa.swipesavvy.com" style="color: %s;">support@bsa.swipesavvy.com</a>
+                                                        Questions? Contact us at <a href="mailto:support@campcardapp.org" style="color: %s;">support@campcardapp.org</a>
                                                     </p>
                                                     <p style="margin: 0; font-size: 11px; color: #aaaaaa;">
                                                         © %d Boy Scouts of America. All rights reserved.<br/>
