@@ -88,7 +88,7 @@ export default function SignupScreen() {
           console.log('Purchasing cards with transaction:', transactionId);
           await cardsApi.purchaseCards({
             quantity: quantity,
-            planId: selectedPlan?.uuid,
+            planId: selectedPlan?.id, // Use numeric ID, not UUID
             scoutCode: scoutCode,
             paymentToken: transactionId,
             email: email.trim(),
