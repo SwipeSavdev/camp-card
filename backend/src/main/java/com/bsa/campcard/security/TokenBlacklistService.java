@@ -35,14 +35,21 @@ public class TokenBlacklistService {
 
     /**
      * Checks if a token is blacklisted.
+     * Gracefully handles Redis connection failures to allow authentication when Redis is unavailable.
      *
      * @param token The JWT token to check
-     * @return true if the token is blacklisted, false otherwise
+     * @return true if the token is blacklisted, false if not blacklisted or if Redis is unavailable
      */
     public boolean isBlacklisted(String token) {
-        String key = BLACKLIST_PREFIX + token;
-        Boolean exists = redisTemplate.hasKey(key);
-        return Boolean.TRUE.equals(exists);
+        try {
+            String key = BLACKLIST_PREFIX + token;
+            Boolean exists = redisTemplate.hasKey(key);
+            return Boolean.TRUE.equals(exists);
+        } catch (Exception e) {
+            // Log warning but don't fail authentication - token revocation won't work during Redis outage
+            log.warn("Redis unavailable for blacklist check, assuming token is valid: {}", e.getMessage());
+            return false;
+        }
     }
 
     /**
