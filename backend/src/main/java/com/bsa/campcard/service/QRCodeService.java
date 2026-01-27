@@ -50,14 +50,26 @@ public class QRCodeService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String cacheKey = QR_CODE_PREFIX + userId.toString();
-        String existingCode = (String) redisTemplate.opsForValue().get(cacheKey);
+        String existingCode = null;
+
+        // Try to get cached code, but handle Redis failures gracefully
+        try {
+            existingCode = (String) redisTemplate.opsForValue().get(cacheKey);
+        } catch (Exception e) {
+            log.warn("Redis unavailable for QR code cache read, generating new code: {}", e.getMessage());
+        }
 
         String uniqueCode;
         if (existingCode != null) {
             uniqueCode = existingCode;
         } else {
             uniqueCode = generateUniqueCode();
-            redisTemplate.opsForValue().set(cacheKey, uniqueCode, 30, TimeUnit.DAYS);
+            // Try to cache, but don't fail if Redis is unavailable
+            try {
+                redisTemplate.opsForValue().set(cacheKey, uniqueCode, 30, TimeUnit.DAYS);
+            } catch (Exception e) {
+                log.warn("Redis unavailable for QR code caching, code won't be persisted: {}", e.getMessage());
+            }
         }
 
         Map<String, Object> qrData = new HashMap<>();
@@ -200,15 +212,27 @@ public class QRCodeService {
         }
 
         String cacheKey = QR_CARD_PREFIX + cardId.toString();
-        String existingCode = (String) redisTemplate.opsForValue().get(cacheKey);
+        String existingCode = null;
+
+        // Try to get cached code, but handle Redis failures gracefully
+        try {
+            existingCode = (String) redisTemplate.opsForValue().get(cacheKey);
+        } catch (Exception e) {
+            log.warn("Redis unavailable for card QR code cache read: {}", e.getMessage());
+        }
 
         String uniqueCode;
         if (existingCode != null) {
             uniqueCode = existingCode;
         } else {
             uniqueCode = generateUniqueCode();
-            // Card QR codes valid until card expiry (max 365 days)
-            redisTemplate.opsForValue().set(cacheKey, uniqueCode, 365, TimeUnit.DAYS);
+            // Try to cache, but don't fail if Redis is unavailable
+            try {
+                // Card QR codes valid until card expiry (max 365 days)
+                redisTemplate.opsForValue().set(cacheKey, uniqueCode, 365, TimeUnit.DAYS);
+            } catch (Exception e) {
+                log.warn("Redis unavailable for card QR code caching: {}", e.getMessage());
+            }
         }
 
         Map<String, Object> qrData = new HashMap<>();
