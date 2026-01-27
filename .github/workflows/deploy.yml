@@ -153,6 +153,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
