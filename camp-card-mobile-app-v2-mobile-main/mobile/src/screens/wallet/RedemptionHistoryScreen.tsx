@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
 import { redemptionsApi } from '../../services/apiClient';
+import { useAuthStore } from '../../store/authStore';
 
 interface Redemption {
   id: string;
@@ -28,18 +29,29 @@ interface Redemption {
 
 export default function RedemptionHistoryScreen() {
   const navigation = useNavigation();
+  const { user } = useAuthStore();
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadRedemptions();
-  }, []);
+    if (user?.id) {
+      loadRedemptions();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   const loadRedemptions = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await redemptionsApi.getRedemptionHistory();
-      const data = response.data || [];
+      const response = await redemptionsApi.getRedemptionHistory(user.id);
+      // Handle paginated response from backend
+      const data = response.data?.content || response.data || [];
       // Transform API response to our format
       const formattedRedemptions = data.map((item: any) => ({
         id: item.id?.toString() || Math.random().toString(),

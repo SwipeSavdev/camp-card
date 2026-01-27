@@ -209,10 +209,21 @@ export const subscriptionsApi = {
 };
 
 export const redemptionsApi = {
-  redeemCode: (code: string) =>
-    apiClient.post('/api/v1/redemptions', { code }),
+  // Redeem an offer - uses the authenticated user from the token
+  redeemOffer: (offerId: string | number, merchantLocationId?: number | null, purchaseAmount?: number | null, notes?: string) =>
+    apiClient.post('/api/v1/offers/redeem', { offerId, merchantLocationId, purchaseAmount, notes }),
 
-  getRedemptionHistory: () => apiClient.get('/api/v1/redemptions'),
+  // Get redemption history for a specific user
+  getRedemptionHistory: (userId: string) =>
+    apiClient.get(`/api/v1/offers/redemptions/user/${userId}`),
+
+  // Generate QR code for offer redemption (user scans at merchant)
+  generateQrCode: (offerId: string | number) =>
+    apiClient.post(`/api/v1/offers/${offerId}/qr-code`),
+
+  // Merchant scans customer's QR code
+  scanQrCode: (token: string, latitude?: number, longitude?: number) =>
+    apiClient.post('/api/v1/offers/qr-code/scan', { token, latitude, longitude }),
 };
 
 export const merchantsApi = {
