@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PageLayout from '../components/PageLayout';
+import { api } from '@/lib/api';
 
 const themeColors = {
   white: '#ffffff',
@@ -78,76 +79,147 @@ const _mockSubscriptionData = {
   downgrade_rate: { value: '1.8%', change: -0.5 },
 };
 
+interface SubscriptionData {
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  monthlyPlans: number;
+  annualPlans: number;
+  trialUsers: number;
+  cancellations: number;
+  mrr: number;
+  arr: number;
+  churnRate: number;
+  retentionRate: number;
+  upgradeRate: number;
+  downgradeRate: number;
+}
+
 export default function SubscriptionsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [dateRange, setDateRange] = useState('30d');
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<SubscriptionData>({
+    totalSubscriptions: 0,
+    activeSubscriptions: 0,
+    monthlyPlans: 0,
+    annualPlans: 0,
+    trialUsers: 0,
+    cancellations: 0,
+    mrr: 0,
+    arr: 0,
+    churnRate: 0,
+    retentionRate: 0,
+    upgradeRate: 0,
+    downgradeRate: 0,
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
   }, [status, router]);
+
+  useEffect(() => {
+    if (session) {
+      loadSubscriptionData();
+    }
+  }, [session, dateRange]);
+
+  const loadSubscriptionData = async () => {
+    try {
+      setLoading(true);
+      // Try to get subscription analytics from dashboard summary
+      const dashboardData = await api.getDashboardSummary(session);
+      if (dashboardData) {
+        setData({
+          totalSubscriptions: dashboardData.totalSubscriptions || 0,
+          activeSubscriptions: dashboardData.activeSubscriptions || 0,
+          monthlyPlans: dashboardData.monthlyPlans || 0,
+          annualPlans: dashboardData.annualPlans || 0,
+          trialUsers: dashboardData.trialUsers || 0,
+          cancellations: dashboardData.cancellations || 0,
+          mrr: dashboardData.mrr || 0,
+          arr: dashboardData.arr || 0,
+          churnRate: dashboardData.churnRate || 0,
+          retentionRate: dashboardData.retentionRate || 100,
+          upgradeRate: dashboardData.upgradeRate || 0,
+          downgradeRate: dashboardData.downgradeRate || 0,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load subscription data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatNumber = (num: number) => num.toLocaleString();
+  const formatCurrency = (num: number) => `$${num.toLocaleString()}`;
+  const formatPercent = (num: number) => `${num.toFixed(1)}%`;
 
   if (status === 'loading') return null;
   if (!session) return null;
 
   const subscriptionStats = [
     {
-      label: 'Total Subscriptions', value: '8,932', change: '+12.3%', icon: 'creditCard', color: themeColors.primary50, trend: 'up',
+      label: 'Total Subscriptions', value: loading ? '...' : formatNumber(data.totalSubscriptions), change: '+12.3%', icon: 'creditCard', color: themeColors.primary50, trend: 'up',
     },
     {
-      label: 'Active Subscriptions', value: '7,654', change: '+9.8%', icon: 'checkCircle', color: themeColors.success50, trend: 'up',
+      label: 'Active Subscriptions', value: loading ? '...' : formatNumber(data.activeSubscriptions), change: '+9.8%', icon: 'checkCircle', color: themeColors.success50, trend: 'up',
     },
     {
-      label: 'Monthly Plans', value: '3,421', change: '+15.2%', icon: 'chart', color: themeColors.info50, trend: 'up',
+      label: 'Monthly Plans', value: loading ? '...' : formatNumber(data.monthlyPlans), change: '+15.2%', icon: 'chart', color: themeColors.info50, trend: 'up',
     },
     {
-      label: 'Annual Plans', value: '4,233', change: '+8.1%', icon: 'chart', color: themeColors.warning50, trend: 'up',
+      label: 'Annual Plans', value: loading ? '...' : formatNumber(data.annualPlans), change: '+8.1%', icon: 'chart', color: themeColors.warning50, trend: 'up',
     },
   ];
 
+  const total = data.monthlyPlans + data.annualPlans + data.trialUsers || 1;
   const subscriptionBreakdown = [
     {
-      plan: 'Monthly', count: 3421, revenue: '$34,210', percentage: 38.3, color: themeColors.info600,
+      plan: 'Monthly', count: data.monthlyPlans, revenue: formatCurrency(data.monthlyPlans * 10), percentage: (data.monthlyPlans / total * 100), color: themeColors.info600,
     },
     {
-      plan: 'Annual', count: 4233, revenue: '$127,990', percentage: 47.3, color: themeColors.primary600,
+      plan: 'Annual', count: data.annualPlans, revenue: formatCurrency(data.annualPlans * 30), percentage: (data.annualPlans / total * 100), color: themeColors.primary600,
     },
     {
-      plan: 'Trial', count: 1278, revenue: '$0', percentage: 14.3, color: themeColors.gray400,
+      plan: 'Trial', count: data.trialUsers, revenue: '$0', percentage: (data.trialUsers / total * 100), color: themeColors.gray400,
     },
   ];
 
+  const statusTotal = data.activeSubscriptions + data.trialUsers + data.cancellations || 1;
   const statusBreakdown = [
     {
-      status: 'Active', count: 7654, percentage: 85.7, color: themeColors.success600,
+      status: 'Active', count: data.activeSubscriptions, percentage: (data.activeSubscriptions / statusTotal * 100), color: themeColors.success600,
     },
     {
-      status: 'Trial', count: 1278, percentage: 14.3, color: themeColors.warning600,
+      status: 'Trial', count: data.trialUsers, percentage: (data.trialUsers / statusTotal * 100), color: themeColors.warning600,
     },
     {
-      status: 'Cancelled', count: 247, percentage: 2.8, color: themeColors.error500,
+      status: 'Cancelled', count: data.cancellations, percentage: (data.cancellations / statusTotal * 100), color: themeColors.error500,
     },
   ];
 
   const churnMetrics = [
     {
-      metric: 'Churn Rate', value: '2.1%', change: '-0.8%', type: 'negative',
+      metric: 'Churn Rate', value: loading ? '...' : formatPercent(data.churnRate), change: '-0.8%', type: 'negative' as const,
     },
     {
-      metric: 'Retention Rate', value: '97.9%', change: '+0.8%', type: 'positive',
+      metric: 'Retention Rate', value: loading ? '...' : formatPercent(data.retentionRate), change: '+0.8%', type: 'positive' as const,
     },
     {
-      metric: 'Upgrade Rate', value: '6.2%', change: '+3.1%', type: 'positive',
+      metric: 'Upgrade Rate', value: loading ? '...' : formatPercent(data.upgradeRate), change: '+3.1%', type: 'positive' as const,
     },
     {
-      metric: 'Downgrade Rate', value: '1.8%', change: '-0.5%', type: 'positive',
+      metric: 'Downgrade Rate', value: loading ? '...' : formatPercent(data.downgradeRate), change: '-0.5%', type: 'positive' as const,
     },
   ];
 
+  const avgRevPerUser = data.totalSubscriptions > 0 ? data.mrr / data.totalSubscriptions : 0;
   const revenueMetrics = [
-    { metric: 'MRR (Monthly Recurring Revenue)', value: '$47,829', change: '+14.2%' },
-    { metric: 'ARR (Annual Recurring Revenue)', value: '$573,948', change: '+18.5%' },
-    { metric: 'Avg Revenue Per User', value: '$53.68', change: '+5.2%' },
+    { metric: 'MRR (Monthly Recurring Revenue)', value: loading ? '...' : formatCurrency(data.mrr), change: '+14.2%' },
+    { metric: 'ARR (Annual Recurring Revenue)', value: loading ? '...' : formatCurrency(data.arr), change: '+18.5%' },
+    { metric: 'Avg Revenue Per User', value: loading ? '...' : formatCurrency(avgRevPerUser), change: '+5.2%' },
   ];
 
   return (

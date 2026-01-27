@@ -173,6 +173,30 @@ export default function OffersPage() {
     return mapping[frontendType] || 'FIXED_AMOUNT';
   };
 
+  // Reverse map backend enum values to frontend display values
+  const reverseMapDiscountType = (backendType: string): string => {
+    const mapping: Record<string, string> = {
+      FIXED_AMOUNT: '$',
+      PERCENTAGE: '%',
+      BUY_ONE_GET_ONE: 'BOGO',
+      FREE_ITEM: 'Free Item',
+      SPECIAL_PRICE: 'Points',
+    };
+    return mapping[backendType] || backendType;
+  };
+
+  // Check if a stored discount type matches the filter (handles both frontend and backend formats)
+  const discountTypeMatches = (storedType: string, filterType: string): boolean => {
+    if (!storedType || !filterType) return false;
+    // Get the backend enum for the filter
+    const filterBackendType = mapDiscountType(filterType);
+    // Check if stored type matches the filter directly, or as backend enum, or as frontend label
+    return storedType === filterType
+      || storedType === filterBackendType
+      || storedType.toUpperCase() === filterBackendType
+      || reverseMapDiscountType(storedType) === filterType;
+  };
+
   useEffect(() => {
     // Wait for session to be authenticated before fetching data
     if (status === 'authenticated' && session) {
@@ -727,8 +751,9 @@ export default function OffersPage() {
  || item.items?.some((offer: OfferItem) => offer.name?.toLowerCase().includes(searchTerm.toLowerCase())
  || offer.description?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesMerchant = merchantFilter === '' || item.merchantId === merchantFilter;
+    // Use improved discount type matching that handles both frontend and backend formats
     const matchesDiscountType = discountTypeFilter === ''
- || item.items?.some((offer: OfferItem) => offer.discountType === mapDiscountType(discountTypeFilter));
+ || item.items?.some((offer: OfferItem) => discountTypeMatches(offer.discountType, discountTypeFilter));
     const matchesUsageType = usageTypeFilter === ''
  || item.items?.some((offer: OfferItem) => offer.useType === usageTypeFilter);
     return matchesSearch && matchesMerchant && matchesDiscountType && matchesUsageType;

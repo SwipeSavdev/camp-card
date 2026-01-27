@@ -2,7 +2,8 @@
 
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 const themeColors = {
   white: '#ffffff',
@@ -180,10 +181,61 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
   return icons[name] || null;
 }
 
+interface DashboardStats {
+  activeUsers: number;
+  merchants: number;
+  liveOffers: number;
+  redemptions: number;
+  usersTrend: string;
+  merchantsTrend: string;
+  offersTrend: string;
+  redemptionsTrend: string;
+}
+
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    activeUsers: 0,
+    merchants: 0,
+    liveOffers: 0,
+    redemptions: 0,
+    usersTrend: '+0%',
+    merchantsTrend: '+0%',
+    offersTrend: '+0%',
+    redemptionsTrend: '+0%',
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    if (session) {
+      loadDashboardStats();
+    }
+  }, [session]);
+
+  const loadDashboardStats = async () => {
+    try {
+      setStatsLoading(true);
+      const data = await api.getDashboardSummary(session);
+      if (data) {
+        setStats({
+          activeUsers: data.activeUsers || data.totalUsers || 0,
+          merchants: data.totalMerchants || data.merchants || 0,
+          liveOffers: data.activeOffers || data.liveOffers || 0,
+          redemptions: data.totalRedemptions || data.redemptions || 0,
+          usersTrend: data.usersTrend || '+0%',
+          merchantsTrend: data.merchantsTrend || '+0%',
+          offersTrend: data.offersTrend || '+0%',
+          redemptionsTrend: data.redemptionsTrend || '+0%',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   if (status === 'loading') return null;
   if (status === 'unauthenticated') {
@@ -191,6 +243,10 @@ export default function Dashboard() {
     return null;
   }
   if (!session) return null;
+
+  const formatNumber = (num: number) => {
+    return num.toLocaleString();
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -415,13 +471,13 @@ export default function Dashboard() {
             }}
           >
             {[{
-              label: 'Active Users', value: '12,847', trend: '+12%', color: themeColors.primary50, icon: 'users',
+              label: 'Active Users', value: statsLoading ? '...' : formatNumber(stats.activeUsers), trend: stats.usersTrend, color: themeColors.primary50, icon: 'users',
             }, {
-              label: 'Merchants', value: '384', trend: '+8%', color: themeColors.warning50, icon: 'merchants',
+              label: 'Merchants', value: statsLoading ? '...' : formatNumber(stats.merchants), trend: stats.merchantsTrend, color: themeColors.warning50, icon: 'merchants',
             }, {
-              label: 'Live Offers', value: '1,563', trend: '+24%', color: themeColors.info50, icon: 'offers',
+              label: 'Live Offers', value: statsLoading ? '...' : formatNumber(stats.liveOffers), trend: stats.offersTrend, color: themeColors.info50, icon: 'offers',
             }, {
-              label: 'Redemptions', value: '4,207', trend: '+15%', color: themeColors.success50, icon: 'cards',
+              label: 'Redemptions', value: statsLoading ? '...' : formatNumber(stats.redemptions), trend: stats.redemptionsTrend, color: themeColors.success50, icon: 'cards',
             }].map((stat, idx) => (
               <div
                 key={idx}

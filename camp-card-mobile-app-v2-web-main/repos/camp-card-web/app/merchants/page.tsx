@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
 import PageLayout from '../components/PageLayout';
 
@@ -143,7 +143,8 @@ export default function MerchantsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const businessTypes = [
+  // Dynamic business types extracted from loaded data + common defaults
+  const defaultBusinessTypes = [
     'Retail',
     'Restaurant',
     'Service',
@@ -152,6 +153,31 @@ export default function MerchantsPage() {
     'Education',
     'Other',
   ];
+
+  // Extract unique business types from loaded merchants (case-insensitive deduplication)
+  const businessTypes = useMemo(() => {
+    const typeSet = new Map<string, string>(); // lowercase -> original case
+
+    // Add types from actual data first (preserve their casing)
+    items.forEach((item) => {
+      if (item.businessType) {
+        const lower = item.businessType.toLowerCase();
+        if (!typeSet.has(lower)) {
+          typeSet.set(lower, item.businessType);
+        }
+      }
+    });
+
+    // Add default types that aren't already present (case-insensitive check)
+    defaultBusinessTypes.forEach((type) => {
+      const lower = type.toLowerCase();
+      if (!typeSet.has(lower)) {
+        typeSet.set(lower, type);
+      }
+    });
+
+    return Array.from(typeSet.values()).sort();
+  }, [items]);
 
   useEffect(() => {
     // Wait for session to be authenticated before fetching data
@@ -494,7 +520,9 @@ export default function MerchantsPage() {
  || item.email?.toLowerCase().includes(searchTerm.toLowerCase())
  || item.contactName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesBusinessType = businessTypeFilter === '' || item.businessType === businessTypeFilter;
+    // Case-insensitive business type comparison
+    const matchesBusinessType = businessTypeFilter === ''
+      || item.businessType?.toLowerCase() === businessTypeFilter.toLowerCase();
 
     const matchesLocationCount = locationCountFilter === ''
  || (locationCountFilter === 'single' && item.isSingleLocation)

@@ -12,9 +12,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { apiClient } from '../../utils/api';
+import { apiClient, paymentsApi } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
+import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
 
 interface SubscriptionPlan {
   id: number;
@@ -50,6 +51,8 @@ export default function SubscriptionScreen() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<SubscriptionPlan | null>(null);
   const navigation = useNavigation<TroopLeaderNavProp>();
   const { user } = useAuthStore();
 
@@ -97,40 +100,53 @@ export default function SubscriptionScreen() {
       return;
     }
 
-    // For Scouts and Parents, proceed directly to subscription
-    Alert.alert(
-      'Confirm Subscription',
-      `Subscribe to ${plan.name} for $${(plan.priceCents / 100).toFixed(2)}/${plan.billingInterval.toLowerCase()}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Subscribe',
-          onPress: async () => {
-            try {
-              setLoading(true);
+    // For Scouts and Parents, show payment modal
+    setPendingPlan(plan);
+    setShowPaymentModal(true);
+  };
 
-              // In production, this would integrate with Authorize.net Accept.js
-              // Backend expects camelCase property names
-              await apiClient.post('/api/v1/subscriptions', {
-                planId: plan.id,
-                paymentMethod: {
-                  type: 'AUTHORIZE_NET',
-                  // This would come from Authorize.net Accept.js tokenization
-                  paymentNonce: 'mock_token'
-                }
-              });
+  const processPayment = async (cardData: CardData): Promise<{ transactionId: string }> => {
+    if (!pendingPlan) {
+      throw new Error('No plan selected');
+    }
 
-              Alert.alert('Success!', 'Your subscription is now active');
-              loadSubscriptionData();
-            } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Subscription failed');
-            } finally {
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
+    // Process payment via Authorize.net
+    const response = await paymentsApi.charge({
+      amount: pendingPlan.priceCents / 100,
+      cardNumber: cardData.cardNumber,
+      expirationDate: cardData.expirationDate,
+      cvv: cardData.cvv,
+      description: `Subscription: ${pendingPlan.name}`,
+      customerEmail: user?.email,
+      customerName: cardData.cardholderName,
+      billingZip: cardData.billingZip,
+    });
+
+    if (response.data.status !== 'SUCCESS') {
+      throw new Error(response.data.errorMessage || 'Payment failed');
+    }
+
+    // Create subscription with payment transaction ID
+    await apiClient.post('/api/v1/subscriptions', {
+      planId: pendingPlan.id,
+      paymentMethod: {
+        type: 'AUTHORIZE_NET',
+        transactionId: response.data.transactionId,
+      }
+    });
+
+    return { transactionId: response.data.transactionId };
+  };
+
+  const handlePaymentSuccess = (transactionId: string) => {
+    setShowPaymentModal(false);
+    setPendingPlan(null);
+    Alert.alert('Success!', 'Your subscription is now active');
+    loadSubscriptionData();
+  };
+
+  const handlePaymentError = (error: string) => {
+    Alert.alert('Payment Failed', error);
   };
 
   const handleCancelSubscription = () => {
@@ -478,6 +494,20 @@ export default function SubscriptionScreen() {
           </View>
         </>
       )}
+
+      {/* Payment Modal */}
+      <CardPaymentModal
+        visible={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPendingPlan(null);
+        }}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentError={handlePaymentError}
+        amount={pendingPlan?.priceCents || 0}
+        description={pendingPlan ? `${pendingPlan.name} Subscription` : 'Subscription'}
+        processPayment={processPayment}
+      />
     </ScrollView>
   );
 }

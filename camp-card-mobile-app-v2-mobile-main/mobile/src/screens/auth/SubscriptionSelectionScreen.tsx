@@ -9,10 +9,16 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
 import { COLORS } from '../../config/constants';
+
+type SubscriptionSelectionRouteProp = RouteProp<{
+  SubscriptionSelection: {
+    scoutCode?: string;
+  };
+}, 'SubscriptionSelection'>;
 
 interface SubscriptionPlan {
   id: number;
@@ -31,6 +37,8 @@ export default function SubscriptionSelectionScreen() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+  const route = useRoute<SubscriptionSelectionRouteProp>();
+  const scoutCode = route.params?.scoutCode;
 
   useEffect(() => {
     loadPlans();
@@ -71,7 +79,7 @@ export default function SubscriptionSelectionScreen() {
       return;
     }
 
-    // Navigate to quantity selection screen with the selected plan
+    // Navigate to quantity selection screen with the selected plan and scoutCode for referral attribution
     (navigation as any).navigate('QuantitySelection', {
       selectedPlan: {
         id: selectedPlan.id,
@@ -80,6 +88,7 @@ export default function SubscriptionSelectionScreen() {
         priceCents: selectedPlan.priceCents,
         billingInterval: selectedPlan.billingInterval,
       },
+      scoutCode: scoutCode, // Pass scout referral code for attribution
     });
   };
 
