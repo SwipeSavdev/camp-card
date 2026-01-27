@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "144573893185",
+    "project_id": "swipe-savvy-mobile-app",
+    "storage_bucket": "swipe-savvy-mobile-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:144573893185:android:02fb670902d135a7a054c0",
+        "android_client_info": {
+          "package_name": "com.bsa.campcard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5cN9sZ4eUTMGSvAtOBxSYAE0vxPlZJ_g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
