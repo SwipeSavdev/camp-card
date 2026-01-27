@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "19",
+      "buildNumber": "22",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
