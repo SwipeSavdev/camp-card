@@ -108,8 +108,10 @@ public class DashboardController {
     @GetMapping("/summary")
     @PreAuthorize("hasAnyRole('GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
     @Operation(summary = "Get dashboard summary", description = "Returns summary metrics only")
-    public ResponseEntity<DashboardResponse> getDashboardSummary() {
-        log.info("Dashboard summary requested");
+    public ResponseEntity<DashboardResponse> getDashboardSummary(Authentication authentication) {
+        log.info("Dashboard summary requested by: {}, authorities: {}",
+            authentication != null ? authentication.getName() : "anonymous",
+            authentication != null ? authentication.getAuthorities() : "none");
         DashboardResponse response = dashboardService.getDashboardData();
         // Clear detailed data for summary view
         response.setTroopSales(null);

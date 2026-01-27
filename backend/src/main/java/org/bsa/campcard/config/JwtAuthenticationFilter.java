@@ -43,8 +43,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 User user = userRepository.findById(userId).orElse(null);
 
                 if (user != null && user.getIsActive()) {
+                    String authority = "ROLE_" + role;
                     var authorities = Collections.singletonList(
-                        new SimpleGrantedAuthority("ROLE_" + role)
+                        new SimpleGrantedAuthority(authority)
                     );
 
                     UsernamePasswordAuthenticationToken authentication =
@@ -52,7 +53,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.debug("Set authentication for user: {}", user.getEmail());
+                    log.info("AUTH: Set authentication for user: {} with role: {} (authority: {})",
+                        user.getEmail(), role, authority);
+                } else {
+                    log.warn("AUTH: User not found or inactive. userId={}, user={}, isActive={}",
+                        userId, user != null ? user.getEmail() : "null", user != null ? user.getIsActive() : "null");
                 }
             }
         } catch (Exception ex) {
