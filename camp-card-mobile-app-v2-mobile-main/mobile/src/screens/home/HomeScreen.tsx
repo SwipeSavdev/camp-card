@@ -1,7 +1,7 @@
 // Home Screen - Role-based Dashboard
 // Shows analytics dashboard for Troop Leaders and Scouts
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
 import ExpiryAlertBanner from '../../components/ExpiryAlertBanner';
 import { useCardExpiry } from '../../hooks/useCardExpiry';
+import { apiClient } from '../../utils/api';
 
 // ============================================================================
 // TROOP LEADER DASHBOARD
@@ -38,16 +39,39 @@ function TroopLeaderDashboard() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
-  const [stats] = useState<TroopLeaderStats>({
-    totalFundsRaised: 1250,
+  const [stats, setStats] = useState<TroopLeaderStats>({
+    totalFundsRaised: 0,
     goalAmount: 5000,
-    totalCardsSold: 50,
-    activeScouts: 12,
-    totalReferrals: 156,
-    totalConversions: 42,
-    weeklyGrowth: 15.5,
-    topScout: { name: 'Sophia M.', amount: 200 },
+    totalCardsSold: 0,
+    activeScouts: 0,
+    totalReferrals: 0,
+    totalConversions: 0,
+    weeklyGrowth: 0,
+    topScout: { name: '--', amount: 0 },
   });
+
+  const loadDashboardData = async () => {
+    try {
+      const response = await apiClient.get('/api/v1/dashboard/summary');
+      const data = response.data;
+      setStats({
+        totalFundsRaised: data.totalRevenueCents ? data.totalRevenueCents / 100 : 0,
+        goalAmount: 5000,
+        totalCardsSold: data.totalCardsSold || 0,
+        activeScouts: data.activeScouts || 0,
+        totalReferrals: data.totalReferrals || 0,
+        totalConversions: data.totalConversions || 0,
+        weeklyGrowth: data.weeklyGrowthPercent || 0,
+        topScout: data.topScout || { name: '--', amount: 0 },
+      });
+    } catch (error) {
+      console.log('Failed to load dashboard data:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
   const progressPercentage = Math.min(
     (stats.totalFundsRaised / stats.goalAmount) * 100,
@@ -56,8 +80,7 @@ function TroopLeaderDashboard() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulated refresh - will be replaced with API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await loadDashboardData();
     setRefreshing(false);
   };
 
@@ -254,16 +277,41 @@ function ScoutDashboard() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
-  const [stats] = useState<ScoutStats>({
-    totalEarned: 80,
+  const [stats, setStats] = useState<ScoutStats>({
+    totalEarned: 0,
     monthlyGoal: 200,
-    totalSubscribers: 8,
-    linkClicks: 45,
-    qrScans: 12,
-    conversionRate: 14,
-    rankInTroop: 2,
-    troopSize: 12,
+    totalSubscribers: 0,
+    linkClicks: 0,
+    qrScans: 0,
+    conversionRate: 0,
+    rankInTroop: 0,
+    troopSize: 0,
   });
+
+  const loadScoutStats = async () => {
+    try {
+      // Fetch scout-specific stats from referral/analytics endpoints
+      const referralResponse = await apiClient.get(`/api/v1/referrals/my-stats`).catch(() => ({ data: null }));
+      const referralData = referralResponse.data;
+
+      setStats(prev => ({
+        ...prev,
+        totalEarned: referralData?.totalEarnings || 0,
+        totalSubscribers: referralData?.totalReferrals || 0,
+        linkClicks: referralData?.linkClicks || 0,
+        qrScans: referralData?.qrScans || 0,
+        conversionRate: referralData?.conversionRate || 0,
+        rankInTroop: referralData?.rankInTroop || 0,
+        troopSize: referralData?.troopSize || 0,
+      }));
+    } catch (error) {
+      console.log('Failed to load scout stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadScoutStats();
+  }, []);
 
   const progressPercentage = Math.min(
     (stats.totalEarned / stats.monthlyGoal) * 100,
@@ -272,8 +320,7 @@ function ScoutDashboard() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulated refresh - will be replaced with API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await loadScoutStats();
     setRefreshing(false);
   };
 
@@ -470,24 +517,57 @@ function CustomerDashboard() {
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
   const { expiryInfo, dismissed, dismissAlert, refresh: refreshExpiry } = useCardExpiry();
-  const [stats] = useState<ParentStats>({
-    totalSavings: 127.50,
-    offersRedeemed: 15,
-    referralsMade: 3,
-    referralChain: 8,
-    supportedScout: { name: 'Ethan A.', troopNumber: '234' },
-    recentSavings: 12.50,
-    memberSince: 'January 2026',
+  const [stats, setStats] = useState<ParentStats>({
+    totalSavings: 0,
+    offersRedeemed: 0,
+    referralsMade: 0,
+    referralChain: 0,
+    supportedScout: null,
+    recentSavings: 0,
+    memberSince: '--',
   });
 
-  // Generate Parent's unique referral link that tracks back to originating scout
-  const parentId = user?.id || 'parent123';
-  const referralCode = `PR-${parentId.toString().slice(0, 8).toUpperCase()}`;
-  const referralLink = `https://campcard.org/refer/${referralCode}`;
+  const loadParentStats = async () => {
+    try {
+      // Fetch wallet analytics and redemption data
+      const [analyticsResponse, cardsResponse] = await Promise.all([
+        apiClient.get('/api/v1/analytics/wallet').catch(() => ({ data: null })),
+        apiClient.get('/api/v1/cards/my-cards').catch(() => ({ data: null })),
+      ]);
+
+      const analyticsData = analyticsResponse.data;
+      const cardsData = cardsResponse.data;
+
+      // Calculate member since from user data
+      const userAny = user as any;
+      const memberSinceDate = userAny?.createdAt
+        ? new Date(userAny.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        : '--';
+
+      setStats(prev => ({
+        ...prev,
+        totalSavings: cardsData?.totalSavings || analyticsData?.totalSavings || 0,
+        offersRedeemed: analyticsData?.totalRedemptions || 0,
+        referralsMade: analyticsData?.referralsMade || 0,
+        referralChain: analyticsData?.referralChain || 0,
+        supportedScout: cardsData?.activeCard?.scoutName
+          ? { name: cardsData.activeCard.scoutName, troopNumber: '--' }
+          : null,
+        recentSavings: analyticsData?.recentSavings || 0,
+        memberSince: memberSinceDate,
+      }));
+    } catch (error) {
+      console.log('Failed to load parent stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadParentStats();
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refreshExpiry();
+    await Promise.all([refreshExpiry(), loadParentStats()]);
     setRefreshing(false);
   };
 

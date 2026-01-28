@@ -315,7 +315,7 @@ export default function MerchantDetailScreen() {
             <Text style={styles.sectionTitle}>Location</Text>
             <MapView
               style={styles.map}
-              initialRegion={{
+              region={{
                 latitude: selectedLocation.latitude,
                 longitude: selectedLocation.longitude,
                 latitudeDelta: 0.01,

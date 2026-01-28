@@ -52,38 +52,54 @@ interface RecentRedemption {
   redeemedAt: string;
 }
 
-// Generate unique card number from user ID or use provided cardNumber
-const generateCardNumber = (userId: string | number, existingCardNumber?: string): string => {
-  if (existingCardNumber) return existingCardNumber;
-  const numStr = userId.toString().padStart(8, '0');
-  const prefix = 'CC';
-  const part1 = numStr.slice(0, 4);
-  const part2 = numStr.slice(4, 8);
-  const checksum = (parseInt(numStr) % 10000).toString().padStart(4, '0');
-  return `${prefix}-${part1}-${part2}-${checksum}`;
-};
+// Active card data from API
+interface ActiveCardData {
+  cardNumber: string;
+  expiresAt: string | null;
+  status: string;
+}
 
 export default function WalletScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [activeCard, setActiveCard] = useState<ActiveCardData | null>(null);
 
   // Animation values
   const flipAnimation = useRef(new Animated.Value(0)).current;
 
-  // Generate card data from user info
+  // Load active card from API
+  const loadActiveCard = async () => {
+    try {
+      const response = await apiClient.get('/api/v1/cards/my-cards');
+      const data = response.data;
+      if (data.activeCard) {
+        setActiveCard({
+          cardNumber: data.activeCard.cardNumber,
+          expiresAt: data.activeCard.expiresAt,
+          status: data.activeCard.status,
+        });
+      }
+    } catch (error) {
+      console.log('Failed to load active card:', error);
+    }
+  };
+
+  // Generate card data from user info and active card
   const userAny = user as any;
   const cardData: CardData = {
-    cardNumber: generateCardNumber(user?.id || Date.now(), userAny?.cardNumber),
+    cardNumber: activeCard?.cardNumber || userAny?.cardNumber || 'No Card',
     memberName: `${user?.firstName || 'Member'} ${user?.lastName || ''}`.trim(),
-    expiryDate: userAny?.subscriptionExpiresAt
-      ? new Date(userAny.subscriptionExpiresAt).toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })
-      : '--/--',
+    expiryDate: activeCard?.expiresAt
+      ? new Date(activeCard.expiresAt).toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })
+      : userAny?.subscriptionExpiresAt
+        ? new Date(userAny.subscriptionExpiresAt).toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })
+        : '--/--',
     memberSince: userAny?.createdAt
       ? new Date(userAny.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
       : '--',
-    status: user?.subscriptionStatus === 'active' ? 'active' : 'pending',
+    status: activeCard?.status === 'ACTIVE' ? 'active' : user?.subscriptionStatus === 'active' ? 'active' : 'pending',
     troopNumber: userAny?.troopNumber || '--',
     councilName: userAny?.councilName || 'Not assigned',
     email: user?.email,
@@ -100,8 +116,9 @@ export default function WalletScreen() {
   // Recent redemptions state
   const [recentRedemptions, setRecentRedemptions] = useState<RecentRedemption[]>([]);
 
-  // Load wallet analytics on mount
+  // Load wallet data on mount
   useEffect(() => {
+    loadActiveCard();
     loadWalletStats();
     loadRecentRedemptions();
   }, []);
@@ -172,7 +189,7 @@ export default function WalletScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadWalletStats(), loadRecentRedemptions()]);
+    await Promise.all([loadActiveCard(), loadWalletStats(), loadRecentRedemptions()]);
     setRefreshing(false);
   };
 
