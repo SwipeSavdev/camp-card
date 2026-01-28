@@ -16,7 +16,7 @@ export interface BiometricCapability {
 
 export interface BiometricCredentials {
   email: string;
-  encryptedToken: string;
+  refreshToken: string;  // Store refresh token for re-authentication
 }
 
 /**
@@ -98,7 +98,7 @@ export const isBiometricEnabled = async (): Promise<boolean> => {
  */
 export const enableBiometricAuth = async (
   email: string,
-  accessToken: string
+  refreshToken: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     // Check if biometrics are available
@@ -125,10 +125,10 @@ export const enableBiometricAuth = async (
       };
     }
 
-    // Store credentials securely
+    // Store credentials securely (refresh token for re-authentication)
     const credentials: BiometricCredentials = {
       email,
-      encryptedToken: accessToken,
+      refreshToken,
     };
 
     await SecureStore.setItemAsync(
@@ -238,7 +238,7 @@ export const authenticateWithBiometrics = async (): Promise<{
  */
 export const updateBiometricCredentials = async (
   email: string,
-  accessToken: string
+  refreshToken: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const enabled = await isBiometricEnabled();
@@ -248,7 +248,7 @@ export const updateBiometricCredentials = async (
 
     const credentials: BiometricCredentials = {
       email,
-      encryptedToken: accessToken,
+      refreshToken,
     };
 
     await SecureStore.setItemAsync(

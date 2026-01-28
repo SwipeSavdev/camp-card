@@ -45,7 +45,7 @@ interface SettingItem {
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const { user } = useAuthStore();
+  const { user, refreshToken } = useAuthStore();
 
   // Settings state
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -135,10 +135,14 @@ export default function SettingsScreen() {
         return;
       }
 
-      // Get access token from secure storage or auth store
-      const accessToken = (user as any).accessToken || '';
+      // Use refresh token for biometric re-authentication
+      if (!refreshToken) {
+        Alert.alert('Error', 'Please log in again to enable biometric authentication');
+        setLoadingBiometric(false);
+        return;
+      }
 
-      const result = await enableBiometricAuth(user.email, accessToken);
+      const result = await enableBiometricAuth(user.email, refreshToken);
 
       if (result.success) {
         setBiometricLogin(true);

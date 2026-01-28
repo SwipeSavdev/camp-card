@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "22",
+      "buildNumber": "23",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -51,7 +51,7 @@
     },
     "android": {
       "package": "org.bsa.campcard",
-      "versionCode": 18,
+      "versionCode": 19,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
@@ -125,7 +125,7 @@
       "expo-secure-store",
       "expo-font"
     ],
-    "runtimeVersion": "1.0.3-22",
+    "runtimeVersion": "1.0.3-23",
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"

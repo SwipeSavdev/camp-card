@@ -44,6 +44,14 @@ interface RedemptionStats {
   favoriteCategory: string;
 }
 
+interface RecentRedemption {
+  id: string;
+  merchantName: string;
+  category: string;
+  savings: number;
+  redeemedAt: string;
+}
+
 // Generate unique card number from user ID or use provided cardNumber
 const generateCardNumber = (userId: string | number, existingCardNumber?: string): string => {
   if (existingCardNumber) return existingCardNumber;
@@ -71,13 +79,13 @@ export default function WalletScreen() {
     memberName: `${user?.firstName || 'Member'} ${user?.lastName || ''}`.trim(),
     expiryDate: userAny?.subscriptionExpiresAt
       ? new Date(userAny.subscriptionExpiresAt).toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })
-      : '12/26',
+      : '--/--',
     memberSince: userAny?.createdAt
       ? new Date(userAny.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-      : 'Jan 2026',
+      : '--',
     status: user?.subscriptionStatus === 'active' ? 'active' : 'pending',
-    troopNumber: userAny?.troopNumber || '234',
-    councilName: userAny?.councilName || 'Central Florida Council',
+    troopNumber: userAny?.troopNumber || '--',
+    councilName: userAny?.councilName || 'Not assigned',
     email: user?.email,
   };
 
@@ -89,9 +97,13 @@ export default function WalletScreen() {
     favoriteCategory: 'None yet',
   });
 
+  // Recent redemptions state
+  const [recentRedemptions, setRecentRedemptions] = useState<RecentRedemption[]>([]);
+
   // Load wallet analytics on mount
   useEffect(() => {
     loadWalletStats();
+    loadRecentRedemptions();
   }, []);
 
   const loadWalletStats = async () => {
@@ -107,6 +119,23 @@ export default function WalletScreen() {
     } catch (error) {
       console.log('Failed to load wallet stats:', error);
       // Keep default values on error
+    }
+  };
+
+  const loadRecentRedemptions = async () => {
+    try {
+      const response = await apiClient.get(`/api/v1/offers/redemptions/user/${user?.id}?page=0&size=3`);
+      const redemptions = response.data?.content || [];
+      setRecentRedemptions(redemptions.map((r: any) => ({
+        id: r.id,
+        merchantName: r.merchantName || r.offer?.merchantName || 'Unknown Merchant',
+        category: r.offer?.category || 'Other',
+        savings: r.savingsAmount || r.offer?.discountValue || 0,
+        redeemedAt: r.redeemedAt || r.createdAt,
+      })));
+    } catch (error) {
+      console.log('Failed to load recent redemptions:', error);
+      // Keep empty array on error
     }
   };
 
@@ -143,8 +172,28 @@ export default function WalletScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadWalletStats();
+    await Promise.all([loadWalletStats(), loadRecentRedemptions()]);
     setRefreshing(false);
+  };
+
+  const getCategoryIcon = (category: string): string => {
+    const iconMap: Record<string, string> = {
+      'Food & Dining': 'restaurant-outline',
+      'Shopping': 'cart-outline',
+      'Entertainment': 'film-outline',
+      'Services': 'construct-outline',
+      'Sports': 'football-outline',
+      'Cafe': 'cafe-outline',
+    };
+    return iconMap[category] || 'pricetag-outline';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
   const handleAddToWallet = () => {
@@ -340,38 +389,40 @@ export default function WalletScreen() {
           </View>
 
           <View style={styles.redemptionsList}>
-            <View style={styles.redemptionItem}>
-              <View style={styles.redemptionIcon}>
-                <Ionicons name="restaurant-outline" size={20} color={COLORS.primary} />
+            {recentRedemptions.length > 0 ? (
+              recentRedemptions.map((redemption, index) => (
+                <View
+                  key={redemption.id || index}
+                  style={[
+                    styles.redemptionItem,
+                    index === recentRedemptions.length - 1 && styles.redemptionItemLast,
+                  ]}
+                >
+                  <View style={styles.redemptionIcon}>
+                    <Ionicons
+                      name={getCategoryIcon(redemption.category) as any}
+                      size={20}
+                      color={COLORS.primary}
+                    />
+                  </View>
+                  <View style={styles.redemptionInfo}>
+                    <Text style={styles.redemptionName}>{redemption.merchantName}</Text>
+                    <Text style={styles.redemptionDate}>{formatDate(redemption.redeemedAt)}</Text>
+                  </View>
+                  <Text style={styles.redemptionSavings}>
+                    -${redemption.savings.toFixed(2)}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyRedemptions}>
+                <Ionicons name="receipt-outline" size={32} color={COLORS.textSecondary} />
+                <Text style={styles.emptyRedemptionsText}>No redemptions yet</Text>
+                <Text style={styles.emptyRedemptionsSubtext}>
+                  Use your card at participating merchants to start saving!
+                </Text>
               </View>
-              <View style={styles.redemptionInfo}>
-                <Text style={styles.redemptionName}>Pizza Palace</Text>
-                <Text style={styles.redemptionDate}>Jan 14, 2026</Text>
-              </View>
-              <Text style={styles.redemptionSavings}>-$5.00</Text>
-            </View>
-
-            <View style={styles.redemptionItem}>
-              <View style={styles.redemptionIcon}>
-                <Ionicons name="cart-outline" size={20} color={COLORS.secondary} />
-              </View>
-              <View style={styles.redemptionInfo}>
-                <Text style={styles.redemptionName}>Sports Gear Pro</Text>
-                <Text style={styles.redemptionDate}>Jan 12, 2026</Text>
-              </View>
-              <Text style={styles.redemptionSavings}>-$12.50</Text>
-            </View>
-
-            <View style={styles.redemptionItem}>
-              <View style={styles.redemptionIcon}>
-                <Ionicons name="cafe-outline" size={20} color="#795548" />
-              </View>
-              <View style={styles.redemptionInfo}>
-                <Text style={styles.redemptionName}>Coffee Corner</Text>
-                <Text style={styles.redemptionDate}>Jan 10, 2026</Text>
-              </View>
-              <Text style={styles.redemptionSavings}>-$2.50</Text>
-            </View>
+            )}
           </View>
         </View>
 
@@ -695,6 +746,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: COLORS.success,
+  },
+  redemptionItemLast: {
+    borderBottomWidth: 0,
+  },
+  emptyRedemptions: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyRedemptionsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginTop: 12,
+  },
+  emptyRedemptionsSubtext: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
   },
   actionsSection: {
     padding: 20,

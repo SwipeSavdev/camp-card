@@ -45,7 +45,7 @@ export default function LoginScreen() {
   const [biometricLoading, setBiometricLoading] = React.useState(false);
 
   const navigation = useNavigation();
-  const { login, isLoading } = useAuthStore();
+  const { login, loginWithBiometric, isLoading } = useAuthStore();
   const { width } = useWindowDimensions();
   const logoSize = Math.min(220, Math.round(width * 0.6));
 
@@ -75,8 +75,8 @@ export default function LoginScreen() {
       const result = await authenticateWithBiometrics();
 
       if (result.success && result.credentials) {
-        // Use stored credentials to auto-login
-        await login(result.credentials.email, result.credentials.encryptedToken);
+        // Use stored refresh token for re-authentication
+        await loginWithBiometric(result.credentials.refreshToken);
       } else {
         Alert.alert('Authentication Failed', result.error || 'Biometric authentication failed');
       }

@@ -104,12 +104,14 @@ public class OfferService {
             throw new IllegalStateException("Only approved merchants can create offers");
         }
         
-        // Calculate expiration date - all offers expire on December 31st of current year
-        LocalDateTime expirationDate = calculateExpirationDate();
+        // Calculate expiration date - use provided validUntil or default to December 31st of current year
+        LocalDateTime expirationDate = request.getValidUntil() != null
+            ? request.getValidUntil()
+            : calculateExpirationDate();
 
         // Validate that validFrom is before the expiration date
         if (request.getValidFrom().isAfter(expirationDate)) {
-            throw new IllegalArgumentException("Valid from date must be before December 31st of the current year");
+            throw new IllegalArgumentException("Valid from date must be before the expiration date");
         }
 
         Offer offer = new Offer();
@@ -184,8 +186,13 @@ public class OfferService {
             offer.setImageUrl(imageUrl);
         }
         if (request.getValidFrom() != null) offer.setValidFrom(request.getValidFrom());
-        // Always set expiration to December 31st of current year (ignore any provided validUntil)
-        offer.setValidUntil(calculateExpirationDate());
+        // Allow custom expiration date if provided, otherwise default to December 31st of current year
+        if (request.getValidUntil() != null) {
+            offer.setValidUntil(request.getValidUntil());
+        } else if (offer.getValidUntil() == null || offer.getValidUntil().isBefore(LocalDateTime.now())) {
+            // Only update to default if not set or already expired
+            offer.setValidUntil(calculateExpirationDate());
+        }
         if (request.getUsageLimit() != null) offer.setUsageLimit(request.getUsageLimit());
         if (request.getUsageLimitPerUser() != null) offer.setUsageLimitPerUser(request.getUsageLimitPerUser());
         if (request.getFeatured() != null) offer.setFeatured(request.getFeatured());

@@ -33,6 +33,7 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
+  loginWithBiometric: (refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   refreshAccessToken: () => Promise<void>;
@@ -161,6 +162,51 @@ export const useAuthStore = create<AuthState>()(
           console.error('❌ Login failed:', error.message);
           console.error('❌ Error details:', error.response?.data || error);
           console.error('❌ Request URL:', `${API_BASE_URL}/api/v1/auth/mobile/login`);
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      loginWithBiometric: async (storedRefreshToken: string) => {
+        set({ isLoading: true });
+        console.log('🔐 Attempting biometric login with refresh token');
+
+        try {
+          // Use the stored refresh token to get new access token
+          const response = await apiClient.post('/api/v1/auth/refresh', {
+            refreshToken: storedRefreshToken,
+          });
+
+          console.log('✅ Biometric login successful');
+
+          const { accessToken, refreshToken: newRefreshToken, user } = response.data;
+
+          // Store new tokens securely
+          await SecureStore.setItemAsync('accessToken', accessToken);
+          if (newRefreshToken) {
+            await SecureStore.setItemAsync('refreshToken', newRefreshToken);
+          } else {
+            // Keep the old refresh token if no new one was returned
+            await SecureStore.setItemAsync('refreshToken', storedRefreshToken);
+          }
+
+          // If user data wasn't returned, fetch it
+          let userData = user;
+          if (!userData) {
+            const meResponse = await apiClient.get('/api/v1/auth/me');
+            userData = meResponse.data;
+          }
+
+          set({
+            user: userData,
+            accessToken,
+            refreshToken: newRefreshToken || storedRefreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error: any) {
+          console.error('❌ Biometric login failed:', error.message);
+          console.error('❌ Error details:', error.response?.data || error);
           set({ isLoading: false });
           throw error;
         }

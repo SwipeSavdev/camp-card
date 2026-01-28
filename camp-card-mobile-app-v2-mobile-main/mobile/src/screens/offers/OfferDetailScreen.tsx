@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Linking,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,6 +42,8 @@ interface Offer {
   merchantName?: string;
   merchantLogoUrl?: string;
   merchantAddress?: string;
+  merchantLatitude?: number;
+  merchantLongitude?: number;
   usageType: 'one_time' | 'unlimited';
   maxRedemptionsPerUser?: number;
   userRedemptionCount: number;
@@ -76,7 +79,6 @@ export default function OfferDetailScreen() {
         usageType: response.data.usageType || 'unlimited',
         userRedemptionCount: response.data.userRedemptionCount || 0,
         isRedeemed: response.data.isRedeemed || false,
-        merchantAddress: response.data.merchantAddress || '123 Main Street, Anytown, USA',
       });
     } catch (error) {
       console.error('Error loading offer:', error);
@@ -290,6 +292,17 @@ export default function OfferDetailScreen() {
                   <Text style={styles.merchantAddress}>{offer.merchantAddress}</Text>
                 )}
               </View>
+              {Boolean(offer.merchantLatitude && offer.merchantLongitude) && (
+                <TouchableOpacity
+                  style={styles.directionsButton}
+                  onPress={() => {
+                    const url = `https://maps.google.com/?q=${offer.merchantLatitude},${offer.merchantLongitude}`;
+                    Linking.openURL(url);
+                  }}
+                >
+                  <Ionicons name="navigate" size={18} color={COLORS.primary} />
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -689,6 +702,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 2,
+  },
+  directionsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   description: {
     fontSize: 16,
