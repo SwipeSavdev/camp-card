@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "23",
+      "buildNumber": "24",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -125,7 +125,7 @@
       "expo-secure-store",
       "expo-font"
     ],
-    "runtimeVersion": "1.0.3-23",
+    "runtimeVersion": "1.0.3-24",
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"
