@@ -257,17 +257,17 @@ class OfferServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when validFrom is after December 31st of current year")
+        @DisplayName("Should throw exception when validFrom is after the expiration date")
         void createOffer_InvalidDates() {
             // Arrange
             when(merchantRepository.findById(1L)).thenReturn(Optional.of(approvedMerchant));
-            // Set validFrom to next year which is after the December 31st expiration
+            // Set validFrom to next year which is after the expiration date
             validCreateRequest.setValidFrom(LocalDateTime.now().plusYears(1));
 
             // Act & Assert
             assertThatThrownBy(() -> offerService.createOffer(validCreateRequest))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Valid from date must be before December 31st of the current year");
+                    .hasMessage("Valid from date must be before the expiration date");
 
             verify(offerRepository, never()).save(any());
         }
