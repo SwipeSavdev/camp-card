@@ -272,6 +272,114 @@ public class PaymentService {
     }
 
     /**
+     * Process a payment using Accept.js opaque data (tokenized card).
+     * Card details are tokenized client-side by Accept.js — raw card data never reaches our server.
+     *
+     * @param request Web charge request with opaque data from Accept.js
+     */
+    public PaymentResponse chargeWithOpaqueData(WebChargeRequest request) {
+        log.info("Processing web charge with Accept.js opaque data for amount: {}", request.getAmount());
+
+        GatewayCredentials creds = resolveGateway(null);
+
+        try {
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
+            // Use opaque data from Accept.js (tokenized card)
+            OpaqueDataType opaqueData = new OpaqueDataType();
+            opaqueData.setDataDescriptor(request.getDataDescriptor());
+            opaqueData.setDataValue(request.getDataValue());
+
+            PaymentType payment = new PaymentType();
+            payment.setOpaqueData(opaqueData);
+
+            // Customer info
+            CustomerDataType customer = new CustomerDataType();
+            customer.setType(CustomerTypeEnum.INDIVIDUAL);
+            if (request.getCustomerEmail() != null) {
+                customer.setEmail(request.getCustomerEmail());
+            }
+
+            // Order info
+            OrderType order = new OrderType();
+            order.setInvoiceNumber("WEB-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            String description = request.getDescription() != null ? request.getDescription() : WEB_SUBSCRIPTION_DESCRIPTION;
+            if (request.getDonationAmount() != null && request.getDonationAmount().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                description += " + $" + request.getDonationAmount().toPlainString() + " donation";
+            }
+            order.setDescription(description);
+
+            // Transaction request
+            TransactionRequestType txnRequest = new TransactionRequestType();
+            txnRequest.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value());
+            txnRequest.setAmount(request.getAmount());
+            txnRequest.setPayment(payment);
+            txnRequest.setCustomer(customer);
+            txnRequest.setOrder(order);
+
+            // Create and execute API request
+            CreateTransactionRequest apiRequest = new CreateTransactionRequest();
+            apiRequest.setMerchantAuthentication(merchantAuth);
+            apiRequest.setTransactionRequest(txnRequest);
+
+            CreateTransactionController controller = new CreateTransactionController(apiRequest);
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
+            controller.execute();
+
+            CreateTransactionResponse response = controller.getApiResponse();
+
+            if (response != null) {
+                if (response.getMessages().getResultCode() == MessageTypeEnum.OK) {
+                    TransactionResponse txnResponse = response.getTransactionResponse();
+
+                    if (txnResponse != null && txnResponse.getMessages() != null) {
+                        log.info("Web charge successful. Transaction ID: {}", txnResponse.getTransId());
+
+                        return PaymentResponse.builder()
+                                .transactionId(txnResponse.getTransId())
+                                .status("SUCCESS")
+                                .amount(request.getAmount())
+                                .currency("USD")
+                                .message(txnResponse.getMessages().getMessage().get(0).getDescription())
+                                .authCode(txnResponse.getAuthCode())
+                                .cardType(txnResponse.getAccountType())
+                                .timestamp(LocalDateTime.now())
+                                .build();
+                    } else {
+                        String errorMessage = txnResponse != null && txnResponse.getErrors() != null
+                                ? txnResponse.getErrors().getError().get(0).getErrorText()
+                                : "Transaction failed";
+                        String errorCode = txnResponse != null && txnResponse.getErrors() != null
+                                ? txnResponse.getErrors().getError().get(0).getErrorCode()
+                                : "UNKNOWN";
+
+                        return PaymentResponse.builder()
+                                .status("FAILED")
+                                .amount(request.getAmount())
+                                .currency("USD")
+                                .errorMessage(errorMessage)
+                                .errorCode(errorCode)
+                                .timestamp(LocalDateTime.now())
+                                .build();
+                    }
+                } else {
+                    String errorMessage = response.getMessages().getMessage().get(0).getText();
+                    String errorCode = response.getMessages().getMessage().get(0).getCode();
+                    throw new PaymentException("Payment failed: " + errorMessage, errorCode);
+                }
+            }
+
+            throw new PaymentException("No response received from payment gateway", "NO_RESPONSE");
+
+        } catch (PaymentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error processing web payment", e);
+            throw new PaymentException("Failed to process payment: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Process a refund for a previous transaction.
      * Uses council-specific gateway if available.
      *

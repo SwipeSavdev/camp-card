@@ -212,19 +212,20 @@ Closes #123
 | **Root Domain** | https://campcardapp.org | Redirects to www |
 
 ### EC2 Server Details
-- **IP Address**: 18.190.69.205
-- **SSH User**: ubuntu
+- **Instance ID**: i-059295c02fec401db
+- **IP Address**: 3.137.164.102
+- **SSH User**: ec2-user
 - **SSH Key**: `~/.ssh/campcard-github-actions`
-- **SSH Command**: `ssh -i ~/.ssh/campcard-github-actions ubuntu@18.190.69.205`
+- **SSH Command**: `ssh -i ~/.ssh/campcard-github-actions ec2-user@3.137.164.102`
 
 ### DNS Configuration (Route 53)
 
 | Record | Type | Value |
 |--------|------|-------|
-| campcardapp.org | A | 18.190.69.205 |
-| www.campcardapp.org | A | 18.190.69.205 |
-| api.campcardapp.org | A | 18.190.69.205 |
-| admin.campcardapp.org | A | 18.190.69.205 |
+| campcardapp.org | A | 3.137.164.102 |
+| www.campcardapp.org | A | 3.137.164.102 |
+| api.campcardapp.org | A | 3.137.164.102 |
+| admin.campcardapp.org | A | 3.137.164.102 |
 
 ### SSL Certificates (Let's Encrypt)
 - Certificate for `campcardapp.org`, `www.campcardapp.org`, `admin.campcardapp.org`
@@ -253,10 +254,10 @@ The Nginx configuration (`/etc/nginx/sites-available/campcardapp`) routes traffi
 
 ```bash
 # SSH to EC2
-ssh -i ~/.ssh/campcard-github-actions ubuntu@18.190.69.205
+ssh -i ~/.ssh/campcard-github-actions ec2-user@3.137.164.102
 
 # Backend deployment
-cd /home/ubuntu/camp-card/backend
+cd /home/ec2-user/camp-card/backend
 sudo git pull origin main
 sudo docker build -t campcard-backend:latest .
 sudo docker stop campcard-backend && sudo docker rm campcard-backend
@@ -285,7 +286,7 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
 # NOTE: SMTP and Authorize.net credentials stored in AWS Secrets Manager or .env.aws (not in git)
 
 # Frontend deployment
-cd /home/ubuntu/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
+cd /home/ec2-user/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
 sudo git pull origin main
 sudo docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1 -t campcard-web:latest .
 sudo docker stop campcard-web && sudo docker rm campcard-web

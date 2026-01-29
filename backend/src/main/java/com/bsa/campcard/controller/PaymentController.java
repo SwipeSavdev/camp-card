@@ -121,6 +121,21 @@ public class PaymentController {
         }
     }
 
+    @PostMapping("/subscribe/web-charge")
+    @Operation(summary = "Process web payment with Accept.js",
+            description = "Charge using Accept.js opaque data token. Card data is tokenized client-side and never reaches our server.")
+    public ResponseEntity<PaymentResponse> webCharge(@Valid @RequestBody WebChargeRequest request) {
+        log.info("Processing web charge via Accept.js for amount: {}", request.getAmount());
+
+        PaymentResponse response = paymentService.chargeWithOpaqueData(request);
+
+        if ("SUCCESS".equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(response);
+        }
+    }
+
     @PostMapping("/subscribe/token")
     @Operation(summary = "Get Accept Hosted token",
             description = "Generate a token for Authorize.Net Accept Hosted payment form. Static $10/year subscription price.")

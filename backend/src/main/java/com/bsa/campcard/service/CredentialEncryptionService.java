@@ -38,7 +38,7 @@ public class CredentialEncryptionService {
         if (encryptionKey == null || encryptionKey.isEmpty()) {
             // Use a default key for development - MUST be overridden in production
             log.warn("CREDENTIAL_ENCRYPTION_KEY not set. Using default key - NOT SECURE FOR PRODUCTION!");
-            encryptionKey = "Y2FtcGNhcmQtZGV2LWtleS0zMi1ieXRlcw=="; // Base64 of "campcard-dev-key-32-bytes"
+            encryptionKey = "Y2FtcGNhcmQtZGV2LWtleS1mb3ItZW5jcnlwdGlvbiE="; // Base64 of "campcard-dev-key-for-encryption!" (32 bytes)
         }
 
         byte[] keyBytes = Base64.getDecoder().decode(encryptionKey);

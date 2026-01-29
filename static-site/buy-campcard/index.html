@@ -53,26 +53,11 @@
       border-bottom: 1px solid rgba(0,0,0,0.08);
     }
 
-    .order-item:last-of-type {
-      border-bottom: none;
-    }
+    .order-item:last-of-type { border-bottom: none; }
 
-    .order-item-name {
-      font-weight: 700;
-      font-size: 18px;
-    }
-
-    .order-item-desc {
-      color: var(--color-muted);
-      font-size: 14px;
-      margin-top: 2px;
-    }
-
-    .order-item-price {
-      font-weight: 800;
-      font-size: 22px;
-      color: var(--color-navy-2);
-    }
+    .order-item-name { font-weight: 700; font-size: 18px; }
+    .order-item-desc { color: var(--color-muted); font-size: 14px; margin-top: 2px; }
+    .order-item-price { font-weight: 800; font-size: 22px; color: var(--color-navy-2); }
 
     .order-total {
       display: flex;
@@ -83,16 +68,8 @@
       border-top: 2px solid var(--color-navy-2);
     }
 
-    .order-total-label {
-      font-weight: 800;
-      font-size: 18px;
-    }
-
-    .order-total-price {
-      font-weight: 800;
-      font-size: 26px;
-      color: var(--color-red);
-    }
+    .order-total-label { font-weight: 800; font-size: 18px; }
+    .order-total-price { font-weight: 800; font-size: 26px; color: var(--color-red); }
 
     .order-trust {
       margin-top: 18px;
@@ -108,247 +85,106 @@
     }
 
     .order-trust svg {
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-      stroke: #1a5c32;
-      fill: none;
-      stroke-width: 2;
-      margin-top: 1px;
+      width: 20px; height: 20px; flex-shrink: 0;
+      stroke: #1a5c32; fill: none; stroke-width: 2; margin-top: 1px;
     }
 
-    .payment-panel {
-      min-height: 480px;
-    }
+    .payment-panel { min-height: 480px; }
+    .payment-panel h2 { margin: 0 0 8px; font-size: 22px; }
+    .payment-panel > p { margin: 0 0 20px; color: var(--color-muted); font-size: 15px; }
 
-    .payment-panel h2 {
-      margin: 0 0 8px;
-      font-size: 22px;
+    /* Form fields */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-weight: 700; margin-bottom: 6px; font-size: 15px;
     }
-
-    .payment-panel > p {
-      margin: 0 0 20px;
-      color: var(--color-muted);
-      font-size: 15px;
+    .form-group input {
+      width: 100%; padding: 12px 14px;
+      border: 1px solid rgba(0,0,0,0.18); border-radius: 12px;
+      font: inherit; font-size: 16px; background: #fff;
     }
-
-    /* Pre-checkout email form */
-    .email-form {
-      margin-bottom: 20px;
-    }
-
-    .email-form label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 6px;
-      font-size: 15px;
-    }
-
-    .email-form input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid rgba(0,0,0,0.18);
-      border-radius: 12px;
-      font: inherit;
-      font-size: 16px;
-    }
-
-    .email-form input:focus {
-      outline: none;
-      border-color: var(--color-navy-2);
+    .form-group input:focus {
+      outline: none; border-color: var(--color-navy-2);
       box-shadow: 0 0 0 3px rgba(13,44,94,0.12);
     }
+    .form-group input.field-error { border-color: var(--color-red); }
+    .form-group .hint { color: var(--color-muted); font-size: 13px; margin-top: 6px; }
+    .form-group .field-error-msg { color: var(--color-red); font-size: 13px; margin-top: 4px; display: none; }
 
-    .email-form .hint {
-      color: var(--color-muted);
-      font-size: 13px;
-      margin-top: 6px;
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Card visual */
+    .card-section-label {
+      font-weight: 800; font-size: 14px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--color-navy-2);
+      margin: 24px 0 12px; padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
     }
 
-    /* Payment button */
+    /* Donation */
+    .donation-section { margin-bottom: 20px; }
+    .donation-section legend {
+      font-weight: 700; margin: 0 0 8px; font-size: 15px; padding: 0;
+    }
+    .donation-hint { color: var(--color-muted); font-size: 13px; margin-bottom: 10px; }
+    .donation-options { display: flex; gap: 10px; flex-wrap: wrap; }
+    .donation-btn {
+      padding: 10px 18px; border: 2px solid rgba(0,0,0,0.14); border-radius: 12px;
+      background: #fff; font: inherit; font-weight: 700; font-size: 16px;
+      color: var(--color-navy-2); cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .donation-btn:hover { border-color: var(--color-navy-2); background: rgba(13,44,94,0.04); }
+    .donation-btn.active { border-color: var(--color-red); background: rgba(208,0,42,0.06); color: var(--color-red); }
+    .donation-btn-none { font-size: 14px; color: var(--color-muted); font-weight: 600; }
+
+    /* Referral */
+    .referral-section { margin-top: 14px; margin-bottom: 20px; }
+    .referral-toggle {
+      color: var(--color-navy-2); font-weight: 600; font-size: 14px;
+      cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline;
+    }
+    .referral-field { margin-top: 8px; }
+    .referral-field input {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid rgba(0,0,0,0.18); border-radius: 12px;
+      font: inherit; font-size: 15px;
+    }
+
+    /* Pay button */
     .btn-checkout {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      padding: 16px 24px;
-      border-radius: 999px;
-      background: var(--color-red);
-      color: #fff;
-      font-weight: 800;
-      font-size: 18px;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 10px 20px rgba(208,0,42,0.25);
-      line-height: 1;
-      margin-top: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%; padding: 16px 24px; border-radius: 999px;
+      background: var(--color-red); color: #fff;
+      font-weight: 800; font-size: 18px; text-decoration: none;
+      border: none; cursor: pointer;
+      box-shadow: 0 10px 20px rgba(208,0,42,0.25); line-height: 1;
     }
-
     .btn-checkout:hover { filter: brightness(1.05); }
     .btn-checkout:active { transform: translateY(1px); }
-    .btn-checkout:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      filter: none;
-    }
-
-    /* Hosted payment iframe */
-    .payment-iframe-wrapper {
-      border: 1px solid rgba(0,0,0,0.12);
-      border-radius: 16px;
-      overflow: hidden;
-      background: #fafafa;
-      min-height: 400px;
-    }
-
-    .payment-iframe-wrapper iframe {
-      width: 100%;
-      height: 480px;
-      border: none;
-      display: block;
-    }
+    .btn-checkout:disabled { opacity: 0.6; cursor: not-allowed; filter: none; }
 
     /* Status states */
-    .payment-loading,
-    .payment-success,
-    .payment-error {
-      text-align: center;
-      padding: 40px 20px;
-    }
-
-    .payment-loading {
-      color: var(--color-muted);
-    }
-
-    .payment-success {
-      color: #1a5c32;
-    }
-
-    .payment-success h3 {
-      font-size: 24px;
-      margin: 0 0 10px;
-    }
-
-    .payment-error {
-      color: var(--color-red);
-    }
-
-    .payment-error h3 {
-      font-size: 20px;
-      margin: 0 0 10px;
-    }
+    .payment-loading, .payment-success, .payment-error { text-align: center; padding: 40px 20px; }
+    .payment-loading { color: var(--color-muted); }
+    .payment-success { color: #1a5c32; }
+    .payment-success h3 { font-size: 24px; margin: 0 0 10px; }
+    .payment-error { color: var(--color-red); }
+    .payment-error h3 { font-size: 20px; margin: 0 0 10px; }
 
     .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid rgba(0,0,0,0.1);
-      border-top-color: var(--color-navy-2);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
+      width: 36px; height: 36px;
+      border: 3px solid rgba(0,0,0,0.1); border-top-color: var(--color-navy-2);
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
     }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .hidden { display: none !important; }
 
-    /* Donation section */
-    .donation-section {
-      margin-top: 20px;
-      margin-bottom: 20px;
-    }
-
-    .donation-section label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 8px;
-      font-size: 15px;
-    }
-
-    .donation-section .donation-hint {
-      color: var(--color-muted);
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .donation-options {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .donation-btn {
-      padding: 10px 18px;
-      border: 2px solid rgba(0,0,0,0.14);
-      border-radius: 12px;
-      background: #fff;
-      font: inherit;
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--color-navy-2);
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-
-    .donation-btn:hover {
-      border-color: var(--color-navy-2);
-      background: rgba(13,44,94,0.04);
-    }
-
-    .donation-btn.active {
-      border-color: var(--color-red);
-      background: rgba(208,0,42,0.06);
-      color: var(--color-red);
-    }
-
-    .donation-btn-none {
-      font-size: 14px;
-      color: var(--color-muted);
-      font-weight: 600;
-    }
-
-    /* Referral code section */
-    .referral-section {
-      margin-top: 14px;
-    }
-
-    .referral-toggle {
-      color: var(--color-navy-2);
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      padding: 0;
-      text-decoration: underline;
-    }
-
-    .referral-field {
-      margin-top: 8px;
-    }
-
-    .referral-field input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid rgba(0,0,0,0.18);
-      border-radius: 12px;
-      font: inherit;
-      font-size: 15px;
-    }
-
     @media (max-width: 980px) {
-      .checkout-layout {
-        grid-template-columns: 1fr;
-        padding: 24px 0 40px;
-      }
-
-      .order-summary {
-        position: static;
-        order: -1;
-      }
+      .checkout-layout { grid-template-columns: 1fr; padding: 24px 0 40px; }
+      .order-summary { position: static; order: -1; }
+      .form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -380,7 +216,6 @@
 </header>
 
 <main id="main">
-  <!-- Page Hero -->
   <section class="page-hero">
     <div class="container">
       <h1>Buy a Camp Card</h1>
@@ -393,17 +228,17 @@
       <!-- Payment Panel -->
       <div class="payment-panel">
         <h2>Payment Details</h2>
-        <p>Complete your purchase securely through Authorize.net.</p>
+        <p>Your card details are securely tokenized and never touch our servers.</p>
 
-        <!-- Step 1: Email + Proceed -->
-        <div id="checkout-form">
-          <div class="email-form">
+        <!-- Checkout Form -->
+        <form id="checkout-form" novalidate>
+          <div class="form-group">
             <label for="customer-email">Email address</label>
             <input type="email" id="customer-email" placeholder="you@example.com" required autocomplete="email">
             <div class="hint">We'll send your Camp Card confirmation here.</div>
           </div>
 
-          <fieldset class="donation-section" style="border:none;padding:0;margin:20px 0;">
+          <fieldset class="donation-section" style="border:none;padding:0;margin:20px 0 16px;">
             <legend style="font-weight:700;margin:0 0 8px;font-size:15px;padding:0;">Add an optional donation</legend>
             <div class="donation-hint">100% of your donation goes directly to Scouting programs.</div>
             <div class="donation-options">
@@ -415,6 +250,37 @@
             </div>
           </fieldset>
 
+          <div class="card-section-label">Card Information</div>
+
+          <div class="form-group">
+            <label for="card-number">Card number</label>
+            <input type="text" id="card-number" placeholder="1234 5678 9012 3456" required autocomplete="cc-number" inputmode="numeric" maxlength="19">
+            <div class="field-error-msg" id="card-number-error">Please enter a valid card number.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="card-expiry">Expiration</label>
+              <input type="text" id="card-expiry" placeholder="MM / YY" required autocomplete="cc-exp" inputmode="numeric" maxlength="7">
+              <div class="field-error-msg" id="card-expiry-error">Enter a valid expiration date.</div>
+            </div>
+            <div class="form-group">
+              <label for="card-cvv">CVV</label>
+              <input type="text" id="card-cvv" placeholder="123" required autocomplete="cc-csc" inputmode="numeric" maxlength="4">
+              <div class="field-error-msg" id="card-cvv-error">Enter a valid CVV.</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="card-name">Name on card</label>
+            <input type="text" id="card-name" placeholder="Full name" autocomplete="cc-name">
+          </div>
+
+          <div class="form-group">
+            <label for="card-zip">Billing ZIP code</label>
+            <input type="text" id="card-zip" placeholder="12345" autocomplete="postal-code" inputmode="numeric" maxlength="10">
+          </div>
+
           <div class="referral-section">
             <button type="button" class="referral-toggle" id="referral-toggle">Have a referral code?</button>
             <div class="referral-field hidden" id="referral-field">
@@ -422,25 +288,20 @@
             </div>
           </div>
 
-          <button type="button" class="btn-checkout" id="btn-proceed">
-            Proceed to Payment — $15.00
-          </button>
-        </div>
+          <div id="form-error" class="hidden" style="color:var(--color-red);font-size:14px;margin-bottom:12px;padding:10px 14px;background:rgba(208,0,42,0.06);border-radius:10px;"></div>
 
-        <!-- Step 2: Loading -->
+          <button type="submit" class="btn-checkout" id="btn-pay">
+            Pay $15.00
+          </button>
+        </form>
+
+        <!-- Loading -->
         <div id="payment-loading" class="payment-loading hidden">
           <div class="spinner"></div>
-          <p>Setting up secure payment...</p>
+          <p>Processing your payment...</p>
         </div>
 
-        <!-- Step 3: Hosted Payment iframe -->
-        <div id="payment-frame" class="hidden">
-          <div class="payment-iframe-wrapper">
-            <iframe id="hosted-payment-iframe" name="hosted-payment-iframe" title="Secure payment form"></iframe>
-          </div>
-        </div>
-
-        <!-- Step 4: Success -->
+        <!-- Success -->
         <div id="payment-success" class="payment-success hidden">
           <svg style="width:48px;height:48px;stroke:#1a5c32;fill:none;stroke-width:2;margin:0 auto 12px;display:block;" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
@@ -461,9 +322,9 @@
           <p style="margin-top:16px;"><a href="../index.html" style="color:var(--color-navy-2);font-weight:600;">Return to home</a></p>
         </div>
 
-        <!-- Step 5: Error -->
+        <!-- Error -->
         <div id="payment-error" class="payment-error hidden">
-          <h3>Something went wrong</h3>
+          <h3>Payment Failed</h3>
           <p id="error-message">We couldn't process your payment. Please try again.</p>
           <button type="button" class="btn-checkout" id="btn-retry" style="max-width:280px;margin:16px auto 0;">Try Again</button>
         </div>
@@ -501,7 +362,7 @@
           </svg>
           <div>
             <strong>Secure checkout</strong><br>
-            Payment processed by Authorize.net. Your card details never touch our servers.
+            Card data is encrypted and tokenized by Authorize.net. It never touches our servers.
           </div>
         </div>
 
@@ -527,31 +388,44 @@
   </div>
 </footer>
 
+<!-- Accept.js from Authorize.net (sandbox) -->
+<script src="https://jstest.authorize.net/v1/Accept.js" charset="utf-8"></script>
+
 <script>
 (function() {
+  // ── Configuration ──────────────────────────────────────────
   var API_BASE = 'https://api.campcardapp.org/api/v1';
+  var AUTHNET_API_LOGIN_ID = '7adF5E2X';
+  var AUTHNET_CLIENT_KEY = '9d68fkNfbpS3aS29kkh986FsfSe9SS97s3PuSYeFw7aG7NCMUpG3K24T3XULbJcP';
   var BASE_PRICE = 15;
   var selectedDonation = 0;
 
-  var checkoutForm = document.getElementById('checkout-form');
+  // ── DOM refs ───────────────────────────────────────────────
+  var form = document.getElementById('checkout-form');
   var loadingEl = document.getElementById('payment-loading');
-  var frameEl = document.getElementById('payment-frame');
   var successEl = document.getElementById('payment-success');
   var errorEl = document.getElementById('payment-error');
   var errorMsg = document.getElementById('error-message');
-  var emailInput = document.getElementById('customer-email');
-  var referralInput = document.getElementById('referral-code');
-  var btnProceed = document.getElementById('btn-proceed');
+  var formError = document.getElementById('form-error');
+  var btnPay = document.getElementById('btn-pay');
   var btnRetry = document.getElementById('btn-retry');
-  var iframe = document.getElementById('hosted-payment-iframe');
+
+  var emailInput = document.getElementById('customer-email');
+  var cardNumber = document.getElementById('card-number');
+  var cardExpiry = document.getElementById('card-expiry');
+  var cardCvv = document.getElementById('card-cvv');
+  var cardName = document.getElementById('card-name');
+  var cardZip = document.getElementById('card-zip');
+  var referralInput = document.getElementById('referral-code');
   var referralToggle = document.getElementById('referral-toggle');
   var referralField = document.getElementById('referral-field');
+
   var donationLine = document.getElementById('donation-line');
   var donationLinePrice = document.getElementById('donation-line-price');
   var orderTotalPrice = document.getElementById('order-total-price');
   var donationBtns = document.querySelectorAll('.donation-btn');
 
-  // Mobile nav toggle (reuse)
+  // ── Mobile nav ─────────────────────────────────────────────
   var toggle = document.querySelector('.nav-toggle');
   var nav = document.getElementById('site-nav');
   if (toggle && nav) {
@@ -562,11 +436,11 @@
     });
   }
 
-  // Donation selection
+  // ── Donation selection ─────────────────────────────────────
   function updateTotal() {
     var total = BASE_PRICE + selectedDonation;
     orderTotalPrice.textContent = '$' + total.toFixed(2);
-    btnProceed.textContent = 'Proceed to Payment \u2014 $' + total.toFixed(2);
+    btnPay.textContent = 'Pay $' + total.toFixed(2);
 
     if (selectedDonation > 0) {
       donationLine.classList.remove('hidden');
@@ -585,149 +459,226 @@
     });
   });
 
-  // Referral code toggle
+  // ── Referral toggle ────────────────────────────────────────
   referralToggle.addEventListener('click', function() {
     referralField.classList.toggle('hidden');
-    if (!referralField.classList.contains('hidden')) {
-      referralInput.focus();
+    if (!referralField.classList.contains('hidden')) referralInput.focus();
+  });
+
+  // ── Card number formatting (spaces every 4 digits) ────────
+  cardNumber.addEventListener('input', function() {
+    var v = this.value.replace(/\D/g, '').substring(0, 16);
+    this.value = v.replace(/(.{4})/g, '$1 ').trim();
+  });
+
+  // ── Expiry formatting (MM / YY) ───────────────────────────
+  cardExpiry.addEventListener('input', function() {
+    var v = this.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 3) {
+      this.value = v.substring(0, 2) + ' / ' + v.substring(2);
+    } else {
+      this.value = v;
     }
   });
 
+  // ── CVV: digits only ──────────────────────────────────────
+  cardCvv.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').substring(0, 4);
+  });
+
+  // ── View management ────────────────────────────────────────
   function showStep(step) {
-    checkoutForm.classList.add('hidden');
+    form.classList.add('hidden');
     loadingEl.classList.add('hidden');
-    frameEl.classList.add('hidden');
     successEl.classList.add('hidden');
     errorEl.classList.add('hidden');
 
-    if (step === 'form') checkoutForm.classList.remove('hidden');
+    if (step === 'form') form.classList.remove('hidden');
     if (step === 'loading') loadingEl.classList.remove('hidden');
-    if (step === 'frame') frameEl.classList.remove('hidden');
     if (step === 'success') successEl.classList.remove('hidden');
     if (step === 'error') errorEl.classList.remove('hidden');
   }
 
+  function showFormError(msg) {
+    formError.textContent = msg;
+    formError.classList.remove('hidden');
+  }
+
+  function clearFormError() {
+    formError.classList.add('hidden');
+  }
+
+  function showFieldError(input, msgEl) {
+    input.classList.add('field-error');
+    if (msgEl) msgEl.style.display = 'block';
+  }
+
+  function clearFieldError(input, msgEl) {
+    input.classList.remove('field-error');
+    if (msgEl) msgEl.style.display = 'none';
+  }
+
+  // ── Validation ─────────────────────────────────────────────
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  async function requestToken() {
-    var email = emailInput.value.trim();
-    if (!validateEmail(email)) {
-      emailInput.focus();
-      emailInput.style.borderColor = 'var(--color-red)';
-      return;
+  function validateForm() {
+    var valid = true;
+    clearFormError();
+
+    // Email
+    if (!validateEmail(emailInput.value.trim())) {
+      showFieldError(emailInput);
+      valid = false;
+    } else {
+      clearFieldError(emailInput);
     }
-    emailInput.style.borderColor = '';
+
+    // Card number (strip spaces)
+    var rawCard = cardNumber.value.replace(/\s/g, '');
+    if (rawCard.length < 13 || rawCard.length > 16) {
+      showFieldError(cardNumber, document.getElementById('card-number-error'));
+      valid = false;
+    } else {
+      clearFieldError(cardNumber, document.getElementById('card-number-error'));
+    }
+
+    // Expiry
+    var rawExpiry = cardExpiry.value.replace(/\D/g, '');
+    if (rawExpiry.length !== 4) {
+      showFieldError(cardExpiry, document.getElementById('card-expiry-error'));
+      valid = false;
+    } else {
+      var month = Number.parseInt(rawExpiry.substring(0, 2), 10);
+      if (month < 1 || month > 12) {
+        showFieldError(cardExpiry, document.getElementById('card-expiry-error'));
+        valid = false;
+      } else {
+        clearFieldError(cardExpiry, document.getElementById('card-expiry-error'));
+      }
+    }
+
+    // CVV
+    if (cardCvv.value.length < 3 || cardCvv.value.length > 4) {
+      showFieldError(cardCvv, document.getElementById('card-cvv-error'));
+      valid = false;
+    } else {
+      clearFieldError(cardCvv, document.getElementById('card-cvv-error'));
+    }
+
+    return valid;
+  }
+
+  // ── Accept.js tokenization ─────────────────────────────────
+  function tokenizeCard(callback) {
+    var rawCard = cardNumber.value.replace(/\s/g, '');
+    var rawExpiry = cardExpiry.value.replace(/\D/g, '');
+    var month = rawExpiry.substring(0, 2);
+    var year = '20' + rawExpiry.substring(2, 4);
+
+    var secureData = {
+      authData: {
+        clientKey: AUTHNET_CLIENT_KEY,
+        apiLoginID: AUTHNET_API_LOGIN_ID
+      },
+      cardData: {
+        cardNumber: rawCard,
+        month: month,
+        year: year,
+        cardCode: cardCvv.value
+      }
+    };
+
+    // Accept.js sends card data directly to Authorize.net
+    Accept.dispatchData(secureData, function(response) {
+      if (response.messages.resultCode === 'Error') {
+        var errors = response.messages.message.map(function(m) { return m.text; });
+        callback({ error: errors.join(' ') });
+      } else {
+        callback({
+          dataDescriptor: response.opaqueData.dataDescriptor,
+          dataValue: response.opaqueData.dataValue
+        });
+      }
+    });
+  }
+
+  // ── Charge via backend ─────────────────────────────────────
+  async function chargeBackend(opaqueData) {
+    var total = BASE_PRICE + selectedDonation;
+
+    var body = {
+      dataDescriptor: opaqueData.dataDescriptor,
+      dataValue: opaqueData.dataValue,
+      amount: total.toFixed(2),
+      customerEmail: emailInput.value.trim(),
+      description: 'Camp Card Annual Subscription'
+    };
+
+    if (selectedDonation > 0) {
+      body.donationAmount = selectedDonation.toFixed(2);
+    }
+
+    var referral = referralInput.value.trim();
+    if (referral) {
+      body.referralCode = referral;
+    }
+
+    var res = await fetch(API_BASE + '/payments/subscribe/web-charge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    return res.json();
+  }
+
+  // ── Form submit ────────────────────────────────────────────
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!validateForm()) return;
 
     showStep('loading');
-    btnProceed.disabled = true;
+    btnPay.disabled = true;
 
-    try {
-      var total = BASE_PRICE + selectedDonation;
-      var body = {
-        customerEmail: email,
-        amount: total.toFixed(2),
-        donationAmount: selectedDonation > 0 ? selectedDonation.toFixed(2) : null,
-        returnUrl: 'https://www.campcardapp.org/buy-campcard/?status=success',
-        cancelUrl: 'https://www.campcardapp.org/buy-campcard/?status=cancel'
-      };
-
-      var referral = referralInput.value.trim();
-      if (referral) {
-        body.referralCode = referral;
-      }
-
-      var res = await fetch(API_BASE + '/payments/subscribe/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-
-      var data = await res.json();
-
-      if (data.success && data.token) {
-        // Build the Authorize.net form and submit to iframe
-        var formUrl = data.formUrl;
-        var token = data.token;
-
-        // Create a hidden form and submit it to the iframe
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = formUrl;
-        form.target = 'hosted-payment-iframe';
-
-        var tokenInput = document.createElement('input');
-        tokenInput.type = 'hidden';
-        tokenInput.name = 'token';
-        tokenInput.value = token;
-        form.appendChild(tokenInput);
-
-        document.body.appendChild(form);
-        showStep('frame');
-        form.submit();
-        document.body.removeChild(form);
-      } else {
-        showError(data.errorMessage || 'Failed to initialize payment. Please try again.');
-      }
-    } catch (err) {
-      showError('Unable to connect to the payment server. Please check your connection and try again.');
-    }
-
-    btnProceed.disabled = false;
-  }
-
-  function showError(msg) {
-    errorMsg.textContent = msg;
-    showStep('error');
-  }
-
-  // Listen for messages from the Authorize.net iframe
-  window.addEventListener('message', function(event) {
-    // Only accept messages from Authorize.net domains
-    if (event.origin.indexOf('authorize.net') === -1) return;
-
-    try {
-      var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-
-      if (data.action === 'successfulSave' || data.action === 'transactResponse') {
-        showStep('success');
-      } else if (data.action === 'cancel') {
+    tokenizeCard(function(result) {
+      if (result.error) {
         showStep('form');
-      } else if (data.action === 'resizeWindow') {
-        // Adjust iframe height
-        if (data.height) {
-          iframe.style.height = Math.max(400, parseInt(data.height)) + 'px';
-        }
+        showFormError(result.error);
+        btnPay.disabled = false;
+        return;
       }
-    } catch (e) {
-      // Not a JSON message, ignore
-    }
+
+      // Token received — charge via backend
+      chargeBackend(result).then(function(data) {
+        if (data.status === 'SUCCESS') {
+          showStep('success');
+        } else {
+          errorMsg.textContent = data.errorMessage || 'Payment was declined. Please check your card details and try again.';
+          showStep('error');
+        }
+        btnPay.disabled = false;
+      }).catch(function() {
+        errorMsg.textContent = 'Unable to connect to the payment server. Please check your connection and try again.';
+        showStep('error');
+        btnPay.disabled = false;
+      });
+    });
   });
 
-  // Check URL for status from Authorize.net redirect
-  var params = new URLSearchParams(window.location.search);
-  if (params.get('status') === 'success') {
-    showStep('success');
-    // Clean URL
-    history.replaceState(null, '', window.location.pathname);
-  } else if (params.get('status') === 'cancel') {
-    showStep('form');
-    history.replaceState(null, '', window.location.pathname);
-  }
-
-  // Event listeners
-  btnProceed.addEventListener('click', requestToken);
+  // ── Retry ──────────────────────────────────────────────────
   btnRetry.addEventListener('click', function() {
     showStep('form');
   });
 
-  // Submit on enter in email field
-  emailInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      requestToken();
-    }
+  // ── Clear field errors on input ────────────────────────────
+  [emailInput, cardNumber, cardExpiry, cardCvv].forEach(function(input) {
+    input.addEventListener('input', function() {
+      clearFieldError(input);
+      clearFormError();
+    });
   });
 })();
 </script>
