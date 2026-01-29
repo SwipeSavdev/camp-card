@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/payments/subscribe/**").permitAll()
                 // Public referral click tracking
                 .requestMatchers("/api/v1/referrals/track").permitAll()
+                // Public parental consent verification (parents don't have accounts)
+                .requestMatchers("/api/v1/consent/verify/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()

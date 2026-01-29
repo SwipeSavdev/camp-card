@@ -1158,4 +1158,28 @@ export const api = {
       return { hasConfig: false, isActive: false, isVerified: false };
     }
   },
+
+  // ============ PARENTAL CONSENT (Public) ============
+  getConsentDetails: async (token: string) => {
+    return await apiCall<{
+      consentId: string;
+      minorName: string;
+      minorDateOfBirth: string | null;
+      parentName: string;
+      status: string;
+      tokenValid: boolean;
+    }>(`/consent/verify/${token}`, {});
+  },
+
+  submitConsentDecision: async (token: string, granted: boolean, locationConsent: boolean, marketingConsent: boolean) => {
+    return await apiCall<{
+      consentId: string;
+      status: string;
+      locationAllowed: boolean;
+      message: string;
+    }>(`/consent/verify/${token}`, {
+      method: 'POST',
+      body: JSON.stringify({ granted, locationConsent, marketingConsent }),
+    });
+  },
 };
