@@ -2,7 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 // Public routes that don't require authentication
-const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/verify-email', '/set-password'];
+const publicRoutes = [
+  '/login',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/set-password',
+  '/claim-gift',
+  '/join/scout',
+  '/join/parent',
+  '/consent/verify',
+  '/subscription/renew',
+  '/download',
+];
 
 // Roles that are NOT allowed to access the admin portal
 const blockedRoles = ['SCOUT', 'PARENT'];
