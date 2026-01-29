@@ -133,7 +133,7 @@ function ConsentVerifyContent() {
           </p>
         </div>
 
-        <div style={{ background: colors.background, padding: space.md, borderRadius: radius.md, marginBottom: space.lg }}>
+        <div style={{ background: colors.gray50, padding: space.md, borderRadius: radius.md, marginBottom: space.lg }}>
           <h3 style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 8px 0' }}>What Camp Card Does:</h3>
           <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: colors.muted }}>
             <li style={{ marginBottom: '4px' }}>Enables scouts to participate in digital fundraising</li>

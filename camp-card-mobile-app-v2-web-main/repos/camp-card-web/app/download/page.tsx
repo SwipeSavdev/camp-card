@@ -36,10 +36,10 @@ export default function DownloadPage() {
         </div>
 
         {/* App Features */}
-        <div style={{ background: colors.background, padding: space.md, borderRadius: radius.md, marginBottom: space.lg }}>
+        <div style={{ background: colors.gray50, padding: space.md, borderRadius: radius.md, marginBottom: space.lg }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: colors.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px' }}>
-              <svg style={{ width: '20px', height: '20px', color: colors.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: colors.primary100, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px' }}>
+              <svg style={{ width: '20px', height: '20px', color: colors.accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -49,8 +49,8 @@ export default function DownloadPage() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: colors.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px' }}>
-              <svg style={{ width: '20px', height: '20px', color: colors.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: colors.primary100, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px' }}>
+              <svg style={{ width: '20px', height: '20px', color: colors.accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
@@ -60,8 +60,8 @@ export default function DownloadPage() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: colors.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px' }}>
-              <svg style={{ width: '20px', height: '20px', color: colors.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: colors.primary100, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px' }}>
+              <svg style={{ width: '20px', height: '20px', color: colors.accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
@@ -139,13 +139,13 @@ export default function DownloadPage() {
           <p style={{ fontSize: '12px', color: colors.muted, margin: '0 0 8px 0' }}>Or scan the QR code with your phone camera</p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: space.md }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '80px', height: '80px', background: colors.background, borderRadius: radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 4px' }}>
+              <div style={{ width: '80px', height: '80px', background: colors.gray50, borderRadius: radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 4px' }}>
                 <span style={{ fontSize: '10px', color: colors.muted }}>iOS QR</span>
               </div>
               <span style={{ fontSize: '10px', color: colors.muted }}>App Store</span>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '80px', height: '80px', background: colors.background, borderRadius: radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 4px' }}>
+              <div style={{ width: '80px', height: '80px', background: colors.gray50, borderRadius: radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 4px' }}>
                 <span style={{ fontSize: '10px', color: colors.muted }}>Android QR</span>
               </div>
               <span style={{ fontSize: '10px', color: colors.muted }}>Play Store</span>

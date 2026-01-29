@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { colors, radius, space, shadow, gradients } from '@/lib/theme';
@@ -12,7 +12,6 @@ function SubscriptionRenewContent() {
   const [errorMessage, setErrorMessage] = useState('');
   const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null);
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get('token') || '';
   const userId = searchParams.get('userId') || '';
 
@@ -79,7 +78,7 @@ function SubscriptionRenewContent() {
       <div style={{ background: gradients.primary, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: space.lg }}>
         <div style={{ maxWidth: '480px', width: '100%', padding: space.xl, backgroundColor: colors.white, borderRadius: radius.lg, boxShadow: shadow.lg, textAlign: 'center' }}>
           <Image src="/assets/images/council_logo.png" alt="Camp Card Logo" width={200} height={85} style={{ borderRadius: radius.md, margin: '0 auto 24px' }} />
-          <div style={{ width: '48px', height: '48px', border: `4px solid ${colors.border}`, borderTopColor: colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <div style={{ width: '48px', height: '48px', border: `4px solid ${colors.border}`, borderTopColor: colors.accent, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
           <p style={{ fontSize: '16px', color: colors.muted }}>Processing your renewal...</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -138,7 +137,7 @@ function SubscriptionRenewContent() {
           <p style={{ fontSize: '14px', color: colors.muted, margin: 0 }}>Keep enjoying Camp Card benefits by renewing your subscription today!</p>
         </div>
 
-        <div style={{ background: colors.background, padding: space.md, borderRadius: radius.md, marginBottom: space.lg }}>
+        <div style={{ background: colors.gray50, padding: space.md, borderRadius: radius.md, marginBottom: space.lg }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '14px', color: colors.muted }}>Current Plan</span>
             <span style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>{subscriptionDetails?.planName}</span>
@@ -150,7 +149,7 @@ function SubscriptionRenewContent() {
           <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '8px', marginTop: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '14px', color: colors.muted }}>Renewal Price</span>
-              <span style={{ fontSize: '18px', fontWeight: '700', color: colors.primary }}>{subscriptionDetails?.renewalPrice}</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: colors.accent }}>{subscriptionDetails?.renewalPrice}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '14px', color: colors.muted }}>New Expiry Date</span>
