@@ -18,10 +18,13 @@ public class AwsConfig {
     @Value("${aws.sns.region:us-east-1}")
     private String snsRegion;
 
+    @Value("${aws.ses.region:us-east-1}")
+    private String sesRegion;
+
     @Bean
     public SesClient sesClient() {
         return SesClient.builder()
-                .region(Region.of(awsRegion))
+                .region(Region.of(sesRegion))
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
     }
