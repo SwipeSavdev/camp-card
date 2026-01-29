@@ -37,6 +37,9 @@ public class QRCodeService {
     @Value("${campcard.base-url:https://api.campcardapp.org}")
     private String baseUrl;
 
+    @Value("${campcard.static-site-url:https://www.campcardapp.org}")
+    private String staticSiteUrl;
+
     private static final String QR_CODE_PREFIX = "qr:user:";
     private static final String QR_CARD_PREFIX = "qr:card:";
     private static final String LINK_PREFIX = "link:offer:";
@@ -96,10 +99,10 @@ public class QRCodeService {
         String subscribeUrl;
         if (user.getRole() == User.UserRole.SCOUT) {
             // Scout referral - $10/year
-            subscribeUrl = baseUrl + "/campcard/subscribe/?scout=" + uniqueCode + "&name=" + userName;
+            subscribeUrl = staticSiteUrl + "/buy-campcard/?scout=" + uniqueCode + "&name=" + userName;
         } else {
             // Customer/Parent referral - $15/year
-            subscribeUrl = baseUrl + "/campcard/subscribe/?ref=" + uniqueCode + "&refname=" + userName;
+            subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + uniqueCode + "&refname=" + userName;
         }
 
         return QRCodeResponse.builder()

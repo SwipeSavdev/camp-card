@@ -34,7 +34,10 @@ public class ReferralService {
     
     @Value("${campcard.base-url:https://api.campcardapp.org}")
     private String baseUrl;
-    
+
+    @Value("${campcard.static-site-url:https://www.campcardapp.org}")
+    private String staticSiteUrl;
+
     private static final String REFERRAL_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int CODE_LENGTH = 8;
     private static final SecureRandom random = new SecureRandom();
@@ -72,7 +75,7 @@ public class ReferralService {
         String customerName = URLEncoder.encode(
                 user.getFirstName() + " " + user.getLastName(),
                 StandardCharsets.UTF_8);
-        String subscribeUrl = baseUrl + "/campcard/subscribe/?ref=" + referralCode + "&refname=" + customerName;
+        String subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + referralCode + "&refname=" + customerName;
 
         return ReferralCodeResponse.builder()
                 .referralCode(referralCode)

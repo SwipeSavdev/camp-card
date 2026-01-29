@@ -172,6 +172,31 @@
     .payment-error { color: var(--color-red); }
     .payment-error h3 { font-size: 20px; margin: 0 0 10px; }
 
+    /* Signup step */
+    .signup-panel h2 { margin: 0 0 6px; font-size: 22px; }
+    .signup-panel > p { margin: 0 0 20px; color: var(--color-muted); font-size: 15px; }
+    .signup-paid-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,166,81,0.08); color: #1a5c32;
+      font-weight: 700; font-size: 14px; padding: 6px 14px;
+      border-radius: 999px; margin-bottom: 18px;
+    }
+    .signup-paid-badge svg {
+      width: 16px; height: 16px; stroke: #1a5c32; fill: none; stroke-width: 2.5;
+    }
+    .password-hint { color: var(--color-muted); font-size: 12px; margin-top: 4px; }
+
+    /* Card reveal */
+    .card-reveal {
+      background: linear-gradient(135deg, var(--color-navy-2), #1a3a6e);
+      border-radius: 18px; padding: 28px; color: #fff; text-align: center;
+      margin-bottom: 20px;
+    }
+    .card-reveal-label { font-size: 13px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .card-reveal-number { font-size: 28px; font-weight: 800; letter-spacing: 0.04em; margin-bottom: 12px; font-family: 'Courier New', monospace; }
+    .card-reveal-name { font-size: 16px; opacity: 0.85; }
+    .card-reveal-expiry { font-size: 13px; opacity: 0.6; margin-top: 4px; }
+
     .spinner {
       width: 36px; height: 36px;
       border: 3px solid rgba(0,0,0,0.1); border-top-color: var(--color-navy-2);
@@ -301,14 +326,83 @@
           <p>Processing your payment...</p>
         </div>
 
-        <!-- Success -->
+        <!-- Signup (after payment) -->
+        <div id="signup-panel" class="signup-panel hidden">
+          <div class="signup-paid-badge">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            Payment successful
+          </div>
+          <h2>Create Your Account</h2>
+          <p>Set up your account to access your Camp Card and start saving.</p>
+
+          <form id="signup-form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="signup-first">First name</label>
+                <input type="text" id="signup-first" placeholder="First name" required autocomplete="given-name">
+                <div class="field-error-msg" id="signup-first-error">First name is required.</div>
+              </div>
+              <div class="form-group">
+                <label for="signup-last">Last name</label>
+                <input type="text" id="signup-last" placeholder="Last name" required autocomplete="family-name">
+                <div class="field-error-msg" id="signup-last-error">Last name is required.</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-email">Email address</label>
+              <input type="email" id="signup-email" readonly autocomplete="email" style="background:#f5f5f5;color:var(--color-muted);">
+              <div class="hint">Same email used for payment.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-password">Password</label>
+              <input type="password" id="signup-password" placeholder="Create a password" required autocomplete="new-password" minlength="8">
+              <div class="password-hint">At least 8 characters.</div>
+              <div class="field-error-msg" id="signup-password-error">Password must be at least 8 characters.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-confirm">Confirm password</label>
+              <input type="password" id="signup-confirm" placeholder="Re-enter password" required autocomplete="new-password">
+              <div class="field-error-msg" id="signup-confirm-error">Passwords do not match.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-phone">Phone number <span style="font-weight:400;color:var(--color-muted);">(optional)</span></label>
+              <input type="tel" id="signup-phone" placeholder="(555) 123-4567" autocomplete="tel">
+            </div>
+
+            <div id="signup-error" class="hidden" style="color:var(--color-red);font-size:14px;margin-bottom:12px;padding:10px 14px;background:rgba(208,0,42,0.06);border-radius:10px;"></div>
+
+            <button type="submit" class="btn-checkout" id="btn-signup">
+              Create Account
+            </button>
+          </form>
+        </div>
+
+        <!-- Signup Loading -->
+        <div id="signup-loading" class="payment-loading hidden">
+          <div class="spinner"></div>
+          <p>Creating your account...</p>
+        </div>
+
+        <!-- Success (after signup) -->
         <div id="payment-success" class="payment-success hidden">
           <svg style="width:48px;height:48px;stroke:#1a5c32;fill:none;stroke-width:2;margin:0 auto 12px;display:block;" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <path d="M9 12l2 2 4-4"/>
           </svg>
-          <h3>Purchase Complete!</h3>
-          <p>Your Camp Card is ready. Download the app to start using your discounts.</p>
+          <h3>You're All Set!</h3>
+
+          <div class="card-reveal" id="card-reveal">
+            <div class="card-reveal-label">Your Camp Card</div>
+            <div class="card-reveal-number" id="card-number-display"></div>
+            <div class="card-reveal-name" id="card-name-display"></div>
+            <div class="card-reveal-expiry" id="card-expiry-display"></div>
+          </div>
+
+          <p>Download the app and log in to start using your discounts.</p>
           <div style="margin-top:20px;">
             <div class="store-badges" style="justify-content:center;">
               <a class="store-badge" href="#" target="_blank" rel="noopener noreferrer">
@@ -339,7 +433,7 @@
             <div class="order-item-name">Scouting America Camp Card</div>
             <div class="order-item-desc">Annual digital discount card</div>
           </div>
-          <div class="order-item-price">$15.00</div>
+          <div class="order-item-price" id="card-price-display">$15.00</div>
         </div>
 
         <div class="order-item hidden" id="donation-line">
@@ -397,8 +491,17 @@
   var API_BASE = 'https://api.campcardapp.org/api/v1';
   var AUTHNET_API_LOGIN_ID = '7adF5E2X';
   var AUTHNET_CLIENT_KEY = '9d68fkNfbpS3aS29kkh986FsfSe9SS97s3PuSYeFw7aG7NCMUpG3K24T3XULbJcP';
-  var BASE_PRICE = 15;
   var selectedDonation = 0;
+
+  // ── URL params (scout referral = $10, otherwise $15) ─────
+  var urlParams = new URLSearchParams(window.location.search);
+  var scoutCode = urlParams.get('scout') || '';
+  var customerRefCode = urlParams.get('ref') || '';
+  var referrerName = urlParams.get('name') || urlParams.get('refname') || '';
+  var BASE_PRICE = scoutCode ? 10 : 15;
+
+  // ── State ─────────────────────────────────────────────────
+  var paymentTransactionId = null;
 
   // ── DOM refs ───────────────────────────────────────────────
   var form = document.getElementById('checkout-form');
@@ -409,6 +512,12 @@
   var formError = document.getElementById('form-error');
   var btnPay = document.getElementById('btn-pay');
   var btnRetry = document.getElementById('btn-retry');
+
+  var signupPanel = document.getElementById('signup-panel');
+  var signupForm = document.getElementById('signup-form');
+  var signupLoading = document.getElementById('signup-loading');
+  var signupError = document.getElementById('signup-error');
+  var btnSignup = document.getElementById('btn-signup');
 
   var emailInput = document.getElementById('customer-email');
   var cardNumber = document.getElementById('card-number');
@@ -465,6 +574,34 @@
     if (!referralField.classList.contains('hidden')) referralInput.focus();
   });
 
+  // ── Initialize from URL params ───────────────────────────
+  (function initFromUrl() {
+    // Set price display
+    document.getElementById('card-price-display').textContent = '$' + BASE_PRICE + '.00';
+
+    // Pre-fill referral code from URL and hide toggle
+    if (scoutCode || customerRefCode) {
+      referralInput.value = scoutCode || customerRefCode;
+      referralField.classList.remove('hidden');
+      referralToggle.style.display = 'none';
+      referralInput.readOnly = true;
+      referralInput.style.background = '#f5f5f5';
+      referralInput.style.color = 'var(--color-muted)';
+    }
+
+    // Show referral banner if from a Scout
+    if (scoutCode && referrerName) {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'background:rgba(0,166,81,0.08);border:1px solid rgba(0,166,81,0.18);border-radius:12px;padding:12px 16px;margin-bottom:20px;font-size:14px;color:#1a5c32;display:flex;align-items:center;gap:8px;';
+      banner.innerHTML = '<svg style="width:18px;height:18px;stroke:#1a5c32;fill:none;stroke-width:2;flex-shrink:0;" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
+        '<span>Referred by <strong>' + decodeURIComponent(referrerName) + '</strong> — you get the Scout discount price!</span>';
+      form.parentNode.insertBefore(banner, form);
+    }
+
+    // Update totals for initial price
+    updateTotal();
+  })();
+
   // ── Card number formatting (spaces every 4 digits) ────────
   cardNumber.addEventListener('input', function() {
     var v = this.value.replace(/\D/g, '').substring(0, 16);
@@ -492,11 +629,15 @@
     loadingEl.classList.add('hidden');
     successEl.classList.add('hidden');
     errorEl.classList.add('hidden');
+    signupPanel.classList.add('hidden');
+    signupLoading.classList.add('hidden');
 
     if (step === 'form') form.classList.remove('hidden');
     if (step === 'loading') loadingEl.classList.remove('hidden');
     if (step === 'success') successEl.classList.remove('hidden');
     if (step === 'error') errorEl.classList.remove('hidden');
+    if (step === 'signup') signupPanel.classList.remove('hidden');
+    if (step === 'signup-loading') signupLoading.classList.remove('hidden');
   }
 
   function showFormError(msg) {
@@ -654,7 +795,9 @@
       // Token received — charge via backend
       chargeBackend(result).then(function(data) {
         if (data.status === 'SUCCESS') {
-          showStep('success');
+          paymentTransactionId = data.transactionId;
+          document.getElementById('signup-email').value = emailInput.value.trim();
+          showStep('signup');
         } else {
           errorMsg.textContent = data.errorMessage || 'Payment was declined. Please check your card details and try again.';
           showStep('error');
@@ -678,6 +821,115 @@
     input.addEventListener('input', function() {
       clearFieldError(input);
       clearFormError();
+    });
+  });
+
+  // ── Signup form ──────────────────────────────────────────────
+  var signupFirst = document.getElementById('signup-first');
+  var signupLast = document.getElementById('signup-last');
+  var signupPassword = document.getElementById('signup-password');
+  var signupConfirm = document.getElementById('signup-confirm');
+  var signupPhone = document.getElementById('signup-phone');
+
+  function validateSignup() {
+    var valid = true;
+    signupError.classList.add('hidden');
+
+    if (!signupFirst.value.trim()) {
+      showFieldError(signupFirst, document.getElementById('signup-first-error'));
+      valid = false;
+    } else {
+      clearFieldError(signupFirst, document.getElementById('signup-first-error'));
+    }
+
+    if (!signupLast.value.trim()) {
+      showFieldError(signupLast, document.getElementById('signup-last-error'));
+      valid = false;
+    } else {
+      clearFieldError(signupLast, document.getElementById('signup-last-error'));
+    }
+
+    if (signupPassword.value.length < 8) {
+      showFieldError(signupPassword, document.getElementById('signup-password-error'));
+      valid = false;
+    } else {
+      clearFieldError(signupPassword, document.getElementById('signup-password-error'));
+    }
+
+    if (signupConfirm.value !== signupPassword.value) {
+      showFieldError(signupConfirm, document.getElementById('signup-confirm-error'));
+      valid = false;
+    } else {
+      clearFieldError(signupConfirm, document.getElementById('signup-confirm-error'));
+    }
+
+    return valid;
+  }
+
+  signupForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!validateSignup()) return;
+
+    showStep('signup-loading');
+    btnSignup.disabled = true;
+
+    var body = {
+      transactionId: paymentTransactionId,
+      firstName: signupFirst.value.trim(),
+      lastName: signupLast.value.trim(),
+      email: document.getElementById('signup-email').value,
+      password: signupPassword.value,
+    };
+
+    var phone = signupPhone.value.trim();
+    if (phone) body.phone = phone;
+
+    // Pass the correct referral field based on URL param type
+    if (scoutCode) {
+      body.scoutCode = scoutCode;
+    } else if (customerRefCode) {
+      body.customerRefCode = customerRefCode;
+    } else {
+      var referral = referralInput.value.trim();
+      if (referral) body.referralCode = referral;
+    }
+
+    fetch(API_BASE + '/payments/subscribe/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.success) {
+        // Populate card reveal
+        document.getElementById('card-number-display').textContent = data.cardNumber || '';
+        document.getElementById('card-name-display').textContent = (data.firstName || '') + ' ' + (data.lastName || '');
+        if (data.subscriptionExpiresAt) {
+          var exp = new Date(data.subscriptionExpiresAt);
+          document.getElementById('card-expiry-display').textContent = 'Valid through ' + exp.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+        showStep('success');
+      } else {
+        signupError.textContent = data.errorMessage || 'Could not create your account. Please try again.';
+        signupError.classList.remove('hidden');
+        showStep('signup');
+      }
+      btnSignup.disabled = false;
+    })
+    .catch(function() {
+      signupError.textContent = 'Unable to connect. Please check your connection and try again.';
+      signupError.classList.remove('hidden');
+      showStep('signup');
+      btnSignup.disabled = false;
+    });
+  });
+
+  // Clear signup field errors on input
+  [signupFirst, signupLast, signupPassword, signupConfirm].forEach(function(input) {
+    input.addEventListener('input', function() {
+      clearFieldError(input);
+      signupError.classList.add('hidden');
     });
   });
 })();
