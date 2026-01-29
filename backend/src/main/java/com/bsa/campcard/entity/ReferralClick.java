@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "referral_clicks")
+@Table(name = "referral_link_clicks")
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,10 +20,7 @@ public class ReferralClick {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "referral_id")
-    private Long referralId;
-
-    @Column(name = "referral_code", length = 50)
+    @Column(name = "referral_code", nullable = false, length = 50)
     private String referralCode;
 
     @Column(length = 20)

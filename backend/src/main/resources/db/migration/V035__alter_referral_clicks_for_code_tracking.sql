@@ -1,23 +1,20 @@
 -- ============================================================================
--- V035: Alter referral_clicks to support tracking by referral code
+-- V035: Create referral_link_clicks table for tracking link/QR clicks
 -- ============================================================================
--- Currently referral_clicks.referral_id is NOT NULL with FK to referrals(id).
--- But clicks happen BEFORE a referral record exists (visitor clicks link,
--- views buy page — no registration yet). We need to track clicks by the
--- referral/scout code directly.
+-- Tracks clicks on referral and scout links BEFORE a referral record exists.
+-- Uses a separate table because the existing referral_clicks table is owned
+-- by postgres and the campcard_app user cannot ALTER it.
 -- ============================================================================
 
--- Make referral_id nullable (clicks can exist without a referral record)
-ALTER TABLE referral_clicks ALTER COLUMN referral_id DROP NOT NULL;
+CREATE TABLE IF NOT EXISTS referral_link_clicks (
+    id BIGSERIAL PRIMARY KEY,
+    referral_code VARCHAR(50) NOT NULL,
+    source VARCHAR(20),
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    referer VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
--- Add referral_code column to track by code
-ALTER TABLE referral_clicks ADD COLUMN IF NOT EXISTS referral_code VARCHAR(50);
-
--- Add source column (link, qr, etc.)
-ALTER TABLE referral_clicks ADD COLUMN IF NOT EXISTS source VARCHAR(20);
-
--- Index on referral_code for fast lookups
-CREATE INDEX IF NOT EXISTS idx_referral_clicks_referral_code ON referral_clicks(referral_code);
-
--- Grant permissions to campcard_app user
-GRANT SELECT, INSERT ON referral_clicks TO campcard_app;
+CREATE INDEX IF NOT EXISTS idx_ref_link_clicks_code ON referral_link_clicks(referral_code);
+CREATE INDEX IF NOT EXISTS idx_ref_link_clicks_created_at ON referral_link_clicks(created_at);
