@@ -30,7 +30,7 @@ import java.util.UUID;
 public class PaymentService {
 
     // Static subscription price for web purchases
-    public static final BigDecimal WEB_SUBSCRIPTION_PRICE = new BigDecimal("10.00");
+    public static final BigDecimal WEB_SUBSCRIPTION_PRICE = new BigDecimal("15.00");
     public static final String WEB_SUBSCRIPTION_DESCRIPTION = "Camp Card Annual Subscription";
 
     // Default gateway credentials (fallback)
@@ -45,6 +45,9 @@ public class PaymentService {
 
     @Value("${campcard.base-url:https://campcardapp.org}")
     private String baseUrl;
+
+    @Value("${campcard.static-site-url:https://www.campcardapp.org}")
+    private String staticSiteUrl;
 
     private final CouncilPaymentConfigService councilPaymentConfigService;
 
@@ -466,10 +469,11 @@ public class PaymentService {
         try {
             MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
 
-            // Set up transaction request with static $10 amount
+            // Set up transaction request — use request amount if provided, otherwise default
+            BigDecimal chargeAmount = request.getAmount() != null ? request.getAmount() : WEB_SUBSCRIPTION_PRICE;
             TransactionRequestType txnRequest = new TransactionRequestType();
             txnRequest.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value());
-            txnRequest.setAmount(WEB_SUBSCRIPTION_PRICE);
+            txnRequest.setAmount(chargeAmount);
 
             // Order information
             OrderType order = new OrderType();
@@ -499,7 +503,7 @@ public class PaymentService {
             // Button options
             SettingType buttonSetting = new SettingType();
             buttonSetting.setSettingName("hostedPaymentButtonOptions");
-            buttonSetting.setSettingValue("{\"text\": \"Pay $10.00\"}");
+            buttonSetting.setSettingValue("{\"text\": \"Pay $" + chargeAmount.toPlainString() + "\"}");
             settings.getSetting().add(buttonSetting);
 
             // Style settings
@@ -547,7 +551,7 @@ public class PaymentService {
             // IFrame communicator for response
             SettingType iframeSetting = new SettingType();
             iframeSetting.setSettingName("hostedPaymentIFrameCommunicatorUrl");
-            iframeSetting.setSettingValue("{\"url\": \"" + baseUrl + "/campcard/subscribe/IFrameCommunicator.html\"}");
+            iframeSetting.setSettingValue("{\"url\": \"" + staticSiteUrl + "/buy-campcard/iframeCommunicator.html\"}");
             settings.getSetting().add(iframeSetting);
 
             // Create the API request

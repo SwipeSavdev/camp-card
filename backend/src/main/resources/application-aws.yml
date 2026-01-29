@@ -23,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate  # Schema managed by Flyway migrations
+      ddl-auto: none  # Schema managed by Flyway migrations, validation disabled due to entity/schema drift
     show-sql: false
     properties:
       hibernate:
@@ -101,7 +101,7 @@ authorize:
       login:
         id: ${AUTHORIZE_NET_API_LOGIN_ID:7adF5E2X}
     transaction:
-      key: ${AUTHORIZE_NET_TRANSACTION_KEY:38Y9qzHR34Y36BgM}
+      key: ${AUTHORIZE_NET_TRANSACTION_KEY:2Jn3332L96UNwffN}
     environment: ${AUTHORIZE_NET_ENVIRONMENT:SANDBOX}
 
 # Together.AI Configuration

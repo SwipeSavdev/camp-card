@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IFrame Communicator</title>
+</head>
+<body>
+<script>
+function callParentFunction(str) {
+  if (str && str.length > 0 && window.parent && window.parent.parent) {
+    window.parent.parent.postMessage(str, 'https://www.campcardapp.org');
+  }
+}
+
+function receiveMessage(event) {
+  if (event && event.data) {
+    callParentFunction(event.data);
+  }
+}
+
+window.addEventListener('message', receiveMessage, false);
+</script>
+</body>
+</html>

@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Buy a Camp Card | Scouting America — Central Florida Council</title>
+  <meta name="description" content="Purchase a Scouting America Camp Card for $15 and unlock exclusive local discounts while funding a Scout's camp experience.">
+  <link rel="canonical" href="https://www.campcardapp.org/buy-campcard/">
+  <meta name="robots" content="index,follow">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Buy a Camp Card | Scouting America — Central Florida Council">
+  <meta property="og:description" content="Purchase a Scouting America Camp Card for $15 and unlock exclusive local discounts while funding a Scout's camp experience.">
+  <meta property="og:url" content="https://www.campcardapp.org/buy-campcard/">
+
+  <meta name="theme-color" content="#001a3a">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+
+  <style>
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 32px;
+      align-items: start;
+      padding: 40px 0 60px;
+    }
+
+    .order-summary {
+      border: 1px solid rgba(0,0,0,0.14);
+      border-radius: 18px;
+      padding: 24px;
+      background: #fff;
+      position: sticky;
+      top: 100px;
+    }
+
+    .order-summary h2 {
+      margin: 0 0 16px;
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .order-item:last-of-type {
+      border-bottom: none;
+    }
+
+    .order-item-name {
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .order-item-desc {
+      color: var(--color-muted);
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .order-item-price {
+      font-weight: 800;
+      font-size: 22px;
+      color: var(--color-navy-2);
+    }
+
+    .order-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 14px;
+      margin-top: 6px;
+      border-top: 2px solid var(--color-navy-2);
+    }
+
+    .order-total-label {
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .order-total-price {
+      font-weight: 800;
+      font-size: 26px;
+      color: var(--color-red);
+    }
+
+    .order-trust {
+      margin-top: 18px;
+      padding: 14px;
+      background: rgba(0,166,81,0.06);
+      border: 1px solid rgba(0,166,81,0.18);
+      border-radius: 12px;
+      font-size: 14px;
+      color: #1a5c32;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .order-trust svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      stroke: #1a5c32;
+      fill: none;
+      stroke-width: 2;
+      margin-top: 1px;
+    }
+
+    .payment-panel {
+      min-height: 480px;
+    }
+
+    .payment-panel h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .payment-panel > p {
+      margin: 0 0 20px;
+      color: var(--color-muted);
+      font-size: 15px;
+    }
+
+    /* Pre-checkout email form */
+    .email-form {
+      margin-bottom: 20px;
+    }
+
+    .email-form label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .email-form input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 12px;
+      font: inherit;
+      font-size: 16px;
+    }
+
+    .email-form input:focus {
+      outline: none;
+      border-color: var(--color-navy-2);
+      box-shadow: 0 0 0 3px rgba(13,44,94,0.12);
+    }
+
+    .email-form .hint {
+      color: var(--color-muted);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    /* Payment button */
+    .btn-checkout {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 16px 24px;
+      border-radius: 999px;
+      background: var(--color-red);
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(208,0,42,0.25);
+      line-height: 1;
+      margin-top: 8px;
+    }
+
+    .btn-checkout:hover { filter: brightness(1.05); }
+    .btn-checkout:active { transform: translateY(1px); }
+    .btn-checkout:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: none;
+    }
+
+    /* Hosted payment iframe */
+    .payment-iframe-wrapper {
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fafafa;
+      min-height: 400px;
+    }
+
+    .payment-iframe-wrapper iframe {
+      width: 100%;
+      height: 480px;
+      border: none;
+      display: block;
+    }
+
+    /* Status states */
+    .payment-loading,
+    .payment-success,
+    .payment-error {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .payment-loading {
+      color: var(--color-muted);
+    }
+
+    .payment-success {
+      color: #1a5c32;
+    }
+
+    .payment-success h3 {
+      font-size: 24px;
+      margin: 0 0 10px;
+    }
+
+    .payment-error {
+      color: var(--color-red);
+    }
+
+    .payment-error h3 {
+      font-size: 20px;
+      margin: 0 0 10px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-top-color: var(--color-navy-2);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hidden { display: none !important; }
+
+    /* Donation section */
+    .donation-section {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .donation-section label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .donation-section .donation-hint {
+      color: var(--color-muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .donation-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .donation-btn {
+      padding: 10px 18px;
+      border: 2px solid rgba(0,0,0,0.14);
+      border-radius: 12px;
+      background: #fff;
+      font: inherit;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--color-navy-2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .donation-btn:hover {
+      border-color: var(--color-navy-2);
+      background: rgba(13,44,94,0.04);
+    }
+
+    .donation-btn.active {
+      border-color: var(--color-red);
+      background: rgba(208,0,42,0.06);
+      color: var(--color-red);
+    }
+
+    .donation-btn-none {
+      font-size: 14px;
+      color: var(--color-muted);
+      font-weight: 600;
+    }
+
+    /* Referral code section */
+    .referral-section {
+      margin-top: 14px;
+    }
+
+    .referral-toggle {
+      color: var(--color-navy-2);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .referral-field {
+      margin-top: 8px;
+    }
+
+    .referral-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 12px;
+      font: inherit;
+      font-size: 15px;
+    }
+
+    @media (max-width: 980px) {
+      .checkout-layout {
+        grid-template-columns: 1fr;
+        padding: 24px 0 40px;
+      }
+
+      .order-summary {
+        position: static;
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="../index.html" aria-label="Camp Card home">
+      <picture>
+        <source srcset="../assets/scouting-america-cfc-logo.avif" type="image/avif">
+        <source srcset="../assets/scouting-america-cfc-logo.webp" type="image/webp">
+        <img src="../assets/scouting-america-cfc-logo.png" width="305" height="60" alt="Scouting America — Central Florida Council">
+      </picture>
+    </a>
+
+    <nav id="site-nav" class="site-nav" aria-label="Primary">
+      <a href="../index.html#how-it-works">How it works</a>
+      <a href="../index.html#why-camp-card">Why Camp Card</a>
+      <a href="../index.html#faq">FAQ</a>
+      <a href="../contact/">Contact</a>
+    </nav>
+
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-controls="site-nav" aria-expanded="false">
+      <span class="hamburger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1>Buy a Camp Card</h1>
+      <p>One card. Exclusive local discounts. 100% supports Scouting.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="checkout-layout">
+      <!-- Payment Panel -->
+      <div class="payment-panel">
+        <h2>Payment Details</h2>
+        <p>Complete your purchase securely through Authorize.net.</p>
+
+        <!-- Step 1: Email + Proceed -->
+        <div id="checkout-form">
+          <div class="email-form">
+            <label for="customer-email">Email address</label>
+            <input type="email" id="customer-email" placeholder="you@example.com" required autocomplete="email">
+            <div class="hint">We'll send your Camp Card confirmation here.</div>
+          </div>
+
+          <fieldset class="donation-section" style="border:none;padding:0;margin:20px 0;">
+            <legend style="font-weight:700;margin:0 0 8px;font-size:15px;padding:0;">Add an optional donation</legend>
+            <div class="donation-hint">100% of your donation goes directly to Scouting programs.</div>
+            <div class="donation-options">
+              <button type="button" class="donation-btn donation-btn-none active" data-amount="0">No thanks</button>
+              <button type="button" class="donation-btn" data-amount="5">+ $5</button>
+              <button type="button" class="donation-btn" data-amount="10">+ $10</button>
+              <button type="button" class="donation-btn" data-amount="15">+ $15</button>
+              <button type="button" class="donation-btn" data-amount="20">+ $20</button>
+            </div>
+          </fieldset>
+
+          <div class="referral-section">
+            <button type="button" class="referral-toggle" id="referral-toggle">Have a referral code?</button>
+            <div class="referral-field hidden" id="referral-field">
+              <input type="text" id="referral-code" placeholder="Enter referral code" autocomplete="off">
+            </div>
+          </div>
+
+          <button type="button" class="btn-checkout" id="btn-proceed">
+            Proceed to Payment — $15.00
+          </button>
+        </div>
+
+        <!-- Step 2: Loading -->
+        <div id="payment-loading" class="payment-loading hidden">
+          <div class="spinner"></div>
+          <p>Setting up secure payment...</p>
+        </div>
+
+        <!-- Step 3: Hosted Payment iframe -->
+        <div id="payment-frame" class="hidden">
+          <div class="payment-iframe-wrapper">
+            <iframe id="hosted-payment-iframe" name="hosted-payment-iframe" title="Secure payment form"></iframe>
+          </div>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div id="payment-success" class="payment-success hidden">
+          <svg style="width:48px;height:48px;stroke:#1a5c32;fill:none;stroke-width:2;margin:0 auto 12px;display:block;" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          <h3>Purchase Complete!</h3>
+          <p>Your Camp Card is ready. Download the app to start using your discounts.</p>
+          <div style="margin-top:20px;">
+            <div class="store-badges" style="justify-content:center;">
+              <a class="store-badge" href="#" target="_blank" rel="noopener noreferrer">
+                <img src="../assets/app-store-badge.svg" alt="Download on the App Store">
+              </a>
+              <a class="store-badge" href="#" target="_blank" rel="noopener noreferrer">
+                <img src="../assets/google-play-badge.png" alt="Get it on Google Play">
+              </a>
+            </div>
+          </div>
+          <p style="margin-top:16px;"><a href="../index.html" style="color:var(--color-navy-2);font-weight:600;">Return to home</a></p>
+        </div>
+
+        <!-- Step 5: Error -->
+        <div id="payment-error" class="payment-error hidden">
+          <h3>Something went wrong</h3>
+          <p id="error-message">We couldn't process your payment. Please try again.</p>
+          <button type="button" class="btn-checkout" id="btn-retry" style="max-width:280px;margin:16px auto 0;">Try Again</button>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <h2>Order Summary</h2>
+
+        <div class="order-item">
+          <div>
+            <div class="order-item-name">Scouting America Camp Card</div>
+            <div class="order-item-desc">Annual digital discount card</div>
+          </div>
+          <div class="order-item-price">$15.00</div>
+        </div>
+
+        <div class="order-item hidden" id="donation-line">
+          <div>
+            <div class="order-item-name">Donation</div>
+            <div class="order-item-desc">Additional support for Scouts</div>
+          </div>
+          <div class="order-item-price" id="donation-line-price">$0.00</div>
+        </div>
+
+        <div class="order-total">
+          <div class="order-total-label">Total</div>
+          <div class="order-total-price" id="order-total-price">$15.00</div>
+        </div>
+
+        <div class="order-trust">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <div>
+            <strong>Secure checkout</strong><br>
+            Payment processed by Authorize.net. Your card details never touch our servers.
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:14px;background:rgba(208,0,42,0.05);border:1px solid rgba(208,0,42,0.15);border-radius:12px;">
+          <strong style="font-size:15px;">100% supports Scouting</strong>
+          <p style="margin:4px 0 0;font-size:13px;color:var(--color-muted);">Every dollar funds camp experiences, leadership programs, and outdoor adventures for Scouts in Central Florida.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div>&copy; Scouting America — Central Florida Council &bull; <a href="../index.html" style="color:inherit;text-decoration:none;">Camp Card</a></div>
+    <div class="footer-links">
+      <a href="../privacy/">Privacy</a>
+      <span aria-hidden="true">&bull;</span>
+      <a href="../terms/">Terms</a>
+      <span aria-hidden="true">&bull;</span>
+      <a href="../contact/">Support</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  var API_BASE = 'https://api.campcardapp.org/api/v1';
+  var BASE_PRICE = 15;
+  var selectedDonation = 0;
+
+  var checkoutForm = document.getElementById('checkout-form');
+  var loadingEl = document.getElementById('payment-loading');
+  var frameEl = document.getElementById('payment-frame');
+  var successEl = document.getElementById('payment-success');
+  var errorEl = document.getElementById('payment-error');
+  var errorMsg = document.getElementById('error-message');
+  var emailInput = document.getElementById('customer-email');
+  var referralInput = document.getElementById('referral-code');
+  var btnProceed = document.getElementById('btn-proceed');
+  var btnRetry = document.getElementById('btn-retry');
+  var iframe = document.getElementById('hosted-payment-iframe');
+  var referralToggle = document.getElementById('referral-toggle');
+  var referralField = document.getElementById('referral-field');
+  var donationLine = document.getElementById('donation-line');
+  var donationLinePrice = document.getElementById('donation-line-price');
+  var orderTotalPrice = document.getElementById('order-total-price');
+  var donationBtns = document.querySelectorAll('.donation-btn');
+
+  // Mobile nav toggle (reuse)
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('site-nav');
+  if (toggle && nav) {
+    toggle.addEventListener('click', function() {
+      var isOpen = nav.classList.toggle('site-nav--open');
+      toggle.setAttribute('aria-expanded', isOpen);
+      document.body.classList.toggle('nav-open', isOpen);
+    });
+  }
+
+  // Donation selection
+  function updateTotal() {
+    var total = BASE_PRICE + selectedDonation;
+    orderTotalPrice.textContent = '$' + total.toFixed(2);
+    btnProceed.textContent = 'Proceed to Payment \u2014 $' + total.toFixed(2);
+
+    if (selectedDonation > 0) {
+      donationLine.classList.remove('hidden');
+      donationLinePrice.textContent = '$' + selectedDonation.toFixed(2);
+    } else {
+      donationLine.classList.add('hidden');
+    }
+  }
+
+  donationBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      donationBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      selectedDonation = Number.parseInt(btn.dataset.amount, 10);
+      updateTotal();
+    });
+  });
+
+  // Referral code toggle
+  referralToggle.addEventListener('click', function() {
+    referralField.classList.toggle('hidden');
+    if (!referralField.classList.contains('hidden')) {
+      referralInput.focus();
+    }
+  });
+
+  function showStep(step) {
+    checkoutForm.classList.add('hidden');
+    loadingEl.classList.add('hidden');
+    frameEl.classList.add('hidden');
+    successEl.classList.add('hidden');
+    errorEl.classList.add('hidden');
+
+    if (step === 'form') checkoutForm.classList.remove('hidden');
+    if (step === 'loading') loadingEl.classList.remove('hidden');
+    if (step === 'frame') frameEl.classList.remove('hidden');
+    if (step === 'success') successEl.classList.remove('hidden');
+    if (step === 'error') errorEl.classList.remove('hidden');
+  }
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  async function requestToken() {
+    var email = emailInput.value.trim();
+    if (!validateEmail(email)) {
+      emailInput.focus();
+      emailInput.style.borderColor = 'var(--color-red)';
+      return;
+    }
+    emailInput.style.borderColor = '';
+
+    showStep('loading');
+    btnProceed.disabled = true;
+
+    try {
+      var total = BASE_PRICE + selectedDonation;
+      var body = {
+        customerEmail: email,
+        amount: total.toFixed(2),
+        donationAmount: selectedDonation > 0 ? selectedDonation.toFixed(2) : null,
+        returnUrl: 'https://www.campcardapp.org/buy-campcard/?status=success',
+        cancelUrl: 'https://www.campcardapp.org/buy-campcard/?status=cancel'
+      };
+
+      var referral = referralInput.value.trim();
+      if (referral) {
+        body.referralCode = referral;
+      }
+
+      var res = await fetch(API_BASE + '/payments/subscribe/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      var data = await res.json();
+
+      if (data.success && data.token) {
+        // Build the Authorize.net form and submit to iframe
+        var formUrl = data.formUrl;
+        var token = data.token;
+
+        // Create a hidden form and submit it to the iframe
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = formUrl;
+        form.target = 'hosted-payment-iframe';
+
+        var tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'token';
+        tokenInput.value = token;
+        form.appendChild(tokenInput);
+
+        document.body.appendChild(form);
+        showStep('frame');
+        form.submit();
+        document.body.removeChild(form);
+      } else {
+        showError(data.errorMessage || 'Failed to initialize payment. Please try again.');
+      }
+    } catch (err) {
+      showError('Unable to connect to the payment server. Please check your connection and try again.');
+    }
+
+    btnProceed.disabled = false;
+  }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    showStep('error');
+  }
+
+  // Listen for messages from the Authorize.net iframe
+  window.addEventListener('message', function(event) {
+    // Only accept messages from Authorize.net domains
+    if (event.origin.indexOf('authorize.net') === -1) return;
+
+    try {
+      var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+      if (data.action === 'successfulSave' || data.action === 'transactResponse') {
+        showStep('success');
+      } else if (data.action === 'cancel') {
+        showStep('form');
+      } else if (data.action === 'resizeWindow') {
+        // Adjust iframe height
+        if (data.height) {
+          iframe.style.height = Math.max(400, parseInt(data.height)) + 'px';
+        }
+      }
+    } catch (e) {
+      // Not a JSON message, ignore
+    }
+  });
+
+  // Check URL for status from Authorize.net redirect
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('status') === 'success') {
+    showStep('success');
+    // Clean URL
+    history.replaceState(null, '', window.location.pathname);
+  } else if (params.get('status') === 'cancel') {
+    showStep('form');
+    history.replaceState(null, '', window.location.pathname);
+  }
+
+  // Event listeners
+  btnProceed.addEventListener('click', requestToken);
+  btnRetry.addEventListener('click', function() {
+    showStep('form');
+  });
+
+  // Submit on enter in email field
+  emailInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      requestToken();
+    }
+  });
+})();
+</script>
+</body>
+</html>
