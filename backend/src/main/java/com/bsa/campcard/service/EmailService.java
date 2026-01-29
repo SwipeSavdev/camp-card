@@ -2712,8 +2712,12 @@ public class EmailService {
 
     private void sendEmail(String to, String subject, String htmlBody, String textBody) {
         try {
+            // Use friendly From name for better deliverability
+            String fromAddress = "BSA Camp Card <" + fromEmail + ">";
+
             SendEmailRequest request = SendEmailRequest.builder()
-                    .source(fromEmail)
+                    .source(fromAddress)
+                    .replyToAddresses("support@campcardapp.org")
                     .destination(Destination.builder()
                             .toAddresses(to)
                             .build())
