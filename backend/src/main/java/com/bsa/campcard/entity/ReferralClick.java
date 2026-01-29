@@ -20,8 +20,14 @@ public class ReferralClick {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "referral_id", nullable = false)
+    @Column(name = "referral_id")
     private Long referralId;
+
+    @Column(name = "referral_code", length = 50)
+    private String referralCode;
+
+    @Column(length = 20)
+    private String source;
 
     @Column(name = "ip_address", length = 45)
     private String ipAddress;

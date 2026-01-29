@@ -90,8 +90,16 @@ public class QRCodeService {
         }
 
         // Build subscribe URL based on user role
-        // Scouts use ?scout= parameter ($10/year tier)
-        // Customers/Parents use ?ref= parameter ($15/year tier)
+        // Use the user's referralCode (from users table) in shareable links
+        // so that click tracking aligns with referral stats.
+        // The uniqueCode is still used for QR code scanning/validation data.
+        String referralCode = user.getReferralCode();
+        if (referralCode == null || referralCode.isEmpty()) {
+            referralCode = generateUniqueCode();
+            user.setReferralCode(referralCode);
+            userRepository.save(user);
+        }
+
         String userName = URLEncoder.encode(
                 user.getFirstName() + " " + user.getLastName(),
                 StandardCharsets.UTF_8);
@@ -99,10 +107,10 @@ public class QRCodeService {
         String subscribeUrl;
         if (user.getRole() == User.UserRole.SCOUT) {
             // Scout referral - $10/year
-            subscribeUrl = staticSiteUrl + "/buy-campcard/?scout=" + uniqueCode + "&name=" + userName;
+            subscribeUrl = staticSiteUrl + "/buy-campcard/?scout=" + referralCode + "&name=" + userName;
         } else {
             // Customer/Parent referral - $15/year
-            subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + uniqueCode + "&refname=" + userName;
+            subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + referralCode + "&refname=" + userName;
         }
 
         return QRCodeResponse.builder()

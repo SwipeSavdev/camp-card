@@ -4,6 +4,7 @@ import com.bsa.campcard.dto.referral.*;
 import com.bsa.campcard.service.ReferralService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -69,6 +71,24 @@ public class ReferralController {
         log.info("Claiming reward for referral: {}", referralId);
         referralService.claimReward(userId, referralId);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/track")
+    @Operation(summary = "Track referral link click", description = "Public endpoint to track clicks on referral/scout links")
+    public ResponseEntity<Map<String, String>> trackClick(
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request) {
+
+        String code = body.getOrDefault("code", "");
+        String source = body.getOrDefault("source", "link");
+        String ipAddress = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+        String referer = request.getHeader("Referer");
+
+        log.info("Track click request: code={} source={} ip={}", code, source, ipAddress);
+        referralService.trackClick(code, source, ipAddress, userAgent, referer);
+
+        return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
     private UUID getUserIdFromAuth(Authentication authentication) {

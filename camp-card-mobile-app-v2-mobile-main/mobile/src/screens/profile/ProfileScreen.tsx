@@ -35,7 +35,7 @@ export default function ProfileScreen() {
       title: 'Referrals',
       subtitle: 'Share and earn rewards',
       onPress: () => navigation.navigate('Referral'),
-      showFor: ['SCOUT', 'PARENT'], // Not for Troop Leaders
+      showFor: ['SCOUT'], // Only for Scouts
     },
     {
       icon: 'notifications-outline',

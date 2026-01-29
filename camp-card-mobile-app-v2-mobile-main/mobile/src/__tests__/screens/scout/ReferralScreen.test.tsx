@@ -356,7 +356,7 @@ describe('ReferralScreen', () => {
 
       await waitFor(() => {
         expect(mockClipboard.setStringAsync).toHaveBeenCalledWith(
-          expect.stringContaining('https://campcard.org/join/')
+          expect.stringContaining('https://www.campcardapp.org/buy-campcard/')
         );
       });
     });

@@ -2,8 +2,10 @@ package com.bsa.campcard.service;
 
 import com.bsa.campcard.dto.referral.*;
 import com.bsa.campcard.entity.Referral;
+import com.bsa.campcard.entity.ReferralClick;
 import org.bsa.campcard.domain.user.User;
 import com.bsa.campcard.exception.ResourceNotFoundException;
+import com.bsa.campcard.repository.ReferralClickRepository;
 import com.bsa.campcard.repository.ReferralRepository;
 import org.bsa.campcard.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 public class ReferralService {
     
     private final ReferralRepository referralRepository;
+    private final ReferralClickRepository referralClickRepository;
     private final UserRepository userRepository;
     
     @Value("${app.referral.reward.amount:10.00}")
@@ -77,6 +80,9 @@ public class ReferralService {
                 StandardCharsets.UTF_8);
         String subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + referralCode + "&refname=" + customerName;
 
+        // Get click count for this referral code
+        long clickCount = referralClickRepository.countByReferralCode(referralCode);
+
         return ReferralCodeResponse.builder()
                 .referralCode(referralCode)
                 .shareableLink(subscribeUrl)
@@ -84,6 +90,7 @@ public class ReferralService {
                 .successfulReferrals(successfulReferrals.intValue())
                 .totalRewardsEarned(totalRewards != null ? BigDecimal.valueOf(totalRewards) : BigDecimal.ZERO)
                 .pendingRewards(pendingRewards)
+                .totalClicks(clickCount)
                 .build();
     }
     
@@ -187,6 +194,37 @@ public class ReferralService {
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Track a click on a referral or scout link.
+     * This is a public endpoint — no authentication required.
+     */
+    @Transactional
+    public void trackClick(String code, String source, String ipAddress, String userAgent, String referer) {
+        if (code == null || code.isBlank()) {
+            log.warn("trackClick called with empty code");
+            return;
+        }
+
+        log.info("Tracking click for code: {} source: {} ip: {}", code, source, ipAddress);
+
+        ReferralClick click = ReferralClick.builder()
+                .referralCode(code)
+                .source(source)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .referer(referer)
+                .build();
+
+        referralClickRepository.save(click);
+    }
+
+    /**
+     * Get click count for a specific referral code.
+     */
+    public long getClickCount(String referralCode) {
+        return referralClickRepository.countByReferralCode(referralCode);
+    }
+
     /**
      * Generate a unique referral code
      */

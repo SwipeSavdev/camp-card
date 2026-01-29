@@ -47,7 +47,7 @@ export default function TroopStatsScreen() {
   // Troop Leader's Cash Code - unique code for customers to use
   const troopId = user?.troopId || '101';
   const cashCode = `TROOP-${troopId}-${new Date().getFullYear()}`;
-  const cashCodeLink = `https://campcard.org/support/${cashCode}`;
+  const cashCodeLink = `https://www.campcardapp.org/support/${cashCode}`;
 
   // Mock stats - will be replaced with API call
   const [stats] = useState<TroopStats>({

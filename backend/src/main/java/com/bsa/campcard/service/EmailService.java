@@ -25,8 +25,11 @@ public class EmailService {
     @Value("${campcard.base-url:https://api.campcardapp.org}")
     private String baseUrl;
 
-    @Value("${campcard.web-portal-url:${campcard.base-url:https://campcardapp.org}}")
+    @Value("${campcard.web-portal-url:${campcard.base-url:https://admin.campcardapp.org}}")
     private String webPortalUrl;
+
+    @Value("${campcard.static-site-url:https://www.campcardapp.org}")
+    private String staticSiteUrl;
 
     @Value("${campcard.notifications.email.enabled:true}")
     private boolean emailEnabled;
@@ -197,7 +200,7 @@ public class EmailService {
         }
 
         String subject = "Welcome to BSA Camp Card, " + firstName + "!";
-        String appUrl = baseUrl + "/download";
+        String appUrl = staticSiteUrl + "/download";
 
         String htmlBody = buildEmailTemplate(
             "Welcome to the Camp Card Family!",
@@ -294,7 +297,7 @@ public class EmailService {
         }
 
         String subject = "Welcome, Scout " + scoutFirstName + "! Your Camp Card Journey Begins";
-        String referralUrl = baseUrl + "/r/" + referralCode;
+        String referralUrl = staticSiteUrl + "/buy-campcard/?scout=" + referralCode;
 
         String htmlBody = buildEmailTemplate(
             "Your Scouting Adventure Awaits!",
@@ -323,7 +326,7 @@ public class EmailService {
 
             <p style="font-size: 14px; color: #666666;">Your shareable link: <a href="%s" style="color: %s;">%s</a></p>
 
-            """ + buildButton("View Your Dashboard", baseUrl + "/dashboard", BSA_NAVY) + """
+            """ + buildButton("View Your Dashboard", webPortalUrl + "/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 16px; color: #333333; margin-top: 24px;">Do Your Best!</p>
             <p style="font-size: 14px; color: #666666;"><em>The BSA Camp Card Team</em></p>
@@ -354,7 +357,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(scoutFirstName, troopNumber, referralCode, referralUrl, baseUrl);
+            """.formatted(scoutFirstName, troopNumber, referralCode, referralUrl, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Scout welcome email sent to: {}", to);
@@ -418,7 +421,7 @@ public class EmailService {
                 </table>
             </div>
 
-            """ + buildButton("Access Your Dashboard", baseUrl + "/leader/dashboard", BSA_NAVY) + """
+            """ + buildButton("Access Your Dashboard", webPortalUrl + "/leader/dashboard", BSA_NAVY) + """
 
             <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #856404;"><strong>Next Step:</strong> Invite your Scouts to join the program! They can sign up using your troop's invitation link in the dashboard.</p>
@@ -452,7 +455,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(troopNumber, firstName, troopNumber, baseUrl);
+            """.formatted(troopNumber, firstName, troopNumber, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Troop leader welcome email sent to: {}", to);
@@ -484,7 +487,7 @@ public class EmailService {
             </div>
             <p style="font-size: 16px; color: #333333;">Every referral helps your troop get closer to its fundraising goal. Keep up the amazing work!</p>
 
-            """ + buildButton("View Your Progress", baseUrl + "/dashboard", BSA_NAVY) + """
+            """ + buildButton("View Your Progress", webPortalUrl + "/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px; text-align: center;">Keep sharing your referral link to earn more!</p>
             """.formatted(scoutName, customerName)
@@ -504,7 +507,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(scoutName, customerName, baseUrl);
+            """.formatted(scoutName, customerName, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Referral notification sent to: {}", to);
@@ -536,7 +539,7 @@ public class EmailService {
             <p style="font-size: 16px; color: #333333;">You've reached the <strong>%s</strong> milestone! Your dedication is making a real difference for your troop.</p>
             <p style="font-size: 16px; color: #333333;">Keep going - the next milestone is within reach!</p>
 
-            """ + buildButton("Share Your Achievement", baseUrl + "/dashboard", BSA_NAVY) + """
+            """ + buildButton("Share Your Achievement", webPortalUrl + "/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px; text-align: center;">Do Your Best!</p>
             """.formatted(scoutName, BSA_GOLD, milestoneName, salesCount, milestoneName)
@@ -559,7 +562,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(scoutName, milestoneName, salesCount, baseUrl);
+            """.formatted(scoutName, milestoneName, salesCount, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Sales milestone email sent to: {}", to);
@@ -610,7 +613,7 @@ public class EmailService {
 
             <p style="font-size: 16px; color: #333333;">You now have full access to all Camp Card offers. Start exploring and saving!</p>
 
-            """ + buildButton("Browse Offers", baseUrl + "/offers", BSA_NAVY) + """
+            """ + buildButton("Browse Offers", webPortalUrl + "/offers", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Thank you for supporting local Scouts!</p>
             """.formatted(firstName, BSA_NAVY, planName, formattedAmount, formattedDate)
@@ -637,7 +640,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(firstName, planName, formattedAmount, formattedDate, baseUrl);
+            """.formatted(firstName, planName, formattedAmount, formattedDate, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Subscription confirmation sent to: {}", to);
@@ -671,7 +674,7 @@ public class EmailService {
 
             <p style="font-size: 16px; color: #333333;">Don't miss out on exclusive offers from local merchants. Renew now to continue saving!</p>
 
-            """ + buildButton("Renew Subscription", baseUrl + "/subscription/renew", BSA_NAVY) + """
+            """ + buildButton("Renew Subscription", staticSiteUrl + "/buy-campcard/", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact us at support@campcardapp.org</p>
             """.formatted(firstName, formattedDate, daysRemaining, daysRemaining == 1 ? "" : "s")
@@ -695,7 +698,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(firstName, formattedDate, daysRemaining, daysRemaining == 1 ? "" : "s", baseUrl);
+            """.formatted(firstName, formattedDate, daysRemaining, daysRemaining == 1 ? "" : "s", staticSiteUrl + "/buy-campcard/");
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Subscription expiring reminder sent to: {}", to);
@@ -729,7 +732,7 @@ public class EmailService {
                 <li>Save money at your favorite stores</li>
             </ul>
 
-            """ + buildButton("Renew Now", baseUrl + "/subscription/renew", BSA_NAVY) + """
+            """ + buildButton("Renew Now", staticSiteUrl + "/buy-campcard/", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">We hope to see you back soon!</p>
             """.formatted(firstName)
@@ -749,14 +752,14 @@ public class EmailService {
             - Support Scouts in your community
             - Save money at your favorite stores
 
-            Renew now: %s/subscription/renew
+            Renew now: %s
 
             We hope to see you back soon!
 
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(firstName, baseUrl);
+            """.formatted(firstName, staticSiteUrl + "/buy-campcard/");
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Subscription expired email sent to: {}", to);
@@ -1727,7 +1730,7 @@ public class EmailService {
         }
 
         String subject = "You're Invited to Join BSA Camp Card - Troop " + troopNumber;
-        String inviteUrl = baseUrl + "/join/scout?token=" + inviteToken;
+        String inviteUrl = staticSiteUrl + "/join/scout?token=" + inviteToken;
 
         String htmlBody = buildEmailTemplate(
             "You're Invited to Join!",
@@ -1797,7 +1800,7 @@ public class EmailService {
         }
 
         String subject = "Join BSA Camp Card to Support " + scoutName;
-        String inviteUrl = baseUrl + "/join/parent?token=" + inviteToken;
+        String inviteUrl = staticSiteUrl + "/join/parent?token=" + inviteToken;
 
         String htmlBody = buildEmailTemplate(
             "Support Your Scout!",
@@ -1932,7 +1935,7 @@ public class EmailService {
                 </table>
             </div>
 
-            """ + buildButton("Access Admin Dashboard", baseUrl + "/admin/dashboard", BSA_NAVY) + """
+            """ + buildButton("Access Admin Dashboard", webPortalUrl + "/admin/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact national support at support@campcardapp.org</p>
             """.formatted(firstName, councilName, BSA_NAVY)
@@ -1958,7 +1961,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(firstName, councilName, baseUrl);
+            """.formatted(firstName, councilName, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Council admin welcome email sent to: {}", to);
@@ -1993,7 +1996,7 @@ public class EmailService {
                 <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 18px;">%s</p>
             </div>
 
-            """ + buildButton("View Offer", baseUrl + "/offers", BSA_NAVY) + """
+            """ + buildButton("View Offer", webPortalUrl + "/offers", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px; text-align: center;">Don't miss out - redeem this offer today!</p>
             """.formatted(firstName, BSA_GOLD, merchantName, offerTitle, discountDescription)
@@ -2017,7 +2020,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(firstName, merchantName, offerTitle, discountDescription, baseUrl);
+            """.formatted(firstName, merchantName, offerTitle, discountDescription, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("New offer notification sent to: {}", to);
@@ -2059,7 +2062,7 @@ public class EmailService {
 
             %s
 
-            """ + buildButton("View Full Report", baseUrl + "/leader/dashboard", BSA_NAVY) + """
+            """ + buildButton("View Full Report", webPortalUrl + "/leader/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Keep up the great work!</p>
             """.formatted(
@@ -2093,7 +2096,7 @@ public class EmailService {
             BSA Camp Card
             Supporting Scouts, One Card at a Time
             """.formatted(leaderName, troopNumber, totalSales, newSubscribers, formattedAmount,
-                topScoutName != null ? "\nTop Scout This Week: " + topScoutName : "", baseUrl);
+                topScoutName != null ? "\nTop Scout This Week: " + topScoutName : "", webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Weekly troop summary sent to: {}", to);
@@ -2177,7 +2180,7 @@ public class EmailService {
                 </ol>
             </div>
 
-            """ + buildButton("Access Merchant Dashboard", baseUrl + "/merchant/dashboard", BSA_NAVY) + """
+            """ + buildButton("Access Merchant Dashboard", webPortalUrl + "/merchant/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Welcome to the Camp Card family!</p>
             """.formatted(contactName, businessName, BSA_NAVY)
@@ -2203,7 +2206,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(contactName, businessName, baseUrl);
+            """.formatted(contactName, businessName, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Merchant approval email sent to: {}", to);
@@ -2401,7 +2404,7 @@ public class EmailService {
                 </ul>
             </div>
 
-            """ + buildButton("Cancel Deletion", baseUrl + "/cancel-deletion", BSA_NAVY) + """
+            """ + buildButton("Cancel Deletion", webPortalUrl + "/cancel-deletion", BSA_NAVY) + """
 
             <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>Didn't request this?</strong></p>
@@ -2433,7 +2436,7 @@ public class EmailService {
             ---
             BSA Camp Card
             Supporting Scouts, One Card at a Time
-            """.formatted(firstName, baseUrl);
+            """.formatted(firstName, webPortalUrl);
 
         sendEmail(to, subject, htmlBody, textBody);
         log.info("Account deletion notification sent to: {}", to);

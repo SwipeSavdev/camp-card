@@ -24,4 +24,6 @@ public class ReferralCodeResponse {
     private BigDecimal totalRewardsEarned;
     
     private BigDecimal pendingRewards;
+
+    private Long totalClicks;
 }

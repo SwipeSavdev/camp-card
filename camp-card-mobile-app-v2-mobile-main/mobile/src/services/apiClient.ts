@@ -305,11 +305,11 @@ export const analyticsApi = {
 export const qrCodeApi = {
   // Get user's QR code with shareable link for scout affiliate tracking
   getUserQRCode: () =>
-    apiClient.get('/api/v1/qr-codes/user'),
+    apiClient.get('/api/v1/users/me/qr-code'),
 
   // Validate a QR code
   validateQRCode: (code: string) =>
-    apiClient.get(`/api/v1/qr-codes/validate/${code}`),
+    apiClient.get(`/api/v1/qr/validate/${code}`),
 };
 
 // Camp Cards API (Multi-Card System)

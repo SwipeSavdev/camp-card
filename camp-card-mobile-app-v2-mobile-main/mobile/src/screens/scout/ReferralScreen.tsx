@@ -19,7 +19,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
-import { referralApi } from '../../services/apiClient';
+import { referralApi, qrCodeApi } from '../../services/apiClient';
 
 interface Referral {
   id: string;
@@ -48,11 +48,23 @@ export default function ReferralScreen() {
 
   // Generate Scout's unique affiliate link (FR-16)
   const scoutId = user?.id || 'scout123';
-  const affiliateCode = `SC-${scoutId.slice(0, 8).toUpperCase()}`;
-  const affiliateLink = `https://campcard.org/join/${affiliateCode}`;
-  const shortLink = `campcard.org/j/${affiliateCode}`;
+  const [affiliateCode, setAffiliateCode] = useState(`SC-${scoutId.slice(0, 8).toUpperCase()}`);
+  const [affiliateLink, setAffiliateLink] = useState(`https://www.campcardapp.org/buy-campcard/?scout=SC-${scoutId.slice(0, 8).toUpperCase()}`);
+  const shortLink = affiliateLink.replace('https://www.', '').replace('https://', '');
+
+  const loadQRCode = async () => {
+    try {
+      const response = await qrCodeApi.getUserQRCode();
+      const data = response.data;
+      if (data.shareableLink) setAffiliateLink(data.shareableLink);
+      if (data.uniqueCode) setAffiliateCode(data.uniqueCode);
+    } catch (error) {
+      console.log('Failed to load QR code from API, using fallback:', error);
+    }
+  };
 
   useEffect(() => {
+    loadQRCode();
     loadReferrals();
   }, []);
 

@@ -67,7 +67,7 @@ export default function ScoutDashboardScreen() {
   const loadQRCode = async () => {
     try {
       setIsLoadingQR(true);
-      // Fetch QR code from backend - returns shareable link pointing to /campcard/subscribe/
+      // Fetch QR code from backend - returns shareable link pointing to /buy-campcard/
       const response = await qrCodeApi.getUserQRCode();
       const data = response.data;
 
@@ -78,7 +78,7 @@ export default function ScoutDashboardScreen() {
       // Fallback to local generation if API fails
       const fallbackCode = `SC-${scoutId.slice(0, 8).toUpperCase()}`;
       setAffiliateCode(fallbackCode);
-      setAffiliateLink(`https://campcardapp.org/subscribe/?scout=${fallbackCode}`);
+      setAffiliateLink(`https://www.campcardapp.org/buy-campcard/?scout=${fallbackCode}`);
     } finally {
       setIsLoadingQR(false);
     }

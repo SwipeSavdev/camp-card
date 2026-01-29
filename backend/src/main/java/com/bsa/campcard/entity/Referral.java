@@ -38,6 +38,10 @@ public class Referral {
     @Column(precision = 10, scale = 2)
     private BigDecimal rewardAmount;
 
+    @Column(name = "click_count", nullable = false)
+    @Builder.Default
+    private Integer clickCount = 0;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean rewardClaimed = false;

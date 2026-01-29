@@ -24,7 +24,7 @@ export default function InviteScoutsScreen() {
 
   // Generate a unique invite code (mock - will come from API)
   const inviteCode = `TROOP-${user?.troopId || '101'}-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-  const inviteLink = `https://campcard.org/join/${inviteCode}`;
+  const inviteLink = `https://www.campcardapp.org/join/${inviteCode}`;
 
   const handleSendInvite = async () => {
     if (!email.trim()) {

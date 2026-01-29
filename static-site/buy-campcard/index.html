@@ -600,6 +600,17 @@
 
     // Update totals for initial price
     updateTotal();
+
+    // Track referral link click
+    if (scoutCode || customerRefCode) {
+      var trackCode = scoutCode || customerRefCode;
+      var trackSource = scoutCode ? 'scout_link' : 'referral_link';
+      fetch(API_BASE + '/referrals/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: trackCode, source: trackSource })
+      }).catch(function() { /* silent fail — tracking is best-effort */ });
+    }
   })();
 
   // ── Card number formatting (spaces every 4 digits) ────────
