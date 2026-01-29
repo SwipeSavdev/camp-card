@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
 
                 // Role-based access
-                .requestMatchers("/api/v1/admin/**").hasRole("NATIONAL_ADMIN")
+                .requestMatchers("/api/v1/admin/**").hasAnyRole("NATIONAL_ADMIN", "GLOBAL_SYSTEM_ADMIN")
                 .requestMatchers("/api/v1/council/**").hasAnyRole("COUNCIL_ADMIN", "NATIONAL_ADMIN")
                 .requestMatchers("/api/v1/troop/**").hasAnyRole("UNIT_LEADER", "COUNCIL_ADMIN", "NATIONAL_ADMIN")
 
