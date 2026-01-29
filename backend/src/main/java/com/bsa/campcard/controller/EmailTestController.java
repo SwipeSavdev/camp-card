@@ -19,7 +19,7 @@ import java.util.*;
 @RequestMapping("/api/v1/admin/email-test")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('NATIONAL_ADMIN')")
+@PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
 public class EmailTestController {
 
     private final EmailService emailService;
