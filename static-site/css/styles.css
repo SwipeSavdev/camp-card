@@ -47,7 +47,11 @@ body{
   color:var(--color-ink);
   background:var(--color-white);
   line-height:var(--leading-normal);
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
 }
+main,#main{flex:1}
 
 img{max-width:100%;height:auto;display:block}
 a{color:inherit}
