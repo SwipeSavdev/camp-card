@@ -26,7 +26,7 @@ public class WebChargeRequest {
     private String dataValue;
 
     @NotNull(message = "Amount is required")
-    @DecimalMin(value = "15.00", message = "Minimum amount is $15.00")
+    @DecimalMin(value = "10.00", message = "Minimum amount is $10.00")
     private BigDecimal amount;
 
     private String customerEmail;
