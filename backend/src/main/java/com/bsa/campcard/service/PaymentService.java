@@ -29,8 +29,9 @@ import java.util.UUID;
 @Service
 public class PaymentService {
 
-    // Static subscription price for web purchases
+    // Subscription prices for web purchases
     public static final BigDecimal WEB_SUBSCRIPTION_PRICE = new BigDecimal("15.00");
+    public static final BigDecimal WEB_SUBSCRIPTION_PRICE_SCOUT_REFERRAL = new BigDecimal("10.00");
     public static final String WEB_SUBSCRIPTION_DESCRIPTION = "Camp Card Annual Subscription";
 
     // Default gateway credentials (fallback)
@@ -741,11 +742,12 @@ public class PaymentService {
 
         PaymentResponse response = getTransactionDetails(councilId, queryRequest);
 
-        // Verify the amount matches our subscription price
+        // Verify the amount is at least the minimum subscription price ($10 for scout referrals, $15 regular)
+        // Donations can increase the total above the base price
         if (response.getAmount() != null &&
-                response.getAmount().compareTo(WEB_SUBSCRIPTION_PRICE) == 0 &&
+                response.getAmount().compareTo(WEB_SUBSCRIPTION_PRICE_SCOUT_REFERRAL) >= 0 &&
                 "SUCCESS".equals(response.getStatus())) {
-            log.info("Subscription payment verified: {} for ${}", transactionId, WEB_SUBSCRIPTION_PRICE);
+            log.info("Subscription payment verified: {} for ${}", transactionId, response.getAmount());
             return response;
         }
 
