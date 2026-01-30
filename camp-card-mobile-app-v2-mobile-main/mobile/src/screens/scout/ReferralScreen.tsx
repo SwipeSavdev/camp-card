@@ -49,7 +49,7 @@ export default function ReferralScreen() {
   // Generate Scout's unique affiliate link (FR-16)
   const scoutId = user?.id || 'scout123';
   const [affiliateCode, setAffiliateCode] = useState(`SC-${scoutId.slice(0, 8).toUpperCase()}`);
-  const [affiliateLink, setAffiliateLink] = useState(`https://www.campcardapp.org/buy-campcard/?scout=SC-${scoutId.slice(0, 8).toUpperCase()}`);
+  const [affiliateLink, setAffiliateLink] = useState(`https://www.campcardapp.org/subscribe/?scout=SC-${scoutId.slice(0, 8).toUpperCase()}`);
   const shortLink = affiliateLink.replace('https://www.', '').replace('https://', '');
 
   const loadQRCode = async () => {

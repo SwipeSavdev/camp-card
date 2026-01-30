@@ -89,10 +89,7 @@ public class QRCodeService {
             qrCodeData = uniqueCode;
         }
 
-        // Build subscribe URL based on user role
-        // Use the user's referralCode (from users table) in shareable links
-        // so that click tracking aligns with referral stats.
-        // The uniqueCode is still used for QR code scanning/validation data.
+        // Ensure user has a referralCode for customer/parent referral links
         String referralCode = user.getReferralCode();
         if (referralCode == null || referralCode.isEmpty()) {
             referralCode = generateUniqueCode();
@@ -106,8 +103,10 @@ public class QRCodeService {
 
         String subscribeUrl;
         if (user.getRole() == User.UserRole.SCOUT) {
-            // Scout referral - $10/year
-            subscribeUrl = staticSiteUrl + "/buy-campcard/?scout=" + referralCode + "&name=" + userName;
+            // Scout referral - $10/year — use uniqueCode (the QR code stored in Redis)
+            // so the code in the link matches what the scout sees in the app.
+            // Points to /subscribe/ which is the dedicated scout referral landing page.
+            subscribeUrl = staticSiteUrl + "/subscribe/?scout=" + uniqueCode + "&name=" + userName;
         } else {
             // Customer/Parent referral - $15/year
             subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + referralCode + "&refname=" + userName;

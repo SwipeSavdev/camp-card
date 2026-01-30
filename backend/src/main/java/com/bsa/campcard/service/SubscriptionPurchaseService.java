@@ -5,18 +5,22 @@ import com.bsa.campcard.dto.payment.PaymentResponse;
 import com.bsa.campcard.dto.payment.SubscriptionCheckoutRequest;
 import com.bsa.campcard.dto.payment.SubscriptionPurchaseRequest;
 import com.bsa.campcard.dto.payment.SubscriptionPurchaseResponse;
+import com.bsa.campcard.entity.Referral;
 import com.bsa.campcard.entity.Subscription;
+import com.bsa.campcard.repository.ReferralRepository;
 import com.bsa.campcard.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserRepository;
 import com.bsa.campcard.security.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,9 +33,13 @@ public class SubscriptionPurchaseService {
     private final PaymentService paymentService;
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final ReferralRepository referralRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${app.referral.reward.amount:10.00}")
+    private BigDecimal referralRewardAmount;
 
     private static final String QR_CODE_PREFIX = "qr:user:";
 
@@ -148,8 +156,9 @@ public class SubscriptionPurchaseService {
             String accessToken = jwtTokenProvider.generateAccessToken(user);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-            // Log Scout attribution for tracking
+            // Create Referral record so the scout's referral stats are updated
             if (rootScoutId != null) {
+                createReferralRecord(rootScoutId, user.getId(), effectiveReferralCode);
                 log.info("Scout {} credited for subscription (depth: {})", rootScoutId, referralDepth);
             }
 
@@ -373,6 +382,30 @@ public class SubscriptionPurchaseService {
     private record ReferralChainInfo(UUID rootScoutId, int depth) {}
 
     /**
+     * Create a Referral entity record so the scout's referral stats
+     * (displayed via GET /referrals/my-code) are accurately counted.
+     */
+    private void createReferralRecord(UUID scoutId, UUID referredUserId, String referralCode) {
+        try {
+            Referral referral = Referral.builder()
+                    .referrerId(scoutId)
+                    .referredUserId(referredUserId)
+                    .referralCode(referralCode)
+                    .status(Referral.ReferralStatus.COMPLETED)
+                    .rewardAmount(referralRewardAmount)
+                    .rewardClaimed(false)
+                    .completedAt(LocalDateTime.now())
+                    .build();
+
+            referralRepository.save(referral);
+            log.info("Referral record created: scout={} referredUser={} code={}", scoutId, referredUserId, referralCode);
+        } catch (Exception e) {
+            // Log but don't fail the purchase — the subscription is already created
+            log.error("Failed to create referral record for scout={} referredUser={}: {}", scoutId, referredUserId, e.getMessage());
+        }
+    }
+
+    /**
      * Process a complete subscription checkout in one step:
      * 1. Check if email already exists
      * 2. Process payment with Authorize.Net
@@ -503,7 +536,9 @@ public class SubscriptionPurchaseService {
             String accessToken = jwtTokenProvider.generateAccessToken(user);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
+            // Create Referral record so the scout's referral stats are updated
             if (rootScoutId != null) {
+                createReferralRecord(rootScoutId, user.getId(), effectiveReferralCode);
                 log.info("Scout {} credited for subscription (depth: {})", rootScoutId, referralDepth);
             }
 

@@ -28,7 +28,7 @@ public class Referral {
     @Column(nullable = false, columnDefinition = "UUID")
     private UUID referredUserId; // User who was referred
     
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 50)
     private String referralCode;
     
     @Column(nullable = false, length = 20)

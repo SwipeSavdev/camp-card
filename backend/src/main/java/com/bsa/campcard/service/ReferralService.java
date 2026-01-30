@@ -11,6 +11,7 @@ import org.bsa.campcard.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,9 @@ public class ReferralService {
     private final ReferralRepository referralRepository;
     private final ReferralClickRepository referralClickRepository;
     private final UserRepository userRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String QR_CODE_PREFIX = "qr:user:";
     
     @Value("${app.referral.reward.amount:10.00}")
     private BigDecimal referralRewardAmount;
@@ -73,15 +77,30 @@ public class ReferralService {
                 .map(Referral::getRewardAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        // Build subscribe URL with customer referral tracking
-        // Customer referrals show $15 tier and include the referring customer's code
-        String customerName = URLEncoder.encode(
+        // Build subscribe URL based on user role
+        String userName = URLEncoder.encode(
                 user.getFirstName() + " " + user.getLastName(),
                 StandardCharsets.UTF_8);
-        String subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + referralCode + "&refname=" + customerName;
 
-        // Get click count for this referral code
+        String subscribeUrl;
+        if (user.getRole() == User.UserRole.SCOUT) {
+            // Scout referral - use QR code from Redis (matches what scout sees in app)
+            // Points to /subscribe/ which is the dedicated scout referral landing page ($10)
+            String qrCode = getQrCodeForUser(userId);
+            String scoutCode = (qrCode != null) ? qrCode : referralCode;
+            subscribeUrl = staticSiteUrl + "/subscribe/?scout=" + scoutCode + "&name=" + userName;
+        } else {
+            // Customer/Parent referral - $15/year via /buy-campcard/
+            subscribeUrl = staticSiteUrl + "/buy-campcard/?ref=" + referralCode + "&refname=" + userName;
+        }
+
+        // Get click count — include clicks on the user's QR code (stored in Redis)
+        // because the subscribe page tracks clicks using the QR code, not the referralCode
         long clickCount = referralClickRepository.countByReferralCode(referralCode);
+        String qrCode = getQrCodeForUser(userId);
+        if (qrCode != null && !qrCode.equals(referralCode)) {
+            clickCount += referralClickRepository.countByReferralCode(qrCode);
+        }
 
         return ReferralCodeResponse.builder()
                 .referralCode(referralCode)
@@ -256,6 +275,20 @@ public class ReferralService {
         return sb.toString();
     }
     
+    /**
+     * Look up a user's QR code from Redis.
+     * Scout QR codes are stored as "qr:user:{userId}" → code (e.g. "SC-945F31BB").
+     */
+    private String getQrCodeForUser(UUID userId) {
+        try {
+            Object value = redisTemplate.opsForValue().get(QR_CODE_PREFIX + userId.toString());
+            return value != null ? value.toString() : null;
+        } catch (Exception e) {
+            log.warn("Failed to look up QR code for user {}: {}", userId, e.getMessage());
+            return null;
+        }
+    }
+
     private ReferralResponse toResponse(Referral referral) {
         User referredUser = userRepository.findById(referral.getReferredUserId()).orElse(null);
         

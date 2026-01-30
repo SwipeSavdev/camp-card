@@ -66,9 +66,9 @@ export default function HelpSupportScreen() {
     {
       icon: 'mail',
       title: 'Email Support',
-      subtitle: 'support@campcard.org',
+      subtitle: 'support@campcardapp.org',
       onPress: () => {
-        Linking.openURL('mailto:support@campcard.org?subject=Camp Card App Support');
+        Linking.openURL('mailto:support@campcardapp.org?subject=Camp Card App Support');
       },
     },
     {
@@ -97,9 +97,9 @@ export default function HelpSupportScreen() {
     {
       icon: 'globe',
       title: 'Visit Website',
-      subtitle: 'campcard.org/help',
+      subtitle: 'campcardapp.org/help',
       onPress: () => {
-        Linking.openURL('https://campcard.org/help');
+        Linking.openURL('https://www.campcardapp.org/help');
       },
     },
   ];
@@ -110,7 +110,7 @@ export default function HelpSupportScreen() {
       title: 'User Guide',
       subtitle: 'Learn how to use the app',
       onPress: () => {
-        Linking.openURL('https://campcard.org/guide');
+        Linking.openURL('https://www.campcardapp.org/guide');
       },
     },
     {
@@ -118,7 +118,7 @@ export default function HelpSupportScreen() {
       title: 'Video Tutorials',
       subtitle: 'Watch step-by-step guides',
       onPress: () => {
-        Linking.openURL('https://campcard.org/tutorials');
+        Linking.openURL('https://www.campcardapp.org/tutorials');
       },
     },
     {
@@ -126,7 +126,7 @@ export default function HelpSupportScreen() {
       title: 'Report a Problem',
       subtitle: 'Let us know about issues',
       onPress: () => {
-        Linking.openURL('mailto:support@campcard.org?subject=Problem Report - Camp Card App');
+        Linking.openURL('mailto:support@campcardapp.org?subject=Problem Report - Camp Card App');
       },
     },
     {
