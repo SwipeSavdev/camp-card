@@ -1,23 +1,16 @@
 -- ============================================================================
--- V036: Fix referral constraints for subscription purchase flow
+-- V036: Referral constraint notes
 -- ============================================================================
--- 1. Drop UNIQUE constraint on referral_code — the same scout/referral code
---    can generate multiple referral records (one per referred user).
--- 2. Update status CHECK to include 'COMPLETED' (used by Java entity enum).
--- 3. Add 'notes' column if missing (used by Referral entity).
+-- The referrals table is owned by 'postgres', so campcard_app cannot ALTER it.
+-- Java code has been adapted to work within existing constraints:
+--   - Uses SUBSCRIBED status (in DB CHECK) instead of COMPLETED
+--   - Generates unique referral codes per record to avoid UNIQUE violation
+--
+-- If you have postgres access, run these optional optimizations:
+--   ALTER TABLE referrals DROP CONSTRAINT IF EXISTS referrals_referral_code_key;
+--   ALTER TABLE referrals DROP CONSTRAINT IF EXISTS chk_referral_status;
+--   ALTER TABLE referrals ADD CONSTRAINT chk_referral_status
+--     CHECK (status IN ('PENDING','CLICKED','SIGNED_UP','SUBSCRIBED','COMPLETED','REWARDED','EXPIRED','CANCELLED'));
+--   ALTER TABLE referrals ADD COLUMN IF NOT EXISTS notes TEXT;
 -- ============================================================================
-
--- Drop the unique constraint on referral_code
--- The constraint name follows PostgreSQL naming: {table}_{column}_key
-ALTER TABLE referrals DROP CONSTRAINT IF EXISTS referrals_referral_code_key;
-
--- Drop the unique index if it exists separately
-DROP INDEX IF EXISTS referrals_referral_code_key;
-
--- Update status CHECK to include COMPLETED (Java entity uses this value)
-ALTER TABLE referrals DROP CONSTRAINT IF EXISTS chk_referral_status;
-ALTER TABLE referrals ADD CONSTRAINT chk_referral_status
-    CHECK (status IN ('PENDING', 'CLICKED', 'SIGNED_UP', 'SUBSCRIBED', 'COMPLETED', 'REWARDED', 'EXPIRED', 'CANCELLED'));
-
--- Add notes column if it doesn't exist (Referral entity maps this field)
-ALTER TABLE referrals ADD COLUMN IF NOT EXISTS notes TEXT;
+SELECT 1;

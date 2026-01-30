@@ -73,7 +73,9 @@ public class ReferralService {
         Double totalRewards = referralRepository.getTotalRewardsEarned(userId);
         
         BigDecimal pendingRewards = allReferrals.stream()
-                .filter(r -> r.getStatus() == Referral.ReferralStatus.COMPLETED && Boolean.FALSE.equals(r.getRewardClaimed()))
+                .filter(r -> (r.getStatus() == Referral.ReferralStatus.COMPLETED ||
+                              r.getStatus() == Referral.ReferralStatus.SUBSCRIBED) &&
+                             Boolean.FALSE.equals(r.getRewardClaimed()))
                 .map(Referral::getRewardAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
@@ -160,10 +162,10 @@ public class ReferralService {
         
         for (Referral referral : referrals) {
             if (referral.getStatus() == Referral.ReferralStatus.PENDING) {
-                referral.setStatus(Referral.ReferralStatus.COMPLETED);
+                referral.setStatus(Referral.ReferralStatus.SUBSCRIBED);
                 referral.setCompletedAt(LocalDateTime.now());
                 referralRepository.save(referral);
-                
+
                 log.info("Referral completed: {}", referral.getId());
             }
         }
@@ -183,7 +185,8 @@ public class ReferralService {
             throw new IllegalArgumentException("This referral does not belong to you");
         }
         
-        if (referral.getStatus() != Referral.ReferralStatus.COMPLETED) {
+        if (referral.getStatus() != Referral.ReferralStatus.COMPLETED &&
+            referral.getStatus() != Referral.ReferralStatus.SUBSCRIBED) {
             throw new IllegalStateException("Referral is not completed yet");
         }
         

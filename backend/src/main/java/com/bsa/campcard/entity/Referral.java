@@ -49,9 +49,6 @@ public class Referral {
     
     private LocalDateTime completedAt;
     
-    @Column(columnDefinition = "TEXT")
-    private String notes;
-    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -59,7 +56,8 @@ public class Referral {
     
     public enum ReferralStatus {
         PENDING,      // Referred user registered but hasn't subscribed
-        COMPLETED,    // Referred user has active subscription
+        COMPLETED,    // Referred user has active subscription (legacy — not in DB CHECK)
+        SUBSCRIBED,   // Referred user has active subscription (matches DB CHECK constraint)
         REWARDED,     // Reward has been distributed
         EXPIRED,      // Referral link expired
         CANCELLED     // Referral was cancelled

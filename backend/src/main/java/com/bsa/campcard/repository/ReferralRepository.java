@@ -25,6 +25,6 @@ public interface ReferralRepository extends JpaRepository<Referral, Long> {
     @Query("SELECT SUM(r.rewardAmount) FROM Referral r WHERE r.referrerId = ?1 AND r.rewardClaimed = true")
     Double getTotalRewardsEarned(UUID referrerId);
     
-    @Query("SELECT COUNT(r) FROM Referral r WHERE r.referrerId = ?1 AND r.status = 'COMPLETED'")
+    @Query("SELECT COUNT(r) FROM Referral r WHERE r.referrerId = ?1 AND (r.status = 'COMPLETED' OR r.status = 'SUBSCRIBED')")
     Long countSuccessfulReferrals(UUID referrerId);
 }

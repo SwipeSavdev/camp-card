@@ -387,18 +387,22 @@ public class SubscriptionPurchaseService {
      */
     private void createReferralRecord(UUID scoutId, UUID referredUserId, String referralCode) {
         try {
+            // Generate a unique per-referral code because the DB has a UNIQUE constraint
+            // on referrals.referral_code (and the same scout code is used for many referrals).
+            String uniqueRefCode = referralCode + "-" + UUID.randomUUID().toString().substring(0, 8);
+
             Referral referral = Referral.builder()
                     .referrerId(scoutId)
                     .referredUserId(referredUserId)
-                    .referralCode(referralCode)
-                    .status(Referral.ReferralStatus.COMPLETED)
+                    .referralCode(uniqueRefCode)
+                    .status(Referral.ReferralStatus.SUBSCRIBED) // DB CHECK allows SUBSCRIBED, not COMPLETED
                     .rewardAmount(referralRewardAmount)
                     .rewardClaimed(false)
                     .completedAt(LocalDateTime.now())
                     .build();
 
             referralRepository.save(referral);
-            log.info("Referral record created: scout={} referredUser={} code={}", scoutId, referredUserId, referralCode);
+            log.info("Referral record created: scout={} referredUser={} code={}", scoutId, referredUserId, uniqueRefCode);
         } catch (Exception e) {
             // Log but don't fail the purchase — the subscription is already created
             log.error("Failed to create referral record for scout={} referredUser={}: {}", scoutId, referredUserId, e.getMessage());
