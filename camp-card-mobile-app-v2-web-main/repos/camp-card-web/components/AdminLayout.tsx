@@ -32,7 +32,7 @@ import {
 type MenuItemConfig = {
   name: string;
   href: string;
-  Icon: any;
+  Icon: React.ComponentType<Record<string, unknown>>;
   allowedRoles?: string[];
 };
 
@@ -59,7 +59,7 @@ const allMenuItems: MenuItemConfig[] = [
 function getMenuItemsForRole(role: string | undefined): MenuItemConfig[] {
   if (!role) return allMenuItems;
 
-  return allMenuItems.filter(item => {
+  return allMenuItems.filter((item) => {
     // If no allowedRoles specified, all roles can access
     if (!item.allowedRoles) return true;
     // Otherwise, check if user's role is in the allowed list
@@ -67,7 +67,7 @@ function getMenuItemsForRole(role: string | undefined): MenuItemConfig[] {
   });
 }
 
-function MenuItem({ item, isActive, sidebarExpanded }: any) {
+function MenuItem({ item, isActive, sidebarExpanded }: { item: MenuItemConfig; isActive: boolean; sidebarExpanded: boolean }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -81,11 +81,8 @@ function MenuItem({ item, isActive, sidebarExpanded }: any) {
         gap: space.md,
         padding: `${space.sm} ${space.md}`,
         borderRadius: radius.md,
-        backgroundColor: isActive
-          ? 'rgba(59, 130, 246, 0.15)'
-          : isHovered
-            ? 'rgba(255, 255, 255, 0.08)'
-            : 'transparent',
+        // eslint-disable-next-line no-nested-ternary
+        backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : isHovered ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
         color: colors.white,
         cursor: 'pointer',
         transition: 'all 0.2s ease',
@@ -114,7 +111,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const sidebarWidth = sidebarExpanded ? '260px' : '80px';
 
   // Get menu items filtered by user role
-  const userRole = (session?.user as any)?.role;
+  const userRole = (session?.user as Record<string, unknown>)?.role as string | undefined;
   const menuItems = getMenuItemsForRole(userRole);
 
   return (
@@ -157,6 +154,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 justifyContent: sidebarExpanded ? 'flex-start' : 'center',
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/assets/images/appicon_1024.png"
                 alt="Camp Card Logo"
@@ -250,6 +248,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </p>
           </div>
           <button
+            type="button"
             onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
             style={{
               width: '100%',
@@ -309,6 +308,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: space.lg }}>
             <button
+              type="button"
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
               style={{
                 background: 'none',

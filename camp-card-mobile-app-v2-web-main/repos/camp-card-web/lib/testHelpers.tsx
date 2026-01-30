@@ -168,7 +168,7 @@ export const createErrorResponse = (status: number, message: string) => ({
 // ============ FETCH MOCK HELPERS ============
 
 export const mockFetchSuccess = <T,>(data: T) => {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,
     status: 200,
     json: async () => data,
@@ -178,7 +178,7 @@ export const mockFetchSuccess = <T,>(data: T) => {
 };
 
 export const mockFetch204 = () => {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,
     status: 204,
     json: async () => ({}),
@@ -188,7 +188,7 @@ export const mockFetch204 = () => {
 };
 
 export const mockFetchError = (status: number, message = 'Error') => {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
     ok: false,
     status,
     json: async () => ({ error: message }),
@@ -198,13 +198,12 @@ export const mockFetchError = (status: number, message = 'Error') => {
 };
 
 export const mockFetchNetworkError = () => {
-  (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+  (globalThis.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 };
 
 // ============ CUSTOM RENDER ============
 
-const createTestQueryClient = () =>
-  new QueryClient({
+const createTestQueryClient = () => new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
@@ -231,7 +230,7 @@ const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 export const customRender = (
   ui: ReactElement,
-  options: CustomRenderOptions = {}
+  options: CustomRenderOptions = {},
 ) => {
   const { session: _session, ...renderOptions } = options;
   return render(ui, { wrapper: AllProviders, ...renderOptions });

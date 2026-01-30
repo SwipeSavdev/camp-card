@@ -41,7 +41,7 @@ const themeRadius = { sm: '4px', card: '12px', lg: '16px' };
 const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' };
 
 function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
-  const icons: { [key: string]: any } = {
+  const icons: { [key: string]: React.ReactNode } = {
     add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
@@ -177,6 +177,7 @@ export default function MerchantsPage() {
     });
 
     return Array.from(typeSet.values()).sort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
   useEffect(() => {
@@ -187,6 +188,7 @@ export default function MerchantsPage() {
       // If not authenticated, still set loading to false to show proper message
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   const fetchData = async () => {
@@ -194,42 +196,37 @@ export default function MerchantsPage() {
       setLoading(true);
       setError(null);
       const data = await api.getMerchants(session);
-      console.log('[PAGE] Raw merchants data:', data);
-
       // Handle response from backend - it returns { merchants: [...], total: N }
-      const merchantsArray = (data as any).merchants || (data as any).content || data || [];
-      console.log('[PAGE] Merchants array:', merchantsArray);
-      console.log('[PAGE] Merchants count:', merchantsArray.length);
+      const merchantsArray = ((data as Record<string, unknown>).merchants || (data as Record<string, unknown>).content || data || []) as Record<string, unknown>[];
 
       // Map backend fields to frontend interface
-      const merchants = merchantsArray.map((item: any) => {
+      const merchants = merchantsArray.map((item: Record<string, unknown>) => {
         // Handle locations - map backend location fields to frontend interface
         let locations: MerchantLocation[] = [];
         if (Array.isArray(item.locations)) {
-          locations = item.locations.map((loc: any) => ({
-            id: loc.id || loc.uuid || '',
-            name: loc.locationName || loc.name || '',
-            streetAddress: loc.streetAddress || loc.street_address || '',
-            city: loc.city || '',
-            state: loc.state || '',
-            zipCode: loc.zipCode || loc.zip_code || '',
-            isHQ: loc.primaryLocation || loc.primary_location || false,
+          locations = (item.locations as Record<string, unknown>[]).map((loc: Record<string, unknown>) => ({
+            id: String(loc.id || loc.uuid || ''),
+            name: String(loc.locationName || loc.name || ''),
+            streetAddress: String(loc.streetAddress || loc.street_address || ''),
+            city: String(loc.city || ''),
+            state: String(loc.state || ''),
+            zipCode: String(loc.zipCode || loc.zip_code || ''),
+            isHQ: Boolean(loc.primaryLocation || loc.primary_location || false),
           }));
         }
 
         return {
-          id: item.id,
-          name: item.name || item.business_name || item.businessName || '',
-          contactName: item.contactName || item.contact_name || '',
-          email: item.email || item.contactEmail || '',
-          phone: item.phone_number || item.phone || item.contactPhone || '',
-          businessType: item.category || item.business_type || '',
-          status: item.status || 'PENDING',
-          isSingleLocation: item.isSingleLocation !== undefined ? item.isSingleLocation : true,
+          id: String(item.id || ''),
+          name: String(item.name || item.business_name || item.businessName || ''),
+          contactName: String(item.contactName || item.contact_name || ''),
+          email: String(item.email || item.contactEmail || ''),
+          phone: String(item.phone_number || item.phone || item.contactPhone || ''),
+          businessType: String(item.category || item.business_type || ''),
+          status: (String(item.status || 'PENDING')) as Merchant['status'],
+          isSingleLocation: item.isSingleLocation !== undefined ? Boolean(item.isSingleLocation) : true,
           locations,
         };
       });
-      console.log('[PAGE] Mapped merchants:', merchants);
       setItems(merchants);
     } catch (err) {
       setError('Failed to load merchants');
@@ -240,20 +237,19 @@ export default function MerchantsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this merchant?')) return;
+    if (!window.confirm('Delete this merchant?')) return;
     try {
-      console.log('[PAGE] Deleting merchant:', id);
       await api.deleteMerchant(id, session);
-      console.log('[PAGE] Merchant deleted successfully');
       setItems(items.filter((i) => i.id !== id));
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('[PAGE] Delete error:', err);
-      const errorMsg = err?.status === 403
-        ? 'Permission denied. Only National Admins can delete merchants.'
-        : err?.status === 404
-        ? 'Merchant not found.'
-        : `Failed to delete merchant: ${err?.message || 'Unknown error'}`;
+      const apiErr = err instanceof Error ? err : err as Record<string, unknown>;
+      const errMsg = err instanceof Error ? err.message : String((apiErr as Record<string, unknown>)?.message || 'Unknown error');
+      const errStatus = (apiErr as Record<string, unknown>)?.status;
+      let errorMsg = `Failed to delete merchant: ${errMsg}`;
+      if (errStatus === 403) errorMsg = 'Permission denied. Only National Admins can delete merchants.';
+      else if (errStatus === 404) errorMsg = 'Merchant not found.';
       setError(errorMsg);
     }
   };
@@ -289,15 +285,13 @@ export default function MerchantsPage() {
   const toggleMerchantStatus = async (merchant: Merchant) => {
     const newStatus = merchant.status === 'APPROVED' ? 'INACTIVE' : 'APPROVED';
     try {
-      console.log('[PAGE] Updating merchant status:', merchant.id, newStatus);
       await api.updateMerchantStatus(merchant.id, newStatus, session);
-      console.log('[PAGE] Merchant status updated successfully');
       // Update local state
       setItems(items.map((m) => (m.id === merchant.id ? { ...m, status: newStatus } : m)));
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('[PAGE] Status update error:', err);
-      setError(`Failed to update merchant status: ${err?.message || 'Unknown error'}`);
+      setError(`Failed to update merchant status: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -320,8 +314,6 @@ export default function MerchantsPage() {
       };
 
       const newLocation = await api.createMerchantLocation(merchantId, locData, session);
-      console.log('[PAGE] Created location for existing merchant:', newLocation);
-
       // Update local state to show the new location
       setItems(items.map((m) => {
         if (m.id === merchantId) {
@@ -350,9 +342,9 @@ export default function MerchantsPage() {
       setExistingLocState('');
       setExistingLocZip('');
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('[PAGE] Failed to add location:', err);
-      setError(`Failed to add location: ${err?.message || 'Unknown error'}`);
+      setError(`Failed to add location: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setAddingLocationLoading(false);
     }
@@ -406,27 +398,28 @@ export default function MerchantsPage() {
 
     try {
       // Build primary location from the first location or the HQ address fields
-      const primaryLocationData = newLocations.length > 0
-        ? {
-            locationName: newLocations[0].name,
-            streetAddress: newLocations[0].streetAddress,
-            city: newLocations[0].city,
-            state: newLocations[0].state,
-            zipCode: newLocations[0].zipCode,
-            primaryLocation: true,
-            phone: newPhone,
-          }
-        : newIsSingleLocation
-        ? {
-            locationName: `${newMerchantName} - Main`,
-            streetAddress: newStreetAddress,
-            city: newCity,
-            state: newState,
-            zipCode: newZipCode,
-            primaryLocation: true,
-            phone: newPhone,
-          }
-        : null;
+      let primaryLocationData = null;
+      if (newLocations.length > 0) {
+        primaryLocationData = {
+          locationName: newLocations[0].name,
+          streetAddress: newLocations[0].streetAddress,
+          city: newLocations[0].city,
+          state: newLocations[0].state,
+          zipCode: newLocations[0].zipCode,
+          primaryLocation: true,
+          phone: newPhone,
+        };
+      } else if (newIsSingleLocation) {
+        primaryLocationData = {
+          locationName: `${newMerchantName} - Main`,
+          streetAddress: newStreetAddress,
+          city: newCity,
+          state: newState,
+          zipCode: newZipCode,
+          primaryLocation: true,
+          phone: newPhone,
+        };
+      }
 
       const merchantData = {
         businessName: newMerchantName,
@@ -439,16 +432,11 @@ export default function MerchantsPage() {
         termsAccepted: true,
       };
 
-      console.log('[PAGE] Submitting merchant data:', merchantData);
-
       // Handle edit vs create
       if (editingId) {
-        console.log('[PAGE] Updating merchant:', editingId);
         await api.updateMerchant(editingId, merchantData, session);
       } else {
-        console.log('[PAGE] Creating new merchant');
         const newMerchant = await api.createMerchant(merchantData, session);
-        console.log('[PAGE] Create response:', newMerchant);
 
         // Add additional locations if any (beyond the primary)
         if (newMerchant && newLocations.length > 1) {
@@ -464,8 +452,8 @@ export default function MerchantsPage() {
               phone: newPhone,
             };
             try {
+              // eslint-disable-next-line no-await-in-loop
               await api.createMerchantLocation(newMerchant.id, locData, session);
-              console.log(`[PAGE] Created additional location: ${loc.name}`);
             } catch (locErr) {
               console.error(`[PAGE] Failed to create location ${loc.name}:`, locErr);
             }
@@ -486,12 +474,8 @@ export default function MerchantsPage() {
             locations: newMerchant.locations || [],
           };
           setItems([...items, mappedMerchant]);
-          console.log('[PAGE] Merchant added to local state');
         }
       }
-
-      console.log('[PAGE] Success, form will close');
-      // Don't refresh data - keep the optimistically added merchant
 
       // Reset form
       setNewMerchantName('');
@@ -570,6 +554,7 @@ export default function MerchantsPage() {
             </span>
           </div>
           <button
+            type="button"
             onClick={() => setShowAddForm(true)}
             style={{
               background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
@@ -672,6 +657,7 @@ export default function MerchantsPage() {
           {/* Clear Filters */}
           {(searchTerm || businessTypeFilter || locationCountFilter) && (
           <button
+            type="button"
             onClick={() => {
               setSearchTerm('');
               setBusinessTypeFilter('');
@@ -703,6 +689,7 @@ export default function MerchantsPage() {
       </div>
       )}
 
+      {/* eslint-disable-next-line no-nested-ternary */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
       ) : filteredItems.length === 0 ? (
@@ -721,6 +708,9 @@ export default function MerchantsPage() {
               >
                 <div
                   onClick={() => toggleMerchantExpand(merchant.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                   style={{
                    padding: themeSpace.lg,
                    cursor: 'pointer',
@@ -757,6 +747,7 @@ export default function MerchantsPage() {
                   <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
                    {/* Status Toggle */}
                    <button
+                     type="button"
                      onClick={(e) => { e.stopPropagation(); toggleMerchantStatus(merchant); }}
                      style={{
                        padding: `4px ${themeSpace.md}`,
@@ -773,6 +764,7 @@ export default function MerchantsPage() {
                      {merchant.status === 'APPROVED' ? '✓ Approved' : merchant.status}
                    </button>
                    <button
+                   type="button"
                    onClick={(e) => { e.stopPropagation(); handleEdit(merchant); }}
                    style={{
   background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -781,6 +773,7 @@ export default function MerchantsPage() {
                    <Icon name="edit" size={16} color={themeColors.info600} />
                  </button>
                    <button
+                   type="button"
                    onClick={(e) => { e.stopPropagation(); handleDelete(merchant.id); }}
                    style={{
   background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -799,6 +792,7 @@ export default function MerchantsPage() {
                      Locations ({merchant.locations?.length || 0})
                    </h4>
                    <button
+                     type="button"
                      onClick={(e) => {
                        e.stopPropagation();
                        setAddingLocationToMerchant(addingLocationToMerchant === merchant.id ? null : merchant.id);
@@ -911,6 +905,7 @@ export default function MerchantsPage() {
                        </div>
                        <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'flex-end' }}>
                          <button
+                           type="button"
                            onClick={(e) => {
                              e.stopPropagation();
                              setAddingLocationToMerchant(null);
@@ -928,6 +923,7 @@ export default function MerchantsPage() {
                            Cancel
                          </button>
                          <button
+                           type="button"
                            onClick={(e) => {
                              e.stopPropagation();
                              addLocationToExistingMerchant(merchant.id);
@@ -1017,6 +1013,7 @@ export default function MerchantsPage() {
           }}
           >
             <button
+              type="button"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
               style={{
@@ -1033,6 +1030,7 @@ export default function MerchantsPage() {
               First
             </button>
             <button
+              type="button"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               style={{
@@ -1068,6 +1066,7 @@ export default function MerchantsPage() {
                 }
                 return (
                  <button
+                 type="button"
                  key={pageNum}
                  onClick={() => setCurrentPage(pageNum)}
                  style={{
@@ -1089,6 +1088,7 @@ export default function MerchantsPage() {
             </div>
 
             <button
+              type="button"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               style={{
@@ -1110,6 +1110,7 @@ export default function MerchantsPage() {
               <Icon name="chevronRight" size={16} />
             </button>
             <button
+              type="button"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
               style={{
@@ -1153,13 +1154,15 @@ export default function MerchantsPage() {
           }}
           >
             <div>
-              <label style={{
+              <label
+htmlFor="field" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Merchant Name
               </label>
               <input
+id="field"
                 type="text"
                 value={newMerchantName}
                 onChange={(e) => setNewMerchantName(e.target.value)}
@@ -1176,13 +1179,15 @@ export default function MerchantsPage() {
             </div>
 
             <div>
-              <label style={{
+              <label
+htmlFor="field-2" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Contact Name
               </label>
               <input
+id="field-2"
                 type="text"
                 value={newContactName}
                 onChange={(e) => setNewContactName(e.target.value)}
@@ -1199,13 +1204,15 @@ export default function MerchantsPage() {
             </div>
 
             <div>
-              <label style={{
+              <label
+htmlFor="field-3" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Email
               </label>
               <input
+id="field-3"
                 type="email"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
@@ -1222,13 +1229,15 @@ export default function MerchantsPage() {
             </div>
 
             <div>
-              <label style={{
+              <label
+htmlFor="field-4" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Phone
               </label>
               <input
+id="field-4"
                 type="tel"
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
@@ -1245,13 +1254,15 @@ export default function MerchantsPage() {
             </div>
 
             <div>
-              <label style={{
+              <label
+htmlFor="field-5" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Business Type
               </label>
               <select
+id="field-5"
                 value={newBusinessType}
                 onChange={(e) => setNewBusinessType(e.target.value)}
                 style={{
@@ -1275,13 +1286,15 @@ export default function MerchantsPage() {
             </div>
 
             <div>
-              <label style={{
+              <label
+htmlFor="field-6" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 HQ Address
               </label>
               <input
+id="field-6"
                 type="text"
                 value={newStreetAddress}
                 onChange={(e) => setNewStreetAddress(e.target.value)}
@@ -1407,13 +1420,15 @@ export default function MerchantsPage() {
              >
                <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
                <div>
-               <label style={{
+               <label
+htmlFor="field-7" style={{
                  fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'block', marginBottom: themeSpace.xs,
                }}
                >
            Location Name
                </label>
                <input
+id="field-7"
                  type="text"
                  value={newLocationName}
                  onChange={(e) => setNewLocationName(e.target.value)}
@@ -1429,13 +1444,15 @@ export default function MerchantsPage() {
                />
              </div>
                <div>
-               <label style={{
+               <label
+htmlFor="field-8" style={{
                  fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'block', marginBottom: themeSpace.xs,
                }}
                >
            Street Address
                </label>
                <input
+id="field-8"
                  type="text"
                  value={newLocationStreet}
                  onChange={(e) => setNewLocationStreet(e.target.value)}

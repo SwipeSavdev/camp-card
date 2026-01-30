@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -447,8 +449,8 @@ function CustomTooltip({ active, payload, label }: any) {
       }}
       >
         <p style={{ margin: 0, fontWeight: '600', color: themeColors.text }}>{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} style={{ margin: '4px 0 0 0', color: entry.color, fontSize: '14px' }}>
+        {payload.map((entry: any) => (
+          <p key={entry.name} style={{ margin: '4px 0 0 0', color: entry.color, fontSize: '14px' }}>
             {entry.name}
             :
             {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
@@ -486,7 +488,6 @@ export default function AnalyticsPage() {
         setDashboardData(data);
         setLastUpdate(new Date());
         setIsConnected(true);
-        console.log('[Analytics] Dashboard data loaded:', data);
       }
     } catch (error) {
       console.error('[Analytics] Failed to fetch dashboard data:', error);
@@ -760,7 +761,8 @@ export default function AnalyticsPage() {
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 labelLine={false}
               >
-                {chartData?.map((entry: any, index: number) => (
+                {chartData?.map((_entry: any, index: number) => (
+                  // eslint-disable-next-line react/no-array-index-key
                   <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Pie>
@@ -769,15 +771,12 @@ export default function AnalyticsPage() {
           </ResponsiveContainer>
         );
 
-      case 'drilldown':
+      case 'drilldown': {
         // Show a preview table with top items and a "View All" button
         const previewData = (chartData || []).slice(0, 3);
         const totalItems = (chartData || []).length;
-        const primaryKey = widget.metric === 'troop_sales' ? 'sales'
-          : widget.metric === 'troop_recruiting' ? 'newScouts'
-            : widget.metric === 'scout_sales' ? 'sales'
-              : widget.metric === 'scout_referrals' ? 'referrals'
-                : 'referrals';
+        const metricKeyMap: Record<string, string> = { troop_sales: 'sales', troop_recruiting: 'newScouts', scout_sales: 'sales', scout_referrals: 'referrals' };
+        const primaryKey = metricKeyMap[widget.metric] || 'referrals';
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', height: '200px' }}>
@@ -822,6 +821,7 @@ export default function AnalyticsPage() {
             </div>
             {totalItems > 3 && (
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); handleDrilldown(widget); }}
                 style={{
                   marginTop: themeSpace.sm,
@@ -844,8 +844,9 @@ export default function AnalyticsPage() {
             )}
           </div>
         );
+      }
 
-      default:
+      default: {
         const isPositive = data.change >= 0;
         return (
           <>
@@ -894,6 +895,7 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </>
         );
+      }
     }
   };
 
@@ -935,6 +937,7 @@ export default function AnalyticsPage() {
           <div style={{ display: 'flex', gap: themeSpace.md }}>
             {selectedWidgets.size > 0 && (
             <button
+              type="button"
               onClick={handleExportSelected}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.success600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm,
@@ -959,6 +962,7 @@ export default function AnalyticsPage() {
               <option value="1y">Last year</option>
             </select>
             <button
+              type="button"
               onClick={() => setEditMode(!editMode)}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: editMode ? themeColors.primary600 : themeColors.white, color: editMode ? themeColors.white : themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm,
@@ -968,6 +972,7 @@ export default function AnalyticsPage() {
               {editMode ? 'Done' : 'Customize'}
             </button>
             <button
+              type="button"
               onClick={() => setShowWidgetSelector(!showWidgetSelector)}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: themeSpace.sm,
@@ -996,6 +1001,7 @@ export default function AnalyticsPage() {
             Available Metrics
           </h2>
           <button
+            type="button"
             onClick={() => setShowWidgetSelector(false)}
             style={{
               background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600,
@@ -1010,6 +1016,7 @@ export default function AnalyticsPage() {
             const chartTypeLabel = metric.chartType === 'metric' ? 'KPI' : metric.chartType.charAt(0).toUpperCase() + metric.chartType.slice(1);
             return (
               <button
+                type="button"
                 key={metric.id}
                 onClick={() => !isAdded && handleAddWidget(metric)}
                 disabled={isAdded}
@@ -1064,9 +1071,10 @@ export default function AnalyticsPage() {
             fontSize: '14px', color: themeColors.gray600, margin: 0, marginBottom: themeSpace.lg,
           }}
           >
-            Click "Add Widget" to start building your dashboard
+            Click &quot;Add Widget&quot; to start building your dashboard
           </p>
           <button
+            type="button"
             onClick={() => setShowWidgetSelector(true)}
             style={{
               padding: `${themeSpace.sm} ${themeSpace.lg}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600',
@@ -1084,6 +1092,9 @@ export default function AnalyticsPage() {
               <div
                 key={widget.id}
                 onClick={() => !editMode && handleSelectWidget(widget.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                 style={{
                   backgroundColor: isSelected ? `${themeColors.primary600}08` : themeColors.white,
                   borderRadius: themeRadius.card,
@@ -1112,6 +1123,7 @@ export default function AnalyticsPage() {
                   >
                     {idx > 0 && (
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); handleReorderWidgets(idx, idx - 1); }}
                       style={{
                             background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
@@ -1123,6 +1135,7 @@ export default function AnalyticsPage() {
                     )}
                     {idx < visibleWidgets.length - 1 && (
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); handleReorderWidgets(idx, idx + 1); }}
                       style={{
                             background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
@@ -1133,6 +1146,7 @@ export default function AnalyticsPage() {
                     </button>
                     )}
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); handleRemoveWidget(widget.id); }}
                       style={{
                         background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs, color: themeColors.error500,
@@ -1158,6 +1172,7 @@ export default function AnalyticsPage() {
                 }}
                 >
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); handleShowDetails(widget); }}
                     style={{
                       flex: 1, padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: 'transparent', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
@@ -1167,6 +1182,7 @@ export default function AnalyticsPage() {
                     Details
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); handleExport(widget); }}
                     style={{
                       flex: 1, padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: 'transparent', border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
@@ -1188,12 +1204,18 @@ export default function AnalyticsPage() {
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
           }}
           onClick={() => setDetailsModal(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
         >
           <div
             style={{
               backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, maxWidth: '600px', width: '90%', boxShadow: themeShadow.md,
             }}
             onClick={(e) => e.stopPropagation()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
           >
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.lg,
@@ -1206,6 +1228,7 @@ export default function AnalyticsPage() {
                 Metric Details
               </h2>
               <button
+                type="button"
                 onClick={() => setDetailsModal(null)}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600,
@@ -1310,6 +1333,7 @@ export default function AnalyticsPage() {
 
             <div style={{ display: 'flex', gap: themeSpace.md }}>
               <button
+                type="button"
                 onClick={() => { handleExport(detailsModal.widget); setDetailsModal(null); }}
                 style={{
                   flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: themeColors.primary600, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: themeSpace.sm,
@@ -1319,6 +1343,7 @@ export default function AnalyticsPage() {
                 Export Data
               </button>
               <button
+                type="button"
                 onClick={() => setDetailsModal(null)}
                 style={{
                   flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: 'transparent', color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px',
@@ -1338,12 +1363,18 @@ export default function AnalyticsPage() {
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
           }}
           onClick={() => setDrilldownModal(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
         >
           <div
             style={{
               backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.xl, maxWidth: drilldownModal.selectedItem ? '900px' : '700px', width: '95%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: themeShadow.md,
             }}
             onClick={(e) => e.stopPropagation()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
           >
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: themeSpace.lg,
@@ -1352,6 +1383,7 @@ export default function AnalyticsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
                 {drilldownModal.selectedItem && (
                   <button
+                    type="button"
                     onClick={() => setDrilldownModal({ ...drilldownModal, selectedItem: null })}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, display: 'flex', alignItems: 'center', gap: themeSpace.xs, fontSize: '14px', fontWeight: '600',
@@ -1366,6 +1398,7 @@ export default function AnalyticsPage() {
                 </h2>
               </div>
               <button
+                type="button"
                 onClick={() => setDrilldownModal(null)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: themeColors.gray600 }}
               >
@@ -1542,11 +1575,7 @@ export default function AnalyticsPage() {
                   {/* Table Header */}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: drilldownModal.widget.metric === 'troop_sales' ? '2fr 1fr 1fr 1fr 80px'
-                      : drilldownModal.widget.metric === 'troop_recruiting' ? '2fr 1fr 1fr 1fr 80px'
-                        : drilldownModal.widget.metric === 'scout_sales' ? '2fr 1fr 1fr 1fr 80px'
-                          : drilldownModal.widget.metric === 'scout_referrals' ? '2fr 1fr 1fr 1fr 80px'
-                            : '2fr 1fr 1fr 1fr 80px',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr 80px',
                     padding: themeSpace.md,
                     backgroundColor: themeColors.gray50,
                     borderBottom: `1px solid ${themeColors.gray200}`,
@@ -1599,13 +1628,12 @@ export default function AnalyticsPage() {
                     <div
                       key={item.id || idx}
                       onClick={() => handleDrilldownItemClick(item)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: drilldownModal.widget.metric === 'troop_sales' ? '2fr 1fr 1fr 1fr 80px'
-                          : drilldownModal.widget.metric === 'troop_recruiting' ? '2fr 1fr 1fr 1fr 80px'
-                            : drilldownModal.widget.metric === 'scout_sales' ? '2fr 1fr 1fr 1fr 80px'
-                              : drilldownModal.widget.metric === 'scout_referrals' ? '2fr 1fr 1fr 1fr 80px'
-                                : '2fr 1fr 1fr 1fr 80px',
+                        gridTemplateColumns: '2fr 1fr 1fr 1fr 80px',
                         padding: themeSpace.md,
                         borderBottom: idx < drilldownModal.data.length - 1 ? `1px solid ${themeColors.gray100}` : 'none',
                         cursor: 'pointer',
@@ -1665,6 +1693,7 @@ export default function AnalyticsPage() {
 
             <div style={{ display: 'flex', gap: themeSpace.md, marginTop: themeSpace.lg, borderTop: `1px solid ${themeColors.gray200}`, paddingTop: themeSpace.lg }}>
               <button
+                type="button"
                 onClick={() => {
                   const chartData = drilldownModal.data;
                   const headers = Object.keys(chartData[0] || {}).join(',');
@@ -1686,6 +1715,7 @@ export default function AnalyticsPage() {
                 Export Report
               </button>
               <button
+                type="button"
                 onClick={() => setDrilldownModal(null)}
                 style={{
                   flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, backgroundColor: 'transparent', color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontWeight: '600', fontSize: '14px',

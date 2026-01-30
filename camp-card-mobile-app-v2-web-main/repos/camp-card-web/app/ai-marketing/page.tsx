@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -503,13 +505,8 @@ export default function AIMarketingPage() {
       const segmentNames = newCampaign.segments.map((s) => segments.find((seg) => seg.id === s)?.name || s).join(', ');
 
       // Determine content type based on selected channels (prefer push for multi-channel)
-      const primaryChannel = newCampaign.channels.includes('push')
-        ? 'PUSH_NOTIFICATION'
-        : newCampaign.channels.includes('email')
-          ? 'EMAIL_BODY'
-          : newCampaign.channels.includes('sms')
-            ? 'SMS'
-            : 'IN_APP_MESSAGE';
+      const channelTypeMap: Record<string, string> = { push: 'PUSH_NOTIFICATION', email: 'EMAIL_BODY', sms: 'SMS' };
+      const primaryChannel = channelTypeMap[newCampaign.channels.find((ch: string) => ch in channelTypeMap) || ''] || 'IN_APP_MESSAGE';
 
       const result = await api.generateAIContent({
         contentType: primaryChannel,
@@ -646,7 +643,7 @@ export default function AIMarketingPage() {
 
   // Delete campaign
   const handleDeleteCampaign = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this campaign?')) return;
+    if (!window.confirm('Are you sure you want to delete this campaign?')) return;
     try {
       await api.deleteCampaign(id, session);
       setCampaigns(campaigns.filter((c) => c.id !== id));
@@ -684,8 +681,8 @@ export default function AIMarketingPage() {
     }));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (s: string) => {
+    switch (s) {
       case 'active': return { bg: themeColors.success50, text: themeColors.success600 };
       case 'scheduled': return { bg: themeColors.info50, text: themeColors.info600 };
       case 'completed': return { bg: themeColors.gray100, text: themeColors.gray600 };
@@ -718,6 +715,7 @@ export default function AIMarketingPage() {
           </div>
           {activeTab === 'campaigns' && (
           <button
+            type="button"
             onClick={() => setShowCreateForm(true)}
             style={{
               background: `linear-gradient(135deg, ${themeColors.primary600} 0%, ${themeColors.purple600} 100%)`,
@@ -752,6 +750,7 @@ export default function AIMarketingPage() {
             { id: 'merchants', label: 'Merchants', icon: 'store' },
           ].map((tab) => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               style={{
@@ -800,9 +799,9 @@ export default function AIMarketingPage() {
             {
               label: 'Avg Conversion', value: '18.7%', icon: 'target', color: themeColors.purple600, bg: themeColors.purple50,
             },
-          ].map((stat, idx) => (
+          ].map((stat) => (
             <div
-              key={idx}
+              key={stat.label}
               style={{
                 backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.lg, border: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.sm,
               }}
@@ -1009,6 +1008,7 @@ export default function AIMarketingPage() {
                             <td style={{ padding: themeSpace.md, textAlign: 'center' }}>
                               <div style={{ display: 'flex', justifyContent: 'center', gap: themeSpace.xs }}>
                                 <button
+                                  type="button"
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
                                   }}
@@ -1018,6 +1018,7 @@ export default function AIMarketingPage() {
                                 </button>
                                 {campaign.status === 'active' ? (
                                   <button
+                                    type="button"
                                     onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)}
                                     style={{
                                     background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
@@ -1028,6 +1029,7 @@ export default function AIMarketingPage() {
                                   </button>
                                 ) : (
                                   <button
+                                  type="button"
                                   onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)}
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
@@ -1038,6 +1040,7 @@ export default function AIMarketingPage() {
                                 </button>
                                 )}
                                 <button
+                                  type="button"
                                   onClick={() => handleDeleteCampaign(campaign.id)}
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
@@ -1063,6 +1066,7 @@ export default function AIMarketingPage() {
         }}
         >
           <button
+            type="button"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
             style={{
@@ -1081,6 +1085,7 @@ export default function AIMarketingPage() {
             {totalPages}
           </span>
           <button
+            type="button"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
             style={{
@@ -1128,6 +1133,7 @@ export default function AIMarketingPage() {
                   <div style={{ fontSize: '12px', color: themeColors.gray500 }}>users in segment</div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => {
                     setNewCampaign((prev) => ({ ...prev, segments: [segment.id] }));
                     setShowCreateForm(true);
@@ -1193,9 +1199,9 @@ export default function AIMarketingPage() {
             {
               label: 'Avg ROI', value: '245%', change: '+15%', icon: 'chart', color: themeColors.warning600,
             },
-          ].map((kpi, idx) => (
+          ].map((kpi) => (
             <div
-              key={idx}
+              key={kpi.label}
               style={{
                 backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.lg, border: `1px solid ${themeColors.gray200}`,
               }}
@@ -1267,7 +1273,8 @@ export default function AIMarketingPage() {
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
                 >
-                  {mockAnalyticsData.conversionsByType.map((entry, index) => (
+                  {mockAnalyticsData.conversionsByType.map((_entry, index) => (
+                    // eslint-disable-next-line react/no-array-index-key
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
@@ -1324,8 +1331,8 @@ export default function AIMarketingPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockAnalyticsData.channelPerformance.map((channel, idx) => (
-                    <tr key={idx}>
+                  {mockAnalyticsData.channelPerformance.map((channel) => (
+                    <tr key={channel.name}>
                       <td style={{ padding: themeSpace.md, fontWeight: '500' }}>{channel.name}</td>
                       <td style={{ padding: themeSpace.md, textAlign: 'right' }}>{channel.sent.toLocaleString()}</td>
                       <td style={{ padding: themeSpace.md, textAlign: 'right' }}>{channel.opened.toLocaleString()}</td>
@@ -1368,9 +1375,9 @@ export default function AIMarketingPage() {
             {
               label: 'Avg Rating', value: (mockMerchants.reduce((a, m) => a + m.rating, 0) / mockMerchants.length).toFixed(1), icon: 'award', color: themeColors.purple600,
             },
-          ].map((stat, idx) => (
+          ].map((stat) => (
             <div
-              key={idx}
+              key={stat.label}
               style={{
                 backgroundColor: themeColors.white, borderRadius: themeRadius.card, padding: themeSpace.lg, border: `1px solid ${themeColors.gray200}`,
               }}
@@ -1402,9 +1409,11 @@ export default function AIMarketingPage() {
             >
               Merchant Network
             </h3>
-            <button style={{
-              background: themeColors.primary50, border: 'none', color: themeColors.primary600, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: themeSpace.xs,
-            }}
+            <button
+              type="button"
+              style={{
+                background: themeColors.primary50, border: 'none', color: themeColors.primary600, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: themeSpace.xs,
+              }}
             >
               <Icon name="plus" size={14} color={themeColors.primary600} />
               Add Merchant
@@ -1507,6 +1516,7 @@ export default function AIMarketingPage() {
                   <td style={{ padding: themeSpace.md, textAlign: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: themeSpace.xs }}>
                       <button
+                        type="button"
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
                         }}
@@ -1515,6 +1525,7 @@ export default function AIMarketingPage() {
                         <Icon name="eye" size={16} color={themeColors.gray500} />
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           setNewCampaign((prev) => ({ ...prev, name: `${merchant.name} Campaign` }));
                           setShowCreateForm(true);
@@ -1527,6 +1538,7 @@ export default function AIMarketingPage() {
                         <Icon name="megaphone" size={16} color={themeColors.primary600} />
                       </button>
                       <button
+                        type="button"
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
                         }}
@@ -1574,6 +1586,7 @@ export default function AIMarketingPage() {
               </p>
             </div>
             <button
+              type="button"
               onClick={() => setShowCreateForm(false)}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.sm,
@@ -1587,13 +1600,15 @@ export default function AIMarketingPage() {
           <div style={{ padding: themeSpace.lg, overflowY: 'auto', flex: 1, minHeight: 0 }}>
             {/* Campaign Name */}
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.gray700, marginBottom: themeSpace.sm,
               }}
               >
                 Campaign Name *
               </label>
               <input
+id="field"
                 type="text"
                 value={newCampaign.name}
                 onChange={(e) => setNewCampaign((prev) => ({ ...prev, name: e.target.value }))}
@@ -1606,7 +1621,8 @@ export default function AIMarketingPage() {
 
             {/* Campaign Type */}
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-2" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.gray700, marginBottom: themeSpace.sm,
               }}
               >
@@ -1617,6 +1633,9 @@ export default function AIMarketingPage() {
                   <div
                     key={type.id}
                     onClick={() => setNewCampaign((prev) => ({ ...prev, type: type.id }))}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                     style={{
                       padding: themeSpace.md,
                       border: `2px solid ${newCampaign.type === type.id ? type.color : themeColors.gray200}`,
@@ -1641,7 +1660,8 @@ export default function AIMarketingPage() {
 
             {/* Target Segments */}
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-3" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.gray700, marginBottom: themeSpace.sm,
               }}
               >
@@ -1652,6 +1672,9 @@ export default function AIMarketingPage() {
                   <div
                     key={segment.id}
                     onClick={() => toggleSegment(segment.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                     style={{
                       padding: themeSpace.md,
                       border: `2px solid ${newCampaign.segments.includes(segment.id) ? themeColors.primary600 : themeColors.gray200}`,
@@ -1691,7 +1714,8 @@ export default function AIMarketingPage() {
 
             {/* Notification Channels */}
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-4" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.gray700, marginBottom: themeSpace.sm,
               }}
               >
@@ -1702,6 +1726,9 @@ export default function AIMarketingPage() {
                   <div
                     key={channel.id}
                     onClick={() => toggleChannel(channel.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                     style={{
                       padding: `${themeSpace.sm} ${themeSpace.lg}`,
                       border: `2px solid ${newCampaign.channels.includes(channel.id) ? channel.color : themeColors.gray200}`,
@@ -1726,8 +1753,9 @@ export default function AIMarketingPage() {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.sm,
               }}
               >
-                <label style={{ fontSize: '14px', fontWeight: '600', color: themeColors.gray700 }}>Campaign Message</label>
+                <label htmlFor="campaign-message" style={{ fontSize: '14px', fontWeight: '600', color: themeColors.gray700 }}>Campaign Message</label>
                 <button
+                  type="button"
                   onClick={handleGenerateAIContent}
                   disabled={isGeneratingAI}
                   style={{
@@ -1771,13 +1799,15 @@ export default function AIMarketingPage() {
 
             {/* Schedule */}
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-5" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.gray700, marginBottom: themeSpace.sm,
               }}
               >
                 Schedule (Optional)
               </label>
               <input
+id="field-5"
                 type="datetime-local"
                 value={newCampaign.scheduleDate}
                 onChange={(e) => setNewCampaign((prev) => ({ ...prev, scheduleDate: e.target.value }))}
@@ -1811,6 +1841,9 @@ export default function AIMarketingPage() {
                   <div
                     key={option.key}
                     onClick={() => setNewCampaign((prev) => ({ ...prev, [option.key]: !prev[option.key as keyof typeof prev] }))}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                     style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -1868,6 +1901,7 @@ export default function AIMarketingPage() {
           }}
           >
             <button
+              type="button"
               onClick={() => setShowCreateForm(false)}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -1883,6 +1917,7 @@ export default function AIMarketingPage() {
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSaveDraft}
               disabled={!newCampaign.name}
               style={{
@@ -1904,6 +1939,7 @@ export default function AIMarketingPage() {
               Save as Draft
             </button>
             <button
+              type="button"
               onClick={handleCreateCampaign}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,

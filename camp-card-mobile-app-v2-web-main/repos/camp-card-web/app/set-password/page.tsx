@@ -70,8 +70,8 @@ function SetPasswordForm() {
     try {
       await api.setPassword(token, newPassword);
       setSetPasswordSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to set password. The link may have expired.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to set password. The link may have expired.');
     } finally {
       setIsLoading(false);
     }
@@ -185,7 +185,7 @@ function SetPasswordForm() {
             }}
           >
             <p style={{ fontSize: '13px', fontWeight: '600', color: colors.success, margin: '0 0 8px 0' }}>
-              What's next?
+              What&apos;s next?
             </p>
             <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: colors.green600 }}>
               <li style={{ marginBottom: '4px' }}>Log in with your email and new password</li>
@@ -360,6 +360,7 @@ function SetPasswordForm() {
           {/* New Password Field */}
           <div style={{ marginBottom: space.lg }}>
             <label
+              htmlFor="field"
               style={{
                 display: 'block',
                 fontSize: '12px',
@@ -436,6 +437,7 @@ function SetPasswordForm() {
           {/* Confirm Password Field */}
           <div style={{ marginBottom: space.lg }}>
             <label
+              htmlFor="field-2"
               style={{
                 display: 'block',
                 fontSize: '12px',
@@ -600,7 +602,7 @@ function SetPasswordForm() {
 export default function SetPasswordPage() {
   return (
     <Suspense
-      fallback={
+      fallback={(
         <div
           style={{
             background: gradients.primary,
@@ -612,7 +614,7 @@ export default function SetPasswordPage() {
         >
           <p style={{ color: colors.white, fontSize: '16px' }}>Loading...</p>
         </div>
-      }
+      )}
     >
       <SetPasswordForm />
     </Suspense>

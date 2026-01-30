@@ -221,6 +221,7 @@ export default function NotificationsPage() {
         {/* Filter Buttons */}
         <div style={{ display: 'flex', gap: themeSpace.md, marginBottom: themeSpace.xl }}>
           <button
+            type="button"
             onClick={() => setFilter('all')}
             style={{
               padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -239,6 +240,7 @@ export default function NotificationsPage() {
             )
           </button>
           <button
+            type="button"
             onClick={() => setFilter('unread')}
             style={{
               padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -258,6 +260,7 @@ export default function NotificationsPage() {
           </button>
           {unreadCount > 0 && (
           <button
+            type="button"
             onClick={markAllAsRead}
             style={{
               padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -289,7 +292,7 @@ export default function NotificationsPage() {
             >
               No notifications
             </p>
-            <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0 }}>You're all caught up!</p>
+            <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0 }}>You&apos;re all caught up!</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
@@ -297,6 +300,9 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 onClick={() => markAsRead(notification.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                 style={{
                   backgroundColor: notification.read ? themeColors.white : '#f0f9ff',
                   borderRadius: themeRadius.card,

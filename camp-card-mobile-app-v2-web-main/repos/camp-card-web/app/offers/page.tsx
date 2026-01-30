@@ -2,9 +2,78 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
 import PageLayout from '../components/PageLayout';
+
+interface MerchantItem {
+  id: string;
+  name?: string;
+  businessName?: string;
+  status: string;
+  locations?: MerchantLocationItem[];
+}
+
+interface MerchantLocationItem {
+  id?: string;
+  uuid?: string;
+  locationName?: string;
+  name?: string;
+  city: string;
+  state: string;
+}
+
+interface ApiOfferResponse {
+  id: string | number;
+  title?: string;
+  name?: string;
+  description: string;
+  merchantId?: string | number;
+  merchantName?: string;
+  merchant?: {
+    id?: string | number;
+    business_name?: string;
+    businessName?: string;
+    name?: string;
+  };
+  discountType?: string;
+  discount?: string;
+  discountValue?: number;
+  value?: number;
+  usageLimitPerUser?: number;
+  imageUrl?: string;
+  image?: string;
+  barcode?: string;
+}
+
+interface OfferFormData {
+  merchantId: string;
+  title: string;
+  description: string;
+  discountType: string;
+  discountValue: number;
+  validFrom: string;
+  validUntil: string;
+  imageUrl?: string;
+  usageLimitPerUser?: number | null;
+  merchantLocationId?: string;
+  locationSpecific?: boolean;
+  minPurchaseAmount?: number;
+  barcode?: string;
+}
+
+interface EditOfferFormData {
+  title: string;
+  description: string;
+  discountType: string;
+  discountValue: number;
+  validFrom: string;
+  validUntil: string;
+  usageLimitPerUser?: number | null;
+  imageUrl?: string;
+  minPurchaseAmount?: number;
+  barcode?: string;
+}
 
 const themeColors = {
   white: '#ffffff',
@@ -42,7 +111,7 @@ const themeRadius = { sm: '4px', card: '12px', lg: '16px' };
 const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' };
 
 function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
-  const icons: { [key: string]: any } = {
+  const icons: { [key: string]: React.ReactNode } = {
     add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
@@ -103,7 +172,7 @@ interface Offer {
 export default function OffersPage() {
   const { data: session, status } = useSession();
   const _router = useRouter();
-  const [merchants, setMerchants] = useState<any[]>([]);
+  const [merchants, setMerchants] = useState<MerchantItem[]>([]);
   const [items, setItems] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +192,7 @@ export default function OffersPage() {
   // Form states
   const [newMerchantId, setNewMerchantId] = useState('');
   const [newLocationId, setNewLocationId] = useState('');
-  const [merchantLocations, setMerchantLocations] = useState<any[]>([]);
+  const [merchantLocations, setMerchantLocations] = useState<MerchantLocationItem[]>([]);
   const [newOfferName, setNewOfferName] = useState('');
   const [newOfferDescription, setNewOfferDescription] = useState('');
   const [newDiscountType, setNewDiscountType] = useState('');
@@ -206,6 +275,7 @@ export default function OffersPage() {
       // If not authenticated, still set loading to false to show proper message
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   const fetchMerchants = async () => {
@@ -213,7 +283,7 @@ export default function OffersPage() {
       const data = await api.getMerchants(session);
       const allMerchants = data.content || data || [];
       // Filter to only show APPROVED merchants (only approved merchants can have offers)
-      const approvedMerchants = allMerchants.filter((m: any) => m.status === 'APPROVED');
+      const approvedMerchants = allMerchants.filter((m: MerchantItem) => m.status === 'APPROVED');
       setMerchants(approvedMerchants);
     } catch (err) {
       console.error('Failed to load merchants', err);
@@ -226,7 +296,7 @@ export default function OffersPage() {
 
     if (merchantId) {
       // Find the selected merchant and get its locations
-      const selectedMerchant = merchants.find((m: any) => String(m.id) === String(merchantId));
+      const selectedMerchant = merchants.find((m) => String(m.id) === String(merchantId));
       if (selectedMerchant && selectedMerchant.locations) {
         setMerchantLocations(selectedMerchant.locations);
       } else {
@@ -242,22 +312,18 @@ export default function OffersPage() {
       setLoading(true);
       setError(null);
       const response = await api.getOffers(session);
-      console.log('Raw offers data:', response);
       // Handle both old structure (with items property) and new flat structure
       // API returns { data: [...], pagination: {...} }
-      let offersData = (response as any)?.data || (response as any)?.content || response || [];
+      const rawData = (response as Record<string, unknown>)?.data || (response as Record<string, unknown>)?.content || response || [];
       // Ensure offersData is always an array
-      if (!Array.isArray(offersData)) {
+      let offersData: Offer[] = [];
+      if (!Array.isArray(rawData)) {
         offersData = [];
-      }
-      console.log('Offers array:', offersData);
-      console.log('Offers count:', offersData.length);
-      // If offers are flat objects, transform them to the expected structure
-      if (offersData.length > 0 && !offersData[0].items) {
-        console.log('Transforming flat offers to grouped structure...');
+      } else if (rawData.length > 0 && !('items' in (rawData[0] as Record<string, unknown>))) {
+        // If offers are flat objects, transform them to the expected structure
         // Group offers by merchant - use Map to preserve insertion order and ensure unique keys
         const grouped = new Map<string, Offer>();
-        offersData.forEach((offer: any) => {
+        (rawData as ApiOfferResponse[]).forEach((offer: ApiOfferResponse) => {
           // Handle both API format (merchant object) and legacy format
           const merchantObj = offer.merchant || {};
 
@@ -294,11 +360,11 @@ export default function OffersPage() {
           const group = grouped.get(merchantId)!;
           group.items.push({
             id: String(offer.id),
-            name: offer.title || offer.name,
+            name: offer.title || offer.name || '',
             description: offer.description,
             merchantId,
             merchantName: group.merchantName, // Use the group's merchantName for consistency
-            discountType: offer.discountType || offer.discount,
+            discountType: offer.discountType || offer.discount || '',
             discountAmount: String(offer.discountValue || offer.value || ''),
             useType: (offer.usageLimitPerUser === 1 ? 'one-time' : 'reusable') as 'one-time' | 'reusable',
             image: offer.imageUrl || offer.image,
@@ -306,9 +372,9 @@ export default function OffersPage() {
           });
         });
         offersData = Array.from(grouped.values());
-        console.log('Grouped offers:', offersData);
+      } else {
+        offersData = rawData as Offer[];
       }
-      console.log('Final offers state:', offersData);
       setItems(offersData);
     } catch (err) {
       console.error('Error loading offers:', err);
@@ -321,7 +387,7 @@ export default function OffersPage() {
   };
 
   const handleDeleteSingleOffer = async (offerId: string, merchantId: string) => {
-    if (!confirm('Delete this offer?')) return;
+    if (!window.confirm('Delete this offer?')) return;
     try {
       // Call API to delete the offer
       await api.deleteOffer(offerId, session);
@@ -351,11 +417,12 @@ export default function OffersPage() {
     if (!merchantGroup) return;
 
     const offerCount = merchantGroup.items.length;
-    if (!confirm(`Delete all ${offerCount} offer${offerCount !== 1 ? 's' : ''} for ${merchantGroup.merchantName}?`)) return;
+    if (!window.confirm(`Delete all ${offerCount} offer${offerCount !== 1 ? 's' : ''} for ${merchantGroup.merchantName}?`)) return;
 
     try {
       // Delete all offers in the merchant group via API
       for (const offer of merchantGroup.items) {
+        // eslint-disable-next-line no-await-in-loop
         await api.deleteOffer(String(offer.id), session);
       }
 
@@ -427,7 +494,7 @@ export default function OffersPage() {
         const now = new Date();
         const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
 
-        const offerData: any = {
+        const offerData: OfferFormData = {
           merchantId: newMerchantId,
           title: newOfferName,
           description: newOfferDescription,
@@ -456,9 +523,7 @@ export default function OffersPage() {
           offerData.barcode = newBarcode.trim();
         }
 
-        console.log('[PAGE] Creating offer:', offerData);
         const createdOffer = await api.createOffer(offerData, session);
-        console.log('[PAGE] Offer created successfully:', createdOffer);
 
         // Add to local state immediately
         if (createdOffer) {
@@ -522,9 +587,9 @@ export default function OffersPage() {
         setNewImageName('');
         setShowAddMultiple(false);
       }
-    } catch (err: any) {
+    } catch (err) {
       // Display the actual error message from the backend
-      const errorMessage = err?.message || 'Unknown error';
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(`Failed to create offer: ${errorMessage}`);
       console.error('[PAGE] Error:', err);
     }
@@ -541,14 +606,14 @@ export default function OffersPage() {
     }
 
     try {
-      const createdOffers: any[] = [];
+      const createdOffers: ApiOfferResponse[] = [];
       // Set default dates: start now, expire in 1 year
       const now = new Date();
       const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
 
       // Submit each offer to the API
       for (const offer of tempOffers) {
-        const offerData: any = {
+        const offerData: OfferFormData = {
           merchantId: newMerchantId,
           title: offer.name,
           description: offer.description,
@@ -561,12 +626,10 @@ export default function OffersPage() {
         if ((offer.discountType === '$ off when $ spent' || offer.discountType === '% off when $ spent') && offer.minimumSpend) {
           offerData.minPurchaseAmount = parseFloat(offer.minimumSpend) || 0;
         }
-        console.log('[PAGE] Creating offer:', offerData);
+        // eslint-disable-next-line no-await-in-loop
         const createdOffer = await api.createOffer(offerData, session);
         createdOffers.push(createdOffer);
       }
-
-      console.log('[PAGE] All offers created successfully:', createdOffers);
 
       // Add all offers to local state immediately
       if (createdOffers.length > 0) {
@@ -581,11 +644,11 @@ export default function OffersPage() {
 
         const mappedOffers: OfferItem[] = createdOffers.map((offer) => ({
           id: String(offer.id || Date.now()),
-          name: offer.title || offer.name,
+          name: offer.title || offer.name || '',
           description: offer.description,
           merchantId: groupKey,
           merchantName,
-          discountType: offer.discountType,
+          discountType: offer.discountType || '',
           discountAmount: String(offer.discountValue),
           useType: 'reusable' as const,
           image: offer.imageUrl,
@@ -650,7 +713,7 @@ export default function OffersPage() {
   const filteredMerchants = useMemo(() => {
     if (!merchantSearchTerm.trim()) return merchants;
     const search = merchantSearchTerm.toLowerCase();
-    return merchants.filter((merchant: any) => {
+    return merchants.filter((merchant) => {
       const name = (merchant.businessName || merchant.name || '').toLowerCase();
       return name.includes(search);
     });
@@ -659,7 +722,7 @@ export default function OffersPage() {
   // Get selected merchant name for display
   const selectedMerchantName = useMemo(() => {
     if (!newMerchantId) return '';
-    const merchant = merchants.find((m: any) => String(m.id) === String(newMerchantId));
+    const merchant = merchants.find((m) => String(m.id) === String(newMerchantId));
     return merchant?.businessName || merchant?.name || '';
   }, [merchants, newMerchantId]);
 
@@ -690,7 +753,7 @@ export default function OffersPage() {
       const now = new Date();
       const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
 
-      const offerData: any = {
+      const offerData: EditOfferFormData = {
         title: editOfferName,
         description: editOfferDescription,
         discountType: mapDiscountType(editDiscountType),
@@ -713,9 +776,7 @@ export default function OffersPage() {
         offerData.barcode = editBarcode.trim();
       }
 
-      console.log('[PAGE] Updating offer:', editingOffer.id, offerData);
       await api.updateOffer(editingOffer.id, offerData, session);
-      console.log('[PAGE] Offer updated successfully');
 
       // Update local state
       setItems(items.map((group) => ({
@@ -816,6 +877,7 @@ export default function OffersPage() {
             merchants
           </span>
           <button
+            type="button"
             onClick={() => setShowAddForm(true)}
             style={{
               background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
@@ -929,6 +991,7 @@ export default function OffersPage() {
 
           {hasActiveFilters && (
           <button
+            type="button"
             onClick={clearFilters}
             style={{
               padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -959,6 +1022,7 @@ export default function OffersPage() {
       </div>
       )}
 
+      {/* eslint-disable-next-line no-nested-ternary */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
       ) : paginatedItems.length === 0 ? (
@@ -975,6 +1039,9 @@ export default function OffersPage() {
               >
                 <div
                   onClick={() => toggleOfferExpand(offer.merchantId)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                   style={{
                    padding: themeSpace.lg,
                    cursor: 'pointer',
@@ -1002,6 +1069,7 @@ export default function OffersPage() {
                  </div>
                   <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
                    <button
+                   type="button"
                    onClick={(e) => { e.stopPropagation(); handleDeleteMerchantOffers(offer.merchantId); }}
                    style={{
   background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1056,6 +1124,7 @@ export default function OffersPage() {
                  </div>
                    <div style={{ display: 'flex', gap: themeSpace.sm, alignItems: 'flex-start' }}>
                      <button
+                       type="button"
                        onClick={() => openEditForm(item)}
                        style={{
                          background: themeColors.info50,
@@ -1074,6 +1143,7 @@ export default function OffersPage() {
                        <Icon name="edit" size={14} color={themeColors.info600} />
                      </button>
                      <button
+                       type="button"
                        onClick={() => handleDeleteSingleOffer(item.id, offer.merchantId)}
                        style={{
                          background: '#fee2e2',
@@ -1094,6 +1164,7 @@ export default function OffersPage() {
                    </div>
                    {item.image && (
                  <div style={{ marginLeft: themeSpace.lg, textAlign: 'center' }}>
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
                  <img
                  src={item.image}
                  alt="Offer barcode"
@@ -1120,6 +1191,7 @@ export default function OffersPage() {
           }}
           >
             <button
+              type="button"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
               style={{
@@ -1135,6 +1207,7 @@ export default function OffersPage() {
               First
             </button>
             <button
+              type="button"
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
               style={{
@@ -1163,6 +1236,7 @@ export default function OffersPage() {
               for (let i = startPage; i <= endPage; i++) {
                 pages.push(
                   <button
+                   type="button"
                    key={i}
                    onClick={() => setCurrentPage(i)}
                    style={{
@@ -1185,6 +1259,7 @@ export default function OffersPage() {
             })()}
 
             <button
+              type="button"
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
               style={{
@@ -1203,6 +1278,7 @@ export default function OffersPage() {
               <Icon name="chevronRight" size={16} />
             </button>
             <button
+              type="button"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
               style={{
@@ -1243,7 +1319,8 @@ export default function OffersPage() {
           }}
           >
             <div>
-              <label style={{
+              <label
+htmlFor="field" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
@@ -1252,6 +1329,9 @@ export default function OffersPage() {
               <div style={{ position: 'relative' }}>
                 <div
                   onClick={() => !tempOffers.length && setShowMerchantDropdown(!showMerchantDropdown)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                   style={{
                     width: '100%',
                     padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -1298,7 +1378,6 @@ export default function OffersPage() {
                           placeholder="Search merchants..."
                           value={merchantSearchTerm}
                           onChange={(e) => setMerchantSearchTerm(e.target.value)}
-                          autoFocus
                           style={{
                             width: '100%',
                             padding: `${themeSpace.sm} ${themeSpace.sm} ${themeSpace.sm} ${themeSpace.xl}`,
@@ -1315,14 +1394,17 @@ export default function OffersPage() {
                         No merchants found
                       </div>
                     ) : (
-                      filteredMerchants.map((merchant: any) => (
+                      filteredMerchants.map((merchant) => (
                         <div
                           key={merchant.id}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => {
                             handleMerchantChange(String(merchant.id));
                             setShowMerchantDropdown(false);
                             setMerchantSearchTerm('');
                           }}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                           style={{
                             padding: `${themeSpace.sm} ${themeSpace.md}`,
                             cursor: 'pointer',
@@ -1353,13 +1435,15 @@ export default function OffersPage() {
 
             {newMerchantId && (
             <div>
-              <label style={{
+              <label
+htmlFor="field-2" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Location (Optional)
               </label>
               <select
+id="field-2"
                 value={newLocationId}
                 onChange={(e) => setNewLocationId(e.target.value)}
                 style={{
@@ -1374,7 +1458,7 @@ export default function OffersPage() {
                 }}
               >
                 <option value="">All Locations</option>
-                {merchantLocations.map((location: any) => (
+                {merchantLocations.map((location) => (
                   <option key={location.id || location.uuid} value={location.id || location.uuid}>
                     {location.locationName || location.name} - {location.city}, {location.state}
                   </option>
@@ -1422,6 +1506,7 @@ export default function OffersPage() {
                  </div>
                </div>
                  <button
+                 type="button"
                  onClick={() => deleteFromTemp(o.id)}
                  style={{
                    background: 'none',
@@ -1445,13 +1530,15 @@ export default function OffersPage() {
             {!multipleOffers || showAddMultiple ? (
               <>
                 <div>
-                  <label style={{
+                  <label
+htmlFor="field-3" style={{
                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                  }}
                  >
 Offer Name
                  </label>
                   <input
+id="field-3"
                    type="text"
                    value={newOfferName}
                    onChange={(e) => setNewOfferName(e.target.value)}
@@ -1468,13 +1555,15 @@ Offer Name
                 </div>
 
                 <div>
-                  <label style={{
+                  <label
+htmlFor="field-4" style={{
                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                  }}
                  >
 Offer Description
                  </label>
                   <textarea
+id="field-4"
                    value={newOfferDescription}
                    onChange={(e) => setNewOfferDescription(e.target.value)}
                    placeholder="Describe the offer details..."
@@ -1493,13 +1582,15 @@ Offer Description
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: themeSpace.lg }}>
                   <div>
-                   <label style={{
+                   <label
+htmlFor="field-5" style={{
                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                  }}
                  >
 Discount Type
                  </label>
                    <select
+id="field-5"
                    value={newDiscountType}
                    onChange={(e) => setNewDiscountType(e.target.value)}
                    style={{
@@ -1523,13 +1614,15 @@ Discount Type
                  </div>
 
                   <div>
-                   <label style={{
+                   <label
+htmlFor="field-6" style={{
                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                  }}
                  >
 Discount Amount
                  </label>
                    <input
+id="field-6"
                    type="text"
                    value={newDiscountAmount}
                    onChange={(e) => setNewDiscountAmount(e.target.value)}
@@ -1548,13 +1641,15 @@ Discount Amount
 
                 {(newDiscountType === '$ off when $ spent' || newDiscountType === '% off when $ spent') && (
                 <div>
-                  <label style={{
+                  <label
+htmlFor="field-7" style={{
                     display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                   }}
                   >
                     Minimum Spend Amount ($)
                   </label>
                   <input
+id="field-7"
                     type="number"
                     value={newMinSpend}
                     onChange={(e) => setNewMinSpend(e.target.value)}
@@ -1575,7 +1670,8 @@ Discount Amount
                 )}
 
                 <div>
-                  <label style={{
+                  <label
+htmlFor="field-8" style={{
                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                  }}
                  >
@@ -1584,12 +1680,14 @@ Usage Type
                   <div style={{ display: 'flex', gap: themeSpace.lg }}>
                    {usageTypes.map((type) => (
                    <label
+                   htmlFor="field-9"
                    key={type}
 style={{
                    display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer',
                  }}
                  >
                    <input
+id="field-9"
                      type="radio"
                      name="useType"
                      value={type}
@@ -1608,13 +1706,15 @@ style={{
                 {/* Barcode field - shown for one-time use offers */}
                 {newUseType === 'one-time' && (
                 <div>
-                  <label style={{
+                  <label
+htmlFor="field-10" style={{
                     display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                   }}
                   >
                     Barcode (Optional)
                   </label>
                   <input
+id="field-10"
                     type="text"
                     value={newBarcode}
                     onChange={(e) => setNewBarcode(e.target.value)}
@@ -1635,7 +1735,8 @@ style={{
                 )}
 
                 <div>
-                  <label style={{
+                  <label
+htmlFor="field-11" style={{
                    display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                  }}
                  >
@@ -1667,6 +1768,7 @@ Upload Image / Barcode
                  </div>
                   {newImage && (
                  <div style={{ marginTop: themeSpace.md, textAlign: 'center' }}>
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
                  <img
                  src={newImage}
                  alt="Preview"
@@ -1675,6 +1777,7 @@ Upload Image / Barcode
                  }}
                />
                  <button
+                 type="button"
                  onClick={() => { setNewImage(null); setNewImageName(''); }}
                  style={{
                    marginTop: themeSpace.sm,
@@ -1728,6 +1831,7 @@ Upload Image / Barcode
 
           <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
             <button
+              type="button"
               onClick={() => {
                 setShowAddForm(false);
                 resetForm();
@@ -1749,6 +1853,7 @@ Upload Image / Barcode
             {multipleOffers && tempOffers.length > 0 ? (
               <>
                 <button
+                  type="button"
                   onClick={() => {
                    if (!showAddMultiple) {
                      setShowAddMultiple(true);
@@ -1770,6 +1875,7 @@ Upload Image / Barcode
                   {showAddMultiple ? 'Add Offer' : 'Add Another Offer'}
                 </button>
                 <button
+                  type="button"
                   onClick={finalizMultipleOffers}
                   style={{
                    padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -1787,6 +1893,7 @@ Upload Image / Barcode
               </>
             ) : (
               <button
+                type="button"
                 onClick={addSingleOffer}
                 style={{
                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -1838,13 +1945,15 @@ Upload Image / Barcode
           }}
           >
             <div>
-              <label style={{
+              <label
+htmlFor="field-12" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Offer Name
               </label>
               <input
+id="field-12"
                 type="text"
                 value={editOfferName}
                 onChange={(e) => setEditOfferName(e.target.value)}
@@ -1861,13 +1970,15 @@ Upload Image / Barcode
             </div>
 
             <div>
-              <label style={{
+              <label
+htmlFor="field-13" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Offer Description
               </label>
               <textarea
+id="field-13"
                 value={editOfferDescription}
                 onChange={(e) => setEditOfferDescription(e.target.value)}
                 placeholder="Describe the offer details..."
@@ -1886,13 +1997,15 @@ Upload Image / Barcode
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: themeSpace.lg }}>
               <div>
-                <label style={{
+                <label
+htmlFor="field-14" style={{
                   display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                 }}
                 >
                   Discount Type
                 </label>
                 <select
+id="field-14"
                   value={editDiscountType}
                   onChange={(e) => setEditDiscountType(e.target.value)}
                   style={{
@@ -1916,13 +2029,15 @@ Upload Image / Barcode
               </div>
 
               <div>
-                <label style={{
+                <label
+htmlFor="field-15" style={{
                   display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                 }}
                 >
                   Discount Amount
                 </label>
                 <input
+id="field-15"
                   type="text"
                   value={editDiscountAmount}
                   onChange={(e) => setEditDiscountAmount(e.target.value)}
@@ -1941,13 +2056,15 @@ Upload Image / Barcode
 
             {(editDiscountType === '$ off when $ spent' || editDiscountType === '% off when $ spent') && (
             <div>
-              <label style={{
+              <label
+htmlFor="field-16" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Minimum Spend Amount ($)
               </label>
               <input
+id="field-16"
                 type="number"
                 value={editMinSpend}
                 onChange={(e) => setEditMinSpend(e.target.value)}
@@ -1965,7 +2082,8 @@ Upload Image / Barcode
             )}
 
             <div>
-              <label style={{
+              <label
+htmlFor="field-17" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
@@ -1974,12 +2092,14 @@ Upload Image / Barcode
               <div style={{ display: 'flex', gap: themeSpace.lg }}>
                 {usageTypes.map((type) => (
                   <label
+                    htmlFor="field-18"
                     key={type}
                     style={{
                       display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer',
                     }}
                   >
                     <input
+id="field-18"
                       type="radio"
                       name="editUseType"
                       value={type}
@@ -1998,13 +2118,15 @@ Upload Image / Barcode
             {/* Barcode field - shown for one-time use offers */}
             {editUseType === 'one-time' && (
             <div>
-              <label style={{
+              <label
+htmlFor="field-19" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
                 Barcode (Optional)
               </label>
               <input
+id="field-19"
                 type="text"
                 value={editBarcode}
                 onChange={(e) => setEditBarcode(e.target.value)}
@@ -2026,7 +2148,8 @@ Upload Image / Barcode
 
             {/* Image Upload for Edit */}
             <div>
-              <label style={{
+              <label
+htmlFor="field-20" style={{
                 display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
               }}
               >
@@ -2058,6 +2181,7 @@ Upload Image / Barcode
               </div>
               {editImage && (
                 <div style={{ marginTop: themeSpace.md, textAlign: 'center' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={editImage}
                     alt="Preview"

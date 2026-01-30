@@ -38,7 +38,7 @@ const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rg
 
 function Icon({
   name, size = 18, color = 'currentColor', ...props
-}: { name: string; size?: number; color?: string; [key: string]: any }) {
+}: { name: string; size?: number; color?: string; [key: string]: unknown }) {
   const icons: { [key: string]: JSX.Element } = {
     back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
     bell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
@@ -61,12 +61,26 @@ function Icon({
   return <span {...props}>{icons[name] || null}</span>;
 }
 
+interface SettingsState {
+  appName: string;
+  apiUrl: string;
+  timeout: string;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  weeklyReport: boolean;
+  twoFactorAuth: boolean;
+  ipWhitelist: boolean;
+  sessionTimeout: string;
+  apiKeys: Array<{ key: string; name: string }>;
+  [key: string]: string | boolean | Array<{ key: string; name: string }>;
+}
+
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('general');
   const [saved, setSaved] = useState(false);
-  const [settings, setSettings] = useState<{ [key: string]: any }>({
+  const [settings, setSettings] = useState<SettingsState>({
     // General
     appName: 'Camp Card Platform',
     apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
@@ -137,6 +151,7 @@ export default function SettingsPage() {
               { id: 'api', label: 'API Keys', icon: 'mail' },
             ].map((tab) => (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
@@ -179,13 +194,15 @@ export default function SettingsPage() {
             </h2>
 
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: themeSpace.sm,
               }}
               >
                 Application Name
               </label>
               <input
+id="field"
                 type="text"
                 value={settings.appName}
                 onChange={(e) => setSettings({ ...settings, appName: e.target.value })}
@@ -200,13 +217,15 @@ export default function SettingsPage() {
             </div>
 
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-2" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: themeSpace.sm,
               }}
               >
                 API Base URL
               </label>
               <input
+id="field-2"
                 type="text"
                 value={settings.apiUrl}
                 onChange={(e) => setSettings({ ...settings, apiUrl: e.target.value })}
@@ -221,13 +240,15 @@ export default function SettingsPage() {
             </div>
 
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-3" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: themeSpace.sm,
               }}
               >
                 Request Timeout (ms)
               </label>
               <input
+id="field-3"
                 type="number"
                 value={settings.timeout}
                 onChange={(e) => setSettings({ ...settings, timeout: e.target.value })}
@@ -242,6 +263,7 @@ export default function SettingsPage() {
             </div>
 
             <button
+              type="button"
               onClick={handleSave}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -294,6 +316,8 @@ export default function SettingsPage() {
                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: themeColors.gray600 }}>{item.description}</p>
                </div>
                  <button
+                 type="button"
+                 aria-label={`Toggle ${item.label}`}
                  onClick={() => toggleSwitch(item.key)}
                  style={{
                  width: '50px',
@@ -324,6 +348,7 @@ export default function SettingsPage() {
             </div>
 
             <button
+              type="button"
               onClick={handleSave}
               style={{
                 marginTop: themeSpace.lg,
@@ -376,6 +401,8 @@ export default function SettingsPage() {
                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: themeColors.gray600 }}>{item.description}</p>
                </div>
                  <button
+                 type="button"
+                 aria-label={`Toggle ${item.label}`}
                  onClick={() => toggleSwitch(item.key)}
                  style={{
                  width: '50px',
@@ -406,13 +433,15 @@ export default function SettingsPage() {
             </div>
 
             <div style={{ marginTop: themeSpace.lg, marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-4" style={{
                 display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: themeSpace.sm,
               }}
               >
                 Session Timeout (seconds)
               </label>
               <input
+id="field-4"
                 type="number"
                 value={settings.sessionTimeout}
                 onChange={(e) => setSettings({ ...settings, sessionTimeout: e.target.value })}
@@ -427,6 +456,7 @@ export default function SettingsPage() {
             </div>
 
             <button
+              type="button"
               onClick={handleSave}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -459,6 +489,7 @@ export default function SettingsPage() {
             <p style={{ fontSize: '14px', color: themeColors.gray600, marginBottom: themeSpace.lg }}>Generate and manage API keys for integrations</p>
 
             <button
+              type="button"
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
                 backgroundColor: themeColors.primary600,

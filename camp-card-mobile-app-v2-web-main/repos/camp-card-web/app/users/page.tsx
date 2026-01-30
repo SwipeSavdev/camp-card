@@ -40,7 +40,7 @@ const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rg
 
 function Icon({
   name, size = 18, color = 'currentColor', ...props
-}: { name: string; size?: number; color?: string; [key: string]: any }) {
+}: { name: string; size?: number; color?: string; [key: string]: unknown }) {
   const icons: { [key: string]: JSX.Element } = {
     add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <line x1="12" y1="5" x2="12" y2="19" />
@@ -169,13 +169,56 @@ type UserRole = 'GLOBAL_SYSTEM_ADMIN' | 'ADMIN' | 'SUPPORT_REPRESENTATIVE' | 'SY
 type UnitType = 'PACK' | 'BSA_TROOP_BOYS' | 'BSA_TROOP_GIRLS' | 'SHIP' | 'CREW' | 'FAMILY_SCOUTING' | null;
 
 // System-level roles that can only be assigned by Global System Admin
-const SYSTEM_ROLES: UserRole[] = ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'SYSTEM_ANALYST', 'SYSTEM_QA', 'SECURITY_ANALYST'];
+const _SYSTEM_ROLES: UserRole[] = ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'SUPPORT_REPRESENTATIVE', 'SYSTEM_ANALYST', 'SYSTEM_QA', 'SECURITY_ANALYST'];
 
 interface User {
   id: string;
   name: string;
   email: string;
   status: 'active' | 'inactive';
+  role: UserRole;
+  unitType?: UnitType;
+  unitNumber?: string;
+  councilName?: string;
+}
+
+interface ImportPreviewRow {
+  row: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  councilName: string;
+  unitNumber: string;
+  unitType: string;
+  dateOfBirth: string;
+  parentName: string;
+  parentEmail: string;
+  valid: boolean;
+  errors: string[];
+}
+
+interface UserCreateData {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  password?: string;
+  isActive: boolean;
+  role: UserRole | string;
+  councilId?: string;
+  councilName?: string;
+  unitType?: UnitType;
+  unitNumber?: string;
+  dateOfBirth?: string;
+  parentName?: string;
+  parentEmail?: string;
+  parentPhone?: string;
+}
+
+interface UserUpdateData {
+  firstName: string;
+  lastName: string;
+  isActive: boolean;
   role: UserRole;
   unitType?: UnitType;
   unitNumber?: string;
@@ -240,7 +283,7 @@ export default function UsersPage() {
   // Import/Export state
   const [showImportModal, setShowImportModal] = useState(false);
   const [_importFile, setImportFile] = useState<File | null>(null);
-  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importPreview, setImportPreview] = useState<ImportPreviewRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importSuccess, setImportSuccess] = useState<number>(0);
@@ -263,7 +306,7 @@ export default function UsersPage() {
   ];
 
   // Get current user's role from session
-  const currentUserRole = (session?.user as any)?.role as UserRole | undefined;
+  const currentUserRole = session?.user?.role as UserRole | undefined;
   const isGlobalSystemAdmin = currentUserRole === 'GLOBAL_SYSTEM_ADMIN';
 
   // Filter role options based on current user's permissions
@@ -285,6 +328,7 @@ export default function UsersPage() {
     if (status === 'authenticated' && session) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   // Fetch councils when the form opens
@@ -292,11 +336,12 @@ export default function UsersPage() {
     if (showAddForm && status === 'authenticated' && session) {
       fetchCouncils();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAddForm, status, session]);
 
   // Fetch councils with optional search term (debounced)
   useEffect(() => {
-    if (!showAddForm) return;
+    if (!showAddForm) return undefined;
 
     const debounceTimer = setTimeout(() => {
       if (councilSearchTerm.length >= 2 || councilSearchTerm.length === 0) {
@@ -305,6 +350,7 @@ export default function UsersPage() {
     }, 300);
 
     return () => clearTimeout(debounceTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [councilSearchTerm, showAddForm]);
 
   const fetchCouncils = async (search?: string) => {
@@ -312,7 +358,7 @@ export default function UsersPage() {
       setCouncilsLoading(true);
       const data = await api.getCouncils(session, search);
       const councilList = data.content || [];
-      setCouncils(councilList.map((c: any) => ({
+      setCouncils(councilList.map((c: Record<string, unknown>) => ({
         id: c.id,
         uuid: c.uuid,
         name: c.name,
@@ -332,7 +378,7 @@ export default function UsersPage() {
       const data = await api.getUsers(session);
       const rawUsers = data.content || data || [];
       // Map API response to frontend User interface
-      const mappedUsers = rawUsers.map((u: any) => ({
+      const mappedUsers = rawUsers.map((u: Record<string, unknown>) => ({
         id: u.id,
         name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
         email: u.email,
@@ -349,26 +395,22 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this user?')) return;
+    if (!window.confirm('Delete this user?')) return;
     try {
-      console.log('[PAGE] Deleting user:', id);
       await api.deleteUser(id, session);
-      console.log('[PAGE] User deleted successfully');
       setItems(items.filter((i) => i.id !== id));
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('[PAGE] Delete error:', err);
-      const errorMsg = err?.status === 403
-        ? 'Permission denied. Only National Admins can delete users.'
-        : err?.status === 404
-        ? 'User not found.'
-        : `Failed to delete user: ${err?.message || 'Unknown error'}`;
+      const apiErr = err as Record<string, unknown>;
+      let errorMsg = `Failed to delete user: ${apiErr?.message || 'Unknown error'}`;
+      if (apiErr?.status === 403) errorMsg = 'Permission denied. Only National Admins can delete users.';
+      else if (apiErr?.status === 404) errorMsg = 'User not found.';
       setError(errorMsg);
     }
   };
 
   const handleEdit = (user: User) => {
-    console.log('[PAGE] Editing user:', user);
     setEditingUser(user);
     setEditUserName(user.name || '');
     setEditUserEmail(user.email || '');
@@ -391,7 +433,7 @@ export default function UsersPage() {
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      const updateData: any = {
+      const updateData: UserUpdateData = {
         firstName,
         lastName,
         isActive: editUserStatus === 'active',
@@ -404,9 +446,7 @@ export default function UsersPage() {
         updateData.unitNumber = editUserUnitNumber;
       }
 
-      console.log('[PAGE] Updating user:', editingUser.id, updateData);
-      const updatedUser = await api.updateUser(editingUser.id, updateData, session);
-      console.log('[PAGE] User updated successfully:', updatedUser);
+      await api.updateUser(editingUser.id, updateData, session);
 
       // Update local state
       setItems(items.map((item) => (item.id === editingUser.id
@@ -474,7 +514,7 @@ export default function UsersPage() {
       // Generate a temporary password for the new user
       const tempPassword = `TempPass${Math.random().toString(36).slice(-8)}!`;
 
-      const userData: any = {
+      const userData: UserCreateData = {
         firstName,
         lastName,
         email: newUserEmail,
@@ -501,9 +541,7 @@ export default function UsersPage() {
         }
       }
 
-      console.log('[PAGE] Submitting user data:', userData);
       const newUser = await api.createUser(userData, session);
-      console.log('[PAGE] User created successfully:', newUser);
 
       // Add to local state immediately
       if (newUser) {
@@ -593,9 +631,7 @@ export default function UsersPage() {
         role: 'UNIT_LEADER',
       };
 
-      console.log('[PAGE] Creating new troop leader:', userData);
       const newTroopLeader = await api.createUser(userData, session);
-      console.log('[PAGE] Troop leader created successfully:', newTroopLeader);
 
       // Add to local state immediately
       if (newTroopLeader) {
@@ -627,7 +663,7 @@ export default function UsersPage() {
     const headers = ['Name', 'Email', 'Role', 'Status', 'CouncilName', 'UnitNumber', 'UnitType'];
     const csvContent = [
       headers.join(','),
-      ...items.map((user: any) => [
+      ...items.map((user: User) => [
         `"${user.name.replace(/"/g, '""')}"`,
         `"${user.email.replace(/"/g, '""')}"`,
         user.role,
@@ -735,7 +771,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
       const validRoles = ['NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER', 'PARENT', 'SCOUT'];
       const validStatuses = ['active', 'inactive'];
       const validUnitTypes = ['PACK', 'BSA_TROOP_BOYS', 'BSA_TROOP_GIRLS', 'SHIP', 'CREW', 'FAMILY_SCOUTING'];
-      const preview: any[] = [];
+      const preview: ImportPreviewRow[] = [];
       const errors: string[] = [];
 
       for (let i = 1; i < lines.length; i++) {
@@ -761,7 +797,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
         const name = values[nameIdx]?.replace(/^"|"$/g, '');
         const email = values[emailIdx]?.replace(/^"|"$/g, '');
         const role = values[roleIdx]?.toUpperCase();
-        const status = values[statusIdx]?.toLowerCase();
+        const rowStatus = values[statusIdx]?.toLowerCase();
         const councilName = councilNameIdx >= 0 ? values[councilNameIdx]?.replace(/^"|"$/g, '') : '';
         const unitNumber = unitNumberIdx >= 0 ? values[unitNumberIdx]?.replace(/^"|"$/g, '') : '';
         const unitType = unitTypeIdx >= 0 ? values[unitTypeIdx]?.toUpperCase().replace(/^"|"$/g, '') : '';
@@ -775,7 +811,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
         if (!email) rowErrors.push('Email is required');
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) rowErrors.push('Invalid email format');
         if (!validRoles.includes(role)) rowErrors.push(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
-        if (!validStatuses.includes(status)) rowErrors.push('Invalid status. Must be: active or inactive');
+        if (!validStatuses.includes(rowStatus)) rowErrors.push('Invalid status. Must be: active or inactive');
 
         // Validate council-related fields based on role - only required for COUNCIL_ADMIN
         if (role === 'COUNCIL_ADMIN' && !councilName) {
@@ -803,7 +839,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
               rowErrors.push('DateOfBirth must be in YYYY-MM-DD format');
             } else {
               const parsedDate = new Date(dateOfBirth);
-              if (isNaN(parsedDate.getTime())) {
+              if (Number.isNaN(parsedDate.getTime())) {
                 rowErrors.push('DateOfBirth is not a valid date');
               }
             }
@@ -827,7 +863,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
           name,
           email,
           role,
-          status,
+          status: rowStatus,
           councilName,
           unitNumber,
           unitType,
@@ -868,7 +904,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
         const lastName = nameParts.slice(1).join(' ') || '';
         const tempPassword = `TempPass${Math.random().toString(36).slice(-8)}!`;
 
-        const userData: any = {
+        const userData: UserCreateData = {
           firstName,
           lastName,
           email: row.email,
@@ -885,7 +921,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
           userData.unitNumber = row.unitNumber;
         }
         if (row.unitType) {
-          userData.unitType = row.unitType;
+          userData.unitType = row.unitType as UnitType;
         }
 
         // Add COPPA compliance fields for SCOUT role
@@ -901,6 +937,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
           }
         }
 
+        // eslint-disable-next-line no-await-in-loop
         const newUser = await api.createUser(userData, session);
 
         if (newUser) {
@@ -910,7 +947,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
             email: newUser.email || row.email,
             role: newUser.role || row.role,
             status: (newUser.isActive ? 'active' : 'inactive') as 'active' | 'inactive',
-            unitType: row.unitType || undefined,
+            unitType: (row.unitType as UnitType) || undefined,
             unitNumber: row.unitNumber || undefined,
           });
           successCount++;
@@ -992,6 +1029,9 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
               <div
                 key={item.href}
                 onClick={() => router.push(item.href)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                 style={{
                   padding: `${themeSpace.md}`,
                   display: 'flex',
@@ -1029,6 +1069,9 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
             <div
               key={item.href}
               onClick={() => router.push(item.href)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
               style={{
                 padding: themeSpace.md,
                 display: 'flex',
@@ -1055,6 +1098,9 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
           ))}
           <div
             onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
             style={{
               padding: themeSpace.md,
               display: 'flex',
@@ -1091,6 +1137,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
               <button
+                type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 style={{
   background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, padding: themeSpace.sm,
@@ -1117,6 +1164,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
                 {filteredItems.length}
               </span>
               <button
+                type="button"
                 onClick={() => setShowImportModal(true)}
                 style={{
   background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center',
@@ -1126,6 +1174,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
                 Import
               </button>
               <button
+                type="button"
                 onClick={exportUsers}
                 style={{
   background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray200}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500', display: 'flex', gap: themeSpace.xs, alignItems: 'center',
@@ -1135,6 +1184,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
                 Export
               </button>
               <button
+                type="button"
                 onClick={() => setShowAddForm(true)}
                 style={{
   background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
@@ -1233,6 +1283,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
             {/* Clear Filters */}
             {(searchTerm || roleFilter || statusFilter) && (
             <button
+              type="button"
               onClick={() => {
                 setSearchTerm('');
                 setRoleFilter('');
@@ -1262,6 +1313,7 @@ Mike Davis,mike.davis@example.com,SCOUT,active,Greater New York Councils,456,PAC
             title="Failed to load users"
           />
 
+          {/* eslint-disable-next-line no-nested-ternary */}
           {loading ? (
             <LoadingState message="Loading users..." />
           ) : filteredItems.length === 0 ? (
@@ -1340,6 +1392,7 @@ Actions
                    <td style={{ padding: themeSpace.lg, textAlign: 'center' }}>
                    <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
                    <button
+                     type="button"
                      onClick={() => handleEdit(item)} style={{
                      background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                    }}
@@ -1347,6 +1400,7 @@ Actions
                      <Icon name="edit" size={16} color={themeColors.info600} />
                    </button>
                    <button
+                     type="button"
                      onClick={() => handleDelete(item.id)} style={{
                      background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                    }}
@@ -1368,6 +1422,7 @@ Actions
               }}
               >
                 <button
+                 type="button"
                  onClick={() => setCurrentPage(1)}
                  disabled={currentPage === 1}
                  style={{
@@ -1384,6 +1439,7 @@ Actions
          First
                </button>
                 <button
+                 type="button"
                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                  disabled={currentPage === 1}
                  style={{
@@ -1419,6 +1475,7 @@ Actions
                  }
                  return (
                  <button
+                 type="button"
                  key={pageNum}
                  onClick={() => setCurrentPage(pageNum)}
                  style={{
@@ -1440,6 +1497,7 @@ Actions
                </div>
 
                 <button
+                 type="button"
                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                  disabled={currentPage === totalPages}
                  style={{
@@ -1461,6 +1519,7 @@ Actions
                  <Icon name="chevronRight" size={16} />
                </button>
                 <button
+                 type="button"
                  onClick={() => setCurrentPage(totalPages)}
                  disabled={currentPage === totalPages}
                  style={{
@@ -1505,13 +1564,15 @@ Actions
             }}
             >
               <div>
-                <label style={{
+                <label
+htmlFor="field" style={{
                   display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Name
                 </label>
                 <input
+id="field"
                   type="text"
                   value={newUserName}
                   onChange={(e) => setNewUserName(e.target.value)}
@@ -1528,13 +1589,15 @@ Name
               </div>
 
               <div>
-                <label style={{
+                <label
+htmlFor="field-2" style={{
                   display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Email
                 </label>
                 <input
+id="field-2"
                   type="email"
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
@@ -1551,13 +1614,15 @@ Email
               </div>
 
               <div>
-                <label style={{
+                <label
+htmlFor="field-3" style={{
                   display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Status
                 </label>
                 <select
+id="field-3"
                   value={newUserStatus}
                   onChange={(e) => setNewUserStatus(e.target.value as 'active' | 'inactive')}
                   style={{
@@ -1577,13 +1642,15 @@ Status
               </div>
 
               <div>
-                <label style={{
+                <label
+htmlFor="field-4" style={{
                   display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                 }}
                 >
 Role
                 </label>
                 <select
+id="field-4"
                   value={newUserRole}
                   onChange={(e) => {
                     setNewUserRole(e.target.value as UserRole);
@@ -1619,7 +1686,8 @@ Role
               {/* Council dropdown with search - shown only for Council Admin */}
               {newUserRole === 'COUNCIL_ADMIN' && (
                 <div style={{ position: 'relative' }}>
-                  <label style={{
+                  <label
+htmlFor="field-5" style={{
                     display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                   }}
                   >
@@ -1627,6 +1695,7 @@ Role
                   </label>
                   <div style={{ position: 'relative' }}>
                     <input
+id="field-5"
                       type="text"
                       value={councilSearchTerm}
                       onChange={(e) => {
@@ -1634,7 +1703,7 @@ Role
                         setShowCouncilDropdown(true);
                       }}
                       onFocus={() => setShowCouncilDropdown(true)}
-                      placeholder={newUserCouncilId ? councils.find(c => c.uuid === newUserCouncilId)?.name || 'Search councils...' : 'Search councils...'}
+                      placeholder={newUserCouncilId ? councils.find((c) => c.uuid === newUserCouncilId)?.name || 'Search councils...' : 'Search councils...'}
                       style={{
                         width: '100%',
                         padding: '6px 10px',
@@ -1665,23 +1734,26 @@ Role
                       zIndex: 10,
                     }}>
                       {councils
-                        .filter(c => !councilSearchTerm || c.name.toLowerCase().includes(councilSearchTerm.toLowerCase()))
+                        .filter((c) => !councilSearchTerm || c.name.toLowerCase().includes(councilSearchTerm.toLowerCase()))
                         .map((council) => (
                           <div
                             key={council.uuid}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => {
                               setNewUserCouncilId(council.uuid);
                               setCouncilSearchTerm(council.name);
                               setShowCouncilDropdown(false);
                             }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                             style={{
                               padding: `${themeSpace.sm} ${themeSpace.md}`,
                               cursor: 'pointer',
                               backgroundColor: newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent',
                               borderBottom: `1px solid ${themeColors.gray100}`,
                             }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColors.gray50)}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent')}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColors.gray50; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = newUserCouncilId === council.uuid ? themeColors.primary50 : 'transparent'; }}
                           >
                             {council.name}
                           </div>
@@ -1690,7 +1762,7 @@ Role
                   )}
                   {newUserCouncilId && (
                     <div style={{ marginTop: themeSpace.xs, fontSize: '12px', color: themeColors.primary600 }}>
-                      Selected: {councils.find(c => c.uuid === newUserCouncilId)?.name || 'Loading...'}
+                      Selected: {councils.find((c) => c.uuid === newUserCouncilId)?.name || 'Loading...'}
                       <button
                         type="button"
                         onClick={() => {
@@ -1717,13 +1789,15 @@ Role
               {newUserRole === 'SCOUT' && (
                 <>
                   <div>
-                    <label style={{
+                    <label
+htmlFor="field-6" style={{
                       display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                     }}
                     >
 Unit Type
                     </label>
                     <select
+id="field-6"
                       value={newUserUnitType || ''}
                       onChange={(e) => setNewUserUnitType(e.target.value as UnitType || null)}
                       style={{
@@ -1746,13 +1820,15 @@ Unit Type
                   </div>
 
                   <div>
-                    <label style={{
+                    <label
+htmlFor="field-7" style={{
                       display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                     }}
                     >
 Unit Number
                     </label>
                     <input
+id="field-7"
                       type="text"
                       value={newUserUnitNumber}
                       onChange={(e) => setNewUserUnitNumber(e.target.value)}
@@ -1770,13 +1846,15 @@ Unit Number
 
                   {/* COPPA Compliance: Date of Birth field */}
                   <div>
-                    <label style={{
+                    <label
+htmlFor="field-8" style={{
                       display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                     }}
                     >
                       Date of Birth <span style={{ color: themeColors.error500 }}>*</span>
                     </label>
                     <input
+id="field-8"
                       type="date"
                       value={newUserDateOfBirth}
                       onChange={(e) => setNewUserDateOfBirth(e.target.value)}
@@ -1818,13 +1896,15 @@ Unit Number
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div>
-                        <label style={{
+                        <label
+htmlFor="field-9" style={{
                           display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                         }}
                         >
                           Parent/Guardian Name <span style={{ color: themeColors.error500 }}>*</span>
                         </label>
                         <input
+id="field-9"
                           type="text"
                           value={newUserParentName}
                           onChange={(e) => setNewUserParentName(e.target.value)}
@@ -1841,13 +1921,15 @@ Unit Number
                       </div>
 
                       <div>
-                        <label style={{
+                        <label
+htmlFor="field-10" style={{
                           display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                         }}
                         >
                           Parent/Guardian Email <span style={{ color: themeColors.error500 }}>*</span>
                         </label>
                         <input
+id="field-10"
                           type="email"
                           value={newUserParentEmail}
                           onChange={(e) => setNewUserParentEmail(e.target.value)}
@@ -1864,13 +1946,15 @@ Unit Number
                       </div>
 
                       <div>
-                        <label style={{
+                        <label
+htmlFor="field-11" style={{
                           display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: '4px',
                         }}
                         >
                           Parent/Guardian Phone (Optional)
                         </label>
                         <input
+id="field-11"
                           type="tel"
                           value={newUserParentPhone}
                           onChange={(e) => setNewUserParentPhone(e.target.value)}
@@ -1893,6 +1977,7 @@ Unit Number
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', padding: '12px 16px', borderTop: `1px solid ${themeColors.gray200}`, flexShrink: 0 }}>
               <button
+                type="button"
                 onClick={() => {
                   setShowAddForm(false);
                   setNewUserName('');
@@ -1924,6 +2009,7 @@ Unit Number
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={addUser}
                 style={{
                   padding: '6px 14px',
@@ -1964,13 +2050,15 @@ Unit Number
             }}
             >
               <div>
-                <label style={{
+                <label
+htmlFor="field-12" style={{
                   display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                 }}
                 >
 Name
                 </label>
                 <input
+id="field-12"
                   type="text"
                   value={editUserName}
                   onChange={(e) => setEditUserName(e.target.value)}
@@ -1987,13 +2075,15 @@ Name
               </div>
 
               <div>
-                <label style={{
+                <label
+htmlFor="field-13" style={{
                   display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                 }}
                 >
 Email
                 </label>
                 <input
+id="field-13"
                   type="email"
                   value={editUserEmail}
                   onChange={(e) => setEditUserEmail(e.target.value)}
@@ -2014,13 +2104,15 @@ Email
               </div>
 
               <div>
-                <label style={{
+                <label
+htmlFor="field-14" style={{
                   display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                 }}
                 >
 Status
                 </label>
                 <select
+id="field-14"
                   value={editUserStatus}
                   onChange={(e) => setEditUserStatus(e.target.value as 'active' | 'inactive')}
                   style={{
@@ -2040,13 +2132,15 @@ Status
               </div>
 
               <div>
-                <label style={{
+                <label
+htmlFor="field-15" style={{
                   display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                 }}
                 >
 Role
                 </label>
                 <select
+id="field-15"
                   value={editUserRole}
                   onChange={(e) => {
                     setEditUserRole(e.target.value as UserRole);
@@ -2079,13 +2173,15 @@ Role
               {editUserRole === 'SCOUT' && (
                 <>
                   <div>
-                    <label style={{
+                    <label
+htmlFor="field-16" style={{
                       display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                     }}
                     >
 Unit Type
                     </label>
                     <select
+id="field-16"
                       value={editUserUnitType || ''}
                       onChange={(e) => setEditUserUnitType(e.target.value as UnitType || null)}
                       style={{
@@ -2108,13 +2204,15 @@ Unit Type
                   </div>
 
                   <div>
-                    <label style={{
+                    <label
+htmlFor="field-17" style={{
                       display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.sm,
                     }}
                     >
 Unit Number
                     </label>
                     <input
+id="field-17"
                       type="text"
                       value={editUserUnitNumber}
                       onChange={(e) => setEditUserUnitNumber(e.target.value)}
@@ -2135,6 +2233,7 @@ Unit Number
 
             <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
               <button
+                type="button"
                 onClick={() => {
                   setShowEditForm(false);
                   setEditingUser(null);
@@ -2160,6 +2259,7 @@ Unit Number
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={saveEditUser}
                 style={{
                   padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -2200,6 +2300,7 @@ Unit Number
                 Import Users
               </h2>
               <button
+                type="button"
                 onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs,
@@ -2213,6 +2314,7 @@ Unit Number
             <div style={{ marginBottom: themeSpace.lg }}>
               <div style={{ display: 'flex', borderBottom: `1px solid ${themeColors.gray200}`, marginBottom: themeSpace.md }}>
                 <button
+                  type="button"
                   onClick={() => {}}
                   style={{
                    padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -2228,6 +2330,7 @@ Unit Number
            Instructions
                 </button>
                 <button
+                  type="button"
                   onClick={downloadTemplate}
                   style={{
                    padding: `${themeSpace.sm} ${themeSpace.md}`,
@@ -2254,7 +2357,7 @@ Unit Number
               >
                 <p style={{ margin: 0, marginBottom: themeSpace.sm }}><strong>How to import users:</strong></p>
                 <ol style={{ margin: 0, paddingLeft: themeSpace.lg, marginBottom: themeSpace.md }}>
-                  <li>Click "Download Template" above to get the CSV file</li>
+                  <li>Click &quot;Download Template&quot; above to get the CSV file</li>
                   <li>Open the file in Excel or Google Sheets</li>
                   <li>Delete the example rows (lines starting with # are comments)</li>
                   <li>Add your user data following the column format</li>
@@ -2332,13 +2435,15 @@ Unit Number
 
             {/* File Upload */}
             <div style={{ marginBottom: themeSpace.lg }}>
-              <label style={{
+              <label
+htmlFor="field-18" style={{
                 display: 'block', marginBottom: themeSpace.sm, fontSize: '14px', fontWeight: '500', color: themeColors.text,
               }}
               >
                 Select CSV File
               </label>
               <input
+id="field-18"
                 type="file"
                 accept=".csv"
                 onChange={handleFileSelect}
@@ -2382,9 +2487,9 @@ Unit Number
               >
          Validation Errors:
               </p>
-              {importErrors.map((err, idx) => (
+              {importErrors.map((err) => (
                 <p
-                 key={idx}
+                 key={err}
                  style={{
                  margin: 0, fontSize: '13px', color: themeColors.gray600, marginBottom: themeSpace.xs,
                }}
@@ -2429,8 +2534,8 @@ Unit Number
                </tr>
                </thead>
                  <tbody>
-                 {importPreview.map((row, idx) => (
-                 <tr key={idx} style={{ backgroundColor: row.valid ? themeColors.white : `${themeColors.error400}20` }}>
+                 {importPreview.map((row) => (
+                 <tr key={row.row} style={{ backgroundColor: row.valid ? themeColors.white : `${themeColors.error400}20` }}>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.row}</td>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}` }}>{row.name}</td>
                  <td style={{ padding: themeSpace.sm, borderBottom: `1px solid ${themeColors.gray100}`, maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.email}</td>
@@ -2457,6 +2562,7 @@ Unit Number
             {/* Action Buttons */}
             <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
               <button
+                type="button"
                 onClick={() => { setShowImportModal(false); setImportFile(null); setImportPreview([]); setImportErrors([]); setImportSuccess(0); }}
                 style={{
                   padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -2472,6 +2578,7 @@ Unit Number
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={processImport}
                 disabled={importing || importPreview.filter((r) => r.valid).length === 0}
                 style={{

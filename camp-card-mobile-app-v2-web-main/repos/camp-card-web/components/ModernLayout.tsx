@@ -30,7 +30,7 @@ import {
 interface NavItem {
   name: string;
   href: string;
-  Icon: React.ComponentType<any>;
+  Icon: React.ComponentType<Record<string, unknown>>;
   badge?: number;
 }
 
@@ -138,6 +138,7 @@ export function ModernLayout({ children }: { children: ReactNode }) {
           </Link>
 
           <button
+            type="button"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             style={{
               background: 'none',
@@ -151,8 +152,8 @@ export function ModernLayout({ children }: { children: ReactNode }) {
               transition: 'color 0.2s ease',
               flexShrink: 0,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = colors.white)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = colors.primary400)}
+            onMouseEnter={(e) => { e.currentTarget.style.color = colors.white; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = colors.primary400; }}
           >
             {sidebarCollapsed ? <Menu size={20} /> : <X size={20} />}
           </button>
@@ -282,6 +283,7 @@ export function ModernLayout({ children }: { children: ReactNode }) {
 
           {/* Logout Button */}
           <button
+            type="button"
             onClick={() => signOut()}
             style={{
               width: '100%',

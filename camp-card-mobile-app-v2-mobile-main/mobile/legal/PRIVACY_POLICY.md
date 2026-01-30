@@ -4,9 +4,9 @@
 
 **Published by Swipe Savvy, LLC**
 
-**Effective Date: January 23, 2026**
+**Effective Date: January 30, 2026**
 
-**Last Updated: January 23, 2026**
+**Last Updated: January 30, 2026**
 
 ---
 
@@ -34,11 +34,12 @@ This Policy applies to all users of the Camp Card mobile application, including 
 10. [Third-Party Services](#10-third-party-services)
 11. [Push Notifications](#11-push-notifications)
 12. [Location Services](#12-location-services)
-13. [Limitation of Liability](#13-limitation-of-liability)
-14. [Dispute Resolution and Arbitration](#14-dispute-resolution-and-arbitration)
-15. [Indemnification](#15-indemnification)
-16. [Changes to This Policy](#16-changes-to-this-policy)
-17. [Contact Us](#17-contact-us)
+13. [Do Not Track Signals](#13-do-not-track-signals)
+14. [Limitation of Liability](#14-limitation-of-liability)
+15. [Dispute Resolution and Arbitration](#15-dispute-resolution-and-arbitration)
+16. [Indemnification](#16-indemnification)
+17. [Changes to This Policy](#17-changes-to-this-policy)
+18. [Contact Us](#18-contact-us)
 
 ---
 
@@ -65,6 +66,8 @@ We collect information you voluntarily provide when using the App:
 - Troop/unit affiliation
 - Council association
 - Scout code for referral tracking
+
+> **Scout Data Usage Limitation:** Scout information — including Scout registration numbers, troop/unit affiliation, council association, and referral codes — is collected and used **solely for the purposes of fundraising reporting and sales tracking**. This information is not used for marketing, advertising, behavioral profiling, or any purpose unrelated to Camp Card fundraising operations.
 
 **User-Generated Content:**
 - Saved merchant favorites
@@ -106,7 +109,7 @@ When you use the App, we automatically collect certain information through cooki
 
 We may receive information about you from third-party sources, including:
 
-**Boy Scouts of America Organizations:**
+**Scouting America Organizations:**
 - Troop and council verification data
 - Scout membership verification
 - Organizational affiliation information
@@ -166,8 +169,10 @@ We use collected information for legitimate business purposes, including but not
 - Attribute purchases and activity to Scout troops
 - Track and report fundraising contributions
 - Generate reports for troop leaders and councils
-- Support BSA council operations and programs
+- Support Scouting America council operations and programs
 - Facilitate troop management and administration
+
+**Scout data is used exclusively for fundraising reporting and sales tracking purposes. We do NOT use Scout data for behavioral advertising, profiling, or marketing.**
 
 ### 2.6 Business Operations
 - Operate and maintain our business
@@ -194,10 +199,10 @@ We may share your information with the following categories of third parties:
 - Customer support platforms
 - Analytics and business intelligence providers
 
-**BSA Organizations:**
-- Local councils (for troop management and reporting)
-- Troop leaders (for scout activity and fundraising)
-- National BSA (aggregated and de-identified data)
+**Scouting America Organizations:**
+- Local councils (limited to fundraising reporting and sales tracking data only)
+- Troop leaders (limited to fundraising reporting and sales tracking data only)
+- National Scouting America (aggregated and de-identified data)
 
 **Participating Merchants:**
 - Redemption verification and transaction processing
@@ -326,7 +331,7 @@ To exercise any privacy right:
 
 1. **In-App:** Navigate to Profile > Settings > Privacy
 2. **Email:** support@swipesavvy.com
-3. **Mail:** Swipe Savvy, LLC, Privacy Team, [Address]
+3. **Mail:** Swipe Savvy, LLC, Privacy Team, 250 N. Orange Ave. Suite 1250, Orlando, FL 32801
 
 We will respond to verified requests within the timeframes required by applicable law (generally 30-45 days).
 
@@ -510,9 +515,15 @@ Control location access:
 
 ---
 
-## 13. Limitation of Liability
+## 13. Do Not Track Signals
 
-### 13.1 Disclaimer
+We honor Do Not Track (DNT) browser signals. When we detect a DNT signal, we limit data collection to what is strictly necessary for service operation.
+
+---
+
+## 14. Limitation of Liability
+
+### 14.1 Disclaimer
 
 **TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, SWIPE SAVVY, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, AND LICENSORS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING BUT NOT LIMITED TO DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA, OR OTHER INTANGIBLE LOSSES, RESULTING FROM:**
 
@@ -523,39 +534,39 @@ Control location access:
 - Any errors or omissions in any content
 - Any loss or damage incurred as a result of the use of any content posted, transmitted, or otherwise made available through the Service
 
-### 13.2 Limitation
+### 14.2 Limitation
 
 **IN NO EVENT SHALL SWIPE SAVVY'S TOTAL LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR RELATED TO THIS POLICY OR THE SERVICE EXCEED THE GREATER OF (A) THE AMOUNTS YOU HAVE PAID TO SWIPE SAVVY IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM, OR (B) ONE HUNDRED DOLLARS ($100).**
 
-### 13.3 Jurisdictional Limitations
+### 14.3 Jurisdictional Limitations
 
 SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE LIMITATIONS MAY NOT APPLY.
 
 ---
 
-## 14. Dispute Resolution and Arbitration
+## 15. Dispute Resolution and Arbitration
 
-### 14.1 Informal Resolution
+### 15.1 Informal Resolution
 
 Before filing any claim, you agree to attempt to resolve disputes informally by contacting us at support@swipesavvy.com. We will attempt to resolve the dispute within 60 days.
 
-### 14.2 Binding Arbitration
+### 15.2 Binding Arbitration
 
 **ANY DISPUTE, CONTROVERSY, OR CLAIM ARISING OUT OF OR RELATING TO THIS PRIVACY POLICY OR YOUR USE OF THE SERVICE SHALL BE RESOLVED BY BINDING ARBITRATION IN ACCORDANCE WITH THE COMMERCIAL ARBITRATION RULES OF THE AMERICAN ARBITRATION ASSOCIATION.**
 
-- Arbitration shall take place in Florida, United States
+- Arbitration shall take place in Texas, United States
 - The arbitrator's decision shall be final and binding
 - Judgment on the award may be entered in any court of competent jurisdiction
 
-### 14.3 Class Action Waiver
+### 15.3 Class Action Waiver
 
 **YOU AGREE THAT ANY CLAIMS WILL BE BROUGHT IN YOUR INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING.**
 
-### 14.4 Opt-Out
+### 15.4 Opt-Out
 
 You may opt out of arbitration by sending written notice within 30 days of first accepting this Policy to: support@swipesavvy.com with subject line "Arbitration Opt-Out."
 
-### 14.5 Exceptions
+### 15.5 Exceptions
 
 The following are excluded from arbitration:
 - Claims that may be brought in small claims court
@@ -563,7 +574,7 @@ The following are excluded from arbitration:
 
 ---
 
-## 15. Indemnification
+## 16. Indemnification
 
 **YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS SWIPE SAVVY, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, LICENSORS, AND SERVICE PROVIDERS FROM AND AGAINST ANY AND ALL CLAIMS, DAMAGES, LOSSES, COSTS, AND EXPENSES (INCLUDING REASONABLE ATTORNEYS' FEES) ARISING FROM OR RELATED TO:**
 
@@ -575,32 +586,32 @@ The following are excluded from arbitration:
 
 ---
 
-## 16. Changes to This Policy
+## 17. Changes to This Policy
 
-### 16.1 Policy Updates
+### 17.1 Policy Updates
 
 We reserve the right to modify this Privacy Policy at any time at our sole discretion. Changes will be effective immediately upon posting unless otherwise stated.
 
-### 16.2 Notification
+### 17.2 Notification
 
 For material changes, we will provide notice through:
 - Email to your registered address
 - In-app notification
 - Prominent posting on our website
 
-### 16.3 Acceptance
+### 17.3 Acceptance
 
 **YOUR CONTINUED USE OF THE SERVICE AFTER ANY CHANGES CONSTITUTES YOUR ACCEPTANCE OF THE REVISED PRIVACY POLICY. IF YOU DO NOT AGREE TO THE CHANGES, YOU MUST DISCONTINUE USE OF THE SERVICE.**
 
-### 16.4 Previous Versions
+### 17.4 Previous Versions
 
 Previous versions of this Privacy Policy are available upon request.
 
 ---
 
-## 17. Contact Us
+## 18. Contact Us
 
-### 17.1 Privacy Questions
+### 18.1 Privacy Questions
 
 For questions or concerns about this Privacy Policy:
 
@@ -611,34 +622,35 @@ For questions or concerns about this Privacy Policy:
 **Mail:**
 Swipe Savvy, LLC
 Attn: Privacy Team
-[Company Address]
+250 N. Orange Ave. Suite 1250
+Orlando, FL 32801
 United States
 
-### 17.2 Data Protection Contact
+### 18.2 Data Protection Contact
 
 For data protection inquiries:
 
 **Email:** support@swipesavvy.com
 
-### 17.3 Legal Notices
+### 18.3 Legal Notices
 
 For legal inquiries:
 
 **Email:** support@swipesavvy.com
 
-### 17.4 Response Time
+### 18.4 Response Time
 
 We will respond to inquiries within 30 days or as required by applicable law.
 
 ---
 
-## 18. Summary of Key Points
+## 19. Summary of Key Points
 
 | Topic | Summary |
 |-------|---------|
 | Data Collection | Account, payment, usage, device, and location data |
 | Data Use | Service operation, communication, improvement, security, compliance |
-| Data Sharing | Service providers, BSA organizations, legal requirements |
+| Data Sharing | Service providers, Scouting America organizations, legal requirements |
 | Data Sale | We do NOT sell personal information |
 | Children | COPPA compliant; parental consent required |
 | Security | Industry-standard encryption and security measures |
@@ -649,19 +661,19 @@ We will respond to inquiries within 30 days or as required by applicable law.
 
 ---
 
-## 19. Governing Law
+## 20. Governing Law
 
-This Privacy Policy shall be governed by and construed in accordance with the laws of the State of Florida, United States, without regard to its conflict of law provisions.
+This Privacy Policy shall be governed by and construed in accordance with the laws of the State of Texas, United States, without regard to its conflict of law provisions.
 
 ---
 
-## 20. Severability
+## 21. Severability
 
 If any provision of this Privacy Policy is found to be unenforceable, the remaining provisions shall continue in full force and effect.
 
 ---
 
-## 21. Entire Agreement
+## 22. Entire Agreement
 
 This Privacy Policy, together with our Terms of Service, constitutes the entire agreement between you and Swipe Savvy regarding the subject matter hereof.
 

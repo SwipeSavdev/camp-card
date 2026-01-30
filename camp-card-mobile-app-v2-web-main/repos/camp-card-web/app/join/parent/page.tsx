@@ -1,23 +1,28 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { colors, radius, space, shadow, gradients } from '@/lib/theme';
+
+interface InviteDetails {
+  scoutName: string;
+  troopNumber: string;
+}
 
 function JoinParentContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [joinStatus, setJoinStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const [errorMessage, setErrorMessage] = useState('');
-  const [inviteDetails, setInviteDetails] = useState<any>(null);
+  const [inviteDetails, setInviteDetails] = useState<InviteDetails | null>(null);
   const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', password: '' });
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get('token') || '';
 
   useEffect(() => {
     loadInviteDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadInviteDetails = async () => {
@@ -31,12 +36,12 @@ function JoinParentContent() {
     try {
       setInviteDetails({
         scoutName: 'Your Scout',
-        troopNumber: 'Troop 123'
+        troopNumber: 'Troop 123',
       });
       setJoinStatus('pending');
-    } catch (err: any) {
+    } catch (err) {
       setJoinStatus('error');
-      setErrorMessage(err.message || 'Invalid or expired invitation.');
+      setErrorMessage(err instanceof Error ? err.message : 'Invalid or expired invitation.');
     } finally {
       setIsLoading(false);
     }
@@ -47,9 +52,9 @@ function JoinParentContent() {
     setIsLoading(true);
     try {
       setJoinStatus('success');
-    } catch (err: any) {
+    } catch (err) {
       setJoinStatus('error');
-      setErrorMessage(err.message || 'Failed to join. Please try again.');
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to join. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +82,7 @@ function JoinParentContent() {
             </svg>
           </div>
           <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 8px 0' }}>Account Created!</h1>
-          <p style={{ fontSize: '14px', color: colors.muted, margin: '0 0 24px 0' }}>You're now connected to support {inviteDetails?.scoutName}. Check your email to verify your account!</p>
+          <p style={{ fontSize: '14px', color: colors.muted, margin: '0 0 24px 0' }}>You&apos;re now connected to support {inviteDetails?.scoutName}. Check your email to verify your account!</p>
           <Link href="/login" style={{ display: 'block', width: '100%', padding: `${space.md} ${space.lg}`, fontSize: '16px', fontWeight: '600', color: colors.white, background: gradients.primary, border: 'none', borderRadius: radius.button, textAlign: 'center', textDecoration: 'none', boxShadow: shadow.md, boxSizing: 'border-box' }}>
             Continue to Login
           </Link>
@@ -112,25 +117,25 @@ function JoinParentContent() {
         <div style={{ textAlign: 'center', marginBottom: space.xl }}>
           <Image src="/assets/images/council_logo.png" alt="Camp Card Logo" width={200} height={85} style={{ borderRadius: radius.md, margin: '0 auto 24px' }} />
           <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 8px 0' }}>Support Your Scout</h1>
-          <p style={{ fontSize: '14px', color: colors.muted, margin: 0 }}>Create an account to support {inviteDetails?.scoutName}'s fundraising with Camp Card!</p>
+          <p style={{ fontSize: '14px', color: colors.muted, margin: 0 }}>Create an account to support {inviteDetails?.scoutName}&apos;s fundraising with Camp Card!</p>
         </div>
 
         <form onSubmit={handleJoin}>
           <div style={{ marginBottom: space.md }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>First Name</label>
-            <input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
+            <label htmlFor="first-name" style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>First Name</label>
+            <input id="first-name" type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
           </div>
           <div style={{ marginBottom: space.md }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>Last Name</label>
-            <input type="text" required value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
+            <label htmlFor="last-name" style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>Last Name</label>
+            <input id="last-name" type="text" required value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
           </div>
           <div style={{ marginBottom: space.md }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>Email</label>
-            <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
+            <label htmlFor="email" style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>Email</label>
+            <input id="email" type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
           </div>
           <div style={{ marginBottom: space.lg }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>Password</label>
-            <input type="password" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
+            <label htmlFor="password" style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.text, marginBottom: '4px' }}>Password</label>
+            <input id="password" type="password" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={{ width: '100%', padding: space.sm, fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: radius.md, boxSizing: 'border-box' }} />
           </div>
           <button type="submit" style={{ width: '100%', padding: `${space.md} ${space.lg}`, fontSize: '16px', fontWeight: '600', color: colors.white, background: gradients.primary, border: 'none', borderRadius: radius.button, cursor: 'pointer', boxShadow: shadow.md }}>
             Create Account

@@ -194,19 +194,45 @@ public class EmailTestController {
     }
 
     /**
-     * Send test subscription expiring reminder email
+     * Send test subscription expiring reminder email (default 7 days)
      */
     @PostMapping("/subscription-expiring")
-    public ResponseEntity<Map<String, String>> testSubscriptionExpiringEmail(@RequestParam String to) {
-        log.info("Testing subscription expiring email to: {}", to);
-        emailService.sendSubscriptionExpiringReminder(to, "Test User", 7, LocalDate.now().plusDays(7));
+    public ResponseEntity<Map<String, String>> testSubscriptionExpiringEmail(
+            @RequestParam String to,
+            @RequestParam(defaultValue = "7") int days) {
+        log.info("Testing subscription expiring email ({} days) to: {}", days, to);
+        emailService.sendSubscriptionExpiringReminder(to, "Test User", days, LocalDate.now().plusDays(days));
         return ResponseEntity.ok(Map.of(
             "status", "sent",
             "type", "subscription-expiring",
             "to", to,
-            "daysRemaining", "7",
+            "daysRemaining", String.valueOf(days),
             "expectedUrl", "/subscription/renew"
         ));
+    }
+
+    /**
+     * Send test subscription expiring reminder - 45 days
+     */
+    @PostMapping("/subscription-expiring-45")
+    public ResponseEntity<Map<String, String>> testSubscriptionExpiring45Email(@RequestParam String to) {
+        return testSubscriptionExpiringEmail(to, 45);
+    }
+
+    /**
+     * Send test subscription expiring reminder - 30 days
+     */
+    @PostMapping("/subscription-expiring-30")
+    public ResponseEntity<Map<String, String>> testSubscriptionExpiring30Email(@RequestParam String to) {
+        return testSubscriptionExpiringEmail(to, 30);
+    }
+
+    /**
+     * Send test subscription expiring reminder - 15 days
+     */
+    @PostMapping("/subscription-expiring-15")
+    public ResponseEntity<Map<String, String>> testSubscriptionExpiring15Email(@RequestParam String to) {
+        return testSubscriptionExpiringEmail(to, 15);
     }
 
     /**
@@ -611,7 +637,10 @@ public class EmailTestController {
 
         // Subscription & Payment emails
         results.add(testSubscriptionConfirmationEmail(to).getBody());
-        results.add(testSubscriptionExpiringEmail(to).getBody());
+        results.add(testSubscriptionExpiring45Email(to).getBody());
+        results.add(testSubscriptionExpiring30Email(to).getBody());
+        results.add(testSubscriptionExpiring15Email(to).getBody());
+        results.add(testSubscriptionExpiringEmail(to, 7).getBody());
         results.add(testSubscriptionExpiredEmail(to).getBody());
         results.add(testPaymentReceiptEmail(to).getBody());
 

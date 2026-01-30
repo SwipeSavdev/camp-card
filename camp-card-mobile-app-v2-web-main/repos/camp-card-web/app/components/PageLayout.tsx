@@ -167,6 +167,9 @@ export default function PageLayout({ children, title, currentPath }: PageLayoutP
               <div
                 key={item.href}
                 onClick={() => router.push(item.href)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                 style={{
                   padding: themeSpace.md,
                   display: 'flex',
@@ -206,6 +209,9 @@ export default function PageLayout({ children, title, currentPath }: PageLayoutP
               <div
                 key={item.href}
                 onClick={() => router.push(item.href)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                 style={{
                   padding: themeSpace.md,
                   display: 'flex',
@@ -234,6 +240,9 @@ export default function PageLayout({ children, title, currentPath }: PageLayoutP
           })}
           <div
             onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
             style={{
               padding: themeSpace.md,
               display: 'flex',
@@ -266,6 +275,7 @@ export default function PageLayout({ children, title, currentPath }: PageLayoutP
         }}
         >
           <button
+            type="button"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             style={{
               background: 'none',

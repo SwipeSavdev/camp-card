@@ -5,6 +5,20 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
 
+interface SessionUserExtended {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  profilePicture?: string;
+}
+
 const themeColors = {
   white: '#ffffff',
   gray50: '#f9fafb',
@@ -37,7 +51,7 @@ const themeRadius = { sm: '4px', card: '12px' };
 const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' };
 
 function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
-  const icons: { [key: string]: any } = {
+  const icons: { [key: string]: React.ReactNode } = {
     edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -94,18 +108,19 @@ export default function ProfilePage() {
   useEffect(() => {
     // Load profile data from session if available
     if (session?.user) {
+      const user = session.user as SessionUserExtended;
       setProfile({
         name: session.user.name || 'User',
         email: session.user.email || '',
-        phone: (session.user as any).phone || '',
-        address: (session.user as any).address || '',
-        city: (session.user as any).city || '',
-        state: (session.user as any).state || '',
-        zipCode: (session.user as any).zipCode || '',
-        role: (session.user as any).role || 'User',
+        phone: user.phone || '',
+        address: user.address || '',
+        city: user.city || '',
+        state: user.state || '',
+        zipCode: user.zipCode || '',
+        role: session.user.role || 'User',
         joinedDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         status: 'Active',
-        profilePicture: (session.user as any).profilePicture || '',
+        profilePicture: user.profilePicture || '',
       });
     }
   }, [session]);
@@ -123,7 +138,7 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      const userId = (session?.user as any)?.id;
+      const userId = session?.user?.id;
       if (!userId) {
         console.error('No user ID found in session');
         return;
@@ -140,9 +155,7 @@ export default function ProfilePage() {
         phoneNumber: profile.phone,
       };
 
-      console.log('[PROFILE] Saving profile update:', updateData);
       await api.updateUser(userId, updateData, session);
-      console.log('[PROFILE] Profile updated successfully');
 
       setSaved(true);
       setIsEditing(false);
@@ -168,6 +181,7 @@ export default function ProfilePage() {
         }}
         >
           <button
+            type="button"
             onClick={() => router.push('/dashboard')}
             style={{
               background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600, marginBottom: themeSpace.md,
@@ -208,6 +222,7 @@ export default function ProfilePage() {
                 <div style={{ position: 'relative' }}>
                   {isEditing && (
                   <button
+                   type="button"
                    onClick={() => fileInputRef.current?.click()}
                    style={{
                    position: 'absolute',
@@ -287,6 +302,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsEditing(!isEditing)}
                 style={{
                   background: themeColors.white,
@@ -325,13 +341,15 @@ export default function ProfilePage() {
                   >
                     {/* Email */}
                     <div>
-                     <label style={{
+                     <label
+htmlFor="email" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >Email
                    </label>
                      {isEditing ? (
                      <input
+id="email"
                      type="email"
                      value={profile.email}
                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
@@ -356,13 +374,15 @@ export default function ProfilePage() {
 
                     {/* Phone */}
                     <div>
-                     <label style={{
+                     <label
+htmlFor="phone" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >Phone
                    </label>
                      {isEditing ? (
                      <input
+id="phone"
                      type="tel"
                      value={profile.phone}
                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
@@ -388,13 +408,15 @@ export default function ProfilePage() {
 
                     {/* Address */}
                     <div>
-                     <label style={{
+                     <label
+htmlFor="street-address" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >Street Address
                    </label>
                      {isEditing ? (
                      <input
+id="street-address"
                      type="text"
                      value={profile.address}
                      onChange={(e) => setProfile({ ...profile, address: e.target.value })}
@@ -420,13 +442,15 @@ export default function ProfilePage() {
 
                     {/* City */}
                     <div>
-                     <label style={{
+                     <label
+htmlFor="city" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >City
                    </label>
                      {isEditing ? (
                      <input
+id="city"
                      type="text"
                      value={profile.city}
                      onChange={(e) => setProfile({ ...profile, city: e.target.value })}
@@ -448,13 +472,15 @@ export default function ProfilePage() {
 
                     {/* State */}
                     <div>
-                     <label style={{
+                     <label
+htmlFor="state" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >State
                    </label>
                      {isEditing ? (
                      <input
+id="state"
                      type="text"
                      value={profile.state}
                      onChange={(e) => setProfile({ ...profile, state: e.target.value })}
@@ -477,13 +503,15 @@ export default function ProfilePage() {
 
                     {/* Zip Code */}
                     <div>
-                     <label style={{
+                     <label
+htmlFor="zip-code" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >Zip Code
                    </label>
                      {isEditing ? (
                      <input
+id="zip-code"
                      type="text"
                      value={profile.zipCode}
                      onChange={(e) => setProfile({ ...profile, zipCode: e.target.value })}
@@ -514,7 +542,8 @@ export default function ProfilePage() {
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg }}>
                     <div>
-                     <label style={{
+                     <label
+htmlFor="role" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >Role
@@ -529,7 +558,8 @@ export default function ProfilePage() {
                    </p>
                    </div>
                     <div>
-                     <label style={{
+                     <label
+htmlFor="joined" style={{
                      fontSize: '12px', color: themeColors.gray600, fontWeight: '500', display: 'block', marginBottom: themeSpace.xs,
                    }}
                    >Joined
@@ -553,6 +583,7 @@ export default function ProfilePage() {
               >
                 {isEditing && (
                 <button
+                  type="button"
                   onClick={handleSave}
                   style={{
                    padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -569,6 +600,7 @@ export default function ProfilePage() {
                 </button>
                 )}
                 <button
+                  type="button"
                   onClick={handleLogout}
                   style={{
                     padding: `${themeSpace.sm} ${themeSpace.lg}`,

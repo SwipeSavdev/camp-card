@@ -106,6 +106,7 @@ export default function PaymentSettingsPage() {
     if (status === 'authenticated' && session && councilId) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session, councilId]);
 
   const loadData = async () => {
@@ -124,10 +125,10 @@ export default function PaymentSettingsPage() {
         setConfig(paymentConfig);
         setEnvironment(paymentConfig.environment || 'SANDBOX');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load data:', err);
       // Don't show error for 404 - it just means no config exists yet
-      if (err?.status !== 404) {
+      if ((err as Record<string, unknown>)?.status !== 404) {
         setError('Failed to load payment configuration');
       }
     } finally {
@@ -167,9 +168,9 @@ export default function PaymentSettingsPage() {
       setApiLoginId('');
       setTransactionKey('');
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to save config:', err);
-      setError(err.message || 'Failed to save payment configuration');
+      setError(err instanceof Error ? err.message : 'Failed to save payment configuration');
     } finally {
       setIsSaving(false);
     }
@@ -188,16 +189,16 @@ export default function PaymentSettingsPage() {
       } else {
         setError(`Verification failed: ${result.message}`);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to verify config:', err);
-      setError(err.message || 'Failed to verify credentials');
+      setError(err instanceof Error ? err.message : 'Failed to verify credentials');
     } finally {
       setIsVerifying(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this payment configuration? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to delete this payment configuration? This action cannot be undone.')) {
       return;
     }
 
@@ -205,9 +206,9 @@ export default function PaymentSettingsPage() {
       await api.deleteCouncilPaymentConfig(councilId, session);
       setSuccess('Payment configuration deleted');
       setConfig(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to delete config:', err);
-      setError(err.message || 'Failed to delete payment configuration');
+      setError(err instanceof Error ? err.message : 'Failed to delete payment configuration');
     }
   };
 
@@ -231,7 +232,7 @@ export default function PaymentSettingsPage() {
             animation: 'spin 1s linear infinite',
           }} />
           <p style={{ color: themeColors.gray600, margin: 0 }}>Loading payment settings...</p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
         </div>
       </PageLayout>
     );
@@ -242,6 +243,7 @@ export default function PaymentSettingsPage() {
       {/* Back button and header */}
       <div style={{ marginBottom: themeSpace.lg }}>
         <button
+          type="button"
           onClick={() => router.push('/councils')}
           style={{
             display: 'flex',
@@ -350,7 +352,7 @@ export default function PaymentSettingsPage() {
           {/* Credential Info */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: themeSpace.lg, marginBottom: themeSpace.lg }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.xs }}>
+              <label htmlFor="api-login-id" style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.xs }}>
                 API Login ID
               </label>
               <div style={{
@@ -365,7 +367,7 @@ export default function PaymentSettingsPage() {
               </div>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.xs }}>
+              <label htmlFor="transaction-key" style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.gray600, marginBottom: themeSpace.xs }}>
                 Transaction Key
               </label>
               <div style={{
@@ -391,6 +393,7 @@ export default function PaymentSettingsPage() {
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: themeSpace.md }}>
             <button
+              type="button"
               onClick={handleVerify}
               disabled={isVerifying}
               style={{
@@ -412,6 +415,7 @@ export default function PaymentSettingsPage() {
               {isVerifying ? 'Verifying...' : 'Test Connection'}
             </button>
             <button
+              type="button"
               onClick={handleDelete}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -444,10 +448,11 @@ export default function PaymentSettingsPage() {
 
         {/* Gateway Type */}
         <div style={{ marginBottom: themeSpace.lg }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
+          <label htmlFor="gateway-type" style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
             Gateway Type
           </label>
           <select
+id="gateway-type"
             disabled
             style={{
               width: '100%',
@@ -469,12 +474,13 @@ export default function PaymentSettingsPage() {
 
         {/* Environment */}
         <div style={{ marginBottom: themeSpace.lg }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
+          <label htmlFor="environment" style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
             Environment
           </label>
           <div style={{ display: 'flex', gap: themeSpace.lg }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer' }}>
+            <label htmlFor="field" style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer' }}>
               <input
+id="environment"
                 type="radio"
                 name="environment"
                 value="SANDBOX"
@@ -484,8 +490,9 @@ export default function PaymentSettingsPage() {
               />
               <span style={{ fontSize: '14px', color: themeColors.text }}>Sandbox (Testing)</span>
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer' }}>
+            <label htmlFor="field-2" style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm, cursor: 'pointer' }}>
               <input
+id="field-2"
                 type="radio"
                 name="environment"
                 value="PRODUCTION"
@@ -512,11 +519,12 @@ export default function PaymentSettingsPage() {
 
         {/* API Login ID */}
         <div style={{ marginBottom: themeSpace.lg }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
+          <label htmlFor="api-login-id-2" style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
             API Login ID
           </label>
           <div style={{ position: 'relative' }}>
             <input
+id="api-login-id-2"
               type={showApiLoginId ? 'text' : 'password'}
               value={apiLoginId}
               onChange={(e) => setApiLoginId(e.target.value)}
@@ -551,11 +559,12 @@ export default function PaymentSettingsPage() {
 
         {/* Transaction Key */}
         <div style={{ marginBottom: themeSpace.lg }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
+          <label htmlFor="transaction-key-2" style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm }}>
             Transaction Key
           </label>
           <div style={{ position: 'relative' }}>
             <input
+id="transaction-key-2"
               type={showTransactionKey ? 'text' : 'password'}
               value={transactionKey}
               onChange={(e) => setTransactionKey(e.target.value)}
@@ -590,6 +599,7 @@ export default function PaymentSettingsPage() {
 
         {/* Save Button */}
         <button
+          type="button"
           onClick={handleSave}
           disabled={isSaving || !apiLoginId || !transactionKey}
           style={{
@@ -604,6 +614,7 @@ export default function PaymentSettingsPage() {
             opacity: isSaving ? 0.7 : 1,
           }}
         >
+          {/* eslint-disable-next-line no-nested-ternary */}
           {isSaving ? 'Saving...' : (config ? 'Update Configuration' : 'Save Configuration')}
         </button>
       </div>

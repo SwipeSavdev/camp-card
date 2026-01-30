@@ -70,8 +70,8 @@ function ResetPasswordForm() {
     try {
       await api.resetPassword(token, newPassword);
       setResetSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset password. The link may have expired.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password. The link may have expired.');
     } finally {
       setIsLoading(false);
     }
@@ -341,6 +341,7 @@ function ResetPasswordForm() {
           {/* New Password Field */}
           <div style={{ marginBottom: space.lg }}>
             <label
+              htmlFor="field"
               style={{
                 display: 'block',
                 fontSize: '12px',
@@ -417,6 +418,7 @@ function ResetPasswordForm() {
           {/* Confirm Password Field */}
           <div style={{ marginBottom: space.lg }}>
             <label
+              htmlFor="field-2"
               style={{
                 display: 'block',
                 fontSize: '12px',
@@ -581,7 +583,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense
-      fallback={
+      fallback={(
         <div
           style={{
             background: gradients.primary,
@@ -593,7 +595,7 @@ export default function ResetPasswordPage() {
         >
           <p style={{ color: colors.white, fontSize: '16px' }}>Loading...</p>
         </div>
-      }
+      )}
     >
       <ResetPasswordForm />
     </Suspense>

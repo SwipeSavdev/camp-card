@@ -122,6 +122,7 @@ export default function SubscriptionsPage() {
     if (session) {
       loadSubscriptionData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, dateRange]);
 
   const loadSubscriptionData = async () => {
@@ -177,26 +178,26 @@ export default function SubscriptionsPage() {
   const total = data.monthlyPlans + data.annualPlans + data.trialUsers || 1;
   const subscriptionBreakdown = [
     {
-      plan: 'Monthly', count: data.monthlyPlans, revenue: formatCurrency(data.monthlyPlans * 10), percentage: (data.monthlyPlans / total * 100), color: themeColors.info600,
+      plan: 'Monthly', count: data.monthlyPlans, revenue: formatCurrency(data.monthlyPlans * 10), percentage: ((data.monthlyPlans / total) * 100), color: themeColors.info600,
     },
     {
-      plan: 'Annual', count: data.annualPlans, revenue: formatCurrency(data.annualPlans * 30), percentage: (data.annualPlans / total * 100), color: themeColors.primary600,
+      plan: 'Annual', count: data.annualPlans, revenue: formatCurrency(data.annualPlans * 30), percentage: ((data.annualPlans / total) * 100), color: themeColors.primary600,
     },
     {
-      plan: 'Trial', count: data.trialUsers, revenue: '$0', percentage: (data.trialUsers / total * 100), color: themeColors.gray400,
+      plan: 'Trial', count: data.trialUsers, revenue: '$0', percentage: ((data.trialUsers / total) * 100), color: themeColors.gray400,
     },
   ];
 
   const statusTotal = data.activeSubscriptions + data.trialUsers + data.cancellations || 1;
   const statusBreakdown = [
     {
-      status: 'Active', count: data.activeSubscriptions, percentage: (data.activeSubscriptions / statusTotal * 100), color: themeColors.success600,
+      status: 'Active', count: data.activeSubscriptions, percentage: ((data.activeSubscriptions / statusTotal) * 100), color: themeColors.success600,
     },
     {
-      status: 'Trial', count: data.trialUsers, percentage: (data.trialUsers / statusTotal * 100), color: themeColors.warning600,
+      status: 'Trial', count: data.trialUsers, percentage: ((data.trialUsers / statusTotal) * 100), color: themeColors.warning600,
     },
     {
-      status: 'Cancelled', count: data.cancellations, percentage: (data.cancellations / statusTotal * 100), color: themeColors.error500,
+      status: 'Cancelled', count: data.cancellations, percentage: ((data.cancellations / statusTotal) * 100), color: themeColors.error500,
     },
   ];
 
@@ -262,9 +263,9 @@ export default function SubscriptionsPage() {
           display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: themeSpace.lg, marginBottom: themeSpace.xl,
         }}
         >
-          {subscriptionStats.map((stat, idx) => (
+          {subscriptionStats.map((stat) => (
             <div
-              key={idx}
+              key={stat.label}
               style={{
                 backgroundColor: themeColors.white,
                 borderRadius: themeRadius.card,
@@ -317,8 +318,8 @@ export default function SubscriptionsPage() {
               Subscription Plans Distribution
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg }}>
-              {subscriptionBreakdown.map((plan, idx) => (
-                <div key={idx}>
+              {subscriptionBreakdown.map((plan) => (
+                <div key={plan.plan}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: themeSpace.sm }}>
                     <span style={{ fontSize: '13px', fontWeight: '600', color: themeColors.text }}>{plan.plan}</span>
                     <span style={{ fontSize: '13px', color: themeColors.gray600 }}>
@@ -369,11 +370,11 @@ export default function SubscriptionsPage() {
               Subscription Status
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.lg }}>
-              {statusBreakdown.map((status, idx) => (
-                <div key={idx}>
+              {statusBreakdown.map((item) => (
+                <div key={item.status}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: themeSpace.sm }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: themeColors.text }}>{status.status}</span>
-                    <span style={{ fontSize: '13px', color: themeColors.gray600 }}>{status.count.toLocaleString()}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: themeColors.text }}>{item.status}</span>
+                    <span style={{ fontSize: '13px', color: themeColors.gray600 }}>{item.count.toLocaleString()}</span>
                   </div>
                   <div style={{
                     height: '8px', backgroundColor: themeColors.gray200, borderRadius: themeRadius.sm, overflow: 'hidden',
@@ -382,8 +383,8 @@ export default function SubscriptionsPage() {
                     <div
                      style={{
                      height: '100%',
-                     backgroundColor: status.color,
-                     width: `${status.percentage}%`,
+                     backgroundColor: item.color,
+                     width: `${item.percentage}%`,
                      transition: 'width 300ms',
                    }}
                    />
@@ -392,7 +393,7 @@ export default function SubscriptionsPage() {
                     fontSize: '11px', color: themeColors.gray500, marginTop: themeSpace.xs, display: 'block',
                   }}
                   >
-                    {status.percentage}
+                    {item.percentage}
                     % of total
 </span>
                 </div>
@@ -406,9 +407,9 @@ export default function SubscriptionsPage() {
           display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: themeSpace.lg, marginBottom: themeSpace.xl,
         }}
         >
-          {churnMetrics.map((metric, idx) => (
+          {churnMetrics.map((metric) => (
             <div
-              key={idx}
+              key={metric.metric}
               style={{
                 backgroundColor: themeColors.white,
                 borderRadius: themeRadius.card,
@@ -428,12 +429,12 @@ export default function SubscriptionsPage() {
                 style={{
                   fontSize: '12px',
                   fontWeight: '600',
-                  color: metric.type === 'positive' ? themeColors.success600 : metric.type === 'negative' ? themeColors.error500 : themeColors.warning600,
+                  color: { positive: themeColors.success600, negative: themeColors.error500 }[metric.type] || themeColors.warning600,
                 }}
               >
                 {metric.change}
                 {' '}
-                {metric.type === 'positive' ? '' : metric.type === 'negative' ? '' : ''}
+                {{ positive: '', negative: '' }[metric.type] || ''}
               </div>
             </div>
           ))}
@@ -457,6 +458,7 @@ export default function SubscriptionsPage() {
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: themeSpace.lg }}>
             {revenueMetrics.map((metric, idx) => (
+              // eslint-disable-next-line react/no-array-index-key
               <div key={idx} style={{ paddingBottom: themeSpace.lg, borderBottom: idx < revenueMetrics.length - 1 ? `1px solid ${themeColors.gray200}` : 'none' }}>
                 <div style={{ fontSize: '13px', color: themeColors.gray600, marginBottom: themeSpace.sm }}>{metric.metric}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>

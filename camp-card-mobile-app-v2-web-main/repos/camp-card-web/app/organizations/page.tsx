@@ -38,7 +38,7 @@ const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rg
 
 function Icon({
   name, size = 18, color = 'currentColor', ...props
-}: { name: string; size?: number; color?: string; [key: string]: any }) {
+}: { name: string; size?: number; color?: string; [key: string]: unknown }) {
   const icons: { [key: string]: JSX.Element } = {
     add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <line x1="12" y1="5" x2="12" y2="19" />
@@ -63,10 +63,17 @@ function Icon({
   return <span {...props}>{icons[name] || null}</span>;
 }
 
+interface Organization {
+  id: string;
+  name?: string;
+  email?: string;
+  status?: string;
+}
+
 export default function OrganizationsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,6 +84,7 @@ export default function OrganizationsPage() {
 
   useEffect(() => {
     if (session) fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const fetchData = async () => {
@@ -94,7 +102,7 @@ export default function OrganizationsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this organization?')) return;
+    if (!window.confirm('Delete this organization?')) return;
     try {
       await api.deleteOrganization(id, session);
       setItems(items.filter((i) => i.id !== id));
@@ -122,6 +130,7 @@ export default function OrganizationsPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
               <button
+                type="button"
                 onClick={() => router.push('/dashboard')}
                 style={{
   background: 'none', border: 'none', cursor: 'pointer', color: themeColors.primary600,
@@ -136,9 +145,11 @@ export default function OrganizationsPage() {
                 Organizations
 </h1>
             </div>
-            <button style={{
-              background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
-            }}
+            <button
+              type="button"
+              style={{
+                background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
+              }}
             >
               <Icon name="add" size={18} color={themeColors.white} />
               Add Organization
@@ -173,6 +184,7 @@ export default function OrganizationsPage() {
           </div>
           )}
 
+          {/* eslint-disable-next-line no-nested-ternary */}
           {loading ? (
             <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
           ) : filteredItems.length === 0 ? (
@@ -231,13 +243,16 @@ Actions
                  </td>
                    <td style={{ padding: themeSpace.lg, textAlign: 'center' }}>
                    <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
-                   <button style={{
-                   background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                 }}
+                   <button
+                     type="button"
+                     style={{
+                       background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                     }}
                  >
                    <Icon name="edit" size={16} color={themeColors.info600} />
                  </button>
                    <button
+                   type="button"
                    onClick={() => handleDelete(item.id)}
 style={{
                    background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',

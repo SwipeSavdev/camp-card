@@ -176,6 +176,8 @@ export default function ConfigPage() {
                   </h3>
                 </div>
                 <button
+                  type="button"
+                  aria-label={`Toggle ${module.name}`}
                   onClick={() => handleToggle(module.id)}
                   style={{
                     width: '50px',
@@ -227,6 +229,7 @@ export default function ConfigPage() {
 
         {/* Save Button */}
         <button
+          type="button"
           onClick={handleSave}
           style={{
             padding: `${themeSpace.md} ${themeSpace.lg}`,

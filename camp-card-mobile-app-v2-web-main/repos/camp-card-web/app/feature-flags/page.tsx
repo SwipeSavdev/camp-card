@@ -24,8 +24,8 @@ interface FeatureFlag {
 interface AuditLog {
   id: string;
   action: 'CREATE' | 'UPDATE' | 'DELETE';
-  old_value?: Record<string, any>;
-  new_value?: Record<string, any>;
+  old_value?: Record<string, unknown>;
+  new_value?: Record<string, unknown>;
   changed_by: { id: string; email: string; name: string };
   changed_at: string;
   ip_address: string;
@@ -67,8 +67,8 @@ export default function FeatureFlagsPage() {
     if (status === 'unauthenticated') {
       router.push('/login');
     } else if (status === 'authenticated') {
-      const userRole = (session?.user as any)?.role;
-      if (!['SYSTEM_ADMIN', 'COUNCIL_ADMIN'].includes(userRole)) {
+      const userRole = (session?.user as Record<string, unknown>)?.role as string | undefined;
+      if (!userRole || !['SYSTEM_ADMIN', 'COUNCIL_ADMIN'].includes(userRole)) {
         router.push('/dashboard');
       }
     }
@@ -79,6 +79,7 @@ export default function FeatureFlagsPage() {
     if (status === 'authenticated') {
       fetchFlags();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, scopeFilter, categoryFilter]);
 
   const fetchFlags = async () => {
@@ -116,7 +117,7 @@ export default function FeatureFlagsPage() {
   };
 
   const handleToggleFlag = async (flag: FeatureFlag) => {
-    if (!confirm(`Are you sure you want to ${flag.enabled ? 'disable' : 'enable'} ${flag.name}?`)) {
+    if (!window.confirm(`Are you sure you want to ${flag.enabled ? 'disable' : 'enable'} ${flag.name}?`)) {
       return;
     }
 
@@ -129,7 +130,6 @@ export default function FeatureFlagsPage() {
       }
 
       // Show success toast (assuming toast component available)
-      console.log(`Flag ${flag.name} ${!flag.enabled ? 'enabled' : 'disabled'}`);
     } catch (err) {
       setError('Failed to update flag');
       console.error('Error updating flag:', err);
@@ -138,13 +138,13 @@ export default function FeatureFlagsPage() {
 
   const handleDeleteFlag = async (flagId: string) => {
     // Only SYSTEM_ADMIN can delete
-    const userRole = (session?.user as any)?.role;
+    const userRole = (session?.user as Record<string, unknown>)?.role as string | undefined;
     if (userRole !== 'SYSTEM_ADMIN') {
       setError('Only system admins can delete feature flags');
       return;
     }
 
-    if (!confirm('Are you sure? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure? This action cannot be undone.')) {
       return;
     }
 
@@ -153,7 +153,6 @@ export default function FeatureFlagsPage() {
       setFlags(flags.filter((f) => f.id !== flagId));
       setShowDetailModal(false);
       setSelectedFlag(null);
-      console.log('Flag deleted successfully');
     } catch (err) {
       setError('Failed to delete flag');
       console.error('Error deleting flag:', err);
@@ -177,7 +176,6 @@ export default function FeatureFlagsPage() {
         category: 'offers',
         tags: [],
       });
-      console.log('Flag created successfully');
     } catch (err) {
       setError('Failed to create flag');
       console.error('Error creating flag:', err);
@@ -194,7 +192,7 @@ export default function FeatureFlagsPage() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  const userRole = (session?.user as any)?.role;
+  const userRole = (session?.user as Record<string, unknown>)?.role as string | undefined;
   const isSystemAdmin = userRole === 'SYSTEM_ADMIN';
 
   return (
@@ -207,6 +205,7 @@ export default function FeatureFlagsPage() {
         </div>
         {isSystemAdmin && (
         <button
+          type="button"
           onClick={() => setShowCreateModal(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
         >
@@ -220,8 +219,9 @@ export default function FeatureFlagsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Scope Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Scope</label>
+            <label htmlFor="scope" className="block text-sm font-medium text-gray-700 mb-2">Scope</label>
             <select
+id="scope"
               value={scopeFilter}
               onChange={(e) => setScopeFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -234,8 +234,9 @@ export default function FeatureFlagsPage() {
 
           {/* Category Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
             <select
+id="category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -253,8 +254,9 @@ export default function FeatureFlagsPage() {
 
           {/* Search */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <input
+id="search"
               type="text"
               placeholder="Search by key or name..."
               value={searchQuery}
@@ -270,6 +272,7 @@ export default function FeatureFlagsPage() {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
         {error}
         <button
+          type="button"
           onClick={() => setError(null)}
           className="ml-2 font-semibold hover:underline"
         >
@@ -280,6 +283,7 @@ export default function FeatureFlagsPage() {
 
       {/* Feature Flags Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {/* eslint-disable-next-line no-nested-ternary */}
         {loading ? (
           <div className="p-8 text-center text-gray-500">Loading feature flags...</div>
         ) : filteredFlags.length === 0 ? (
@@ -316,6 +320,7 @@ export default function FeatureFlagsPage() {
                    <td className="px-6 py-4 text-sm text-gray-600">{flag.category}</td>
                    <td className="px-6 py-4 text-sm">
                    <button
+                   type="button"
                    onClick={() => handleToggleFlag(flag)}
                    className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                    flag.enabled
@@ -331,6 +336,7 @@ export default function FeatureFlagsPage() {
                  </td>
                    <td className="px-6 py-4 text-sm text-right space-x-2">
                    <button
+                   type="button"
                    onClick={() => {
                    setSelectedFlag(flag);
                    setShowDetailModal(true);
@@ -340,6 +346,7 @@ export default function FeatureFlagsPage() {
                  View
                  </button>
                    <button
+                   type="button"
                    onClick={() => fetchAuditLog(flag.id)}
                    className="text-gray-600 hover:text-gray-800 font-medium"
                  >
@@ -362,6 +369,8 @@ export default function FeatureFlagsPage() {
           <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
             <h2 className="text-xl font-bold">{selectedFlag.name}</h2>
             <button
+              type="button"
+              aria-label="Close details"
               onClick={() => setShowDetailModal(false)}
               className="text-gray-500 hover:text-gray-700 text-2xl"
             />
@@ -372,20 +381,20 @@ export default function FeatureFlagsPage() {
             {/* Basic Info */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Key</label>
+                <label htmlFor="key" className="block text-sm font-medium text-gray-700 mb-1">Key</label>
                 <p className="text-sm font-mono text-gray-600 bg-gray-50 p-3 rounded">{selectedFlag.key}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <p className="text-sm text-gray-600">{selectedFlag.description}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Scope</label>
+                  <label htmlFor="scope-2" className="block text-sm font-medium text-gray-700 mb-1">Scope</label>
                   <p className="text-sm text-gray-600">{selectedFlag.scope}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label htmlFor="category-2" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <p className="text-sm text-gray-600">{selectedFlag.category}</p>
                 </div>
               </div>
@@ -401,6 +410,7 @@ export default function FeatureFlagsPage() {
                  </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleToggleFlag(selectedFlag)}
                   className={`px-4 py-2 rounded-lg font-medium text-white ${
                    selectedFlag.enabled
@@ -416,12 +426,12 @@ export default function FeatureFlagsPage() {
             {/* Metadata */}
             <div className="border-t border-gray-200 pt-4 grid grid-cols-2 gap-4 text-sm">
               <div>
-                <label className="text-gray-600">Created by</label>
+                <label htmlFor="created-by" className="text-gray-600">Created by</label>
                 <p className="font-medium text-gray-900">{selectedFlag.created_by.name}</p>
                 <p className="text-gray-500 text-xs">{new Date(selectedFlag.created_at).toLocaleString()}</p>
               </div>
               <div>
-                <label className="text-gray-600">Updated by</label>
+                <label htmlFor="updated-by" className="text-gray-600">Updated by</label>
                 <p className="font-medium text-gray-900">{selectedFlag.updated_by.name}</p>
                 <p className="text-gray-500 text-xs">{new Date(selectedFlag.updated_at).toLocaleString()}</p>
               </div>
@@ -430,7 +440,7 @@ export default function FeatureFlagsPage() {
             {/* Tags */}
             {selectedFlag.tags && selectedFlag.tags.length > 0 && (
             <div className="border-t border-gray-200 pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
               <div className="flex flex-wrap gap-2">
                 {selectedFlag.tags.map((tag) => (
                  <span key={tag} className="inline-block bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs">
@@ -446,6 +456,7 @@ export default function FeatureFlagsPage() {
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between items-center">
             {isSystemAdmin && (
             <button
+              type="button"
               onClick={() => {
                 handleDeleteFlag(selectedFlag.id);
               }}
@@ -455,6 +466,7 @@ export default function FeatureFlagsPage() {
             </button>
             )}
             <button
+              type="button"
               onClick={() => setShowDetailModal(false)}
               className="bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 rounded-lg font-medium"
             >
@@ -476,6 +488,8 @@ export default function FeatureFlagsPage() {
               {selectedFlag.name}
             </h2>
             <button
+              type="button"
+              aria-label="Close audit log"
               onClick={() => setShowAuditLog(false)}
               className="text-gray-500 hover:text-gray-700 text-2xl"
             />
@@ -491,9 +505,7 @@ export default function FeatureFlagsPage() {
                  <div key={log.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
                  <div className="flex items-center justify-between">
                  <span className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
-                   log.action === 'CREATE' ? 'bg-green-100 text-green-800'
-                     : log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800'
-                       : 'bg-red-100 text-red-800'
+                   ({ CREATE: 'bg-green-100 text-green-800', UPDATE: 'bg-blue-100 text-blue-800' } as Record<string, string>)[log.action] || 'bg-red-100 text-red-800'
                  }`}
                  >
                    {log.action}
@@ -548,6 +560,7 @@ export default function FeatureFlagsPage() {
           {/* Modal Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
             <button
+              type="button"
               onClick={() => setShowAuditLog(false)}
               className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 rounded-lg font-medium"
             >
@@ -566,6 +579,8 @@ export default function FeatureFlagsPage() {
           <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
             <h2 className="text-xl font-bold">Create Feature Flag</h2>
             <button
+              type="button"
+              aria-label="Close create modal"
               onClick={() => setShowCreateModal(false)}
               className="text-gray-500 hover:text-gray-700 text-2xl"
             />
@@ -574,8 +589,9 @@ export default function FeatureFlagsPage() {
           {/* Modal Body */}
           <form onSubmit={handleCreateFlag} className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Key *</label>
+              <label htmlFor="key-2" className="block text-sm font-medium text-gray-700 mb-1">Key *</label>
               <input
+id="key-2"
                 type="text"
                 required
                 placeholder="e.g., new_feature_xyz"
@@ -587,8 +603,9 @@ export default function FeatureFlagsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
               <input
+id="name"
                 type="text"
                 required
                 placeholder="e.g., New Feature XYZ"
@@ -599,8 +616,9 @@ export default function FeatureFlagsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label htmlFor="description-2" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
+id="description-2"
                 placeholder="What does this feature do?"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -610,8 +628,9 @@ export default function FeatureFlagsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Scope *</label>
+                <label htmlFor="scope-3" className="block text-sm font-medium text-gray-700 mb-1">Scope *</label>
                 <select
+id="scope-3"
                   required
                   value={formData.scope}
                   onChange={(e) => setFormData({ ...formData, scope: e.target.value as 'GLOBAL' | 'PER_COUNCIL' })}
@@ -623,8 +642,9 @@ export default function FeatureFlagsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <label htmlFor="category-3" className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
                 <select
+id="category-3"
                   required
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}

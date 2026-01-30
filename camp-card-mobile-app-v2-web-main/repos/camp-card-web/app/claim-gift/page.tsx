@@ -1,23 +1,28 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { api } from '@/lib/api';
 import { colors, radius, space, shadow, gradients } from '@/lib/theme';
+
+interface GiftDetails {
+  senderName: string;
+  cardNumber: string;
+  expirationDate: string;
+}
 
 function ClaimGiftContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [claimStatus, setClaimStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const [errorMessage, setErrorMessage] = useState('');
-  const [giftDetails, setGiftDetails] = useState<any>(null);
+  const [giftDetails, setGiftDetails] = useState<GiftDetails | null>(null);
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get('token') || '';
 
   useEffect(() => {
     loadGiftDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadGiftDetails = async () => {
@@ -33,12 +38,12 @@ function ClaimGiftContent() {
       setGiftDetails({
         senderName: 'Your Friend',
         cardNumber: 'CC-XXXX-XXXX',
-        expirationDate: 'December 31, 2026'
+        expirationDate: 'December 31, 2026',
       });
       setClaimStatus('pending');
-    } catch (err: any) {
+    } catch (err) {
       setClaimStatus('error');
-      setErrorMessage(err.message || 'Unable to load gift details.');
+      setErrorMessage(err instanceof Error ? err.message : 'Unable to load gift details.');
     } finally {
       setIsLoading(false);
     }
@@ -49,9 +54,9 @@ function ClaimGiftContent() {
     try {
       // API call would go here: await api.claimGift(token);
       setClaimStatus('success');
-    } catch (err: any) {
+    } catch (err) {
       setClaimStatus('error');
-      setErrorMessage(err.message || 'Failed to claim gift. Please try again.');
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to claim gift. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +76,7 @@ function ClaimGiftContent() {
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 8px 0' }}>Loading Gift Details</h1>
           <p style={{ fontSize: '14px', color: colors.muted, margin: 0 }}>Please wait...</p>
         </div>
-        <style jsx global>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <style jsx global>{'@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }'}</style>
       </div>
     );
   }
@@ -123,7 +128,7 @@ function ClaimGiftContent() {
         <div style={{ textAlign: 'center', marginBottom: space.xl }}>
           <Image src="/assets/images/council_logo.png" alt="Camp Card Logo" width={200} height={85} style={{ borderRadius: radius.md, margin: '0 auto 24px' }} />
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎁</div>
-          <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 8px 0' }}>You've Received a Gift!</h1>
+          <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 8px 0' }}>You&apos;ve Received a Gift!</h1>
           <p style={{ fontSize: '14px', color: colors.muted, margin: 0 }}>{giftDetails?.senderName} has sent you a BSA Camp Card!</p>
         </div>
 
@@ -133,10 +138,10 @@ function ClaimGiftContent() {
           <p style={{ fontSize: '12px', color: colors.info, margin: 0 }}>Valid Until: {giftDetails?.expirationDate}</p>
         </div>
 
-        <button onClick={claimGift} style={{ width: '100%', padding: `${space.md} ${space.lg}`, fontSize: '16px', fontWeight: '600', color: colors.white, background: gradients.primary, border: 'none', borderRadius: radius.button, cursor: 'pointer', boxShadow: shadow.md, marginBottom: space.md }}>
+        <button type="button" onClick={claimGift} style={{ width: '100%', padding: `${space.md} ${space.lg}`, fontSize: '16px', fontWeight: '600', color: colors.white, background: gradients.primary, border: 'none', borderRadius: radius.button, cursor: 'pointer', boxShadow: shadow.md, marginBottom: space.md }}>
           Claim Your Gift
         </button>
-        <p style={{ fontSize: '12px', color: colors.muted, textAlign: 'center', margin: 0 }}>By claiming, you'll create an account or sign in to receive your Camp Card.</p>
+        <p style={{ fontSize: '12px', color: colors.muted, textAlign: 'center', margin: 0 }}>By claiming, you&apos;ll create an account or sign in to receive your Camp Card.</p>
       </div>
     </div>
   );

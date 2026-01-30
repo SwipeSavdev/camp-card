@@ -9,6 +9,8 @@ import com.bsa.campcard.repository.SubscriptionPlanRepository;
 import com.bsa.campcard.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bsa.campcard.domain.user.User;
+import org.bsa.campcard.domain.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +28,14 @@ public class SubscriptionService {
     private static final String PLAN_NOT_FOUND = "Subscription plan not found";
     private static final String SUBSCRIPTION_NOT_FOUND = "No subscription found";
 
+    private static final int[] REMINDER_DAY_WINDOWS = {45, 30, 15, 7};
+
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
     private final PaymentService paymentService;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
     
     /**
      * Get all active subscription plans
@@ -327,32 +333,44 @@ public class SubscriptionService {
     }
     
     /**
-     * Send renewal reminders (scheduled job)
+     * Send renewal reminders at 45, 30, 15, and 7 days before expiration (scheduled job)
      */
     public void sendRenewalReminders() {
-        LocalDateTime sevenDaysFromNow = LocalDateTime.now().plusDays(7);
-        LocalDateTime eightDaysFromNow = sevenDaysFromNow.plusDays(1);
+        LocalDateTime now = LocalDateTime.now();
 
-        List<Subscription> renewals = subscriptionRepository.findRenewalsInPeriod(
-                sevenDaysFromNow,
-                eightDaysFromNow
-        );
+        for (int days : REMINDER_DAY_WINDOWS) {
+            LocalDateTime windowStart = now.plusDays(days);
+            LocalDateTime windowEnd = windowStart.plusDays(1);
 
-        log.info("Sending {} renewal reminders", renewals.size());
+            List<Subscription> renewals = subscriptionRepository.findRenewalsInPeriod(
+                    windowStart, windowEnd
+            );
 
-        for (Subscription subscription : renewals) {
-            try {
-                SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
-                        .orElse(null);
+            log.info("Found {} subscriptions expiring in {} days", renewals.size(), days);
 
-                if (plan != null) {
+            for (Subscription subscription : renewals) {
+                try {
                     LocalDate expirationDate = subscription.getCurrentPeriodEnd().toLocalDate();
-                    log.info("Renewal reminder notification scheduled for subscription: {} expiring on: {}", 
-                            subscription.getId(), expirationDate);
-                    // Email sending via async notification service
+
+                    User user = userRepository.findById(subscription.getUserId()).orElse(null);
+                    if (user == null) {
+                        log.warn("User not found for subscription: {}", subscription.getId());
+                        continue;
+                    }
+
+                    emailService.sendSubscriptionExpiringReminder(
+                            user.getEmail(),
+                            user.getFirstName(),
+                            days,
+                            expirationDate
+                    );
+
+                    log.info("Sent {}-day renewal reminder to {} for subscription: {} expiring on: {}",
+                            days, user.getEmail(), subscription.getId(), expirationDate);
+                } catch (Exception e) {
+                    log.error("Failed to send {}-day renewal reminder for subscription: {}",
+                            days, subscription.getId(), e);
                 }
-            } catch (Exception e) {
-                log.error("Failed to send renewal reminder for subscription: {}", subscription.getId(), e);
             }
         }
     }

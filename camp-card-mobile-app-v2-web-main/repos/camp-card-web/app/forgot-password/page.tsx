@@ -12,9 +12,9 @@ export default function ForgotPasswordPage() {
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
 
-  const validateEmail = (email: string): boolean => {
+  const validateEmail = (value: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,7 +153,7 @@ export default function ForgotPasswordPage() {
             }}
           >
             <p style={{ fontSize: '13px', fontWeight: '600', color: colors.accent, margin: '0 0 8px 0' }}>
-              Didn't receive the email?
+              Didn&apos;t receive the email?
             </p>
             <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: colors.primary600 }}>
               <li style={{ marginBottom: '4px' }}>Check your spam or junk folder</li>
@@ -298,7 +298,7 @@ export default function ForgotPasswordPage() {
               margin: 0,
             }}
           >
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
         </div>
 
@@ -328,6 +328,7 @@ export default function ForgotPasswordPage() {
 
           <div style={{ marginBottom: space.lg }}>
             <label
+              htmlFor="field"
               style={{
                 display: 'block',
                 fontSize: '12px',

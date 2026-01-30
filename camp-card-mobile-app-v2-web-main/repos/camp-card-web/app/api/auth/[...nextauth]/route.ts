@@ -1,11 +1,11 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import type { JWT } from 'next-auth/jwt';
 
 // Helper function to refresh the access token
-async function refreshAccessToken(token: any) {
+async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
     const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7010/api/v1';
-    console.log('Attempting to refresh access token');
 
     const response = await fetch(`${apiUrl}/auth/refresh`, {
       method: 'POST',
@@ -17,7 +17,6 @@ async function refreshAccessToken(token: any) {
 
     if (response.ok) {
       const data = await response.json();
-      console.log('Token refresh successful');
 
       return {
         ...token,
@@ -51,7 +50,6 @@ const handler = NextAuth({
 
         // Use internal API URL for server-side calls (Docker network), fallback to public URL
         const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7010/api/v1';
-        console.log('Attempting to authenticate with API:', `${apiUrl}/auth/login`);
 
         try {
           const response = await fetch(`${apiUrl}/auth/login`, {
@@ -64,11 +62,8 @@ const handler = NextAuth({
             signal: AbortSignal.timeout(30000), // 30 second timeout
           });
 
-          console.log('Auth response status:', response.status);
-
           if (response.ok) {
             const data = await response.json();
-            console.log('Auth successful for user:', data.user?.email);
 
             // Map backend response to NextAuth user format
             return {
@@ -126,19 +121,18 @@ const handler = NextAuth({
       }
 
       // Access token has expired, try to refresh it
-      console.log('Access token expired, refreshing...');
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        (session.user as any).accessToken = token.accessToken;
-        (session.user as any).refreshToken = token.refreshToken;
+        (session.user as Record<string, unknown>).accessToken = token.accessToken;
+        (session.user as Record<string, unknown>).refreshToken = token.refreshToken;
       }
       // Pass error to client so it can handle re-authentication
       if (token.error) {
-        (session as any).error = token.error;
+        (session as unknown as Record<string, unknown>).error = token.error;
       }
       return session;
     },

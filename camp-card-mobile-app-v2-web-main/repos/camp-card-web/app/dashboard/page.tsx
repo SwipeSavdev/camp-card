@@ -212,6 +212,7 @@ export default function Dashboard() {
     if (session) {
       loadDashboardStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const loadDashboardStats = async () => {
@@ -244,9 +245,7 @@ export default function Dashboard() {
   }
   if (!session) return null;
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString();
-  };
+  const formatNumber = (num: number) => num.toLocaleString();
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -296,6 +295,9 @@ export default function Dashboard() {
               <div
                 key={item.href}
                 onClick={() => router.push(item.href)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                 style={{
                   padding: `${themeSpace.md}`,
                   display: 'flex',
@@ -337,6 +339,9 @@ export default function Dashboard() {
             <div
               key={item.href}
               onClick={() => router.push(item.href)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
               style={{
                 padding: themeSpace.md,
                 display: 'flex',
@@ -363,6 +368,9 @@ export default function Dashboard() {
           ))}
           <div
             onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
             style={{
               padding: themeSpace.md,
               display: 'flex',
@@ -403,6 +411,7 @@ export default function Dashboard() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.md }}>
             <button
+              type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               style={{
                 background: 'none',
@@ -426,6 +435,9 @@ export default function Dashboard() {
           </div>
           <div
             onClick={() => router.push('/profile')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
             style={{
               width: '40px',
               height: '40px',
@@ -458,7 +470,7 @@ export default function Dashboard() {
               Welcome back,
               {session?.user?.name || 'Admin'}
             </h1>
-            <p style={{ fontSize: '15px', color: themeColors.gray600, margin: 0 }}>Here's what's happening with your Camp Card ecosystem today.</p>
+            <p style={{ fontSize: '15px', color: themeColors.gray600, margin: 0 }}>Here&apos;s what&apos;s happening with your Camp Card ecosystem today.</p>
           </div>
 
           {/* Stats Grid */}
@@ -478,9 +490,9 @@ export default function Dashboard() {
               label: 'Live Offers', value: statsLoading ? '...' : formatNumber(stats.liveOffers), trend: stats.offersTrend, color: themeColors.info50, icon: 'offers',
             }, {
               label: 'Redemptions', value: statsLoading ? '...' : formatNumber(stats.redemptions), trend: stats.redemptionsTrend, color: themeColors.success50, icon: 'cards',
-            }].map((stat, idx) => (
+            }].map((stat) => (
               <div
-                key={idx}
+                key={stat.label}
                 style={{
                   backgroundColor: themeColors.white,
                   borderRadius: themeRadius.card,
@@ -572,6 +584,7 @@ Your Camp Card ecosystem is running smoothly.
               </div>
             </div>
             <button
+              type="button"
               onClick={() => router.push('/health')}
               style={{
                 background: themeColors.white,
@@ -613,10 +626,10 @@ Your Camp Card ecosystem is running smoothly.
                 Recent Activity
 </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
-                {[{ name: 'users', title: 'New merchant onboarded', time: '2 hours ago' }, { name: 'report', title: 'Bulk user import completed', time: '5 hours ago' }, { name: 'offers', title: 'New promotional offer created', time: '1 day ago' }, { name: 'config', title: 'System backup completed', time: '2 days ago' }].map((item, idx) => (
+                {[{ name: 'users', title: 'New merchant onboarded', time: '2 hours ago', last: false }, { name: 'report', title: 'Bulk user import completed', time: '5 hours ago', last: false }, { name: 'offers', title: 'New promotional offer created', time: '1 day ago', last: false }, { name: 'config', title: 'System backup completed', time: '2 days ago', last: true }].map((item) => (
                   <div
-                    key={idx} style={{
-                     display: 'flex', gap: themeSpace.md, paddingBottom: idx < 3 ? themeSpace.md : 0, borderBottom: idx < 3 ? `1px solid ${themeColors.gray100}` : 'none',
+                    key={item.title} style={{
+                     display: 'flex', gap: themeSpace.md, paddingBottom: !item.last ? themeSpace.md : 0, borderBottom: !item.last ? `1px solid ${themeColors.gray100}` : 'none',
                    }}
                   >
                     <div style={{ color: themeColors.primary600, display: 'flex', alignItems: 'center' }}>
@@ -669,9 +682,10 @@ Your Camp Card ecosystem is running smoothly.
                   {
                     name: 'config', label: 'Feature Configuration', color: themeColors.success600, bg: themeColors.success50, action: '/config',
                   },
-                ].map((action, idx) => (
+                ].map((action) => (
                   <button
-                   key={idx}
+                   type="button"
+                   key={action.label}
                    onClick={() => router.push(action.action)}
                    style={{
                    background: action.bg,

@@ -113,8 +113,8 @@ export default function HealthPage() {
   if (status === 'loading') return null;
   if (!session) return null;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (s: string) => {
+    switch (s) {
       case 'healthy':
         return themeColors.success600;
       case 'warning':
@@ -126,8 +126,8 @@ export default function HealthPage() {
     }
   };
 
-  const getStatusBgColor = (status: string) => {
-    switch (status) {
+  const getStatusBgColor = (s: string) => {
+    switch (s) {
       case 'healthy':
         return themeColors.success50;
       case 'warning':
@@ -139,8 +139,8 @@ export default function HealthPage() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
+  const getStatusIcon = (s: string) => {
+    switch (s) {
       case 'healthy':
         return 'checkCircle';
       case 'warning':

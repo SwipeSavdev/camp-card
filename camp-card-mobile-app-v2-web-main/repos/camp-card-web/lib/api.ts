@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Session } from 'next-auth';
 
 // API Base URL - must include /api/v1 suffix
@@ -33,11 +34,6 @@ async function apiCall<T>(
   const userId = (session?.user as any)?.id || session?.user?.id;
   const councilId = (session?.user as any)?.councilId;
 
-  // Debug logging
-  console.log('[API] Session:', session ? 'present' : 'null');
-  console.log('[API] AccessToken:', accessToken ? `${accessToken.substring(0, 20)}...` : 'null');
-  console.log('[API] Endpoint:', endpoint);
-
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   } else {
@@ -58,55 +54,50 @@ async function apiCall<T>(
     ? `${endpoint}&${cacheBuster}`
     : `${endpoint}?${cacheBuster}`;
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    const response = await fetch(`${API_BASE_URL}${urlWithCacheBuster}`, {
-      ...options,
-      headers,
-      signal: controller.signal,
-      cache: 'no-store',
-    });
+  const response = await fetch(`${API_BASE_URL}${urlWithCacheBuster}`, {
+    ...options,
+    headers,
+    signal: controller.signal,
+    cache: 'no-store',
+  });
 
-    clearTimeout(timeoutId);
+  clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      // Try to extract error message from response body
-      let errorMessage = `API Error: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.error) {
-          errorMessage = errorData.error;
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        }
-      } catch {
-        // If response body is not JSON, use default message
-      }
-      throw new ApiError(response.status, errorMessage);
-    }
-
-    // Handle 204 No Content responses (common for DELETE operations)
-    if (response.status === 204 || response.headers.get('content-length') === '0') {
-      return {} as T;
-    }
-
-    // Try to parse JSON, but handle empty responses gracefully
-    const text = await response.text();
-    if (!text || text.trim() === '') {
-      return {} as T;
-    }
-
+  if (!response.ok) {
+    // Try to extract error message from response body
+    let errorMessage = `API Error: ${response.status}`;
     try {
-      return JSON.parse(text);
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      }
     } catch {
-      // If JSON parsing fails, return empty object
-      return {} as T;
+      // If response body is not JSON, use default message
     }
-  } catch (error) {
-    // If the request fails (timeout, network error, etc), throw to trigger fallback
-    throw error;
+    throw new ApiError(response.status, errorMessage);
+  }
+
+  // Handle 204 No Content responses (common for DELETE operations)
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return {} as T;
+  }
+
+  // Try to parse JSON, but handle empty responses gracefully
+  const text = await response.text();
+  if (!text || text.trim() === '') {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    // If JSON parsing fails, return empty object
+    return {} as T;
   }
 }
 
@@ -141,7 +132,7 @@ export const api = {
       // Token must be sent as query parameter, not in body
       return await apiCall<{ success: boolean; message: string; requiresPasswordSetup: boolean; passwordSetupToken: string | null }>(
         `/auth/verify-email?token=${encodeURIComponent(token)}`,
-        { method: 'POST' }
+        { method: 'POST' },
       );
     } catch (error) {
       console.error('Failed to verify email:', error);
@@ -423,10 +414,8 @@ export const api = {
   getMerchants: async (session?: Session | null) => {
     try {
       const result = await apiCall<any>('/merchants', {}, session);
-      console.log('[API] getMerchants success:', result);
       // Backend returns { merchants: [...], total: N }
       const merchants = result.merchants || result.content || result || [];
-      console.log('[API] getMerchants result merchants:', merchants);
       return {
         merchants,
         content: merchants,
@@ -448,12 +437,10 @@ export const api = {
 
   createMerchant: async (data: any, session?: Session | null) => {
     try {
-      console.log('[API] createMerchant request:', data);
       const result = await apiCall<any>('/merchants', {
         method: 'POST',
         body: JSON.stringify(data),
       }, session);
-      console.log('[API] createMerchant response:', result);
       return result;
     } catch (error) {
       console.error('[API] Failed to create merchant:', error);
@@ -463,12 +450,10 @@ export const api = {
 
   updateMerchant: async (id: string, data: any, session?: Session | null) => {
     try {
-      console.log('[API] updateMerchant request:', { id, data });
       const result = await apiCall<any>(`/merchants/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }, session);
-      console.log('[API] updateMerchant response:', result);
       return result;
     } catch (error) {
       console.error('[API] Failed to update merchant:', error);
@@ -478,11 +463,9 @@ export const api = {
 
   updateMerchantStatus: async (id: string, status: string, session?: Session | null) => {
     try {
-      console.log('[API] updateMerchantStatus request:', { id, status });
       const result = await apiCall<any>(`/merchants/${id}/status?status=${status}`, {
         method: 'PATCH',
       }, session);
-      console.log('[API] updateMerchantStatus response:', result);
       return result;
     } catch (error) {
       console.error('[API] Failed to update merchant status:', error);
@@ -505,12 +488,10 @@ export const api = {
   // ============ MERCHANT LOCATIONS ============
   createMerchantLocation: async (merchantId: string, data: any, session?: Session | null) => {
     try {
-      console.log('[API] createMerchantLocation request:', { merchantId, data });
       const result = await apiCall<any>(`/merchants/${merchantId}/locations`, {
         method: 'POST',
         body: JSON.stringify(data),
       }, session);
-      console.log('[API] createMerchantLocation response:', result);
       return result;
     } catch (error) {
       console.error('[API] Failed to create merchant location:', error);
@@ -544,10 +525,8 @@ export const api = {
   getOffers: async (session?: Session | null) => {
     try {
       const result = await apiCall<any>('/offers', {}, session);
-      console.log('[API] getOffers success:', result);
       // Handle both response formats: { data: [...] } from backend and { content: [...] } from mock
       const offers = result.data || result.content || result || [];
-      console.log('[API] getOffers result data:', offers);
       return {
         data: offers,
         content: offers,
@@ -1160,19 +1139,16 @@ export const api = {
   },
 
   // ============ PARENTAL CONSENT (Public) ============
-  getConsentDetails: async (token: string) => {
-    return await apiCall<{
+  getConsentDetails: async (token: string) => apiCall<{
       consentId: string;
       minorName: string;
       minorDateOfBirth: string | null;
       parentName: string;
       status: string;
       tokenValid: boolean;
-    }>(`/consent/verify/${token}`, {});
-  },
+    }>(`/consent/verify/${token}`, {}),
 
-  submitConsentDecision: async (token: string, granted: boolean, locationConsent: boolean, marketingConsent: boolean) => {
-    return await apiCall<{
+  submitConsentDecision: async (token: string, granted: boolean, locationConsent: boolean, marketingConsent: boolean) => apiCall<{
       consentId: string;
       status: string;
       locationAllowed: boolean;
@@ -1180,6 +1156,5 @@ export const api = {
     }>(`/consent/verify/${token}`, {
       method: 'POST',
       body: JSON.stringify({ granted, locationConsent, marketingConsent }),
-    });
-  },
+    }),
 };

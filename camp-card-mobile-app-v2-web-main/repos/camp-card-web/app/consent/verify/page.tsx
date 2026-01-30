@@ -6,12 +6,20 @@ import Image from 'next/image';
 import { colors, radius, space, shadow, gradients } from '@/lib/theme';
 import { api } from '@/lib/api';
 
+interface ConsentDetails {
+  minorName?: string;
+  parentName?: string;
+  tokenValid?: boolean;
+  status?: string;
+  [key: string]: unknown;
+}
+
 function ConsentVerifyContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<'pending' | 'success' | 'denied' | 'error'>('pending');
   const [errorMessage, setErrorMessage] = useState('');
-  const [consentDetails, setConsentDetails] = useState<any>(null);
+  const [consentDetails, setConsentDetails] = useState<ConsentDetails | null>(null);
   const [locationConsent, setLocationConsent] = useState(true);
   const [marketingConsent, setMarketingConsent] = useState(false);
   const searchParams = useSearchParams();
@@ -19,6 +27,7 @@ function ConsentVerifyContent() {
 
   useEffect(() => {
     verifyConsent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const verifyConsent = async () => {
@@ -51,9 +60,9 @@ function ConsentVerifyContent() {
       }
       setConsentDetails(response);
       setVerifyStatus('pending');
-    } catch (err: any) {
+    } catch (err) {
       setVerifyStatus('error');
-      setErrorMessage(err.message || 'Invalid or expired consent link. Please contact your scout\'s Unit Leader.');
+      setErrorMessage(err instanceof Error ? err.message : 'Invalid or expired consent link. Please contact your scout\'s Unit Leader.');
     } finally {
       setIsLoading(false);
     }
@@ -64,9 +73,9 @@ function ConsentVerifyContent() {
     try {
       await api.submitConsentDecision(token, true, locationConsent, marketingConsent);
       setVerifyStatus('success');
-    } catch (err: any) {
+    } catch (err) {
       setVerifyStatus('error');
-      setErrorMessage(err.message || 'Failed to approve consent. Please try again.');
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to approve consent. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -77,9 +86,9 @@ function ConsentVerifyContent() {
     try {
       await api.submitConsentDecision(token, false, false, false);
       setVerifyStatus('denied');
-    } catch (err: any) {
+    } catch (err) {
       setVerifyStatus('error');
-      setErrorMessage(err.message || 'Failed to process your response. Please try again.');
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to process your response. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -185,8 +194,9 @@ function ConsentVerifyContent() {
         <div style={{ marginBottom: space.lg }}>
           <h3 style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 12px 0' }}>Optional Permissions:</h3>
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+          <label htmlFor="field" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
             <input
+id="field"
               type="checkbox"
               checked={locationConsent}
               onChange={(e) => setLocationConsent(e.target.checked)}
@@ -197,8 +207,9 @@ function ConsentVerifyContent() {
             </span>
           </label>
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+          <label htmlFor="field-2" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
             <input
+id="field-2"
               type="checkbox"
               checked={marketingConsent}
               onChange={(e) => setMarketingConsent(e.target.checked)}
@@ -221,6 +232,7 @@ function ConsentVerifyContent() {
 
         <div style={{ display: 'flex', gap: space.md }}>
           <button
+            type="button"
             onClick={handleDeny}
             disabled={isSubmitting}
             style={{ flex: 1, padding: `${space.md} ${space.lg}`, fontSize: '16px', fontWeight: '600', color: colors.text, backgroundColor: colors.white, border: `1px solid ${colors.border}`, borderRadius: radius.button, cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
@@ -228,6 +240,7 @@ function ConsentVerifyContent() {
             Deny
           </button>
           <button
+            type="button"
             onClick={handleApprove}
             disabled={isSubmitting}
             style={{ flex: 1, padding: `${space.md} ${space.lg}`, fontSize: '16px', fontWeight: '600', color: colors.white, background: gradients.primary, border: 'none', borderRadius: radius.button, cursor: isSubmitting ? 'not-allowed' : 'pointer', boxShadow: shadow.md, opacity: isSubmitting ? 0.6 : 1 }}

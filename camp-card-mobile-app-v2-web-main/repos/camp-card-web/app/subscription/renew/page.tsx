@@ -6,17 +6,25 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { colors, radius, space, shadow, gradients } from '@/lib/theme';
 
+interface SubscriptionDetails {
+  planName: string;
+  currentExpiry: string;
+  renewalPrice: string;
+  nextExpiry: string;
+}
+
 function SubscriptionRenewContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [renewStatus, setRenewStatus] = useState<'pending' | 'processing' | 'success' | 'error'>('pending');
   const [errorMessage, setErrorMessage] = useState('');
-  const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null);
+  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const userId = searchParams.get('userId') || '';
 
   useEffect(() => {
     loadSubscriptionDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadSubscriptionDetails = async () => {
@@ -34,12 +42,12 @@ function SubscriptionRenewContent() {
         planName: 'Annual Camp Card',
         currentExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
         renewalPrice: '$15.00',
-        nextExpiry: new Date(Date.now() + 372 * 24 * 60 * 60 * 1000).toLocaleDateString()
+        nextExpiry: new Date(Date.now() + 372 * 24 * 60 * 60 * 1000).toLocaleDateString(),
       });
       setRenewStatus('pending');
-    } catch (err: any) {
+    } catch (err) {
       setRenewStatus('error');
-      setErrorMessage(err.message || 'Unable to load subscription details.');
+      setErrorMessage(err instanceof Error ? err.message : 'Unable to load subscription details.');
     } finally {
       setIsLoading(false);
     }
@@ -56,9 +64,9 @@ function SubscriptionRenewContent() {
       setTimeout(() => {
         setRenewStatus('success');
       }, 1500);
-    } catch (err: any) {
+    } catch (err) {
       setRenewStatus('error');
-      setErrorMessage(err.message || 'Failed to process renewal. Please try again.');
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to process renewal. Please try again.');
     }
   };
 
@@ -80,7 +88,7 @@ function SubscriptionRenewContent() {
           <Image src="/assets/images/council_logo.png" alt="Camp Card Logo" width={200} height={85} style={{ borderRadius: radius.md, margin: '0 auto 24px' }} />
           <div style={{ width: '48px', height: '48px', border: `4px solid ${colors.border}`, borderTopColor: colors.accent, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
           <p style={{ fontSize: '16px', color: colors.muted }}>Processing your renewal...</p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
         </div>
       </div>
     );
@@ -159,7 +167,7 @@ function SubscriptionRenewContent() {
         </div>
 
         <div style={{ background: colors.successLight, padding: space.md, borderRadius: radius.md, marginBottom: space.lg }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 8px 0' }}>What You'll Continue to Get:</h3>
+          <h3 style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 8px 0' }}>What You&apos;ll Continue to Get:</h3>
           <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: colors.muted }}>
             <li style={{ marginBottom: '4px' }}>Access to exclusive merchant discounts</li>
             <li style={{ marginBottom: '4px' }}>Support scout fundraising goals</li>
@@ -169,6 +177,7 @@ function SubscriptionRenewContent() {
         </div>
 
         <button
+          type="button"
           onClick={handleRenew}
           style={{ width: '100%', padding: `${space.md} ${space.lg}`, fontSize: '16px', fontWeight: '600', color: colors.white, background: gradients.primary, border: 'none', borderRadius: radius.button, cursor: 'pointer', boxShadow: shadow.md, marginBottom: space.md }}
         >

@@ -42,7 +42,7 @@ const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rg
 
 function Icon({
   name, size = 18, color = 'currentColor', ...props
-}: { name: string; size?: number; color?: string; [key: string]: any }) {
+}: { name: string; size?: number; color?: string; [key: string]: unknown }) {
   const icons: { [key: string]: JSX.Element } = {
     edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -61,15 +61,15 @@ function Icon({
 interface Column {
   key: string;
   label: string;
-  render?: (value: any, row: any) => React.ReactNode;
+  render?: (value: unknown, row: Record<string, unknown>) => React.ReactNode;
 }
 
 interface DataTableProps {
   columns: Column[];
-  data: any[];
+  data: Record<string, unknown>[];
   loading?: boolean;
-  onEdit?: (row: any) => void;
-  onDelete?: (row: any) => void;
+  onEdit?: (row: Record<string, unknown>) => void;
+  onDelete?: (row: Record<string, unknown>) => void;
 }
 
 export const DataTable: React.FC<DataTableProps> = ({
@@ -83,6 +83,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, overflow: 'hidden', boxShadow: themeShadow.sm,
   }}
   >
+    {/* eslint-disable-next-line no-nested-ternary */}
     {loading ? (
       <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>
         Loading...
@@ -121,10 +122,10 @@ export const DataTable: React.FC<DataTableProps> = ({
         </thead>
         <tbody>
           {data.map((row, idx) => (
-            <tr key={row.id || idx} style={{ borderBottom: `1px solid ${themeColors.gray200}` }}>
+            <tr key={(row.id as React.Key) || idx} style={{ borderBottom: `1px solid ${themeColors.gray200}` }}>
               {columns.map((col) => (
                 <td key={col.key} style={{ padding: themeSpace.lg, fontSize: '14px', color: themeColors.text }}>
-                 {col.render ? col.render(row[col.key], row) : row[col.key]}
+                 {col.render ? col.render(row[col.key], row) : (row[col.key] as React.ReactNode)}
                </td>
               ))}
               {(onEdit || onDelete) && (
@@ -132,6 +133,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
                {onEdit && (
                <button
+               type="button"
                onClick={() => onEdit(row)}
                style={{
                background: themeColors.info50,
@@ -151,6 +153,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                )}
                {onDelete && (
                <button
+               type="button"
                onClick={() => onDelete(row)}
                style={{
                background: '#fee2e2',

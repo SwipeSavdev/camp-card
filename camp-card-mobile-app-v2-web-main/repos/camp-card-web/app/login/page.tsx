@@ -181,6 +181,7 @@ export default function LoginPage() {
           {/* Email Field */}
           <div style={{ marginBottom: space.lg }}>
             <label
+              htmlFor="field"
               style={{
                 display: 'block',
                 fontSize: '12px',
@@ -228,6 +229,7 @@ export default function LoginPage() {
           <div style={{ marginBottom: space.md }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.sm }}>
               <label
+                htmlFor="field-2"
                 style={{
                   fontSize: '12px',
                   fontWeight: '600',

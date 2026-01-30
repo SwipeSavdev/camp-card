@@ -39,7 +39,7 @@ const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rg
 
 function Icon({
   name, size = 18, color = 'currentColor', ...props
-}: { name: string; size?: number; color?: string; [key: string]: any }) {
+}: { name: string; size?: number; color?: string; [key: string]: unknown }) {
   const icons: { [key: string]: JSX.Element } = {
     add: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <line x1="12" y1="5" x2="12" y2="19" />
@@ -64,10 +64,23 @@ function Icon({
   return <span {...props}>{icons[name] || null}</span>;
 }
 
+interface CampCard {
+  id: string;
+  name?: string;
+  cardholderName?: string;
+  cardNumber?: string;
+  status?: string;
+  issuanceMethod?: string;
+  createdAt?: string;
+  expiresAt?: string;
+  claimToken?: string;
+  token?: string;
+}
+
 export default function CampCardsPage() {
   const { data: session, status } = useSession();
   const _router = useRouter();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<CampCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,6 +92,7 @@ export default function CampCardsPage() {
     if (status === 'authenticated' && session) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   const fetchData = async () => {
@@ -96,7 +110,7 @@ export default function CampCardsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this card?')) return;
+    if (!window.confirm('Delete this card?')) return;
     try {
       await api.deleteCard(id, session);
       setItems(items.filter((i) => i.id !== id));
@@ -105,8 +119,8 @@ export default function CampCardsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toUpperCase()) {
+  const getStatusColor = (s: string) => {
+    switch (s?.toUpperCase()) {
       case 'ACTIVE':
         return { bg: themeColors.success50, text: themeColors.success600 };
       case 'PENDING_CLAIM':
@@ -147,6 +161,7 @@ export default function CampCardsPage() {
           <p style={{ fontSize: '13px', color: themeColors.gray600, margin: 0 }}>Cards issued through purchase or claim links only</p>
           <div style={{ display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
             <button
+              type="button"
               disabled
               title="Cards are issued automatically when customers purchase through our gateway or use a claim link from a Troop Leader"
               style={{
@@ -250,6 +265,7 @@ export default function CampCardsPage() {
       </div>
       )}
 
+      {/* eslint-disable-next-line no-nested-ternary */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: themeSpace.xl }}>Loading...</div>
       ) : filteredItems.length === 0 ? (
@@ -324,7 +340,7 @@ Actions
             </thead>
             <tbody>
               {filteredItems.map((item) => {
-                const statusColor = getStatusColor(item.status);
+                const statusColor = getStatusColor(item.status || '');
                 const issuedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
                 const expiresDate = item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'N/A';
                 const claimToken = item.claimToken || item.token;
@@ -370,7 +386,7 @@ Actions
                    display: 'inline-block',
                  }}
                  >
-                   {item.issuanceMethod === 'GATEWAY_PURCHASE' ? 'Payment Gateway' : item.issuanceMethod === 'CLAIM_LINK' ? 'Claim Link' : item.issuanceMethod || 'Unknown'}
+                   {({ GATEWAY_PURCHASE: 'Payment Gateway', CLAIM_LINK: 'Claim Link' } as Record<string, string>)[item.issuanceMethod || ''] || item.issuanceMethod || 'Unknown'}
                  </span>
                  </td>
                    <td style={{ padding: themeSpace.lg, fontSize: '13px', color: themeColors.gray600 }}>
@@ -381,13 +397,16 @@ Actions
                  </td>
                    <td style={{ padding: themeSpace.lg, textAlign: 'center' }}>
                    <div style={{ display: 'flex', gap: themeSpace.sm, justifyContent: 'center' }}>
-                   <button style={{
-                     background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                   }}
+                   <button
+                     type="button"
+                     style={{
+                       background: themeColors.info50, border: 'none', color: themeColors.info600, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                     }}
                    >
                      <Icon name="edit" size={16} color={themeColors.info600} />
                    </button>
                    <button
+                     type="button"
                      onClick={() => handleDelete(item.id)} style={{
                      background: '#fee2e2', border: 'none', color: themeColors.error500, width: '32px', height: '32px', borderRadius: themeRadius.sm, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                    }}

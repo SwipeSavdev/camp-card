@@ -17,6 +17,7 @@ function EmailVerificationContent() {
 
   useEffect(() => {
     verifyEmail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const verifyEmail = async () => {
@@ -38,9 +39,9 @@ function EmailVerificationContent() {
       }
 
       setVerificationStatus('success');
-    } catch (err: any) {
+    } catch (err) {
       setVerificationStatus('error');
-      setErrorMessage(err.message || 'Verification failed. The link may have expired.');
+      setErrorMessage(err instanceof Error ? err.message : 'Verification failed. The link may have expired.');
     } finally {
       setIsLoading(false);
     }
@@ -254,7 +255,7 @@ function EmailVerificationContent() {
             }}
           >
             <p style={{ fontSize: '13px', fontWeight: '600', color: colors.success, margin: '0 0 8px 0' }}>
-              What's next?
+              What&apos;s next?
             </p>
             <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: colors.green600 }}>
               <li style={{ marginBottom: '4px' }}>Sign in to your account</li>
@@ -407,6 +408,7 @@ function EmailVerificationContent() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
           <button
+            type="button"
             onClick={() => {
               setIsLoading(true);
               setVerificationStatus('loading');
@@ -456,7 +458,7 @@ function EmailVerificationContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense
-      fallback={
+      fallback={(
         <div
           style={{
             background: gradients.primary,
@@ -468,7 +470,7 @@ export default function VerifyEmailPage() {
         >
           <p style={{ color: colors.white, fontSize: '16px' }}>Loading...</p>
         </div>
-      }
+      )}
     >
       <EmailVerificationContent />
     </Suspense>

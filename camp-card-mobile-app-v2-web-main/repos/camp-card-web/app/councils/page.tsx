@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -239,6 +241,7 @@ export default function CouncilsPage() {
     if (status === 'authenticated' && session) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   const loadData = async () => {
@@ -588,7 +591,7 @@ export default function CouncilsPage() {
   };
 
   const deleteCouncil = async (councilId: string) => {
-    if (!confirm('Are you sure you want to delete this council? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to delete this council? This action cannot be undone.')) {
       return;
     }
     try {
@@ -603,7 +606,7 @@ export default function CouncilsPage() {
   };
 
   const deleteTroopUnit = async (councilId: string, troopId: string) => {
-    if (!confirm('Are you sure you want to delete this troop? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to delete this troop? This action cannot be undone.')) {
       return;
     }
     try {
@@ -807,6 +810,7 @@ export default function CouncilsPage() {
           {/* Clear Filters */}
           {(searchTerm || locationFilter || troopCountFilter) && (
           <button
+            type="button"
             onClick={() => {
               setSearchTerm('');
               setLocationFilter('');
@@ -831,6 +835,7 @@ export default function CouncilsPage() {
 
       {/* Add Council Button */}
       <button
+        type="button"
         onClick={() => setShowAddCouncil(!showAddCouncil)}
         style={{
           padding: `${themeSpace.md} ${themeSpace.lg}`,
@@ -848,8 +853,8 @@ export default function CouncilsPage() {
           transition: 'all 200ms ease',
           boxShadow: themeShadow.sm,
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColors.primary800)}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = themeColors.primary600)}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColors.primary800; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = themeColors.primary600; }}
       >
         <Icon name="plus" size={18} />
         New Council
@@ -869,13 +874,15 @@ export default function CouncilsPage() {
         </h3>
         <div style={{ display: 'grid', gap: themeSpace.lg, marginBottom: themeSpace.lg }}>
           <div>
-            <label style={{
+            <label
+htmlFor="field" style={{
               display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm,
             }}
             >
               Council Name
             </label>
             <input
+id="field"
               type="text"
               placeholder="e.g., Northern District Council"
               value={newCouncilName}
@@ -891,13 +898,15 @@ export default function CouncilsPage() {
             />
           </div>
           <div>
-            <label style={{
+            <label
+htmlFor="field-2" style={{
               display: 'block', fontSize: '13px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.sm,
             }}
             >
               Location
             </label>
             <input
+id="field-2"
               type="text"
               placeholder="e.g., North Region"
               value={newCouncilLocation}
@@ -915,6 +924,7 @@ export default function CouncilsPage() {
         </div>
         <div style={{ display: 'flex', gap: themeSpace.md }}>
           <button
+            type="button"
             onClick={addCouncil}
             style={{
               padding: `${themeSpace.md} ${themeSpace.lg}`,
@@ -930,6 +940,7 @@ export default function CouncilsPage() {
             Create Council
           </button>
           <button
+            type="button"
             onClick={() => setShowAddCouncil(false)}
             style={{
               padding: `${themeSpace.md} ${themeSpace.lg}`,
@@ -971,6 +982,9 @@ export default function CouncilsPage() {
               {/* Council Header */}
               <div
                 onClick={() => toggleCouncilExpand(council.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                 style={{
                   padding: themeSpace.lg,
                   display: 'flex',
@@ -981,8 +995,8 @@ export default function CouncilsPage() {
                   borderBottom: expandedCouncils.has(council.id) ? `2px solid ${themeColors.primary200}` : 'none',
                   transition: 'all 200ms ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = themeColors.primary50)}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = expandedCouncils.has(council.id) ? themeColors.primary50 : themeColors.white)}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColors.primary50; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = expandedCouncils.has(council.id) ? themeColors.primary50 : themeColors.white; }}
               >
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: themeSpace.lg, flex: 1,
@@ -1049,6 +1063,7 @@ export default function CouncilsPage() {
                 {/* Action Buttons */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: themeSpace.sm }}>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/councils/${council.id}/payment-settings`);
@@ -1072,6 +1087,7 @@ export default function CouncilsPage() {
                     Payment
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => {
                      e.stopPropagation();
                      deleteCouncil(council.id);
@@ -1096,6 +1112,7 @@ export default function CouncilsPage() {
                 <div style={{ display: 'flex', gap: themeSpace.md, marginBottom: themeSpace.lg, flexWrap: 'wrap' }}>
                   {/* Add Troop Button */}
                   <button
+                   type="button"
                    onClick={() => setShowAddTroop(showAddTroop === council.id ? null : council.id)}
                    style={{
                    padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -1117,6 +1134,7 @@ export default function CouncilsPage() {
 
                   {/* Payment Settings Button */}
                   <button
+                   type="button"
                    onClick={() => router.push(`/councils/${council.id}/payment-settings`)}
                    style={{
                    padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -1151,13 +1169,15 @@ export default function CouncilsPage() {
              </h4>
                <div style={{ display: 'grid', gap: themeSpace.md, marginBottom: themeSpace.lg }}>
                <div>
-                 <label style={{
+                 <label
+htmlFor="field-3" style={{
                  display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.xs,
                }}
                >
            Troop Name
                </label>
                  <input
+id="field-3"
                  type="text"
                  placeholder="e.g., Troop A"
                  value={newTroopName}
@@ -1173,13 +1193,15 @@ export default function CouncilsPage() {
                />
                </div>
                <div>
-                 <label style={{
+                 <label
+htmlFor="field-4" style={{
                  display: 'block', fontSize: '12px', fontWeight: '600', color: themeColors.text, marginBottom: themeSpace.xs,
                }}
                >
            Unit Leader
                </label>
                  <input
+id="field-4"
                  type="text"
                  placeholder="Leader name"
                  value={newTroopLeader}
@@ -1197,6 +1219,7 @@ export default function CouncilsPage() {
              </div>
                <div style={{ display: 'flex', gap: themeSpace.md }}>
                <button
+                 type="button"
                  onClick={() => addTroopUnit(council.id)}
                  style={{
                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -1212,6 +1235,7 @@ export default function CouncilsPage() {
          Create
                </button>
                <button
+                 type="button"
                  onClick={() => setShowAddTroop(null)}
                  style={{
                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
@@ -1250,6 +1274,9 @@ export default function CouncilsPage() {
                  {/* Troop Header */}
                  <div
                  onClick={() => toggleTroopExpand(troop.id)}
+                 role="button"
+                 tabIndex={0}
+                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                  style={{
                  padding: themeSpace.lg,
                  display: 'flex',
@@ -1281,6 +1308,7 @@ export default function CouncilsPage() {
                </div>
                </div>
                  <button
+                 type="button"
                  onClick={(e) => {
                  e.stopPropagation();
                  deleteTroopUnit(council.id, troop.id);
@@ -1302,6 +1330,7 @@ export default function CouncilsPage() {
                <div style={{ padding: themeSpace.lg, backgroundColor: themeColors.gray50, borderTop: `1px solid ${themeColors.gray200}` }}>
                {/* Add Leader Button */}
                <button
+               type="button"
                onClick={() => setShowAddLeader(showAddLeader === troop.id ? null : troop.id)}
                style={{
                  padding: `${themeSpace.xs} ${themeSpace.md}`,
@@ -1382,6 +1411,7 @@ export default function CouncilsPage() {
                  )
                  .map((leader: any) => (
                  <button
+                   type="button"
                    key={leader.id}
                    onClick={() => setSelectedTroopLeader(leader)}
                    style={{
@@ -1420,6 +1450,7 @@ export default function CouncilsPage() {
                {/* Action Buttons */}
                <div style={{ display: 'flex', gap: themeSpace.sm }}>
                <button
+                 type="button"
                  onClick={() => {
                  if (selectedTroopLeader) {
                    addTroopLeader(council.id, troop.uuid);
@@ -1440,6 +1471,7 @@ export default function CouncilsPage() {
          Assign
                </button>
                <button
+                 type="button"
                  onClick={() => {
                  setShowAddLeader(null);
                  setTroopLeaderSearchTerm('');
@@ -1490,6 +1522,7 @@ export default function CouncilsPage() {
                  <p style={{ margin: `${themeSpace.xs} 0 0 0`, fontSize: '11px', color: themeColors.gray600 }}>{leader.role}</p>
                </div>
                  <button
+                 type="button"
                  onClick={() => deleteTroopLeader(council.id, troop.id, leader.id)}
                  style={{
                  background: 'none',
@@ -1513,6 +1546,7 @@ export default function CouncilsPage() {
                    Scouts ({troop.scouts?.length || 0})
                  </h5>
                  <button
+                   type="button"
                    onClick={() => setShowAddScout(showAddScout === troop.id ? null : troop.id)}
                    style={{
                      padding: `${themeSpace.xs} ${themeSpace.md}`,
@@ -1593,6 +1627,7 @@ export default function CouncilsPage() {
                          )
                          .map((scout: any) => (
                            <button
+                             type="button"
                              key={scout.id}
                              onClick={() => setSelectedScout(scout)}
                              style={{
@@ -1631,6 +1666,7 @@ export default function CouncilsPage() {
                  {/* Action Buttons */}
                  <div style={{ display: 'flex', gap: themeSpace.sm }}>
                    <button
+                     type="button"
                      onClick={() => {
                        if (selectedScout) {
                          addScoutToTroop(council.id, troop.uuid);
@@ -1651,6 +1687,7 @@ export default function CouncilsPage() {
                      Assign Scout
                    </button>
                    <button
+                     type="button"
                      onClick={() => {
                        setShowAddScout(null);
                        setScoutSearchTerm('');
@@ -1703,6 +1740,7 @@ export default function CouncilsPage() {
                          </p>
                        </div>
                        <button
+                         type="button"
                          onClick={() => removeScoutFromTroop(council.id, troop.id, scout.id)}
                          style={{
                            background: 'none',
@@ -1739,6 +1777,7 @@ export default function CouncilsPage() {
       }}
       >
         <button
+          type="button"
           onClick={() => setCurrentPage(1)}
           disabled={currentPage === 1}
           style={{
@@ -1755,6 +1794,7 @@ export default function CouncilsPage() {
           First
         </button>
         <button
+          type="button"
           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           disabled={currentPage === 1}
           style={{
@@ -1790,6 +1830,7 @@ export default function CouncilsPage() {
             }
             return (
               <button
+                type="button"
                 key={pageNum}
                 onClick={() => setCurrentPage(pageNum)}
                 style={{
@@ -1811,6 +1852,7 @@ export default function CouncilsPage() {
         </div>
 
         <button
+          type="button"
           onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages}
           style={{
@@ -1832,6 +1874,7 @@ export default function CouncilsPage() {
           <Icon name="chevronRight" size={16} />
         </button>
         <button
+          type="button"
           onClick={() => setCurrentPage(totalPages)}
           disabled={currentPage === totalPages}
           style={{

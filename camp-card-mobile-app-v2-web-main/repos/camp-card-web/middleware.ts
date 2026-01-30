@@ -32,7 +32,6 @@ const routeRestrictions: Record<string, string[]> = {
   '/health': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'],
   '/config': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'],
   '/feature-flags': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN'],
-  '/devices': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
   '/ai-marketing': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
   '/notifications': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
   '/redemptions': ['GLOBAL_SYSTEM_ADMIN', 'ADMIN', 'NATIONAL_ADMIN', 'COUNCIL_ADMIN'],
@@ -67,7 +66,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Allow public routes
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  if (publicRoutes.some((route) => pathname.startsWith(route))) {
     // If already logged in and trying to access login, redirect to dashboard
     if (token && pathname.startsWith('/login')) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
