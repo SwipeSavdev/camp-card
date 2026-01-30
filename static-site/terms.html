@@ -1,224 +1,177 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Terms of Service - Camp Card</title>
     <meta name="description" content="Terms of Service for Camp Card mobile application by Swipe Savvy, LLC">
     <link rel="icon" type="image/png" href="/icon.png">
+    <meta name="theme-color" content="#001a3a">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/main.js" defer></script>
+
     <style>
-        :root {
-            --primary-blue: #003F87;
-            --primary-red: #CE1126;
-            --gold: #FFD700;
-            --dark-text: #1A1A1A;
-            --light-bg: #F5F5F5;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
-            color: var(--dark-text);
-            background-color: #fff;
-        }
-
-        header {
-            background-color: var(--primary-blue);
-            color: white;
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        header nav {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        header .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-
-        header .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 2rem;
-        }
-
-        header .nav-links a:hover {
-            text-decoration: underline;
-        }
-
-        main {
+        .legal-content {
             max-width: 900px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 0;
         }
 
-        h1 {
-            color: var(--primary-blue);
-            font-size: 2.5rem;
+        .legal-content h1 {
+            color: var(--color-navy);
+            font-size: var(--text-3xl);
             margin-bottom: 0.5rem;
-            border-bottom: 3px solid var(--primary-red);
+            border-bottom: 3px solid var(--color-red);
             padding-bottom: 0.5rem;
         }
 
-        .subtitle {
-            color: #666;
+        .legal-content .subtitle {
+            color: var(--color-muted);
             margin-bottom: 2rem;
         }
 
-        h2 {
-            color: var(--primary-blue);
-            font-size: 1.5rem;
+        .legal-content h2 {
+            color: var(--color-navy);
+            font-size: var(--text-xl);
             margin-top: 2.5rem;
             margin-bottom: 1rem;
             padding-bottom: 0.25rem;
-            border-bottom: 2px solid var(--light-bg);
+            border-bottom: 2px solid #f5f5f5;
         }
 
-        h3 {
-            color: var(--dark-text);
-            font-size: 1.2rem;
+        .legal-content h3 {
+            color: var(--color-ink);
+            font-size: var(--text-lg);
             margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-        }
-
-        p {
-            margin-bottom: 1rem;
-        }
-
-        ul, ol {
-            margin-left: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        li {
             margin-bottom: 0.5rem;
         }
 
-        .notice {
-            background-color: var(--light-bg);
-            border-left: 4px solid var(--primary-blue);
+        .legal-content .notice {
+            background-color: #f5f5f5;
+            border-left: 4px solid var(--color-navy);
             padding: 1rem 1.5rem;
             margin: 1.5rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
         }
 
-        .notice.important {
-            background-color: #FFF3CD;
-            border-left-color: var(--gold);
+        .legal-content .notice.important {
+            border-left-color: var(--color-red);
+            background-color: #fff5f5;
         }
 
-        .notice.legal {
-            background-color: #F8D7DA;
-            border-left-color: var(--primary-red);
-            font-weight: 500;
+        .legal-content .notice.legal {
+            background-color: #f0f0f0;
+            border-left-color: #333;
         }
 
-        table {
+        .legal-content table {
             width: 100%;
             border-collapse: collapse;
             margin: 1rem 0;
+            font-size: var(--text-sm);
         }
 
-        th, td {
+        .legal-content th, .legal-content td {
             border: 1px solid #ddd;
-            padding: 0.75rem;
+            padding: 0.75rem 1rem;
             text-align: left;
         }
 
-        th {
-            background-color: var(--primary-blue);
+        .legal-content th {
+            background-color: var(--color-navy);
             color: white;
+            font-weight: 600;
         }
 
-        tr:nth-child(even) {
-            background-color: var(--light-bg);
+        .legal-content tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
 
-        .toc {
-            background-color: var(--light-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
+        .legal-content .toc {
+            background-color: #f5f5f5;
+            padding: 1.5rem 2rem;
+            border-radius: var(--radius-lg);
             margin: 2rem 0;
         }
 
-        .toc h2 {
+        .legal-content .toc h2 {
             margin-top: 0;
             border-bottom: none;
         }
 
-        .toc ol {
+        .legal-content .toc ol {
             columns: 2;
+            column-gap: 2rem;
         }
 
-        .toc a {
-            color: var(--primary-blue);
+        .legal-content .toc li {
+            break-inside: avoid;
+        }
+
+        .legal-content .toc a {
+            color: var(--color-navy-2);
             text-decoration: none;
         }
 
-        .toc a:hover {
+        .legal-content .toc a:hover {
             text-decoration: underline;
         }
 
-        footer {
-            background-color: var(--primary-blue);
-            color: white;
-            text-align: center;
-            padding: 2rem;
-            margin-top: 3rem;
-        }
-
-        footer a {
-            color: var(--gold);
-        }
-
         @media (max-width: 768px) {
-            main {
-                padding: 1rem;
+            .legal-content {
+                padding: 1rem 0;
             }
 
-            h1 {
-                font-size: 1.8rem;
+            .legal-content h1 {
+                font-size: var(--text-2xl);
             }
 
-            .toc ol {
+            .legal-content .toc ol {
                 columns: 1;
-            }
-
-            header .nav-links {
-                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="/" class="logo">Camp Card</a>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/privacy">Privacy</a>
-                <a href="/terms">Terms</a>
-                <a href="/support">Support</a>
-            </div>
-        </nav>
-    </header>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Camp Card home">
+      <picture>
+        <source srcset="/assets/scouting-america-cfc-logo.avif" type="image/avif">
+        <source srcset="/assets/scouting-america-cfc-logo.webp" type="image/webp">
+        <img src="/assets/scouting-america-cfc-logo.png" width="305" height="60" alt="Scouting America — Central Florida Council">
+      </picture>
+    </a>
 
-    <main>
+    <nav id="site-nav" class="site-nav" aria-label="Primary">
+      <a href="/#how-it-works">How it works</a>
+      <a href="/#why-camp-card">Why Camp Card</a>
+      <a href="/#faq">FAQ</a>
+      <a href="/contact/">Contact</a>
+
+      <div class="nav-extra" aria-label="More links">
+        <a href="/about/">About</a>
+        <a href="/terms/">Terms</a>
+        <a href="/privacy/">Privacy</a>
+        <a href="/sitemap/">Site map</a>
+      </div>
+    </nav>
+
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-controls="site-nav" aria-expanded="false">
+      <span class="hamburger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="container legal-content">
         <h1>Terms of Service</h1>
         <p class="subtitle">
             <strong>Camp Card Mobile Application</strong><br>
@@ -262,12 +215,10 @@
             </ol>
         </div>
 
-        <!-- ============================================================ -->
         <!-- SECTION 1: ACCEPTANCE OF TERMS -->
-        <!-- ============================================================ -->
         <h2 id="section1">1. Acceptance of Terms</h2>
 
-        <p>By creating an account, downloading, installing, accessing, or using Camp Card in any manner, you agree to be bound by these Terms, our <a href="/privacy">Privacy Policy</a>, and any additional terms, guidelines, or rules referenced herein. These Terms form a binding legal contract between you and Swipe Savvy, LLC.</p>
+        <p>By creating an account, downloading, installing, accessing, or using Camp Card in any manner, you agree to be bound by these Terms, our <a href="/privacy/">Privacy Policy</a>, and any additional terms, guidelines, or rules referenced herein. These Terms form a binding legal contract between you and Swipe Savvy, LLC.</p>
 
         <p>Camp Card is developed and published by Swipe Savvy, LLC in collaboration with Scouting America to digitalize and modernize Scout fundraising efforts. Scouting America has authorized the use of its trademarks and branding within the Camp Card platform in connection with official Scout fundraising programs.</p>
 
@@ -277,9 +228,7 @@
             <p><strong>Your continued use of the Service following the posting of any changes to these Terms constitutes your acceptance of such changes. If you do not agree with any modifications, you must discontinue use of the Service immediately.</strong></p>
         </div>
 
-        <!-- ============================================================ -->
         <!-- SECTION 2: DESCRIPTION OF SERVICE -->
-        <!-- ============================================================ -->
         <h2 id="section2">2. Description of Service</h2>
 
         <p>Camp Card is a digital platform designed to support Scouting America fundraising through a mobile application, web portal, and related services. The Service provides the following core features:</p>
@@ -321,9 +270,7 @@
 
         <p>We reserve the right to modify, suspend, or discontinue any feature or aspect of the Service at any time, with or without notice. We shall not be liable to you or any third party for any modification, suspension, or discontinuance of the Service.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 3: ELIGIBILITY -->
-        <!-- ============================================================ -->
         <h2 id="section3">3. Eligibility</h2>
 
         <h3>3.1 Age Requirements</h3>
@@ -347,9 +294,7 @@
             <li>Not impersonate any person or entity, or falsely state or misrepresent your affiliation with any person or entity</li>
         </ul>
 
-        <!-- ============================================================ -->
         <!-- SECTION 4: ACCOUNT REGISTRATION AND SECURITY -->
-        <!-- ============================================================ -->
         <h2 id="section4">4. Account Registration and Security</h2>
 
         <h3>4.1 Account Creation</h3>
@@ -419,9 +364,7 @@
 
         <p>Your account type determines the features and data available to you. You agree to use your account only for its intended purpose and within the scope of your assigned role. Attempting to access features or data beyond your authorized role is a violation of these Terms.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 5: SUBSCRIPTIONS AND PAYMENTS -->
-        <!-- ============================================================ -->
         <h2 id="section5">5. Subscriptions and Payments</h2>
 
         <h3>5.1 Subscription Plans</h3>
@@ -490,9 +433,7 @@
             <li>We reserve the right to void Gift Cards obtained through fraud or in violation of these Terms</li>
         </ul>
 
-        <!-- ============================================================ -->
         <!-- SECTION 6: SCOUT DATA AND FUNDRAISING -->
-        <!-- ============================================================ -->
         <h2 id="section6">6. Scout Data and Fundraising</h2>
 
         <div class="notice important">
@@ -508,16 +449,14 @@
             <li><strong>Limited Data Sharing:</strong> Scouting America councils and troop leaders receive only reporting and sales tracking data necessary for managing their fundraising programs. This includes aggregate and individual fundraising performance metrics such as subscription sales, referral activity, and offer redemptions attributable to their troop or council</li>
             <li><strong>Council and Troop Leader Access:</strong> Council Admins and Troop Leaders may access fundraising data for Scouts within their respective organizations for the sole purpose of managing, tracking, and reporting on fundraising activities. They may not use this data for any other purpose</li>
             <li><strong>Data Minimization:</strong> We collect only the minimum amount of Scout data necessary to support the fundraising features of the Service</li>
-            <li><strong>Parental Oversight:</strong> Parents and legal guardians have the right to access, review, and request deletion of their child's data as described in our <a href="/privacy">Privacy Policy</a> and in accordance with COPPA requirements</li>
+            <li><strong>Parental Oversight:</strong> Parents and legal guardians have the right to access, review, and request deletion of their child's data as described in our <a href="/privacy/">Privacy Policy</a> and in accordance with COPPA requirements</li>
         </ul>
 
         <div class="notice">
             <p><strong>Scout data shared with Scouting America councils and troop leaders is provided under the obligation that such data will be used exclusively for fundraising reporting and sales tracking purposes. Any misuse of Scout data by council administrators or troop leaders is a violation of these Terms.</strong></p>
         </div>
 
-        <!-- ============================================================ -->
         <!-- SECTION 7: USER CONDUCT -->
-        <!-- ============================================================ -->
         <h2 id="section7">7. User Conduct</h2>
 
         <h3>7.1 Acceptable Use</h3>
@@ -559,9 +498,7 @@
 
         <p>If you become aware of any violation of these Terms, misuse of the Service, or any fraudulent activity, you agree to promptly report it to us at <a href="mailto:support@swipesavvy.com">support@swipesavvy.com</a>. We take reports seriously and will investigate all credible reports of violations. You may also report violations in-app through the designated reporting features.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 8: INTELLECTUAL PROPERTY -->
-        <!-- ============================================================ -->
         <h2 id="section8">8. Intellectual Property</h2>
 
         <h3>8.1 Our Intellectual Property</h3>
@@ -600,9 +537,7 @@
 
         <p>To the extent the Service allows you to submit, post, or transmit content (such as profile information, feedback, or reviews), you retain ownership of your content but grant Swipe Savvy a worldwide, non-exclusive, royalty-free, transferable, sublicensable license to use, reproduce, modify, display, and distribute such content in connection with operating and improving the Service. You represent and warrant that you own or have the necessary rights to submit such content and that it does not violate the rights of any third party.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 9: THIRD-PARTY SERVICES -->
-        <!-- ============================================================ -->
         <h2 id="section9">9. Third-Party Services</h2>
 
         <h3>9.1 Merchant Relationships</h3>
@@ -636,9 +571,7 @@
             <li>Any issues related to payment processing, chargebacks, or transaction disputes may involve coordination with Authorize.net and/or your financial institution</li>
         </ul>
 
-        <!-- ============================================================ -->
         <!-- SECTION 10: DISCLAIMER OF WARRANTIES -->
-        <!-- ============================================================ -->
         <h2 id="section10">10. Disclaimer of Warranties</h2>
 
         <div class="notice legal">
@@ -658,9 +591,7 @@
 
         <p>Some jurisdictions do not allow the exclusion of certain warranties, so some of the above exclusions may not apply to you. In such cases, the warranties are limited to the minimum extent permitted by applicable law.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 11: LIMITATION OF LIABILITY -->
-        <!-- ============================================================ -->
         <h2 id="section11">11. Limitation of Liability</h2>
 
         <div class="notice legal">
@@ -687,9 +618,7 @@
 
         <p><strong>Jurisdictional Limitations:</strong> Some jurisdictions do not allow the limitation or exclusion of liability for incidental, consequential, or certain other types of damages. If you reside in such a jurisdiction, the above limitations or exclusions may not apply to you, and the limitations shall be applied to the fullest extent permitted by applicable law in your jurisdiction.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 12: INDEMNIFICATION -->
-        <!-- ============================================================ -->
         <h2 id="section12">12. Indemnification</h2>
 
         <p>You agree to indemnify, defend, and hold harmless Swipe Savvy, LLC, Scouting America, their respective Scouting America councils, and each of their respective affiliates, officers, directors, employees, agents, licensors, service providers, successors, and assigns (collectively, the "Indemnified Parties") from and against any and all claims, damages, losses, liabilities, obligations, penalties, fees, costs, and expenses (including reasonable attorneys' fees and legal costs) arising from or related to:</p>
@@ -705,9 +634,7 @@
 
         <p>Swipe Savvy reserves the right, at your expense, to assume the exclusive defense and control of any matter for which you are required to indemnify us, and you agree to cooperate fully with our defense of such claims. You agree not to settle any matter without our prior written consent. We will use reasonable efforts to notify you of any such claim upon becoming aware of it.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 13: TERMINATION -->
-        <!-- ============================================================ -->
         <h2 id="section13">13. Termination</h2>
 
         <h3>13.1 Termination by You</h3>
@@ -743,7 +670,7 @@
             <li>Your license under Section 8.2 will automatically terminate</li>
             <li>All pending or unused offers, discounts, and subscription benefits will be forfeited</li>
             <li>You must delete all copies of the App from your devices</li>
-            <li>We may retain your data as described in our <a href="/privacy">Privacy Policy</a> and as required by applicable law</li>
+            <li>We may retain your data as described in our <a href="/privacy/">Privacy Policy</a> and as required by applicable law</li>
             <li>Outstanding payment obligations and any amounts owed to Swipe Savvy shall survive termination</li>
         </ul>
 
@@ -751,9 +678,7 @@
 
         <p>The following sections shall survive termination or expiration of these Terms: Section 5 (to the extent of outstanding payment obligations), Section 6, Section 8 (Intellectual Property), Section 10 (Disclaimer of Warranties), Section 11 (Limitation of Liability), Section 12 (Indemnification), Section 13.3 (Effect of Termination), Section 13.4 (Survival), Section 14 (Dispute Resolution), Section 15 (Privacy), Section 19 (General Provisions), Section 20 (Apple App Store Terms), and Section 21 (Google Play Store Terms).</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 14: DISPUTE RESOLUTION -->
-        <!-- ============================================================ -->
         <h2 id="section14">14. Dispute Resolution</h2>
 
         <div class="notice legal">
@@ -797,20 +722,16 @@
 
         <p>These Terms and any Disputes arising out of or related to these Terms or the Service shall be governed by and construed in accordance with the laws of the <strong>State of Texas</strong>, United States of America, without regard to its conflict of law provisions. To the extent that litigation is permitted (including if you have opted out of arbitration), you and Swipe Savvy agree to submit to the personal and exclusive jurisdiction of the state and federal courts located in the State of Texas.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 15: PRIVACY -->
-        <!-- ============================================================ -->
         <h2 id="section15">15. Privacy</h2>
 
-        <p>Your privacy is important to us. Our <a href="/privacy">Privacy Policy</a> explains how we collect, use, process, disclose, and safeguard your information when you use the Service. The Privacy Policy is incorporated by reference into these Terms and forms part of this Agreement.</p>
+        <p>Your privacy is important to us. Our <a href="/privacy/">Privacy Policy</a> explains how we collect, use, process, disclose, and safeguard your information when you use the Service. The Privacy Policy is incorporated by reference into these Terms and forms part of this Agreement.</p>
 
         <p>By using the Service, you consent to the collection and use of your information as described in the Privacy Policy. We encourage you to review the Privacy Policy carefully before using the Service and periodically thereafter for any changes.</p>
 
         <p>If there is a conflict between these Terms and the Privacy Policy, the Privacy Policy shall control with respect to matters relating to privacy and data protection, and these Terms shall control with respect to all other matters.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 16: COPPA COMPLIANCE -->
-        <!-- ============================================================ -->
         <h2 id="section16">16. COPPA Compliance</h2>
 
         <div class="notice important">
@@ -837,9 +758,7 @@
 
         <p>To exercise parental rights or ask questions about our children's privacy practices, contact us at <a href="mailto:support@swipesavvy.com">support@swipesavvy.com</a>.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 17: ELECTRONIC COMMUNICATIONS -->
-        <!-- ============================================================ -->
         <h2 id="section17">17. Electronic Communications</h2>
 
         <p>By creating an account and using Camp Card, you consent to receive electronic communications from Swipe Savvy, including but not limited to:</p>
@@ -855,14 +774,12 @@
 
         <p>You may manage your communication preferences through the App's notification settings or by contacting <a href="mailto:support@swipesavvy.com">support@swipesavvy.com</a>. Please note that certain communications (such as account security alerts, billing notices, and legal updates) are transactional in nature and cannot be opted out of while your account remains active.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 18: CHANGES TO TERMS -->
-        <!-- ============================================================ -->
         <h2 id="section18">18. Changes to Terms</h2>
 
         <p>Swipe Savvy reserves the right to modify, amend, or update these Terms at any time and at our sole discretion. When we make changes:</p>
         <ul>
-            <li><strong>Posting:</strong> Updated Terms will be posted on our website at <a href="https://www.campcardapp.org/terms">https://www.campcardapp.org/terms</a> and within the App. The "Last Updated" date at the top of these Terms will be revised accordingly</li>
+            <li><strong>Posting:</strong> Updated Terms will be posted on our website at <a href="https://www.campcardapp.org/terms/">https://www.campcardapp.org/terms/</a> and within the App. The "Last Updated" date at the top of these Terms will be revised accordingly</li>
             <li><strong>Notification:</strong> For material changes, we will provide notice through one or more of the following methods: email notification to the address associated with your account, in-app notification or banner, push notification (if enabled), or prominent notice on our website</li>
             <li><strong>Effective Date:</strong> Changes will be effective upon posting unless otherwise stated. For material changes, we will provide at least 15 days' notice before the changes take effect</li>
             <li><strong>Continued Use:</strong> Your continued use of the Service after the effective date of any changes constitutes your acceptance of the revised Terms. If you do not agree to the revised Terms, you must stop using the Service and may terminate your account in accordance with Section 13.1</li>
@@ -870,14 +787,12 @@
 
         <p>We encourage you to periodically review these Terms to stay informed of any changes. It is your responsibility to review the Terms for any modifications.</p>
 
-        <!-- ============================================================ -->
         <!-- SECTION 19: GENERAL PROVISIONS -->
-        <!-- ============================================================ -->
         <h2 id="section19">19. General Provisions</h2>
 
         <h3>19.1 Entire Agreement</h3>
 
-        <p>These Terms, together with the <a href="/privacy">Privacy Policy</a> and any other legal documents or policies referenced herein, constitute the entire agreement between you and Swipe Savvy regarding your use of the Service. These Terms supersede all prior and contemporaneous agreements, understandings, representations, and warranties, both written and oral, regarding the Service.</p>
+        <p>These Terms, together with the <a href="/privacy/">Privacy Policy</a> and any other legal documents or policies referenced herein, constitute the entire agreement between you and Swipe Savvy regarding your use of the Service. These Terms supersede all prior and contemporaneous agreements, understandings, representations, and warranties, both written and oral, regarding the Service.</p>
 
         <h3>19.2 Severability</h3>
 
@@ -907,9 +822,7 @@
             <li><strong>Google LLC:</strong> Google and its subsidiaries are third-party beneficiaries of these Terms with respect to users who access the Service through the Google Play Store. Upon your acceptance of these Terms, Google has the right to enforce these Terms against you as a third-party beneficiary thereof (see Section 21)</li>
         </ul>
 
-        <!-- ============================================================ -->
         <!-- SECTION 20: APPLE APP STORE TERMS -->
-        <!-- ============================================================ -->
         <h2 id="section20">20. Apple App Store Terms</h2>
 
         <p>The following additional terms apply if you download or use the Camp Card application through the Apple App Store:</p>
@@ -926,9 +839,7 @@
             <li>You must comply with all applicable third-party terms of agreement when using the App (e.g., your wireless data service agreement)</li>
         </ul>
 
-        <!-- ============================================================ -->
         <!-- SECTION 21: GOOGLE PLAY STORE TERMS -->
-        <!-- ============================================================ -->
         <h2 id="section21">21. Google Play Store Terms</h2>
 
         <p>The following additional terms apply if you download or use the Camp Card application through the Google Play Store:</p>
@@ -944,9 +855,7 @@
             <li>You must comply with all applicable Google Play Store policies and developer guidelines when using the App</li>
         </ul>
 
-        <!-- ============================================================ -->
         <!-- SECTION 22: CONTACT INFORMATION -->
-        <!-- ============================================================ -->
         <h2 id="section22">22. Contact Information</h2>
 
         <p>If you have any questions, concerns, or feedback about these Terms of Service, please contact us through the following channels:</p>
@@ -996,16 +905,20 @@
             These Terms of Service comply with Apple App Store, Google Play Store, COPPA, and applicable US consumer protection requirements.<br>
             Copyright 2026 Swipe Savvy, LLC. All rights reserved.
         </p>
-    </main>
+  </div>
+</main>
 
-    <footer>
-        <p><strong>Swipe Savvy, LLC</strong> - Publisher of Camp Card</p>
-        <p>
-            <a href="/privacy">Privacy Policy</a> |
-            <a href="/terms">Terms of Service</a> |
-            <a href="mailto:support@swipesavvy.com">Contact Us</a>
-        </p>
-        <p style="margin-top: 1rem; font-size: 0.9rem;">Copyright 2026 Swipe Savvy, LLC. All rights reserved.</p>
-    </footer>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div>&copy; Scouting America — Central Florida Council &bull; <a href="/" style="color:inherit;text-decoration:none;">Camp Card</a></div>
+    <div class="footer-links">
+      <a href="/privacy/">Privacy</a>
+      <span aria-hidden="true">&bull;</span>
+      <a href="/terms/">Terms</a>
+      <span aria-hidden="true">&bull;</span>
+      <a href="/contact/">Support</a>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
