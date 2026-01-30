@@ -205,7 +205,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Welcome to the Camp Card Family!",
             BSA_NAVY,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Welcome to BSA Camp Card! You've joined thousands of families supporting Scouts across America.</p>
 
@@ -256,7 +256,7 @@ public class EmailService {
             <p style="font-size: 16px; color: #333333; margin-top: 24px;">Ready to explore? Open the app and start discovering offers near you!</p>
             <p style="font-size: 16px; color: #333333;">Happy Scouting!</p>
             <p style="font-size: 14px; color: #666666;"><em>The BSA Camp Card Team</em></p>
-            """.formatted(firstName, BSA_NAVY)
+            """).formatted(firstName, BSA_NAVY)
         );
 
         String textBody = """
@@ -302,7 +302,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Your Scouting Adventure Awaits!",
             BSA_NAVY,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Congratulations on joining the BSA Camp Card program with <strong>Troop %s</strong>!</p>
 
@@ -330,7 +330,7 @@ public class EmailService {
 
             <p style="font-size: 16px; color: #333333; margin-top: 24px;">Do Your Best!</p>
             <p style="font-size: 14px; color: #666666;"><em>The BSA Camp Card Team</em></p>
-            """.formatted(scoutFirstName, troopNumber, BSA_NAVY, BSA_NAVY, referralCode, BSA_NAVY, referralUrl, BSA_NAVY, referralUrl)
+            """).formatted(scoutFirstName, troopNumber, BSA_NAVY, BSA_NAVY, referralCode, BSA_NAVY, referralUrl, BSA_NAVY, referralUrl)
         );
 
         String textBody = """
@@ -375,7 +375,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Lead Your Troop to Success!",
             BSA_NAVY,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Welcome to the BSA Camp Card program! As the leader of <strong>Troop %s</strong>, you now have access to powerful tools to manage your troop's fundraising campaign.</p>
 
@@ -429,7 +429,7 @@ public class EmailService {
 
             <p style="font-size: 16px; color: #333333; margin-top: 24px;">Thank you for leading the way!</p>
             <p style="font-size: 14px; color: #666666;"><em>The BSA Camp Card Team</em></p>
-            """.formatted(firstName, troopNumber, BSA_NAVY)
+            """).formatted(firstName, troopNumber, BSA_NAVY)
         );
 
         String textBody = """
@@ -477,7 +477,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "You've Got a New Referral!",
             SUCCESS_GREEN,
-            """
+            ("""
             <div style="text-align: center; padding: 24px 0;">
                 <span style="font-size: 64px;">🎉</span>
             </div>
@@ -490,7 +490,7 @@ public class EmailService {
             """ + buildButton("View Your Progress", webPortalUrl + "/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px; text-align: center;">Keep sharing your referral link to earn more!</p>
-            """.formatted(scoutName, customerName)
+            """).formatted(scoutName, customerName)
         );
 
         String textBody = """
@@ -525,7 +525,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Milestone Achieved!",
             BSA_GOLD,
-            """
+            ("""
             <div style="text-align: center; padding: 24px 0;">
                 <span style="font-size: 64px;">🏆</span>
             </div>
@@ -542,7 +542,7 @@ public class EmailService {
             """ + buildButton("Share Your Achievement", webPortalUrl + "/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px; text-align: center;">Do Your Best!</p>
-            """.formatted(scoutName, BSA_GOLD, milestoneName, salesCount, milestoneName)
+            """).formatted(scoutName, BSA_GOLD, milestoneName, salesCount, milestoneName)
         );
 
         String textBody = """
@@ -586,7 +586,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Subscription Confirmed",
             SUCCESS_GREEN,
-            """
+            ("""
             <div style="text-align: center; padding: 24px 0;">
                 <span style="font-size: 64px;">✅</span>
             </div>
@@ -616,7 +616,7 @@ public class EmailService {
             """ + buildButton("Browse Offers", webPortalUrl + "/offers", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Thank you for supporting local Scouts!</p>
-            """.formatted(firstName, BSA_NAVY, planName, formattedAmount, formattedDate)
+            """).formatted(firstName, BSA_NAVY, planName, formattedAmount, formattedDate)
         );
 
         String textBody = """
@@ -661,7 +661,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Subscription Expiring Soon",
             WARNING_ORANGE,
-            """
+            ("""
             <div style="text-align: center; padding: 24px 0;">
                 <span style="font-size: 64px;">⏰</span>
             </div>
@@ -677,7 +677,7 @@ public class EmailService {
             """ + buildButton("Renew Subscription", staticSiteUrl + "/buy-campcard/", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact us at support@campcardapp.org</p>
-            """.formatted(firstName, formattedDate, daysRemaining, daysRemaining == 1 ? "" : "s")
+            """).formatted(firstName, formattedDate, daysRemaining, daysRemaining == 1 ? "" : "s")
         );
 
         String textBody = """
@@ -716,7 +716,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Subscription Expired",
             BSA_RED,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Your BSA Camp Card subscription has expired. You no longer have access to exclusive merchant offers.</p>
 
@@ -735,7 +735,7 @@ public class EmailService {
             """ + buildButton("Renew Now", staticSiteUrl + "/buy-campcard/", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">We hope to see you back soon!</p>
-            """.formatted(firstName)
+            """).formatted(firstName)
         );
 
         String textBody = """
@@ -866,7 +866,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "You've Received a Gift!",
             BSA_GOLD,
-            """
+            ("""
             <div style="text-align: center; padding: 24px 0;">
                 <span style="font-size: 64px;">🎁</span>
             </div>
@@ -893,7 +893,7 @@ public class EmailService {
             <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #856404;"><strong>Important:</strong> Claim your gift before %s to activate your card.</p>
             </div>
-            """.formatted(
+            """).formatted(
                 recipientName != null && !recipientName.isBlank() ? recipientName : "there",
                 senderName,
                 giftMessageHtml,
@@ -1118,7 +1118,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Gift Waiting for You!",
             headerColor,
-            """
+            ("""
             <div style="text-align: center; padding: 24px 0;">
                 <span style="font-size: 64px;">⏳</span>
             </div>
@@ -1140,7 +1140,7 @@ public class EmailService {
                 <li>Support for Scouts in your community</li>
                 <li>One-time use offers that refresh when you activate another card</li>
             </ul>
-            """.formatted(
+            """).formatted(
                 recipientName != null && !recipientName.isBlank() ? recipientName : "there",
                 urgencyMessage,
                 senderName,
@@ -1304,7 +1304,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Card Expiring Soon",
             headerColor,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Your BSA Camp Card is expiring soon!</p>
 
@@ -1335,7 +1335,7 @@ public class EmailService {
             """ + buildButton("Open Camp Card App", baseUrl, BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">All Camp Cards expire on December 31st. Thank you for supporting Scouts!</p>
-            """.formatted(ownerName, urgencyBanner, cardNumber, headerColor, formattedExpiry, unusedOffersMessage)
+            """).formatted(ownerName, urgencyBanner, cardNumber, headerColor, formattedExpiry, unusedOffersMessage)
         );
 
         String textBody = """
@@ -1676,7 +1676,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Application Update",
             BSA_NAVY,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Thank you for your interest in joining the BSA Camp Card merchant network with <strong>%s</strong>.</p>
             <p style="font-size: 16px; color: #333333;">After reviewing your application, we are unable to approve it at this time.</p>
@@ -1691,7 +1691,7 @@ public class EmailService {
             """ + buildButton("Contact Support", "mailto:merchants@campcardapp.org", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">We appreciate your interest in supporting Scouts and hope to work with you in the future.</p>
-            """.formatted(contactName, businessName, BSA_NAVY, reason)
+            """).formatted(contactName, businessName, BSA_NAVY, reason)
         );
 
         String textBody = """
@@ -1735,7 +1735,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "You're Invited to Join!",
             BSA_NAVY,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;"><strong>%s</strong> has invited you to join the BSA Camp Card program with <strong>Troop %s</strong>!</p>
 
@@ -1763,7 +1763,7 @@ public class EmailService {
             <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #856404;"><strong>This invitation expires in 7 days.</strong></p>
             </div>
-            """.formatted(scoutName, inviterName, troopNumber, BSA_NAVY, BSA_NAVY, inviteUrl)
+            """).formatted(scoutName, inviterName, troopNumber, BSA_NAVY, BSA_NAVY, inviteUrl)
         );
 
         String textBody = """
@@ -1805,7 +1805,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Support Your Scout!",
             BSA_GOLD,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Your Scout, <strong>%s</strong>, is participating in the BSA Camp Card fundraising program with <strong>Troop %s</strong>!</p>
 
@@ -1845,7 +1845,7 @@ public class EmailService {
             """ + buildButton("Create Parent Account", inviteUrl, BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Thank you for supporting Scouting!</p>
-            """.formatted(parentName, scoutName, troopNumber, BSA_NAVY)
+            """).formatted(parentName, scoutName, troopNumber, BSA_NAVY)
         );
 
         String textBody = """
@@ -1889,7 +1889,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Council Admin Access Granted",
             BSA_NAVY,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">You've been granted administrator access for <strong>%s</strong> in the BSA Camp Card system.</p>
 
@@ -1938,7 +1938,7 @@ public class EmailService {
             """ + buildButton("Access Admin Dashboard", webPortalUrl + "/admin/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Questions? Contact national support at support@campcardapp.org</p>
-            """.formatted(firstName, councilName, BSA_NAVY)
+            """).formatted(firstName, councilName, BSA_NAVY)
         );
 
         String textBody = """
@@ -1983,7 +1983,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "New Offer Available!",
             BSA_GOLD,
-            """
+            ("""
             <div style="text-align: center; padding: 16px 0;">
                 <span style="font-size: 48px;">🎉</span>
             </div>
@@ -1999,7 +1999,7 @@ public class EmailService {
             """ + buildButton("View Offer", webPortalUrl + "/offers", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px; text-align: center;">Don't miss out - redeem this offer today!</p>
-            """.formatted(firstName, BSA_GOLD, merchantName, offerTitle, discountDescription)
+            """).formatted(firstName, BSA_GOLD, merchantName, offerTitle, discountDescription)
         );
 
         String textBody = """
@@ -2041,7 +2041,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Weekly Troop Summary",
             BSA_NAVY,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Here's this week's fundraising summary for <strong>Troop %s</strong>:</p>
 
@@ -2065,7 +2065,7 @@ public class EmailService {
             """ + buildButton("View Full Report", webPortalUrl + "/leader/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Keep up the great work!</p>
-            """.formatted(
+            """).formatted(
                 leaderName, troopNumber, BSA_NAVY, totalSales, BSA_NAVY, newSubscribers,
                 SUCCESS_GREEN, formattedAmount,
                 topScoutName != null ? """
@@ -2114,7 +2114,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Account Deactivated",
             BSA_RED,
-            """
+            ("""
             <p style="font-size: 18px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">Your BSA Camp Card account has been deactivated.</p>
 
@@ -2128,7 +2128,7 @@ public class EmailService {
             """ + buildButton("Contact Support", "mailto:support@campcardapp.org", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">We're here to help if you need assistance.</p>
-            """.formatted(firstName, BSA_RED, reason)
+            """).formatted(firstName, BSA_RED, reason)
         );
 
         String textBody = """
@@ -2163,7 +2163,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Your Merchant Account is Approved!",
             SUCCESS_GREEN,
-            """
+            ("""
             <div style="text-align: center; padding: 24px 0;">
                 <span style="font-size: 64px;">✅</span>
             </div>
@@ -2183,7 +2183,7 @@ public class EmailService {
             """ + buildButton("Access Merchant Dashboard", webPortalUrl + "/merchant/dashboard", BSA_NAVY) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Welcome to the Camp Card family!</p>
-            """.formatted(contactName, businessName, BSA_NAVY)
+            """).formatted(contactName, businessName, BSA_NAVY)
         );
 
         String textBody = """
@@ -2385,7 +2385,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Account Deletion Requested",
             BSA_RED,
-            """
+            ("""
             <p style="font-size: 16px; color: #333333;">Hi %s,</p>
             <p style="font-size: 16px; color: #333333;">We've received a request to delete your BSA Camp Card account.</p>
 
@@ -2410,7 +2410,7 @@ public class EmailService {
                 <p style="margin: 0; font-size: 14px; color: #721c24;"><strong>Didn't request this?</strong></p>
                 <p style="margin: 8px 0 0 0; font-size: 14px; color: #721c24;">Contact us immediately at support@campcardapp.org to secure your account.</p>
             </div>
-            """.formatted(firstName, BSA_RED)
+            """).formatted(firstName, BSA_RED)
         );
 
         String textBody = """
@@ -2518,7 +2518,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Parental Consent Required",
             WARNING_ORANGE,
-            """
+            ("""
             <p style="font-size: 16px; color: #333333;">Hello %s,</p>
             <p style="font-size: 16px; color: #333333;">Your child, <strong>%s</strong> (age %s), has been registered for a BSA Camp Card account by their Unit Leader.</p>
 
@@ -2549,7 +2549,7 @@ public class EmailService {
             </div>
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">If you have questions, please contact your child's Unit Leader or email us at support@campcardapp.org.</p>
-            """.formatted(parentName, minorName, minorAge, consentUrl)
+            """).formatted(parentName, minorName, minorAge, consentUrl)
         );
 
         String textBody = """
@@ -2605,7 +2605,7 @@ public class EmailService {
         String htmlBody = buildEmailTemplate(
             "Account Approved!",
             SUCCESS_GREEN,
-            """
+            ("""
             <p style="font-size: 16px; color: #333333;">Great news, %s!</p>
             <p style="font-size: 16px; color: #333333;">Your parent or guardian has approved your BSA Camp Card account. You're all set to start discovering exclusive offers and supporting your unit's fundraising efforts!</p>
 
@@ -2622,7 +2622,7 @@ public class EmailService {
             """ + buildButton("Open Camp Card", loginUrl, SUCCESS_GREEN) + """
 
             <p style="font-size: 14px; color: #666666; margin-top: 24px;">Download the Camp Card app from the App Store or Google Play to start exploring offers in your area.</p>
-            """.formatted(firstName, locationStatus)
+            """).formatted(firstName, locationStatus)
         );
 
         String textBody = """
