@@ -474,7 +474,7 @@ export default function AnalyticsPage() {
         return { value: d.failedTransactions || 0, change: 0 };
       // System
       case 'system_uptime':
-        return { value: '99.9%', change: 0 };
+        return { value: `${d.systemUptime || 99.9}%`, change: 0 };
       // BSA Troops & Scouts
       case 'total_troops':
         return { value: d.totalTroops || 0, change: d.troopsTrend || 0 };
