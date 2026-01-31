@@ -29,6 +29,36 @@ public class DashboardResponse {
     private Long totalOffers;
     private Long activeOffers;
 
+    // User Metrics
+    private Long totalUsers;
+    private Long activeUsers;
+    private Long newUsersLast30Days;
+
+    // Subscription Metrics
+    private Long totalSubscriptions;
+    private Long activeSubscriptions;
+    private Long monthlyPlans;
+    private Long annualPlans;
+    private Long trialUsers;
+    private Long cancellations;
+    private Long mrr;       // Monthly Recurring Revenue in dollars
+    private Long arr;       // Annual Recurring Revenue in dollars
+    private Double churnRate;
+    private Double retentionRate;
+    private Double upgradeRate;
+    private Double downgradeRate;
+
+    // Card Metrics
+    private Long totalCards;
+    private Long activeCards;
+    private Long totalRedemptions;
+
+    // Revenue / Transaction Metrics
+    private Long totalRevenueCents;
+    private Long totalTransactions;
+    private Long failedTransactions;
+    private Long avgTransactionCents;
+
     // Trend Data (percentage change from previous period)
     private Double salesTrend;
     private Double scoutsTrend;
@@ -44,6 +74,9 @@ public class DashboardResponse {
 
     // Time series data for charts
     private List<TimeSeriesPoint> salesTrend30Days;
+
+    // Offer distribution by category
+    private List<CategoryCount> offerDistribution;
 
     @Data
     @Builder
@@ -127,5 +160,14 @@ public class DashboardResponse {
     public static class TimeSeriesPoint {
         private String date;
         private BigDecimal value;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CategoryCount {
+        private String name;
+        private Long value;
     }
 }

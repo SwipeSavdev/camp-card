@@ -3,6 +3,8 @@ package com.bsa.campcard.service;
 import com.bsa.campcard.dto.DashboardResponse;
 import com.bsa.campcard.dto.DashboardResponse.*;
 import com.bsa.campcard.entity.*;
+import com.bsa.campcard.entity.CardOrder;
+import com.bsa.campcard.entity.CampCard;
 import com.bsa.campcard.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,12 @@ public class DashboardService {
     private final MerchantRepository merchantRepository;
     private final OfferRepository offerRepository;
     private final ReferralRepository referralRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final SubscriptionPlanRepository subscriptionPlanRepository;
+    private final org.bsa.campcard.domain.user.UserRepository userRepository;
+    private final CampCardRepository campCardRepository;
+    private final CardOrderRepository cardOrderRepository;
+    private final OfferRedemptionRepository offerRedemptionRepository;
 
     public DashboardResponse getDashboardData() {
         return getDashboardData(null);
@@ -75,6 +83,73 @@ public class DashboardService {
             }
         }
 
+        // Subscription analytics
+        List<Subscription> allSubscriptions = subscriptionRepository.findAll();
+        long totalSubscriptions = allSubscriptions.stream()
+                .filter(s -> s.getDeletedAt() == null)
+                .count();
+        long activeSubscriptions = allSubscriptions.stream()
+                .filter(s -> s.getStatus() == Subscription.SubscriptionStatus.ACTIVE && s.getDeletedAt() == null)
+                .count();
+        long canceledSubscriptions = allSubscriptions.stream()
+                .filter(s -> s.getStatus() == Subscription.SubscriptionStatus.CANCELED && s.getDeletedAt() == null)
+                .count();
+
+        // Count plans by billing interval
+        Map<Long, SubscriptionPlan> planMap = new HashMap<>();
+        for (SubscriptionPlan plan : subscriptionPlanRepository.findAll()) {
+            planMap.put(plan.getId(), plan);
+        }
+
+        long monthlyPlans = 0;
+        long annualPlans = 0;
+        long mrrCents = 0;
+        for (Subscription sub : allSubscriptions) {
+            if (sub.getStatus() != Subscription.SubscriptionStatus.ACTIVE || sub.getDeletedAt() != null) continue;
+            SubscriptionPlan plan = planMap.get(sub.getPlanId());
+            if (plan == null) continue;
+            if (plan.getBillingInterval() == SubscriptionPlan.BillingInterval.MONTHLY) {
+                monthlyPlans++;
+                mrrCents += plan.getPriceCents();
+            } else {
+                annualPlans++;
+                mrrCents += plan.getPriceCents() / 12;
+            }
+        }
+        long arrCents = mrrCents * 12;
+
+        // Churn rate: canceled / total (as percentage)
+        double churnRate = totalSubscriptions > 0 ?
+                (double) canceledSubscriptions / totalSubscriptions * 100 : 0.0;
+        double retentionRate = 100.0 - churnRate;
+
+        // User metrics
+        long totalUsersCount = userRepository.count();
+        long activeUsersCount = userRepository.findAll().stream()
+                .filter(u -> u.getIsActive() != null && u.getIsActive())
+                .count();
+        long newUsersLast30Days = userRepository.findAll().stream()
+                .filter(u -> u.getCreatedAt() != null &&
+                        u.getCreatedAt().isAfter(LocalDateTime.now().minusDays(30)))
+                .count();
+
+        // Card metrics
+        long totalCardsCount = campCardRepository.count();
+        long activeCardsCount = campCardRepository.findByStatusIn(
+                List.of(CampCard.CampCardStatus.ACTIVE, CampCard.CampCardStatus.UNASSIGNED))
+                .size();
+        long totalRedemptionsCount = offerRedemptionRepository.count();
+
+        // Transaction / Revenue metrics
+        Long totalRevenueCentsVal = cardOrderRepository.getTotalRevenueCents();
+        if (totalRevenueCentsVal == null) totalRevenueCentsVal = 0L;
+        long totalTransactionsCount = cardOrderRepository.findByPaymentStatusIn(
+                List.of(CardOrder.PaymentStatus.PAID)).size();
+        long failedTransactionsCount = cardOrderRepository.findByPaymentStatusIn(
+                List.of(CardOrder.PaymentStatus.FAILED)).size();
+        long avgTransactionCentsVal = totalTransactionsCount > 0 ?
+                totalRevenueCentsVal / totalTransactionsCount : 0L;
+
         // Get BSA reporting data
         List<TroopSalesData> troopSales = getTroopSalesData();
         List<TroopRecruitingData> troopRecruiting = getTroopRecruitingData();
@@ -84,6 +159,9 @@ public class DashboardService {
 
         // Get time series data
         List<TimeSeriesPoint> salesTrend30Days = generateSalesTrend30Days();
+
+        // Offer distribution by category
+        List<DashboardResponse.CategoryCount> offerDistribution = getOfferDistribution();
 
         return DashboardResponse.builder()
                 .totalTroops(totalTroops)
@@ -99,6 +177,33 @@ public class DashboardService {
                 .activeMerchants(activeMerchants)
                 .totalOffers(totalOffers)
                 .activeOffers(activeOffers)
+                // User metrics
+                .totalUsers(totalUsersCount)
+                .activeUsers(activeUsersCount)
+                .newUsersLast30Days(newUsersLast30Days)
+                // Subscription metrics
+                .totalSubscriptions(totalSubscriptions)
+                .activeSubscriptions(activeSubscriptions)
+                .monthlyPlans(monthlyPlans)
+                .annualPlans(annualPlans)
+                .trialUsers(0L)
+                .cancellations(canceledSubscriptions)
+                .mrr(mrrCents / 100)
+                .arr(arrCents / 100)
+                .churnRate(Math.round(churnRate * 10.0) / 10.0)
+                .retentionRate(Math.round(retentionRate * 10.0) / 10.0)
+                .upgradeRate(0.0)
+                .downgradeRate(0.0)
+                // Card metrics
+                .totalCards(totalCardsCount)
+                .activeCards(activeCardsCount)
+                .totalRedemptions(totalRedemptionsCount)
+                // Revenue / Transaction metrics
+                .totalRevenueCents(totalRevenueCentsVal)
+                .totalTransactions(totalTransactionsCount)
+                .failedTransactions(failedTransactionsCount)
+                .avgTransactionCents(avgTransactionCentsVal)
+                // Trends
                 .salesTrend(calculateTrend())
                 .scoutsTrend(calculateTrend())
                 .troopsTrend(calculateTrend())
@@ -109,6 +214,7 @@ public class DashboardService {
                 .scoutReferrals(scoutReferrals)
                 .customerReferrals(customerReferrals)
                 .salesTrend30Days(salesTrend30Days)
+                .offerDistribution(offerDistribution)
                 .build();
     }
 
@@ -321,29 +427,71 @@ public class DashboardService {
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd");
 
-        BigDecimal baseSales = councilRepository.getTotalActiveSales();
-        if (baseSales == null) baseSales = BigDecimal.valueOf(10000);
+        LocalDateTime startDate = today.minusDays(29).atStartOfDay();
+        LocalDateTime endDate = today.plusDays(1).atStartOfDay();
 
-        Random random = new Random(42); // Seed for consistency
-        for (int i = 29; i >= 0; i--) {
-            LocalDate date = today.minusDays(i);
-            // Simulate daily variation
-            double variance = 0.8 + (random.nextDouble() * 0.4);
-            BigDecimal dailySales = baseSales.multiply(BigDecimal.valueOf(variance / 30));
+        try {
+            List<Object[]> dailyRevenue = cardOrderRepository.getDailyRevenueBetweenDates(startDate, endDate);
+            Map<String, BigDecimal> revenueByDate = new HashMap<>();
+            for (Object[] row : dailyRevenue) {
+                // row[0] = DATE, row[1] = totalRevenueCents, row[2] = totalQuantity
+                LocalDate rowDate;
+                if (row[0] instanceof java.sql.Date) {
+                    rowDate = ((java.sql.Date) row[0]).toLocalDate();
+                } else if (row[0] instanceof LocalDate) {
+                    rowDate = (LocalDate) row[0];
+                } else {
+                    continue;
+                }
+                long revenueCents = row[1] instanceof Number ? ((Number) row[1]).longValue() : 0L;
+                revenueByDate.put(rowDate.format(formatter),
+                        BigDecimal.valueOf(revenueCents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            }
 
-            data.add(TimeSeriesPoint.builder()
-                    .date(date.format(formatter))
-                    .value(dailySales.setScale(2, RoundingMode.HALF_UP))
-                    .build());
+            // Fill in all 30 days (0 for days with no orders)
+            for (int i = 29; i >= 0; i--) {
+                LocalDate date = today.minusDays(i);
+                String key = date.format(formatter);
+                data.add(TimeSeriesPoint.builder()
+                        .date(key)
+                        .value(revenueByDate.getOrDefault(key, BigDecimal.ZERO))
+                        .build());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch daily revenue data, returning empty trend", e);
+            // Return 30 days of zero values
+            for (int i = 29; i >= 0; i--) {
+                LocalDate date = today.minusDays(i);
+                data.add(TimeSeriesPoint.builder()
+                        .date(date.format(formatter))
+                        .value(BigDecimal.ZERO)
+                        .build());
+            }
         }
 
         return data;
     }
 
+    private List<DashboardResponse.CategoryCount> getOfferDistribution() {
+        List<Offer> allOffers = offerRepository.findAll();
+        Map<String, Long> countByCategory = allOffers.stream()
+                .filter(o -> o.getStatus() == Offer.OfferStatus.ACTIVE)
+                .collect(Collectors.groupingBy(
+                        o -> o.getCategory() != null ? o.getCategory() : "Uncategorized",
+                        Collectors.counting()
+                ));
+        return countByCategory.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .map(e -> DashboardResponse.CategoryCount.builder()
+                        .name(e.getKey())
+                        .value(e.getValue())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     private Double calculateTrend() {
-        // Simulate a trend value between -20 and +50
-        Random random = new Random();
-        return Math.round((random.nextDouble() * 70 - 20) * 10.0) / 10.0;
+        // No historical period comparison data available yet
+        return 0.0;
     }
 
     private String formatRank(String rank) {

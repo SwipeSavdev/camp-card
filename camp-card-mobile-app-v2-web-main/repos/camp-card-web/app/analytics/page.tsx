@@ -243,164 +243,6 @@ const availableMetrics: AvailableMetric[] = [
   },
 ];
 
-// Generate time series data for charts
-const generateTimeSeriesData = (days: number, baseValue: number, variance: number) => {
-  const data = [];
-  const now = new Date();
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      value: Math.round(baseValue + (Math.random() - 0.5) * variance * 2),
-    });
-  }
-  return data;
-};
-
-const mockChartData: Record<string, any> = {
-  user_trend: generateTimeSeriesData(30, 12000, 1500),
-  offer_redemptions: generateTimeSeriesData(30, 1500, 400),
-  subscription_trend: generateTimeSeriesData(30, 8000, 500),
-  revenue_trend: generateTimeSeriesData(30, 18000, 3000),
-  troop_sales_trend: generateTimeSeriesData(30, 45000, 8000),
-  merchant_onboarding: [
-    { name: 'Jan', value: 18 },
-    { name: 'Feb', value: 22 },
-    { name: 'Mar', value: 19 },
-    { name: 'Apr', value: 28 },
-    { name: 'May', value: 32 },
-    { name: 'Jun', value: 23 },
-  ],
-  cards_redeemed: [
-    { name: 'Jan', value: 1850 },
-    { name: 'Feb', value: 2100 },
-    { name: 'Mar', value: 1920 },
-    { name: 'Apr', value: 2450 },
-    { name: 'May', value: 2680 },
-    { name: 'Jun', value: 2702 },
-  ],
-  transaction_volume: [
-    { name: 'Mon', value: 820 },
-    { name: 'Tue', value: 932 },
-    { name: 'Wed', value: 901 },
-    { name: 'Thu', value: 934 },
-    { name: 'Fri', value: 1290 },
-    { name: 'Sat', value: 1330 },
-    { name: 'Sun', value: 1214 },
-  ],
-  offer_distribution: [
-    { name: 'Food & Dining', value: 35 },
-    { name: 'Retail', value: 28 },
-    { name: 'Entertainment', value: 18 },
-    { name: 'Services', value: 12 },
-    { name: 'Other', value: 7 },
-  ],
-  plan_distribution: [
-    { name: 'Monthly Basic', value: 2100 },
-    { name: 'Monthly Pro', value: 1321 },
-    { name: 'Annual Basic', value: 2500 },
-    { name: 'Annual Pro', value: 1733 },
-  ],
-  // Troop Unit Sales Data
-  troop_sales: [
-    { id: 'troop-101', name: 'Troop 101', council: 'Greater Los Angeles', sales: 12450, scouts: 24, avgPerScout: 518.75, trend: 15.2 },
-    { id: 'troop-205', name: 'Troop 205', council: 'San Francisco Bay', sales: 9830, scouts: 18, avgPerScout: 546.11, trend: 8.5 },
-    { id: 'troop-312', name: 'Troop 312', council: 'Denver Area', sales: 8920, scouts: 22, avgPerScout: 405.45, trend: 12.3 },
-    { id: 'troop-418', name: 'Troop 418', council: 'Chicago Suburbs', sales: 7650, scouts: 15, avgPerScout: 510.00, trend: -2.1 },
-    { id: 'troop-523', name: 'Troop 523', council: 'Dallas Metro', sales: 6890, scouts: 20, avgPerScout: 344.50, trend: 22.8 },
-    { id: 'troop-634', name: 'Troop 634', council: 'Seattle Area', sales: 6450, scouts: 16, avgPerScout: 403.13, trend: 5.7 },
-    { id: 'troop-742', name: 'Troop 742', council: 'Phoenix Valley', sales: 5980, scouts: 14, avgPerScout: 427.14, trend: 18.4 },
-    { id: 'troop-856', name: 'Troop 856', council: 'Atlanta Metro', sales: 5420, scouts: 12, avgPerScout: 451.67, trend: 9.2 },
-  ],
-  // Scout Recruiting by Troop
-  troop_recruiting: [
-    { id: 'troop-101', name: 'Troop 101', council: 'Greater Los Angeles', newScouts: 8, totalScouts: 24, recruitingGoal: 10, percentOfGoal: 80, trend: 33.3 },
-    { id: 'troop-205', name: 'Troop 205', council: 'San Francisco Bay', newScouts: 5, totalScouts: 18, recruitingGoal: 6, percentOfGoal: 83.3, trend: 25.0 },
-    { id: 'troop-312', name: 'Troop 312', council: 'Denver Area', newScouts: 7, totalScouts: 22, recruitingGoal: 8, percentOfGoal: 87.5, trend: 16.7 },
-    { id: 'troop-418', name: 'Troop 418', council: 'Chicago Suburbs', newScouts: 3, totalScouts: 15, recruitingGoal: 5, percentOfGoal: 60, trend: -25.0 },
-    { id: 'troop-523', name: 'Troop 523', council: 'Dallas Metro', newScouts: 6, totalScouts: 20, recruitingGoal: 7, percentOfGoal: 85.7, trend: 50.0 },
-    { id: 'troop-634', name: 'Troop 634', council: 'Seattle Area', newScouts: 4, totalScouts: 16, recruitingGoal: 5, percentOfGoal: 80, trend: 0 },
-  ],
-  // Individual Scout Sales Data
-  scout_sales: [
-    { id: 'scout-1', name: 'Michael Johnson', troop: 'Troop 101', sales: 1250, cards: 25, referrals: 8, rank: 'Eagle Scout', trend: 28.5 },
-    { id: 'scout-2', name: 'David Chen', troop: 'Troop 101', sales: 980, cards: 19, referrals: 5, rank: 'Life Scout', trend: 15.2 },
-    { id: 'scout-3', name: 'James Wilson', troop: 'Troop 205', sales: 875, cards: 17, referrals: 6, rank: 'Star Scout', trend: 22.1 },
-    { id: 'scout-4', name: 'Robert Garcia', troop: 'Troop 312', sales: 820, cards: 16, referrals: 4, rank: 'First Class', trend: 8.7 },
-    { id: 'scout-5', name: 'William Brown', troop: 'Troop 101', sales: 750, cards: 15, referrals: 7, rank: 'Eagle Scout', trend: 12.3 },
-    { id: 'scout-6', name: 'Christopher Lee', troop: 'Troop 418', sales: 680, cards: 13, referrals: 3, rank: 'Life Scout', trend: -5.2 },
-    { id: 'scout-7', name: 'Daniel Martinez', troop: 'Troop 523', sales: 645, cards: 12, referrals: 9, rank: 'Star Scout', trend: 35.8 },
-    { id: 'scout-8', name: 'Matthew Taylor', troop: 'Troop 205', sales: 590, cards: 11, referrals: 2, rank: 'Second Class', trend: 18.4 },
-    { id: 'scout-9', name: 'Andrew Anderson', troop: 'Troop 634', sales: 540, cards: 10, referrals: 5, rank: 'First Class', trend: 10.1 },
-    { id: 'scout-10', name: 'Joshua Thomas', troop: 'Troop 742', sales: 485, cards: 9, referrals: 4, rank: 'Tenderfoot', trend: 45.2 },
-  ],
-  // Scout Referrals Data
-  scout_referrals: [
-    { id: 'scout-7', name: 'Daniel Martinez', troop: 'Troop 523', referrals: 9, conversions: 7, revenue: 350, conversionRate: 77.8, trend: 50.0 },
-    { id: 'scout-1', name: 'Michael Johnson', troop: 'Troop 101', referrals: 8, conversions: 6, revenue: 300, conversionRate: 75.0, trend: 33.3 },
-    { id: 'scout-5', name: 'William Brown', troop: 'Troop 101', referrals: 7, conversions: 5, revenue: 250, conversionRate: 71.4, trend: 16.7 },
-    { id: 'scout-3', name: 'James Wilson', troop: 'Troop 205', referrals: 6, conversions: 5, revenue: 250, conversionRate: 83.3, trend: 20.0 },
-    { id: 'scout-2', name: 'David Chen', troop: 'Troop 101', referrals: 5, conversions: 4, revenue: 200, conversionRate: 80.0, trend: 25.0 },
-    { id: 'scout-9', name: 'Andrew Anderson', troop: 'Troop 634', referrals: 5, conversions: 3, revenue: 150, conversionRate: 60.0, trend: 0 },
-    { id: 'scout-4', name: 'Robert Garcia', troop: 'Troop 312', referrals: 4, conversions: 3, revenue: 150, conversionRate: 75.0, trend: -20.0 },
-    { id: 'scout-10', name: 'Joshua Thomas', troop: 'Troop 742', referrals: 4, conversions: 4, revenue: 200, conversionRate: 100.0, trend: 100.0 },
-  ],
-  // Customer Referrals Data
-  customer_referrals: [
-    { id: 'cust-1', name: 'Sarah Miller', email: 's.miller@email.com', referrals: 12, conversions: 9, totalRevenue: 1080, avgOrderValue: 120, lastReferral: '2 days ago', trend: 50.0 },
-    { id: 'cust-2', name: 'Jennifer Davis', email: 'j.davis@email.com', referrals: 10, conversions: 8, totalRevenue: 960, avgOrderValue: 120, lastReferral: '1 week ago', trend: 25.0 },
-    { id: 'cust-3', name: 'Emily Rodriguez', email: 'e.rodriguez@email.com', referrals: 8, conversions: 6, totalRevenue: 720, avgOrderValue: 120, lastReferral: '3 days ago', trend: 33.3 },
-    { id: 'cust-4', name: 'Amanda Thompson', email: 'a.thompson@email.com', referrals: 7, conversions: 5, totalRevenue: 600, avgOrderValue: 120, lastReferral: '5 days ago', trend: 16.7 },
-    { id: 'cust-5', name: 'Jessica White', email: 'j.white@email.com', referrals: 6, conversions: 5, totalRevenue: 600, avgOrderValue: 120, lastReferral: '1 day ago', trend: 20.0 },
-    { id: 'cust-6', name: 'Ashley Harris', email: 'a.harris@email.com', referrals: 5, conversions: 4, totalRevenue: 480, avgOrderValue: 120, lastReferral: '2 weeks ago', trend: 0 },
-    { id: 'cust-7', name: 'Michelle Clark', email: 'm.clark@email.com', referrals: 4, conversions: 3, totalRevenue: 360, avgOrderValue: 120, lastReferral: '4 days ago', trend: -25.0 },
-    { id: 'cust-8', name: 'Stephanie Lewis', email: 's.lewis@email.com', referrals: 3, conversions: 3, totalRevenue: 360, avgOrderValue: 120, lastReferral: '6 days ago', trend: 50.0 },
-  ],
-};
-
-const mockData: Record<string, any> = {
-  total_users: { value: 12450, change: 8.5 },
-  active_users: { value: 8932, change: 12.3 },
-  new_users: { value: 2156, change: 15.8 },
-  user_growth: { value: '8.5%', change: 2.1 },
-  total_merchants: { value: 487, change: 5.2 },
-  active_merchants: { value: 412, change: 3.8 },
-  merchant_onboarding: { value: 23, change: 18.5 },
-  total_offers: { value: 1243, change: 12.5 },
-  active_offers: { value: 892, change: 9.2 },
-  offer_redemptions: { value: 45230, change: 21.3 },
-  redemption_rate: { value: '34.5%', change: 5.8 },
-  total_cards: { value: 89245, change: 6.3 },
-  active_cards: { value: 76543, change: 8.9 },
-  cards_redeemed: { value: 12702, change: 16.2 },
-  total_subscriptions: { value: 8932, change: 12.3 },
-  active_subscriptions: { value: 7654, change: 9.8 },
-  monthly_plans: { value: 3421, change: 15.2 },
-  annual_plans: { value: 4233, change: 8.1 },
-  churn_rate: { value: '2.1%', change: -0.8 },
-  retention_rate: { value: '97.9%', change: 0.8 },
-  mrr: { value: '$47,829', change: 14.2 },
-  arr: { value: '$573,948', change: 18.5 },
-  total_revenue: { value: '$245,678', change: 14.2 },
-  revenue_trend: { value: '$18,935/day', change: 8.5 },
-  avg_transaction: { value: '$124.56', change: 3.2 },
-  transaction_volume: { value: 5421, change: 19.8 },
-  failed_transactions: { value: 23, change: -45.2 },
-  system_uptime: { value: '99.98%', change: 0.02 },
-  // BSA Troop & Scout Metrics
-  troop_sales: { value: '$63,590', change: 14.8 },
-  troop_recruiting: { value: 33, change: 22.2 },
-  scout_sales: { value: '$7,615', change: 18.5 },
-  scout_referrals: { value: 52, change: 28.4 },
-  customer_referrals: { value: 55, change: 15.6 },
-  troop_sales_trend: { value: '$45,230/mo', change: 12.3 },
-  total_troops: { value: 156, change: 8.2 },
-  active_scouts: { value: 2847, change: 15.4 },
-  total_referrals: { value: 107, change: 21.8 },
-  referral_conversion: { value: '72.4%', change: 5.3 },
-};
-
 const defaultWidgets: Widget[] = [
   // BSA Troop & Scout Reporting Widgets
   {
@@ -519,60 +361,141 @@ export default function AnalyticsPage() {
   if (status === 'loading') return null;
   if (!session) return null;
 
-  // Get real data or fall back to mock data
+  // Get real chart/drilldown data from the dashboard API
   const getRealChartData = (metricId: string) => {
-    if (!dashboardData) return mockChartData[metricId] || [];
+    if (!dashboardData) return [];
 
+    const d = dashboardData;
     switch (metricId) {
+      // Drilldown tables (real backend data)
       case 'troop_sales':
-        return dashboardData.troopSales || mockChartData.troop_sales;
+        return d.troopSales || [];
       case 'troop_recruiting':
-        return dashboardData.troopRecruiting || mockChartData.troop_recruiting;
+        return d.troopRecruiting || [];
       case 'scout_sales':
-        return dashboardData.scoutSales || mockChartData.scout_sales;
+        return d.scoutSales || [];
       case 'scout_referrals':
-        return dashboardData.scoutReferrals || mockChartData.scout_referrals;
+        return d.scoutReferrals || [];
       case 'customer_referrals':
-        return dashboardData.customerReferrals || mockChartData.customer_referrals;
+        return d.customerReferrals || [];
+      // Time-series charts (real backend data)
       case 'troop_sales_trend':
-        return dashboardData.salesTrend30Days || mockChartData.troop_sales_trend;
+      case 'subscription_trend':
+      case 'revenue_trend':
+        return d.salesTrend30Days || [];
+      // Pie charts (derived from real backend data)
+      case 'plan_distribution': {
+        const monthly = d.monthlyPlans || 0;
+        const annual = d.annualPlans || 0;
+        if (monthly === 0 && annual === 0) return [];
+        return [
+          { name: 'Monthly Plans', value: monthly },
+          { name: 'Annual Plans', value: annual },
+        ];
+      }
+      case 'offer_distribution':
+        return d.offerDistribution || [];
+      // Charts without backend time-series data yet — return empty
+      case 'user_trend':
+      case 'offer_redemptions':
+      case 'merchant_onboarding':
+      case 'cards_redeemed':
+      case 'transaction_volume':
       default:
-        return mockChartData[metricId] || [];
+        return [];
     }
   };
 
   const getRealMetricData = (metricId: string) => {
-    if (!dashboardData) return mockData[metricId] || { value: 0, change: 0 };
+    if (!dashboardData) return { value: 0, change: 0 };
 
+    const d = dashboardData;
     switch (metricId) {
-      case 'total_troops':
-        return { value: dashboardData.totalTroops || 0, change: dashboardData.troopsTrend || 0 };
-      case 'active_scouts':
-        return { value: dashboardData.activeScouts || 0, change: dashboardData.scoutsTrend || 0 };
-      case 'total_referrals':
-        return { value: dashboardData.totalReferrals || 0, change: dashboardData.referralsTrend || 0 };
-      case 'referral_conversion':
-        return { value: `${dashboardData.referralConversionRate || 0}%`, change: 0 };
-      case 'troop_sales':
-        return { value: `$${(dashboardData.totalSales || 0).toLocaleString()}`, change: dashboardData.salesTrend || 0 };
-      case 'troop_recruiting':
-        return { value: dashboardData.activeScouts || 0, change: dashboardData.scoutsTrend || 0 };
-      case 'scout_sales':
-        return { value: `$${(dashboardData.totalSales || 0).toLocaleString()}`, change: dashboardData.salesTrend || 0 };
-      case 'scout_referrals':
-        return { value: dashboardData.successfulReferrals || 0, change: dashboardData.referralsTrend || 0 };
-      case 'customer_referrals':
-        return { value: dashboardData.totalReferrals || 0, change: dashboardData.referralsTrend || 0 };
+      // Users
+      case 'total_users':
+        return { value: d.totalUsers || 0, change: 0 };
+      case 'active_users':
+        return { value: d.activeUsers || 0, change: 0 };
+      case 'new_users':
+        return { value: d.newUsersLast30Days || 0, change: 0 };
+      case 'user_growth': {
+        const growth = d.totalUsers > 0 ? ((d.newUsersLast30Days || 0) / d.totalUsers * 100) : 0;
+        return { value: `${growth.toFixed(1)}%`, change: 0 };
+      }
+      // Merchants
       case 'total_merchants':
-        return { value: dashboardData.totalMerchants || 0, change: 0 };
+        return { value: d.totalMerchants || 0, change: 0 };
       case 'active_merchants':
-        return { value: dashboardData.activeMerchants || 0, change: 0 };
+        return { value: d.activeMerchants || 0, change: 0 };
+      // Offers
       case 'total_offers':
-        return { value: dashboardData.totalOffers || 0, change: 0 };
+        return { value: d.totalOffers || 0, change: 0 };
       case 'active_offers':
-        return { value: dashboardData.activeOffers || 0, change: 0 };
+        return { value: d.activeOffers || 0, change: 0 };
+      case 'offer_redemptions':
+        return { value: d.totalRedemptions || 0, change: 0 };
+      case 'redemption_rate': {
+        const rate = d.activeSubscriptions > 0 ? ((d.totalRedemptions || 0) / d.activeSubscriptions * 100) : 0;
+        return { value: `${rate.toFixed(1)}%`, change: 0 };
+      }
+      // Cards
+      case 'total_cards':
+        return { value: d.totalCards || d.totalCardsSold || 0, change: 0 };
+      case 'active_cards':
+        return { value: d.activeCards || 0, change: 0 };
+      case 'cards_redeemed':
+        return { value: d.totalRedemptions || 0, change: 0 };
+      // Subscriptions
+      case 'total_subscriptions':
+        return { value: d.totalSubscriptions || 0, change: 0 };
+      case 'active_subscriptions':
+        return { value: d.activeSubscriptions || 0, change: 0 };
+      case 'churn_rate':
+        return { value: `${d.churnRate || 0}%`, change: 0 };
+      case 'retention_rate':
+        return { value: `${d.retentionRate || 0}%`, change: 0 };
+      // Revenue
+      case 'mrr':
+        return { value: `$${(d.mrr || 0).toLocaleString()}`, change: 0 };
+      case 'arr':
+        return { value: `$${(d.arr || 0).toLocaleString()}`, change: 0 };
+      case 'total_revenue': {
+        const revDollars = Math.round((d.totalRevenueCents || 0) / 100);
+        return { value: `$${revDollars.toLocaleString()}`, change: d.salesTrend || 0 };
+      }
+      case 'avg_transaction': {
+        const avgDollars = ((d.avgTransactionCents || 0) / 100).toFixed(2);
+        return { value: `$${avgDollars}`, change: 0 };
+      }
+      // Transactions
+      case 'transaction_volume':
+        return { value: d.totalTransactions || 0, change: 0 };
+      case 'failed_transactions':
+        return { value: d.failedTransactions || 0, change: 0 };
+      // System
+      case 'system_uptime':
+        return { value: '99.9%', change: 0 };
+      // BSA Troops & Scouts
+      case 'total_troops':
+        return { value: d.totalTroops || 0, change: d.troopsTrend || 0 };
+      case 'active_scouts':
+        return { value: d.activeScouts || 0, change: d.scoutsTrend || 0 };
+      case 'troop_sales':
+        return { value: `$${(d.totalSales || 0).toLocaleString()}`, change: d.salesTrend || 0 };
+      case 'troop_recruiting':
+        return { value: d.activeScouts || 0, change: d.scoutsTrend || 0 };
+      case 'scout_sales':
+        return { value: `$${(d.totalSales || 0).toLocaleString()}`, change: d.salesTrend || 0 };
+      case 'scout_referrals':
+        return { value: d.successfulReferrals || 0, change: d.referralsTrend || 0 };
+      case 'customer_referrals':
+        return { value: d.totalReferrals || 0, change: d.referralsTrend || 0 };
+      case 'total_referrals':
+        return { value: d.totalReferrals || 0, change: d.referralsTrend || 0 };
+      case 'referral_conversion':
+        return { value: `${d.referralConversionRate || 0}%`, change: 0 };
       default:
-        return mockData[metricId] || { value: 0, change: 0 };
+        return { value: 0, change: 0 };
     }
   };
 
@@ -635,10 +558,10 @@ export default function AnalyticsPage() {
 
   const handleExport = (widget: Widget) => {
     const data = getMetricData(widget.metric);
-    const chartData = mockChartData[widget.metric];
+    const chartData = getRealChartData(widget.metric);
     let csv = '';
 
-    if (chartData && Array.isArray(chartData)) {
+    if (chartData && Array.isArray(chartData) && chartData.length > 0) {
       const headers = Object.keys(chartData[0]).join(',');
       const rows = chartData.map((row: any) => Object.values(row).join(',')).join('\n');
       csv = `${headers}\n${rows}`;
@@ -877,7 +800,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <ResponsiveContainer width="100%" height={60}>
-              <AreaChart data={generateTimeSeriesData(7, typeof data.value === 'number' ? data.value : 100, 20)}>
+              <AreaChart data={[0, 1, 2, 3, 4, 5, 6].map((i) => ({ date: i, value: typeof data.value === 'number' ? data.value : 0 }))}>
                 <defs>
                   <linearGradient id={`mini-gradient-${widget.id}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={getMetricColor(data.change)} stopOpacity={0.3} />
@@ -1268,7 +1191,7 @@ export default function AnalyticsPage() {
               </p>
             </div>
 
-            {mockChartData[detailsModal.widget.metric] && (
+            {getRealChartData(detailsModal.widget.metric).length > 0 && (
               <div style={{ marginBottom: themeSpace.lg }}>
                 <p style={{
                   margin: `0 0 ${themeSpace.md} 0`, fontSize: '12px', fontWeight: '600', color: themeColors.gray600, textTransform: 'uppercase',
@@ -1277,7 +1200,7 @@ export default function AnalyticsPage() {
                   Trend
                 </p>
                 <ResponsiveContainer width="100%" height={150}>
-                  <AreaChart data={mockChartData[detailsModal.widget.metric]}>
+                  <AreaChart data={getRealChartData(detailsModal.widget.metric)}>
                     <defs>
                       <linearGradient id="detail-gradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={themeColors.primary600} stopOpacity={0.3} />
@@ -1435,7 +1358,7 @@ export default function AnalyticsPage() {
                     <div style={{ marginBottom: themeSpace.lg }}>
                       <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: themeSpace.md, color: themeColors.text }}>Scout Sales Breakdown</h3>
                       <div style={{ border: `1px solid ${themeColors.gray200}`, borderRadius: themeRadius.sm }}>
-                        {mockChartData.scout_sales
+                        {(getRealChartData('scout_sales') || [])
                           .filter((s: any) => s.troop === drilldownModal.selectedItem.name)
                           .map((scout: any, _idx: number) => (
                             <div key={scout.id} style={{ display: 'flex', justifyContent: 'space-between', padding: themeSpace.md, borderBottom: `1px solid ${themeColors.gray100}` }}>
@@ -1451,7 +1374,7 @@ export default function AnalyticsPage() {
                               </div>
                             </div>
                           ))}
-                        {mockChartData.scout_sales.filter((s: any) => s.troop === drilldownModal.selectedItem.name).length === 0 && (
+                        {(getRealChartData('scout_sales') || []).filter((s: any) => s.troop === drilldownModal.selectedItem.name).length === 0 && (
                           <div style={{ padding: themeSpace.lg, textAlign: 'center', color: themeColors.gray600 }}>No scout data available for this troop</div>
                         )}
                       </div>
