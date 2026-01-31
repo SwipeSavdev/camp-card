@@ -155,7 +155,7 @@ export default function ScoutDashboardScreen() {
             <Text style={styles.progressTitle}>Your Fundraising Impact</Text>
           </View>
           <View style={styles.earningsContainer}>
-            <Text style={styles.earningsAmount}>${stats.totalEarnings}</Text>
+            <Text style={styles.earningsAmount}>${stats.totalEarnings.toFixed(2)}</Text>
             <Text style={styles.earningsLabel}>Total Funds Raised</Text>
           </View>
           <View style={styles.progressStats}>
