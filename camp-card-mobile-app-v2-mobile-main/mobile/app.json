@@ -2,7 +2,7 @@
   "expo": {
     "name": "Camp Card",
     "slug": "camp-card",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "description": "BSA Camp Card - Digital discount subscriptions supporting Scout fundraising. Access exclusive merchant offers, track redemptions, and support your local Scout troop.",
     "sdkVersion": "54.0.0",
@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "25",
+      "buildNumber": "26",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -51,7 +51,7 @@
     },
     "android": {
       "package": "org.bsa.campcard",
-      "versionCode": 19,
+      "versionCode": 22,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
@@ -125,19 +125,18 @@
       "expo-secure-store",
       "expo-font"
     ],
-    "runtimeVersion": "1.0.3-25",
+    "runtimeVersion": "1.0.4-26",
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"
       },
-      "buildTimestamp": "2026-01-27T16:15:00Z",
+      "buildTimestamp": "2026-01-30T17:00:00Z",
       "privacyPolicyUrl": "https://www.campcardapp.org/privacy",
       "termsOfServiceUrl": "https://www.campcardapp.org/terms",
       "supportEmail": "support@campcardapp.org",
       "publisher": "Swipe Savvy, LLC"
     },
     "owner": "swipesavvy2026",
-    "githubUrl": "https://github.com/swipesavdev/camp-card",
-    "privacy": "public"
+    "githubUrl": "https://github.com/swipesavdev/camp-card"
   }
 }

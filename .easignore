@@ -1,0 +1,75 @@
+# EAS Build ignore file (at git root for monorepo)
+# Overrides .gitignore for EAS Build archive
+# IMPORTANT: gradle-wrapper.jar and google-services.json must NOT be excluded
+
+# Node modules
+node_modules/
+
+# Build outputs
+**/android/app/build/
+**/android/build/
+**/android/.gradle/
+**/android/local.properties
+**/ios/build/
+**/ios/Pods/
+
+# Backend (not needed for mobile build)
+backend/
+
+# Infrastructure (not needed for mobile build)
+camp-card-mobile-app-v2-infrastructure-main/
+
+# Web portal (not needed for mobile build)
+camp-card-mobile-app-v2-web-main/
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+e2e/artifacts/
+
+# Expo
+.expo/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Docs
+docs/
+
+# Store deployment credentials
+google-play-service-account.json
+*.p8
+*.p12
+*.mobileprovision
+AuthKey_*.p8
+
+# Fastlane
+**/fastlane/
+
+# Metro health check
+.metro-health-check*
+
+# Git
+.git/
+.github/
+
+# Docker
+docker-compose*.yml
+Dockerfile

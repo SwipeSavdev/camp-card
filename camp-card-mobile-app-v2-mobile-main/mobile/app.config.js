@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "Camp Card",
     slug: "camp-card",
-    version: "1.0.0",
+    version: "1.0.4",
     orientation: "portrait",
     description: "BSA Camp Card - Digital discount subscriptions supporting Scout fundraising. Access exclusive merchant offers, track redemptions, and support your local Scout troop.",
     sdkVersion: "54.0.0",
@@ -18,7 +18,7 @@ module.exports = {
     assetBundlePatterns: ["**/*"],
     ios: {
       bundleIdentifier: "org.bsa.campcard",
-      buildNumber: "14",
+      buildNumber: "26",
       supportsTablet: true,
       requireFullScreen: false,
       config: {
@@ -43,8 +43,7 @@ module.exports = {
     },
     android: {
       package: "org.bsa.campcard",
-      versionCode: 13,
-      // Use environment variable if available (EAS Build), otherwise fall back to local file
+      versionCode: 22,
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json",
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
@@ -112,14 +111,18 @@ module.exports = {
       "expo-secure-store",
       "expo-font"
     ],
-    runtimeVersion: {
-      policy: "sdkVersion"
-    },
+    runtimeVersion: "1.0.4-26",
     extra: {
       eas: {
         projectId: "b4af49da-5fe8-402f-8339-92131b27ff3e"
-      }
+      },
+      buildTimestamp: "2026-01-30T17:00:00Z",
+      privacyPolicyUrl: "https://www.campcardapp.org/privacy",
+      termsOfServiceUrl: "https://www.campcardapp.org/terms",
+      supportEmail: "support@campcardapp.org",
+      publisher: "Swipe Savvy, LLC"
     },
-    owner: "swipesavvy2026"
+    owner: "swipesavvy2026",
+    githubUrl: "https://github.com/swipesavdev/camp-card"
   }
 };
