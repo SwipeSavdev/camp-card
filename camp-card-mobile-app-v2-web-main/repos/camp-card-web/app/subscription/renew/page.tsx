@@ -2,15 +2,19 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { colors, radius, space, shadow, gradients } from '@/lib/theme';
+import { api } from '@/lib/api';
 
 interface SubscriptionDetails {
   planName: string;
   currentExpiry: string;
   renewalPrice: string;
   nextExpiry: string;
+  status: string;
+  billingInterval: string;
 }
 
 function SubscriptionRenewContent() {
@@ -21,14 +25,15 @@ function SubscriptionRenewContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const userId = searchParams.get('userId') || '';
+  const { data: session } = useSession();
 
   useEffect(() => {
     loadSubscriptionDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session]);
 
   const loadSubscriptionDetails = async () => {
-    if (!token && !userId) {
+    if (!token && !userId && !session) {
       setRenewStatus('error');
       setErrorMessage('Invalid renewal link. Please check your email for the correct link or log in to your account.');
       setIsLoading(false);
@@ -36,13 +41,47 @@ function SubscriptionRenewContent() {
     }
 
     try {
-      // In production, this would call the API to get subscription details
-      // const response = await api.getSubscriptionRenewalDetails(token || userId);
+      // Fetch real subscription data from the backend
+      const data = token
+        ? await api.getMySubscriptionWithToken(token)
+        : await api.getMySubscription(session);
+
+      if (!data) {
+        setRenewStatus('error');
+        setErrorMessage('No active subscription found. Please log in to your account or contact support.');
+        setIsLoading(false);
+        return;
+      }
+
+      const plan = data.plan || {};
+      const priceCents = plan.priceCents || 0;
+      const priceFormatted = `$${(priceCents / 100).toFixed(2)}`;
+      const interval = plan.billingInterval || 'ANNUAL';
+
+      const currentEnd = data.currentPeriodEnd
+        ? new Date(data.currentPeriodEnd).toLocaleDateString()
+        : 'N/A';
+
+      // Calculate next expiry based on billing interval
+      const nextEnd = data.currentPeriodEnd
+        ? (() => {
+            const d = new Date(data.currentPeriodEnd);
+            if (interval === 'MONTHLY') {
+              d.setMonth(d.getMonth() + 1);
+            } else {
+              d.setFullYear(d.getFullYear() + 1);
+            }
+            return d.toLocaleDateString();
+          })()
+        : 'N/A';
+
       setSubscriptionDetails({
-        planName: 'Annual Camp Card',
-        currentExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        renewalPrice: '$15.00',
-        nextExpiry: new Date(Date.now() + 372 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        planName: plan.name || 'Camp Card Subscription',
+        currentExpiry: currentEnd,
+        renewalPrice: priceFormatted,
+        nextExpiry: nextEnd,
+        status: data.status || 'UNKNOWN',
+        billingInterval: interval,
       });
       setRenewStatus('pending');
     } catch (err) {
@@ -56,14 +95,22 @@ function SubscriptionRenewContent() {
   const handleRenew = async () => {
     setRenewStatus('processing');
     try {
-      // In production, redirect to payment flow or process renewal
-      // For authenticated users, this would initiate the payment process
-      // await api.initiateRenewal(token || userId);
+      const result = token
+        ? await api.renewMySubscriptionWithToken(token)
+        : await api.renewMySubscription(session);
 
-      // Simulate redirect to payment
-      setTimeout(() => {
+      if (result) {
+        // Update details with the renewed subscription data
+        const newEnd = result.currentPeriodEnd
+          ? new Date(result.currentPeriodEnd).toLocaleDateString()
+          : subscriptionDetails?.nextExpiry || 'N/A';
+
+        setSubscriptionDetails((prev) => prev ? { ...prev, nextExpiry: newEnd, status: result.status || 'ACTIVE' } : prev);
         setRenewStatus('success');
-      }, 1500);
+      } else {
+        setRenewStatus('error');
+        setErrorMessage('Renewal response was empty. Please try again or contact support.');
+      }
     } catch (err) {
       setRenewStatus('error');
       setErrorMessage(err instanceof Error ? err.message : 'Failed to process renewal. Please try again.');
@@ -149,6 +196,12 @@ function SubscriptionRenewContent() {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '14px', color: colors.muted }}>Current Plan</span>
             <span style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>{subscriptionDetails?.planName}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '14px', color: colors.muted }}>Billing</span>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>
+              {subscriptionDetails?.billingInterval === 'MONTHLY' ? 'Monthly' : 'Annual'}
+            </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '14px', color: colors.muted }}>Expires</span>

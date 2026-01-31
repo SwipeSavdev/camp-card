@@ -2,7 +2,10 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import {
+  useEffect, useState, useCallback,
+} from 'react';
+import { api } from '@/lib/api';
 import PageLayout from '../components/PageLayout';
 
 const themeColors = {
@@ -54,69 +57,87 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
   return icons[name] || null;
 }
 
+type UiType = 'success' | 'info' | 'warning' | 'alert';
+
 interface Notification {
-  id: string;
-  type: 'success' | 'info' | 'warning' | 'alert';
+  id: number;
+  type: UiType;
   title: string;
   message: string;
   timestamp: string;
   read: boolean;
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'success',
-    title: 'User Import Complete',
-    message: '1,250 users have been successfully imported to the system',
-    timestamp: '2 hours ago',
-    read: true,
-  },
-  {
-    id: '2',
-    type: 'info',
-    title: 'New Offer Published',
-    message: 'The Holiday Promotion offer has been published to all merchants',
-    timestamp: '4 hours ago',
-    read: true,
-  },
-  {
-    id: '3',
-    type: 'warning',
-    title: 'High API Usage',
-    message: 'API usage is 85% of monthly quota. Consider optimizing requests.',
-    timestamp: '6 hours ago',
-    read: false,
-  },
-  {
-    id: '4',
-    type: 'alert',
-    title: 'Failed Payment Processing',
-    message: '3 payment transactions failed. Please review and retry.',
-    timestamp: '1 day ago',
-    read: false,
-  },
-  {
-    id: '5',
-    type: 'success',
-    title: 'Scout Verification',
-    message: 'All pending scout applications have been verified',
-    timestamp: '2 days ago',
-    read: true,
-  },
-];
+/** Map backend NotificationType enum to a UI display category */
+function mapNotificationType(backendType: string): UiType {
+  switch (backendType) {
+    case 'PAYMENT_SUCCESS':
+    case 'SUBSCRIPTION_RENEWED':
+    case 'REFERRAL_REWARD':
+      return 'success';
+    case 'PAYMENT_FAILED':
+    case 'SYSTEM_ALERT':
+      return 'alert';
+    case 'SUBSCRIPTION_EXPIRING':
+    case 'OFFER_EXPIRING':
+      return 'warning';
+    case 'NEW_OFFER':
+    case 'TROOP_ANNOUNCEMENT':
+    case 'MARKETING':
+    default:
+      return 'info';
+  }
+}
+
+/** Format an ISO timestamp into a human-readable relative string */
+function formatRelativeTime(isoString: string): string {
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 30) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+  return date.toLocaleDateString();
+}
 
 export default function NotificationsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const result = await api.getNotifications(0, 50, session);
+      if (result?.content && Array.isArray(result.content)) {
+        setNotifications(result.content.map((n) => ({
+          id: n.id,
+          type: mapNotificationType(n.type),
+          title: n.title || 'Notification',
+          message: n.body || '',
+          timestamp: n.createdAt ? formatRelativeTime(n.createdAt) : '',
+          read: n.read ?? false,
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
-  }, [status, router]);
+    if (status === 'authenticated') fetchNotifications();
+  }, [status, router, fetchNotifications]);
 
-  if (status === 'loading') return null;
+  if (status === 'loading' || isLoading) return null;
   if (!session) return null;
 
   const getNotificationColor = (type: string) => {
@@ -163,12 +184,22 @@ export default function NotificationsPage() {
     }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markAsRead = async (id: number) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    try {
+      await api.markNotificationAsRead(id, session);
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await api.markAllNotificationsAsRead(session);
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
   };
 
   const filteredNotifications = filter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
@@ -306,7 +337,7 @@ export default function NotificationsPage() {
                 style={{
                   backgroundColor: notification.read ? themeColors.white : '#f0f9ff',
                   borderRadius: themeRadius.card,
-                  border: `1px solid ${notification.read ? themeColors.gray200 : themeColors.gray200}`,
+                  border: `1px solid ${themeColors.gray200}`,
                   padding: themeSpace.lg,
                   boxShadow: themeShadow.sm,
                   cursor: 'pointer',

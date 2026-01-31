@@ -1138,6 +1138,142 @@ export const api = {
     }
   },
 
+  // ============ SUBSCRIPTIONS ============
+  getMySubscription: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/subscriptions/me', {}, session);
+    } catch (error) {
+      console.error('Failed to fetch subscription:', error);
+      return null;
+    }
+  },
+
+  getMySubscriptionWithToken: async (token: string) => {
+    try {
+      return await apiCall<any>('/subscriptions/me', {}, { accessToken: token } as any);
+    } catch (error) {
+      console.error('Failed to fetch subscription with token:', error);
+      return null;
+    }
+  },
+
+  renewMySubscription: async (session?: Session | null) => {
+    try {
+      return await apiCall<any>('/subscriptions/me/renew', {
+        method: 'POST',
+      }, session);
+    } catch (error) {
+      console.error('Failed to renew subscription:', error);
+      throw error;
+    }
+  },
+
+  renewMySubscriptionWithToken: async (token: string) => {
+    try {
+      return await apiCall<any>('/subscriptions/me/renew', {
+        method: 'POST',
+      }, { accessToken: token } as any);
+    } catch (error) {
+      console.error('Failed to renew subscription with token:', error);
+      throw error;
+    }
+  },
+
+  getSubscriptionPlans: async (councilId?: string) => {
+    try {
+      const query = councilId ? `?councilId=${councilId}` : '';
+      return await apiCall<any>(`/subscription-plans${query}`, {});
+    } catch (error) {
+      console.error('Failed to fetch subscription plans:', error);
+      return null;
+    }
+  },
+
+  // ============ NOTIFICATIONS ============
+  getNotifications: async (page = 0, size = 50, session?: Session | null) =>
+    apiCall<{
+      content: Array<{
+        id: number;
+        title: string;
+        body: string;
+        type: string;
+        imageUrl: string | null;
+        read: boolean;
+        createdAt: string;
+        readAt: string | null;
+      }>;
+      totalElements: number;
+      totalPages: number;
+      number: number;
+    }>(`/notifications/me?page=${page}&size=${size}`, {}, session),
+
+  getUnreadNotificationCount: async (session?: Session | null) =>
+    apiCall<number>('/notifications/me/unread-count', {}, session),
+
+  markNotificationAsRead: async (id: number, session?: Session | null) =>
+    apiCall<void>(`/notifications/${id}/read`, { method: 'PUT' }, session),
+
+  markAllNotificationsAsRead: async (session?: Session | null) =>
+    apiCall<void>('/notifications/mark-all-read', { method: 'PUT' }, session),
+
+  // ============ MOBILE MODULE CONFIG ============
+
+  getMobileModules: async (session?: Session | null) =>
+    apiCall<Array<{
+      id: number;
+      moduleId: string;
+      name: string;
+      description: string;
+      category: string;
+      enabled: boolean;
+      createdAt: string;
+      updatedAt: string;
+    }>>('/config/modules', {}, session),
+
+  toggleMobileModule: async (moduleId: string, enabled: boolean, session?: Session | null) =>
+    apiCall<{
+      id: number;
+      moduleId: string;
+      name: string;
+      description: string;
+      category: string;
+      enabled: boolean;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/config/modules/${moduleId}/toggle`, {
+      method: 'PUT',
+      body: JSON.stringify({ enabled }),
+    }, session),
+
+  bulkToggleMobileModules: async (modules: Record<string, boolean>, session?: Session | null) =>
+    apiCall<Array<{
+      id: number;
+      moduleId: string;
+      name: string;
+      description: string;
+      category: string;
+      enabled: boolean;
+      createdAt: string;
+      updatedAt: string;
+    }>>('/config/modules/bulk', {
+      method: 'PUT',
+      body: JSON.stringify({ modules }),
+    }, session),
+
+  resetMobileModules: async (session?: Session | null) =>
+    apiCall<Array<{
+      id: number;
+      moduleId: string;
+      name: string;
+      description: string;
+      category: string;
+      enabled: boolean;
+      createdAt: string;
+      updatedAt: string;
+    }>>('/config/modules/reset', {
+      method: 'POST',
+    }, session),
+
   // ============ PARENTAL CONSENT (Public) ============
   getConsentDetails: async (token: string) => apiCall<{
       consentId: string;

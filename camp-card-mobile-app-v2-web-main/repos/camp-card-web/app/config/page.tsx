@@ -2,7 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { api } from '@/lib/api';
 import PageLayout from '../components/PageLayout';
 
 const themeColors = {
@@ -12,9 +13,12 @@ const themeColors = {
   gray200: '#e5e7eb',
   gray600: '#4b5563',
   text: '#1f2937',
+  primary50: '#eff6ff',
   primary600: '#2563eb',
   success50: '#f0fdf4',
   success600: '#16a34a',
+  error50: '#fef2f2',
+  error600: '#dc2626',
 };
 
 const themeSpace = {
@@ -23,107 +27,131 @@ const themeSpace = {
 const themeRadius = { sm: '4px', card: '12px' };
 const themeShadow = { xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' };
 
-// Icon component available for future use
-function _Icon({
-  name, size = 18, color = 'currentColor', ...props
-}: { name: string; size?: number; color?: string; [key: string]: unknown }) {
-  const icons: { [key: string]: JSX.Element } = {
-    back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>,
-  };
-  return <span {...props}>{icons[name] || null}</span>;
-}
-
 interface MobileModule {
-  id: string;
+  id: number;
+  moduleId: string;
   name: string;
   description: string;
   enabled: boolean;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const defaultModules: MobileModule[] = [
-  {
-    id: '1',
-    name: 'User Authentication',
-    description: 'Email/password login and account management',
-    enabled: true,
-  },
-  {
-    id: '2',
-    name: 'Biometric Login',
-    description: 'Fingerprint and face recognition authentication',
-    enabled: true,
-  },
-  {
-    id: '3',
-    name: 'Push Notifications',
-    description: 'Real-time push notifications for offers and updates',
-    enabled: true,
-  },
-  {
-    id: '4',
-    name: 'Loyalty Points',
-    description: 'Earn and redeem loyalty points on purchases',
-    enabled: true,
-  },
-  {
-    id: '5',
-    name: 'Dark Mode',
-    description: 'Dark theme option for the mobile app',
-    enabled: false,
-  },
-  {
-    id: '6',
-    name: 'Offer Redemption',
-    description: 'Scan and redeem merchant offers',
-    enabled: true,
-  },
-  {
-    id: '7',
-    name: 'Scout Management',
-    description: 'Scout recruiting and management features',
-    enabled: true,
-  },
-  {
-    id: '8',
-    name: 'Social Sharing',
-    description: 'Share offers on social media platforms',
-    enabled: false,
-  },
-  {
-    id: '9',
-    name: 'Offline Mode',
-    description: 'Access cached data without internet connection',
-    enabled: false,
-  },
-  {
-    id: '10',
-    name: 'Advanced Analytics',
-    description: 'User behavior tracking and analytics dashboard',
-    enabled: true,
-  },
-];
+const categoryLabels: Record<string, string> = {
+  auth: 'Authentication',
+  engagement: 'Engagement',
+  features: 'Core Features',
+  ux: 'User Experience',
+};
+
+const categoryOrder = ['auth', 'features', 'engagement', 'ux'];
 
 export default function ConfigPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [modules, setModules] = useState<MobileModule[]>(defaultModules);
+  const [modules, setModules] = useState<MobileModule[]>([]);
   const [saved, setSaved] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+
+  const fetchModules = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await api.getMobileModules(session);
+      if (Array.isArray(result)) {
+        setModules(result.map((m) => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          name: m.name,
+          description: m.description || '',
+          enabled: m.enabled,
+          category: m.category,
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt,
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to fetch modules:', err);
+      setError('Failed to load module configuration. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
-  }, [status, router]);
+    if (status === 'authenticated') fetchModules();
+  }, [status, router, fetchModules]);
 
-  const handleToggle = (id: string) => {
-    setModules(modules.map((m) => (m.id === id ? { ...m, enabled: !m.enabled } : m)));
+  const handleToggle = (moduleId: string) => {
+    setModules((prev) => prev.map((m) => (m.moduleId === moduleId ? { ...m, enabled: !m.enabled } : m)));
+    setHasUnsavedChanges(true);
+    setSaved(false);
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    try {
+      setError(null);
+      const enabledMap: Record<string, boolean> = {};
+      modules.forEach((m) => { enabledMap[m.moduleId] = m.enabled; });
+      const result = await api.bulkToggleMobileModules(enabledMap, session);
+      if (Array.isArray(result)) {
+        setModules(result.map((m) => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          name: m.name,
+          description: m.description || '',
+          enabled: m.enabled,
+          category: m.category,
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt,
+        })));
+      }
+      setHasUnsavedChanges(false);
+      setSaved(true);
+      setLastSaved(new Date().toLocaleString());
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Failed to save modules:', err);
+      setError('Failed to save configuration. Please try again.');
+    }
+  };
+
+  const handleResetDefaults = async () => {
+    try {
+      setError(null);
+      const result = await api.resetMobileModules(session);
+      if (Array.isArray(result)) {
+        setModules(result.map((m) => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          name: m.name,
+          description: m.description || '',
+          enabled: m.enabled,
+          category: m.category,
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt,
+        })));
+      }
+      setHasUnsavedChanges(false);
+      setSaved(true);
+      setLastSaved(new Date().toLocaleString());
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Failed to reset modules:', err);
+      setError('Failed to reset configuration. Please try again.');
+    }
   };
 
   if (status === 'loading') return null;
   if (!session) return null;
+
+  const enabledCount = modules.filter((m) => m.enabled).length;
+  const disabledCount = modules.filter((m) => !m.enabled).length;
 
   return (
     <PageLayout title="Mobile App Modules" currentPath="/config">
@@ -132,118 +160,199 @@ export default function ConfigPage() {
         padding: themeSpace.xl, backgroundColor: themeColors.white, borderBottom: `1px solid ${themeColors.gray200}`, boxShadow: themeShadow.xs, marginBottom: themeSpace.lg, borderRadius: themeRadius.card,
       }}
       >
-        <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0 }}>Enable or disable features in the mobile application</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <p style={{ fontSize: '14px', color: themeColors.gray600, margin: 0 }}>Enable or disable features in the mobile application</p>
+            {lastSaved && (
+              <p style={{ fontSize: '12px', color: themeColors.gray600, margin: '4px 0 0 0' }}>
+                Last saved:
+                {' '}
+                {lastSaved}
+              </p>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
+            <span style={{
+              padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: themeColors.success50, color: themeColors.success600, borderRadius: themeRadius.sm, fontSize: '12px', fontWeight: '600',
+            }}
+            >
+              {enabledCount}
+              {' '}
+              enabled
+            </span>
+            <span style={{
+              padding: `${themeSpace.xs} ${themeSpace.sm}`, backgroundColor: themeColors.gray100, color: themeColors.gray600, borderRadius: themeRadius.sm, fontSize: '12px', fontWeight: '600',
+            }}
+            >
+              {disabledCount}
+              {' '}
+              disabled
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {error && (
+        <div style={{
+          backgroundColor: themeColors.error50, border: `1px solid ${themeColors.error600}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.error600,
+        }}
+        >
+          {error}
+        </div>
+        )}
+
         {saved && (
         <div style={{
           backgroundColor: themeColors.success50, border: `1px solid ${themeColors.success600}`, borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: themeColors.success600,
         }}
         >
-          Modules configuration saved successfully!
+          Modules configuration saved successfully! Changes will take effect on next mobile app launch.
         </div>
         )}
 
-        {/* Modules List */}
+        {hasUnsavedChanges && !saved && (
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: themeSpace.lg, marginBottom: themeSpace.xl,
+          backgroundColor: '#fefce8', border: '1px solid #eab308', borderRadius: themeRadius.card, padding: themeSpace.lg, marginBottom: themeSpace.lg, color: '#854d0e',
         }}
         >
-          {modules.map((module) => (
-            <div
-              key={module.id}
-              style={{
-                backgroundColor: themeColors.white,
-                borderRadius: themeRadius.card,
-                border: `1px solid ${themeColors.gray200}`,
-                padding: themeSpace.lg,
-                boxShadow: themeShadow.sm,
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: themeSpace.md,
-              }}
-              >
-                <div style={{ flex: 1, marginRight: themeSpace.md }}>
-                  <h3 style={{
-                    margin: 0, fontSize: '16px', fontWeight: '700', color: themeColors.text,
-                  }}
-                  >{module.name}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  aria-label={`Toggle ${module.name}`}
-                  onClick={() => handleToggle(module.id)}
-                  style={{
-                    width: '50px',
-                    height: '28px',
-                    borderRadius: '14px',
-                    border: 'none',
-                    backgroundColor: module.enabled ? themeColors.primary600 : themeColors.gray200,
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'all 200ms',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                     position: 'absolute',
-                     width: '24px',
-                     height: '24px',
-                     backgroundColor: themeColors.white,
-                     borderRadius: '50%',
-                     top: '2px',
-                     left: module.enabled ? '24px' : '2px',
-                     transition: 'left 200ms',
-                   }}
-                  />
-                </button>
-              </div>
-
-              <p style={{ margin: 0, fontSize: '13px', color: themeColors.gray600 }}>{module.description}</p>
-
-              <div style={{ marginTop: themeSpace.md, paddingTop: themeSpace.md, borderTop: `1px solid ${themeColors.gray200}` }}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: `${themeSpace.xs} ${themeSpace.sm}`,
-                    backgroundColor: module.enabled ? themeColors.success50 : themeColors.gray100,
-                    color: module.enabled ? themeColors.success600 : themeColors.gray600,
-                    borderRadius: themeRadius.sm,
-                    fontSize: '12px',
-                    fontWeight: '500',
-                  }}
-                >
-                  {module.enabled ? ' Enabled' : 'Disabled'}
-                </span>
-              </div>
-            </div>
-          ))}
+          You have unsaved changes. Click &quot;Save Configuration&quot; to apply.
         </div>
+        )}
 
-        {/* Save Button */}
-        <button
-          type="button"
-          onClick={handleSave}
-          style={{
-            padding: `${themeSpace.md} ${themeSpace.lg}`,
-            backgroundColor: themeColors.primary600,
-            color: themeColors.white,
-            border: 'none',
-            borderRadius: themeRadius.sm,
-            cursor: 'pointer',
-            fontWeight: '600',
-            fontSize: '14px',
+        {isLoading ? (
+          <div style={{
+            backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, padding: themeSpace.xl, textAlign: 'center',
           }}
-        >
-          Save Modules Configuration
-        </button>
+          >
+            <p style={{ fontSize: '14px', color: themeColors.gray600 }}>Loading module configuration...</p>
+          </div>
+        ) : (
+          <>
+            {/* Modules grouped by category */}
+            {categoryOrder.map((cat) => {
+              const catModules = modules.filter((m) => m.category === cat);
+              if (catModules.length === 0) return null;
+              return (
+                <div key={cat} style={{ marginBottom: themeSpace.xl }}>
+                  <h2 style={{
+                    fontSize: '16px', fontWeight: '700', color: themeColors.text, margin: `0 0 ${themeSpace.md} 0`, textTransform: 'uppercase', letterSpacing: '0.05em',
+                  }}
+                  >
+                    {categoryLabels[cat] || cat}
+                  </h2>
+                  <div style={{
+                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: themeSpace.lg,
+                  }}
+                  >
+                    {catModules.map((module) => (
+                      <div
+                        key={module.moduleId}
+                        style={{
+                          backgroundColor: themeColors.white,
+                          borderRadius: themeRadius.card,
+                          border: `1px solid ${themeColors.gray200}`,
+                          padding: themeSpace.lg,
+                          boxShadow: themeShadow.sm,
+                          display: 'flex',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: themeSpace.md }}>
+                          <div style={{ flex: 1, marginRight: themeSpace.md }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: themeColors.text }}>{module.name}</h3>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label={`Toggle ${module.name}`}
+                            onClick={() => handleToggle(module.moduleId)}
+                            style={{
+                              width: '50px',
+                              height: '28px',
+                              borderRadius: '14px',
+                              border: 'none',
+                              backgroundColor: module.enabled ? themeColors.primary600 : themeColors.gray200,
+                              cursor: 'pointer',
+                              position: 'relative',
+                              transition: 'all 200ms',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <div style={{
+                              position: 'absolute', width: '24px', height: '24px', backgroundColor: themeColors.white, borderRadius: '50%', top: '2px', left: module.enabled ? '24px' : '2px', transition: 'left 200ms',
+                            }}
+                            />
+                          </button>
+                        </div>
+
+                        <p style={{ margin: 0, fontSize: '13px', color: themeColors.gray600 }}>{module.description}</p>
+
+                        <div style={{ marginTop: themeSpace.md, paddingTop: themeSpace.md, borderTop: `1px solid ${themeColors.gray200}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: `${themeSpace.xs} ${themeSpace.sm}`,
+                              backgroundColor: module.enabled ? themeColors.success50 : themeColors.gray100,
+                              color: module.enabled ? themeColors.success600 : themeColors.gray600,
+                              borderRadius: themeRadius.sm,
+                              fontSize: '12px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            {module.enabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                          <span style={{ fontSize: '11px', color: themeColors.gray600 }}>
+                            ID:
+                            {' '}
+                            {module.moduleId}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={handleSave}
+                style={{
+                  padding: `${themeSpace.md} ${themeSpace.lg}`,
+                  backgroundColor: themeColors.primary600,
+                  color: themeColors.white,
+                  border: 'none',
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  opacity: hasUnsavedChanges ? 1 : 0.6,
+                }}
+              >
+                Save Configuration
+              </button>
+              <button
+                type="button"
+                onClick={handleResetDefaults}
+                style={{
+                  padding: `${themeSpace.md} ${themeSpace.lg}`,
+                  backgroundColor: 'transparent',
+                  color: themeColors.gray600,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  fontSize: '14px',
+                }}
+              >
+                Reset to Defaults
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </PageLayout>
   );

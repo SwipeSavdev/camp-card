@@ -8,7 +8,6 @@ import {
   useEffect, useState, useMemo, useCallback,
 } from 'react';
 import { api } from '@/lib/api';
-import { useIsMobile as _useIsMobile } from '@/lib/hooks';
 import {
   AreaChart,
   Area,
@@ -252,121 +251,6 @@ const NOTIFICATION_CHANNELS = [
 ];
 
 // Behavioral Patterns
-const BEHAVIORAL_PATTERNS = [
-  {
-    id: 'dormant', name: 'Dormant Users', description: 'No activity in 30+ days', count: 2847,
-  },
-  {
-    id: 'at_risk', name: 'At Risk', description: 'Declining engagement', count: 1523,
-  },
-  {
-    id: 'loyal', name: 'Loyal Users', description: 'High engagement users', count: 4211,
-  },
-  {
-    id: 'new', name: 'New Users', description: 'Joined in last 7 days', count: 892,
-  },
-  {
-    id: 'high_value', name: 'High Value', description: 'Top spenders', count: 1156,
-  },
-  {
-    id: 'deal_seekers', name: 'Deal Seekers', description: 'Respond to discounts', count: 3487,
-  },
-];
-
-// Mock Data
-const mockCampaigns = [
-  {
-    id: '1', name: 'Weekend Flash Sale', type: 'weekend_special', status: 'active', segments: ['loyal', 'deal_seekers'], channels: ['push', 'email'], sent: 8450, opened: 3245, converted: 892, roi: '+245%', createdAt: '2025-12-20',
-  },
-  {
-    id: '2', name: 'Win Back Dormant Users', type: 'reactivation', status: 'active', segments: ['dormant', 'at_risk'], channels: ['email', 'sms'], sent: 4523, opened: 1876, converted: 423, roi: '+180%', createdAt: '2025-12-18',
-  },
-  {
-    id: '3', name: 'New Year Loyalty Rewards', type: 'loyalty_boost', status: 'scheduled', segments: ['loyal', 'high_value'], channels: ['push', 'in_app'], sent: 0, opened: 0, converted: 0, roi: '-', createdAt: '2025-12-25',
-  },
-  {
-    id: '4', name: 'Local Restaurant Week', type: 'location_based', status: 'completed', segments: ['deal_seekers'], channels: ['push', 'email', 'sms'], sent: 12340, opened: 5678, converted: 1234, roi: '+312%', createdAt: '2025-12-10',
-  },
-  {
-    id: '5', name: 'Welcome Series', type: 'new_user', status: 'active', segments: ['new'], channels: ['email', 'push', 'in_app'], sent: 2890, opened: 1845, converted: 567, roi: '+156%', createdAt: '2025-12-15',
-  },
-];
-
-const generateTimeSeriesData = (days: number, baseValue: number, variance: number) => {
-  const data = [];
-  const now = new Date();
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      value: Math.round(baseValue + (Math.random() - 0.5) * variance * 2),
-      conversions: Math.round((baseValue / 10) + (Math.random() - 0.5) * (variance / 5) * 2),
-    });
-  }
-  return data;
-};
-
-const mockAnalyticsData = {
-  campaignPerformance: generateTimeSeriesData(30, 1500, 400),
-  channelPerformance: [
-    {
-      name: 'Email', sent: 45230, opened: 18920, converted: 4523, rate: 23.9,
-    },
-    {
-      name: 'SMS', sent: 23450, opened: 12340, converted: 3421, rate: 27.7,
-    },
-    {
-      name: 'Push', sent: 67890, opened: 42130, converted: 8945, rate: 21.2,
-    },
-    {
-      name: 'In-App', sent: 34560, opened: 28340, converted: 6789, rate: 23.9,
-    },
-  ],
-  segmentPerformance: [
-    {
-      segment: 'Dormant', campaigns: 12, conversions: 2340, roi: 180,
-    },
-    {
-      segment: 'Loyal', campaigns: 8, conversions: 4567, roi: 245,
-    },
-    {
-      segment: 'New Users', campaigns: 15, conversions: 1890, roi: 156,
-    },
-    {
-      segment: 'High Value', campaigns: 6, conversions: 3210, roi: 312,
-    },
-    {
-      segment: 'Deal Seekers', campaigns: 10, conversions: 5678, roi: 198,
-    },
-  ],
-  conversionsByType: [
-    { name: 'Reactivation', value: 2340 },
-    { name: 'Loyalty', value: 4567 },
-    { name: 'Weekend', value: 3890 },
-    { name: 'Location', value: 2456 },
-    { name: 'New User', value: 1890 },
-  ],
-};
-
-const mockMerchants = [
-  {
-    id: '1', name: 'Pizza Palace', category: 'Food & Dining', location: 'Downtown', campaigns: 12, redemptions: 3456, rating: 4.8, status: 'active',
-  },
-  {
-    id: '2', name: 'Fashion Forward', category: 'Retail', location: 'Mall District', campaigns: 8, redemptions: 2345, rating: 4.5, status: 'active',
-  },
-  {
-    id: '3', name: 'Adventure Sports', category: 'Entertainment', location: 'Sports Complex', campaigns: 5, redemptions: 1234, rating: 4.7, status: 'active',
-  },
-  {
-    id: '4', name: 'Tech Haven', category: 'Electronics', location: 'Tech Park', campaigns: 15, redemptions: 4567, rating: 4.6, status: 'active',
-  },
-  {
-    id: '5', name: 'Green Grocers', category: 'Food & Dining', location: 'East Side', campaigns: 6, redemptions: 890, rating: 4.4, status: 'pending',
-  },
-];
-
 type TabType = 'campaigns' | 'segments' | 'analytics' | 'merchants';
 
 interface Campaign {
@@ -387,8 +271,8 @@ export default function AIMarketingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('campaigns');
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  const [segments, setSegments] = useState(BEHAVIORAL_PATTERNS);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [segments, setSegments] = useState<{ id: string; name: string; description: string; count: number }[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -396,6 +280,8 @@ export default function AIMarketingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiGeneratedContent, setAiGeneratedContent] = useState<string | null>(null);
+  const [merchants, setMerchants] = useState<any[]>([]);
+  const [dashboardData, setDashboardData] = useState<any>(null);
 
   // Campaign creation form state
   const [newCampaign, setNewCampaign] = useState({
@@ -431,17 +317,17 @@ export default function AIMarketingPage() {
           status: c.status?.toLowerCase() || 'active',
           segments: c.targetAudience?.segments || c.segments || [],
           channels: c.channels || ['email'],
-          sent: c.metrics?.sent || c.sent || 0,
-          opened: c.metrics?.opened || c.opened || 0,
-          converted: c.metrics?.converted || c.converted || 0,
-          roi: c.metrics?.roi ? `+${c.metrics.roi}%` : c.roi || '-',
+          sent: c.messagesSent || c.sent || 0,
+          opened: c.opens || c.opened || 0,
+          converted: c.conversions || c.converted || 0,
+          roi: c.roi != null ? `+${c.roi}%` : '-',
           createdAt: c.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
         }));
-        setCampaigns(mapped.length > 0 ? mapped : mockCampaigns);
+        setCampaigns(mapped.length > 0 ? mapped : []);
       }
     } catch (error) {
       console.error('Failed to fetch campaigns:', error);
-      // Keep mock data as fallback
+      // API fetch failed — campaigns remain empty
     } finally {
       setIsLoading(false);
     }
@@ -464,7 +350,40 @@ export default function AIMarketingPage() {
       }
     } catch (error) {
       console.error('Failed to fetch segments:', error);
-      // Keep default segments as fallback
+    }
+  }, [session]);
+
+  // Fetch merchants from API
+  const fetchMerchants = useCallback(async () => {
+    try {
+      const result = await api.getMerchants(session);
+      const list = result?.merchants || result?.content || [];
+      if (Array.isArray(list)) {
+        setMerchants(list.map((m: any) => ({
+          id: m.id?.toString() || String(Date.now()),
+          name: m.name || m.businessName || 'Unnamed',
+          category: m.category || m.businessType || '-',
+          location: m.city || m.address || '-',
+          campaigns: m.campaignCount || 0,
+          redemptions: m.redemptionCount || m.totalRedemptions || 0,
+          rating: m.rating || 0,
+          status: m.status?.toLowerCase() || 'active',
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch merchants:', error);
+    }
+  }, [session]);
+
+  // Fetch dashboard summary for revenue metrics
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const result = await api.getDashboardSummary(session);
+      if (result) {
+        setDashboardData(result);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
     }
   }, [session]);
 
@@ -478,8 +397,111 @@ export default function AIMarketingPage() {
     if (status === 'authenticated') {
       fetchCampaigns();
       fetchSegments();
+      fetchMerchants();
+      fetchDashboard();
     }
-  }, [status, fetchCampaigns, fetchSegments]);
+  }, [status, fetchCampaigns, fetchSegments, fetchMerchants, fetchDashboard]);
+
+  // ---- Computed stats from real campaign data ----
+  const campaignStats = useMemo(() => {
+    const activeCampaigns = campaigns.filter((c) => c.status === 'active').length;
+    const totalSent = campaigns.reduce((sum, c) => sum + c.sent, 0);
+    const totalOpened = campaigns.reduce((sum, c) => sum + c.opened, 0);
+    const totalConverted = campaigns.reduce((sum, c) => sum + c.converted, 0);
+    const campaignsWithSent = campaigns.filter((c) => c.sent > 0);
+    const avgOpenRate = campaignsWithSent.length > 0
+      ? (totalOpened / totalSent * 100) : 0;
+    const avgConversionRate = campaignsWithSent.length > 0
+      ? (totalConverted / totalSent * 100) : 0;
+
+    // Parse ROI values
+    const roiValues = campaigns
+      .map((c) => parseFloat(c.roi.replace(/[^0-9.-]/g, '')))
+      .filter((v) => !Number.isNaN(v));
+    const avgRoi = roiValues.length > 0
+      ? roiValues.reduce((s, v) => s + v, 0) / roiValues.length : 0;
+
+    // Revenue from dashboard
+    const totalRevenueCents = dashboardData?.totalRevenueCents || 0;
+
+    return {
+      activeCampaigns,
+      totalSent,
+      totalOpened,
+      totalConverted,
+      avgOpenRate,
+      avgConversionRate,
+      avgRoi,
+      totalRevenue: Math.round(totalRevenueCents / 100),
+    };
+  }, [campaigns, dashboardData]);
+
+  // Computed analytics derived from campaign data
+  const computedAnalytics = useMemo(() => {
+    // Conversions by campaign type
+    const typeMap: Record<string, number> = {};
+    campaigns.forEach((c) => {
+      const typeInfo = CAMPAIGN_TYPES.find((t) => t.id === c.type);
+      const label = typeInfo?.name || c.type;
+      typeMap[label] = (typeMap[label] || 0) + c.converted;
+    });
+    const conversionsByType = Object.entries(typeMap).map(([name, value]) => ({ name, value }));
+
+    // Channel performance aggregated from campaigns
+    const channelMap: Record<string, { sent: number; opened: number; converted: number }> = {};
+    campaigns.forEach((c) => {
+      c.channels.forEach((ch) => {
+        const chName = NOTIFICATION_CHANNELS.find((nc) => nc.id === ch)?.name || ch;
+        if (!channelMap[chName]) channelMap[chName] = { sent: 0, opened: 0, converted: 0 };
+        // Distribute evenly across channels for this campaign
+        const channelCount = c.channels.length || 1;
+        channelMap[chName].sent += Math.round(c.sent / channelCount);
+        channelMap[chName].opened += Math.round(c.opened / channelCount);
+        channelMap[chName].converted += Math.round(c.converted / channelCount);
+      });
+    });
+    const channelPerformance = Object.entries(channelMap).map(([name, d]) => ({
+      name,
+      sent: d.sent,
+      opened: d.opened,
+      converted: d.converted,
+      rate: d.sent > 0 ? parseFloat((d.converted / d.sent * 100).toFixed(1)) : 0,
+    }));
+
+    // Segment performance from campaigns
+    const segMap: Record<string, { campaigns: number; conversions: number; roiSum: number; roiCount: number }> = {};
+    campaigns.forEach((c) => {
+      const roiVal = parseFloat(c.roi.replace(/[^0-9.-]/g, ''));
+      c.segments.forEach((sId) => {
+        const seg = segments.find((s) => s.id === sId);
+        const label = seg?.name || sId;
+        if (!segMap[label]) segMap[label] = { campaigns: 0, conversions: 0, roiSum: 0, roiCount: 0 };
+        segMap[label].campaigns += 1;
+        segMap[label].conversions += c.converted;
+        if (!Number.isNaN(roiVal)) { segMap[label].roiSum += roiVal; segMap[label].roiCount += 1; }
+      });
+    });
+    const segmentPerformance = Object.entries(segMap).map(([segment, d]) => ({
+      segment,
+      campaigns: d.campaigns,
+      conversions: d.conversions,
+      roi: d.roiCount > 0 ? Math.round(d.roiSum / d.roiCount) : 0,
+    }));
+
+    // Campaign performance time series grouped by creation date
+    const dateMap: Record<string, { value: number; conversions: number }> = {};
+    campaigns.forEach((c) => {
+      const d = c.createdAt;
+      if (!dateMap[d]) dateMap[d] = { value: 0, conversions: 0 };
+      dateMap[d].value += c.sent;
+      dateMap[d].conversions += c.converted;
+    });
+    const campaignPerformance = Object.entries(dateMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, d]) => ({ date, value: d.value, conversions: d.conversions }));
+
+    return { conversionsByType, channelPerformance, segmentPerformance, campaignPerformance };
+  }, [campaigns, segments]);
 
   // Filter campaigns
   const filteredCampaigns = useMemo(() => campaigns.filter((campaign) => {
@@ -788,16 +810,16 @@ export default function AIMarketingPage() {
         >
           {[
             {
-              label: 'Active Campaigns', value: campaigns.filter((c) => c.status === 'active').length, icon: 'play', color: themeColors.success600, bg: themeColors.success50,
+              label: 'Active Campaigns', value: campaignStats.activeCampaigns, icon: 'play', color: themeColors.success600, bg: themeColors.success50,
             },
             {
-              label: 'Total Sent', value: '171K', icon: 'email', color: themeColors.primary600, bg: themeColors.primary50,
+              label: 'Total Sent', value: campaignStats.totalSent.toLocaleString(), icon: 'email', color: themeColors.primary600, bg: themeColors.primary50,
             },
             {
-              label: 'Avg Open Rate', value: '42.3%', icon: 'eye', color: themeColors.info600, bg: themeColors.info50,
+              label: 'Avg Open Rate', value: `${campaignStats.avgOpenRate.toFixed(1)}%`, icon: 'eye', color: themeColors.info600, bg: themeColors.info50,
             },
             {
-              label: 'Avg Conversion', value: '18.7%', icon: 'target', color: themeColors.purple600, bg: themeColors.purple50,
+              label: 'Avg Conversion', value: `${campaignStats.avgConversionRate.toFixed(1)}%`, icon: 'target', color: themeColors.purple600, bg: themeColors.purple50,
             },
           ].map((stat) => (
             <div
@@ -1161,7 +1183,7 @@ export default function AIMarketingPage() {
             Segment Performance
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockAnalyticsData.segmentPerformance}>
+            <BarChart data={computedAnalytics.segmentPerformance}>
               <CartesianGrid strokeDasharray="3 3" stroke={themeColors.gray200} />
               <XAxis dataKey="segment" tick={{ fontSize: 12, fill: themeColors.gray600 }} />
               <YAxis tick={{ fontSize: 12, fill: themeColors.gray600 }} />
@@ -1185,19 +1207,19 @@ export default function AIMarketingPage() {
         >
           {[
             {
-              label: 'Total Campaigns', value: '47', change: '+12%', icon: 'megaphone', color: themeColors.primary600,
+              label: 'Total Campaigns', value: campaigns.length.toString(), icon: 'megaphone', color: themeColors.primary600,
             },
             {
-              label: 'Messages Sent', value: '171K', change: '+28%', icon: 'email', color: themeColors.info600,
+              label: 'Messages Sent', value: campaignStats.totalSent.toLocaleString(), icon: 'email', color: themeColors.info600,
             },
             {
-              label: 'Conversions', value: '23.4K', change: '+18%', icon: 'target', color: themeColors.success600,
+              label: 'Conversions', value: campaignStats.totalConverted.toLocaleString(), icon: 'target', color: themeColors.success600,
             },
             {
-              label: 'Revenue Generated', value: '$89K', change: '+32%', icon: 'trendingUp', color: themeColors.purple600,
+              label: 'Revenue Generated', value: `$${campaignStats.totalRevenue.toLocaleString()}`, icon: 'trendingUp', color: themeColors.purple600,
             },
             {
-              label: 'Avg ROI', value: '245%', change: '+15%', icon: 'chart', color: themeColors.warning600,
+              label: 'Avg ROI', value: `${campaignStats.avgRoi.toFixed(0)}%`, icon: 'chart', color: themeColors.warning600,
             },
           ].map((kpi) => (
             <div
@@ -1214,11 +1236,6 @@ export default function AIMarketingPage() {
                 <Icon name={kpi.icon} size={16} color={kpi.color} />
               </div>
               <div style={{ fontSize: '24px', fontWeight: '700', color: themeColors.text }}>{kpi.value}</div>
-              <div style={{ fontSize: '12px', color: themeColors.success600, marginTop: themeSpace.xs }}>
-                <Icon name="trendingUp" size={12} color={themeColors.success600} />
-                {' '}
-                {kpi.change}
-              </div>
             </div>
           ))}
         </div>
@@ -1237,7 +1254,7 @@ export default function AIMarketingPage() {
               Campaign Performance
             </h3>
             <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={mockAnalyticsData.campaignPerformance}>
+              <AreaChart data={computedAnalytics.campaignPerformance}>
                 <CartesianGrid strokeDasharray="3 3" stroke={themeColors.gray200} />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: themeColors.gray600 }} />
                 <YAxis tick={{ fontSize: 11, fill: themeColors.gray600 }} />
@@ -1262,7 +1279,7 @@ export default function AIMarketingPage() {
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={mockAnalyticsData.conversionsByType}
+                  data={computedAnalytics.conversionsByType}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -1273,7 +1290,7 @@ export default function AIMarketingPage() {
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
                 >
-                  {mockAnalyticsData.conversionsByType.map((_entry, index) => (
+                  {computedAnalytics.conversionsByType.map((_entry, index) => (
                     // eslint-disable-next-line react/no-array-index-key
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
@@ -1331,7 +1348,7 @@ export default function AIMarketingPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockAnalyticsData.channelPerformance.map((channel) => (
+                  {computedAnalytics.channelPerformance.map((channel) => (
                     <tr key={channel.name}>
                       <td style={{ padding: themeSpace.md, fontWeight: '500' }}>{channel.name}</td>
                       <td style={{ padding: themeSpace.md, textAlign: 'right' }}>{channel.sent.toLocaleString()}</td>
@@ -1364,16 +1381,16 @@ export default function AIMarketingPage() {
         >
           {[
             {
-              label: 'Total Merchants', value: mockMerchants.length, icon: 'store', color: themeColors.primary600,
+              label: 'Total Merchants', value: merchants.length, icon: 'store', color: themeColors.primary600,
             },
             {
-              label: 'Active Campaigns', value: mockMerchants.reduce((a, m) => a + m.campaigns, 0), icon: 'megaphone', color: themeColors.success600,
+              label: 'Active Campaigns', value: merchants.reduce((a, m) => a + (m.campaigns || 0), 0), icon: 'megaphone', color: themeColors.success600,
             },
             {
-              label: 'Total Redemptions', value: mockMerchants.reduce((a, m) => a + m.redemptions, 0).toLocaleString(), icon: 'gift', color: themeColors.warning600,
+              label: 'Total Redemptions', value: merchants.reduce((a, m) => a + (m.redemptions || 0), 0).toLocaleString(), icon: 'gift', color: themeColors.warning600,
             },
             {
-              label: 'Avg Rating', value: (mockMerchants.reduce((a, m) => a + m.rating, 0) / mockMerchants.length).toFixed(1), icon: 'award', color: themeColors.purple600,
+              label: 'Avg Rating', value: merchants.length > 0 ? (merchants.reduce((a, m) => a + (m.rating || 0), 0) / merchants.length).toFixed(1) : '0', icon: 'award', color: themeColors.purple600,
             },
           ].map((stat) => (
             <div
@@ -1473,7 +1490,7 @@ export default function AIMarketingPage() {
               </tr>
             </thead>
             <tbody>
-              {mockMerchants.map((merchant) => (
+              {merchants.map((merchant) => (
                 <tr key={merchant.id} style={{ borderBottom: `1px solid ${themeColors.gray100}` }}>
                   <td style={{ padding: themeSpace.md }}>
                     <div style={{ fontWeight: '500', color: themeColors.text }}>{merchant.name}</div>
@@ -1668,7 +1685,7 @@ htmlFor="field-3" style={{
                 Target Segments *
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: themeSpace.sm }}>
-                {BEHAVIORAL_PATTERNS.map((segment) => (
+                {segments.map((segment) => (
                   <div
                     key={segment.id}
                     onClick={() => toggleSegment(segment.id)}

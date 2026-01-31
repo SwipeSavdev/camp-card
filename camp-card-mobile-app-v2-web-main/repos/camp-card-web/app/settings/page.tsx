@@ -61,6 +61,12 @@ function Icon({
   return <span {...props}>{icons[name] || null}</span>;
 }
 
+interface ApiKey {
+  key: string;
+  name: string;
+  createdAt: string;
+}
+
 interface SettingsState {
   appName: string;
   apiUrl: string;
@@ -71,37 +77,52 @@ interface SettingsState {
   twoFactorAuth: boolean;
   ipWhitelist: boolean;
   sessionTimeout: string;
-  apiKeys: Array<{ key: string; name: string }>;
-  [key: string]: string | boolean | Array<{ key: string; name: string }>;
+  apiKeys: ApiKey[];
+  [key: string]: string | boolean | ApiKey[];
 }
+
+const STORAGE_KEY = 'campcard_settings';
+
+const defaultSettings: SettingsState = {
+  appName: 'Camp Card Platform',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
+  timeout: '30000',
+  emailNotifications: true,
+  pushNotifications: true,
+  weeklyReport: true,
+  twoFactorAuth: false,
+  ipWhitelist: false,
+  sessionTimeout: '3600',
+  apiKeys: [],
+};
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('general');
   const [saved, setSaved] = useState(false);
-  const [settings, setSettings] = useState<SettingsState>({
-    // General
-    appName: 'Camp Card Platform',
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
-    timeout: '30000',
-    // Notifications
-    emailNotifications: true,
-    pushNotifications: true,
-    weeklyReport: true,
-    // Security
-    twoFactorAuth: false,
-    ipWhitelist: false,
-    sessionTimeout: '3600',
-    // API
-    apiKeys: [],
-  });
+  const [settings, setSettings] = useState<SettingsState>(defaultSettings);
 
+  // Load persisted settings on mount
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setSettings((prev) => ({ ...prev, ...parsed }));
+      }
+    } catch {
+      // localStorage unavailable or corrupt — use defaults
+    }
   }, [status, router]);
 
   const handleSave = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch {
+      // localStorage full or unavailable
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -111,6 +132,32 @@ export default function SettingsPage() {
       ...settings,
       [key]: !settings[key],
     });
+  };
+
+  const generateApiKey = () => {
+    const key = `cc_${crypto.randomUUID().replaceAll('-', '')}`;
+    const newKey: ApiKey = {
+      key,
+      name: `Key ${settings.apiKeys.length + 1}`,
+      createdAt: new Date().toLocaleDateString(),
+    };
+    const updated = { ...settings, apiKeys: [...settings.apiKeys, newKey] };
+    setSettings(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch {
+      // localStorage full or unavailable
+    }
+  };
+
+  const revokeApiKey = (keyToRevoke: string) => {
+    const updated = { ...settings, apiKeys: settings.apiKeys.filter((k) => k.key !== keyToRevoke) };
+    setSettings(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch {
+      // localStorage full or unavailable
+    }
   };
 
   if (status === 'loading') return null;
@@ -490,6 +537,7 @@ id="field-4"
 
             <button
               type="button"
+              onClick={generateApiKey}
               style={{
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
                 backgroundColor: themeColors.primary600,
@@ -511,7 +559,43 @@ id="field-4"
               >
                 No API keys yet. Create one to get started.
               </div>
-            ) : null}
+            ) : (
+              <div style={{ marginTop: themeSpace.lg, display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
+                {settings.apiKeys.map((apiKey) => (
+                  <div
+                    key={apiKey.key}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: themeSpace.lg, backgroundColor: themeColors.gray50, borderRadius: themeRadius.sm, border: `1px solid ${themeColors.gray200}`,
+                    }}
+                  >
+                    <div>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: themeColors.text }}>{apiKey.name}</p>
+                      <p style={{
+                        margin: '4px 0 0 0', fontSize: '13px', color: themeColors.gray600, fontFamily: 'monospace',
+                      }}
+                      >
+                        {apiKey.key.slice(0, 12)}
+                        {'•'.repeat(20)}
+                      </p>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: themeColors.gray500 }}>
+                        Created
+                        {' '}
+                        {apiKey.createdAt}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => revokeApiKey(apiKey.key)}
+                      style={{
+                        padding: `${themeSpace.xs} ${themeSpace.md}`, backgroundColor: themeColors.error500, color: themeColors.white, border: 'none', borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+                      }}
+                    >
+                      Revoke
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           )}
         </div>
