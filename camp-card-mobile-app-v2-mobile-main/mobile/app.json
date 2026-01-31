@@ -2,7 +2,7 @@
   "expo": {
     "name": "Camp Card",
     "slug": "camp-card",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "description": "BSA Camp Card - Digital discount subscriptions supporting Scout fundraising. Access exclusive merchant offers, track redemptions, and support your local Scout troop.",
     "sdkVersion": "54.0.0",
@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "27",
+      "buildNumber": "28",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -51,7 +51,7 @@
     },
     "android": {
       "package": "org.bsa.campcard",
-      "versionCode": 23,
+      "versionCode": 24,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
@@ -125,7 +125,7 @@
       "expo-secure-store",
       "expo-font"
     ],
-    "runtimeVersion": "1.0.5-27",
+    "runtimeVersion": "1.0.6-28",
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"
