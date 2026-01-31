@@ -261,8 +261,8 @@ export default function CampCardsPage() {
             }}
           >
             <option value="all">All Methods</option>
-            <option value="GATEWAY_PURCHASE">Payment Gateway</option>
-            <option value="CLAIM_LINK">Claim Link</option>
+            <option value="PURCHASE">Purchase</option>
+            <option value="GIFT">Gift</option>
           </select>
 
           <select
@@ -408,15 +408,15 @@ Actions
                    <td style={{ padding: themeSpace.lg, fontSize: '13px', color: themeColors.text }}>
                    <span style={{
                    padding: `${themeSpace.xs} ${themeSpace.sm}`,
-                   backgroundColor: item.issuanceMethod === 'GATEWAY_PURCHASE' ? themeColors.info50 : themeColors.primary50,
-                   color: item.issuanceMethod === 'GATEWAY_PURCHASE' ? themeColors.info600 : themeColors.primary600,
+                   backgroundColor: item.issuanceMethod === 'PURCHASE' ? themeColors.info50 : themeColors.primary50,
+                   color: item.issuanceMethod === 'PURCHASE' ? themeColors.info600 : themeColors.primary600,
                    borderRadius: themeRadius.sm,
                    fontSize: '12px',
                    fontWeight: '500',
                    display: 'inline-block',
                  }}
                  >
-                   {({ GATEWAY_PURCHASE: 'Payment Gateway', CLAIM_LINK: 'Claim Link' } as Record<string, string>)[item.issuanceMethod || ''] || item.issuanceMethod || 'Unknown'}
+                   {({ PURCHASE: 'Purchase', GIFT: 'Gift' } as Record<string, string>)[item.issuanceMethod || ''] || item.issuanceMethod || 'Unknown'}
                  </span>
                  </td>
                    <td style={{ padding: themeSpace.lg, fontSize: '13px', color: themeColors.gray600 }}>
