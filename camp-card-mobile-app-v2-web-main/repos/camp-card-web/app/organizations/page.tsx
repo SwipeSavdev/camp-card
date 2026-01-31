@@ -77,6 +77,8 @@ export default function OrganizationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
@@ -113,6 +115,15 @@ export default function OrganizationsPage() {
 
   const filteredItems = (Array.isArray(items) ? items : []).filter((item) => item.name?.toLowerCase().includes(searchTerm.toLowerCase())
  || item.email?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage]);
 
   if (status === 'loading') return null;
   if (!session) return null;
@@ -156,21 +167,41 @@ export default function OrganizationsPage() {
             </button>
           </div>
 
-          <div style={{ position: 'relative' }}>
-            <Icon name="search" size={18} color={themeColors.gray500} style={{ position: 'absolute', left: themeSpace.md, top: '12px' }} />
-            <input
-              type="text"
-              placeholder="Search organizations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+          <div style={{ display: 'flex', gap: themeSpace.md, alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Icon name="search" size={18} color={themeColors.gray500} style={{ position: 'absolute', left: themeSpace.md, top: '12px' }} />
+              <input
+                type="text"
+                placeholder="Search organizations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: `${themeSpace.sm} ${themeSpace.md} ${themeSpace.sm} ${themeSpace.xl}`,
+                  border: `1px solid ${themeColors.gray200}`,
+                  borderRadius: themeRadius.sm,
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
               style={{
-                width: '100%',
-                padding: `${themeSpace.sm} ${themeSpace.md} ${themeSpace.sm} ${themeSpace.xl}`,
+                padding: `${themeSpace.sm} ${themeSpace.md}`,
                 border: `1px solid ${themeColors.gray200}`,
                 borderRadius: themeRadius.sm,
                 fontSize: '14px',
+                backgroundColor: themeColors.white,
+                cursor: 'pointer',
               }}
-            />
+            >
+              <option value={10}>10 per page</option>
+              <option value={25}>25 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+            </select>
           </div>
         </div>
 
@@ -190,6 +221,7 @@ export default function OrganizationsPage() {
           ) : filteredItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: themeSpace.xl, color: themeColors.gray600 }}>No organizations found</div>
           ) : (
+            <>
             <div style={{
               backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, overflow: 'hidden', boxShadow: themeShadow.sm,
             }}
@@ -224,7 +256,7 @@ Actions
                  </tr>
                 </thead>
                 <tbody>
-                  {filteredItems.map((item) => (
+                  {paginatedItems.map((item) => (
                    <tr key={item.id} style={{ borderBottom: `1px solid ${themeColors.gray200}` }}>
                    <td style={{
                    padding: themeSpace.lg, fontSize: '14px', color: themeColors.text, fontWeight: '500',
@@ -267,6 +299,129 @@ style={{
                 </tbody>
               </table>
             </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+              <div style={{
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: themeSpace.sm, marginTop: themeSpace.xl, padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.card, boxShadow: themeShadow.xs,
+              }}
+              >
+                <span style={{ fontSize: '13px', color: themeColors.gray500, marginRight: themeSpace.md }}>
+                  Showing
+                  {' '}
+                  {startIndex + 1}
+                  -
+                  {Math.min(startIndex + itemsPerPage, filteredItems.length)}
+                  {' '}
+                  of
+                  {' '}
+                  {filteredItems.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  First
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Prev
+                </button>
+                <div style={{ display: 'flex', gap: themeSpace.xs }}>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        type="button"
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        style={{
+                          padding: `${themeSpace.sm} ${themeSpace.md}`,
+                          backgroundColor: currentPage === pageNum ? themeColors.primary600 : themeColors.white,
+                          color: currentPage === pageNum ? themeColors.white : themeColors.text,
+                          border: `1px solid ${currentPage === pageNum ? themeColors.primary600 : themeColors.gray200}`,
+                          borderRadius: themeRadius.sm,
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: currentPage === pageNum ? '600' : '500',
+                          minWidth: '36px',
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Next
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Last
+                </button>
+              </div>
+              )}
+            </>
           )}
         </div>
       </div>

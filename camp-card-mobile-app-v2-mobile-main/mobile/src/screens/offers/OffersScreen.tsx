@@ -46,6 +46,7 @@ export default function OffersScreen() {
   const [filteredOffers, setFilteredOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const navigation = useNavigation();
   const { user } = useAuthStore();
@@ -67,7 +68,7 @@ export default function OffersScreen() {
 
   useEffect(() => {
     filterOffers();
-  }, [selectedCategory, offers]);
+  }, [selectedCategory, searchQuery, offers]);
 
   const loadOffers = async (isRefresh = false) => {
     try {
@@ -109,6 +110,15 @@ export default function OffersScreen() {
 
   const filterOffers = () => {
     let filtered = [...offers];
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(o =>
+        o.title.toLowerCase().includes(query) ||
+        o.description?.toLowerCase().includes(query) ||
+        o.merchantName?.toLowerCase().includes(query)
+      );
+    }
 
     if (selectedCategory !== 'ALL') {
       filtered = filtered.filter(o => o.category === selectedCategory);
@@ -230,6 +240,25 @@ export default function OffersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Offers</Text>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search offers, merchants..."
+          placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Category Filter */}

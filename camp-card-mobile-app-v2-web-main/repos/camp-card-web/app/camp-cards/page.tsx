@@ -86,6 +86,8 @@ export default function CampCardsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     // Load data when session is available
@@ -145,6 +147,15 @@ export default function CampCardsPage() {
     return matchesSearch && matchesStatus && matchesMethod;
   });
 
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, methodFilter, itemsPerPage]);
+
   if (status === 'loading') return null;
   if (!session) return null;
 
@@ -186,7 +197,7 @@ export default function CampCardsPage() {
         </div>
 
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr auto auto', gap: themeSpace.md, alignItems: 'center', marginBottom: themeSpace.lg,
+          display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: themeSpace.md, alignItems: 'center', marginBottom: themeSpace.lg,
         }}
         >
           <div style={{ position: 'relative' }}>
@@ -253,6 +264,24 @@ export default function CampCardsPage() {
             <option value="GATEWAY_PURCHASE">Payment Gateway</option>
             <option value="CLAIM_LINK">Claim Link</option>
           </select>
+
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            style={{
+              padding: `${themeSpace.sm} ${themeSpace.md}`,
+              border: `1px solid ${themeColors.gray200}`,
+              borderRadius: themeRadius.sm,
+              fontSize: '14px',
+              backgroundColor: themeColors.white,
+              cursor: 'pointer',
+            }}
+          >
+            <option value={10}>10 per page</option>
+            <option value={25}>25 per page</option>
+            <option value={50}>50 per page</option>
+            <option value={100}>100 per page</option>
+          </select>
         </div>
       </div>
 
@@ -287,6 +316,7 @@ export default function CampCardsPage() {
           <p style={{ fontSize: '14px', color: themeColors.gray500, margin: 0 }}>Cards are automatically issued when customers purchase through our payment gateway or use a claim link from a Troop Leader</p>
         </div>
       ) : (
+        <>
         <div style={{
           backgroundColor: themeColors.white, borderRadius: themeRadius.card, border: `1px solid ${themeColors.gray200}`, overflow: 'hidden', boxShadow: themeShadow.sm,
         }}
@@ -339,7 +369,7 @@ Actions
               </tr>
             </thead>
             <tbody>
-              {filteredItems.map((item) => {
+              {paginatedItems.map((item) => {
                 const statusColor = getStatusColor(item.status || '');
                 const issuedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
                 const expiresDate = item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'N/A';
@@ -421,6 +451,129 @@ Actions
             </tbody>
           </table>
         </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+              <div style={{
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: themeSpace.sm, marginTop: themeSpace.xl, padding: themeSpace.lg, backgroundColor: themeColors.white, borderRadius: themeRadius.card, boxShadow: themeShadow.xs,
+              }}
+              >
+                <span style={{ fontSize: '13px', color: themeColors.gray500, marginRight: themeSpace.md }}>
+                  Showing
+                  {' '}
+                  {startIndex + 1}
+                  -
+                  {Math.min(startIndex + itemsPerPage, filteredItems.length)}
+                  {' '}
+                  of
+                  {' '}
+                  {filteredItems.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  First
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === 1 ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === 1 ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === 1 ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Prev
+                </button>
+                <div style={{ display: 'flex', gap: themeSpace.xs }}>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        type="button"
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        style={{
+                          padding: `${themeSpace.sm} ${themeSpace.md}`,
+                          backgroundColor: currentPage === pageNum ? themeColors.primary600 : themeColors.white,
+                          color: currentPage === pageNum ? themeColors.white : themeColors.text,
+                          border: `1px solid ${currentPage === pageNum ? themeColors.primary600 : themeColors.gray200}`,
+                          borderRadius: themeRadius.sm,
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: currentPage === pageNum ? '600' : '500',
+                          minWidth: '36px',
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Next
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.md}`,
+                    backgroundColor: currentPage === totalPages ? themeColors.gray100 : themeColors.white,
+                    color: currentPage === totalPages ? themeColors.gray500 : themeColors.primary600,
+                    border: `1px solid ${currentPage === totalPages ? themeColors.gray200 : themeColors.primary100}`,
+                    borderRadius: themeRadius.sm,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Last
+                </button>
+              </div>
+              )}
+        </>
       )}
     </PageLayout>
   );

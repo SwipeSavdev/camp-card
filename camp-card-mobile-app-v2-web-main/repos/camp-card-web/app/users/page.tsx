@@ -232,6 +232,12 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Auto-open add form when navigated from dashboard quick action
+  useEffect(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    if (params.get('action') === 'add') setShowAddForm(true);
+  }, []);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserStatus, setNewUserStatus] = useState<'active' | 'inactive'>('active');

@@ -102,6 +102,12 @@ export default function MerchantsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Auto-open add form when navigated from dashboard quick action
+  useEffect(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    if (params.get('action') === 'add') setShowAddForm(true);
+  }, []);
   const [expandedMerchants, setExpandedMerchants] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
 

@@ -729,16 +729,16 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
                 {[
                   {
-                    name: 'add', label: 'Create New User', color: themeColors.primary600, bg: themeColors.primary50, action: '/users',
+                    name: 'add', label: 'Add User', color: themeColors.primary600, bg: themeColors.primary50, action: '/users?action=add',
                   },
                   {
-                    name: 'report', label: 'Generate Report', color: themeColors.info600, bg: themeColors.info50, action: '/analytics',
+                    name: 'merchants', label: 'Add Merchant', color: themeColors.success600, bg: themeColors.success50, action: '/merchants?action=add',
                   },
                   {
-                    name: 'docs', label: 'View Documentation', color: themeColors.warning600, bg: themeColors.warning50, action: '/settings',
+                    name: 'offers', label: 'Create Offer', color: themeColors.warning600, bg: themeColors.warning50, action: '/offers?action=add',
                   },
                   {
-                    name: 'config', label: 'Feature Configuration', color: themeColors.success600, bg: themeColors.success50, action: '/config',
+                    name: 'analytics', label: 'View Analytics', color: themeColors.info600, bg: themeColors.info50, action: '/analytics',
                   },
                 ].map((action) => (
                   <button

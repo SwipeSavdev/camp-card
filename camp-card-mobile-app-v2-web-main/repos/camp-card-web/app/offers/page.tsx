@@ -178,6 +178,12 @@ export default function OffersPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Auto-open add form when navigated from dashboard quick action
+  useEffect(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    if (params.get('action') === 'add') setShowAddForm(true);
+  }, []);
   const [expandedOffers, setExpandedOffers] = useState<Set<string>>(new Set());
 
   // Filter state
