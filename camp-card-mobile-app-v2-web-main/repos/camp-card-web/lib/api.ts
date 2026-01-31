@@ -740,7 +740,7 @@ export const api = {
   // ============ HEALTH CHECK ============
   getHealth: async () => {
     try {
-      return await apiCall<any>('/health');
+      return await apiCall<any>('/public/health');
     } catch (error) {
       console.error('Failed to check health:', error);
       return { status: 'error' };
