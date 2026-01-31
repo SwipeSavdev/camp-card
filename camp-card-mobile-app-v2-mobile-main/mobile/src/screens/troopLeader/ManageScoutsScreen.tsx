@@ -1,7 +1,7 @@
 // Manage Scouts screen for Troop Leaders - Add/Remove/View Scouts
 // Per Troop Leader Portal requirements: Add/Remove Scouts, See Troop Metrics
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -43,69 +43,10 @@ interface Scout {
   joinedDate: string;
 }
 
-// Mock data - will be replaced with API call
-const initialScouts: Scout[] = [
-  {
-    id: '1',
-    firstName: 'Ethan',
-    lastName: 'Anderson',
-    email: 'ethan.anderson@email.com',
-    subscriptionStatus: 'active',
-    totalSales: 150,
-    redemptions: 12,
-    referrals: 5,
-    joinedDate: '2025-09-15',
-  },
-  {
-    id: '2',
-    firstName: 'Sophia',
-    lastName: 'Martinez',
-    email: 'sophia.martinez@email.com',
-    subscriptionStatus: 'active',
-    totalSales: 200,
-    redemptions: 18,
-    referrals: 8,
-    joinedDate: '2025-09-20',
-  },
-  {
-    id: '3',
-    firstName: 'Noah',
-    lastName: 'Taylor',
-    email: 'noah.taylor@email.com',
-    subscriptionStatus: 'inactive',
-    totalSales: 75,
-    redemptions: 5,
-    referrals: 2,
-    joinedDate: '2025-10-01',
-  },
-  {
-    id: '4',
-    firstName: 'Olivia',
-    lastName: 'Brown',
-    email: 'olivia.brown@email.com',
-    subscriptionStatus: 'active',
-    totalSales: 180,
-    redemptions: 15,
-    referrals: 6,
-    joinedDate: '2025-10-10',
-  },
-  {
-    id: '5',
-    firstName: 'Liam',
-    lastName: 'Wilson',
-    email: 'liam.wilson@email.com',
-    subscriptionStatus: 'expired',
-    totalSales: 50,
-    redemptions: 3,
-    referrals: 1,
-    joinedDate: '2025-08-01',
-  },
-];
-
 export default function ManageScoutsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [scouts, setScouts] = useState<Scout[]>(initialScouts);
+  const [scouts, setScouts] = useState<Scout[]>([]);
   const [selectedScout, setSelectedScout] = useState<Scout | null>(null);
   const [showScoutModal, setShowScoutModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -119,6 +60,33 @@ export default function ManageScoutsScreen() {
 
   const { user } = useAuthStore();
 
+  const loadScouts = useCallback(async () => {
+    if (!user?.troopId) return;
+    try {
+      const response = await scoutApi.getTroopScouts(String(user.troopId));
+      const scoutsData = response.data?.content || response.data || [];
+      if (Array.isArray(scoutsData)) {
+        setScouts(scoutsData.map((s: any) => ({
+          id: String(s.id || s.uuid),
+          firstName: s.firstName || '',
+          lastName: s.lastName || '',
+          email: s.parentEmail || '',
+          subscriptionStatus: (s.status || 'inactive').toLowerCase() as Scout['subscriptionStatus'],
+          totalSales: s.totalSales ? Number(s.totalSales) : 0,
+          redemptions: 0,
+          referrals: 0,
+          joinedDate: s.joinDate || s.createdAt?.split('T')[0] || '',
+        })));
+      }
+    } catch (error) {
+      console.log('Failed to load scouts:', error);
+    }
+  }, [user?.troopId]);
+
+  useEffect(() => {
+    loadScouts();
+  }, [loadScouts]);
+
   const filteredScouts = scouts.filter(
     (scout) =>
       scout.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,10 +96,9 @@ export default function ManageScoutsScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // TODO: Fetch scouts from API
-    // GET /api/v1/troops/{troopId}/scouts
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await loadScouts();
+    setRefreshing(false);
+  }, [loadScouts]);
 
   const getStatusColor = (status: Scout['subscriptionStatus']) => {
     switch (status) {

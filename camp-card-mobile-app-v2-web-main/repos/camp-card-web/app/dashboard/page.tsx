@@ -192,6 +192,34 @@ interface DashboardStats {
   redemptionsTrend: string;
 }
 
+function getHealthBgColor(hs: string) {
+  if (hs === 'operational') return themeColors.success50;
+  if (hs === 'loading') return themeColors.info50;
+  return '#fef2f2';
+}
+function getHealthBorderColor(hs: string) {
+  if (hs === 'operational') return themeColors.success200;
+  if (hs === 'loading') return '#bfdbfe';
+  return '#fecaca';
+}
+function getHealthTextColor(hs: string) {
+  if (hs === 'operational') return themeColors.success600;
+  if (hs === 'loading') return themeColors.info600;
+  return themeColors.error500;
+}
+function getHealthTitle(hs: string) {
+  if (hs === 'operational') return 'All systems operational';
+  if (hs === 'loading') return 'Checking system status...';
+  if (hs === 'degraded') return 'Some services may be degraded';
+  return 'System health check failed';
+}
+function getHealthSubtitle(hs: string) {
+  if (hs === 'operational') return 'Your Camp Card ecosystem is running smoothly.';
+  if (hs === 'loading') return 'Retrieving latest health status...';
+  if (hs === 'degraded') return 'Some services are not responding as expected.';
+  return 'Unable to reach the backend health endpoint.';
+}
+
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -207,10 +235,13 @@ export default function Dashboard() {
     redemptionsTrend: '+0%',
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [healthStatus, setHealthStatus] = useState<'operational' | 'degraded' | 'error' | 'loading'>('loading');
+  const [dashboardData, setDashboardData] = useState<Record<string, number | string | null> | null>(null);
 
   useEffect(() => {
     if (session) {
       loadDashboardStats();
+      loadHealthStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
@@ -220,6 +251,7 @@ export default function Dashboard() {
       setStatsLoading(true);
       const data = await api.getDashboardSummary(session);
       if (data) {
+        setDashboardData(data);
         setStats({
           activeUsers: data.activeUsers || data.totalUsers || 0,
           merchants: data.totalMerchants || data.merchants || 0,
@@ -235,6 +267,21 @@ export default function Dashboard() {
       console.error('Failed to load dashboard stats:', error);
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  const loadHealthStatus = async () => {
+    try {
+      const data = await api.getHealth();
+      if (data?.status === 'UP' || data?.status === 'ok') {
+        setHealthStatus('operational');
+      } else if (data?.status === 'error') {
+        setHealthStatus('error');
+      } else {
+        setHealthStatus('degraded');
+      }
+    } catch {
+      setHealthStatus('error');
     }
   };
 
@@ -554,8 +601,8 @@ export default function Dashboard() {
           {/* System Status */}
           <div
             style={{
-              backgroundColor: themeColors.success50,
-              border: `1px solid ${themeColors.success200}`,
+              backgroundColor: getHealthBgColor(healthStatus),
+              border: `1px solid ${getHealthBorderColor(healthStatus)}`,
               borderRadius: themeRadius.card,
               padding: themeSpace.lg,
               marginBottom: themeSpace['3xl'],
@@ -565,22 +612,22 @@ export default function Dashboard() {
             }}
           >
             <div style={{ display: 'flex', gap: themeSpace.lg, alignItems: 'center' }}>
-              <div style={{ color: themeColors.success600 }}>
-                <Icon name="checkmark" size={28} color={themeColors.success600} />
+              <div style={{ color: getHealthTextColor(healthStatus) }}>
+                <Icon name={healthStatus === 'operational' ? 'checkmark' : 'health'} size={28} color={getHealthTextColor(healthStatus)} />
               </div>
               <div>
                 <p style={{
                   margin: 0, fontSize: '15px', fontWeight: '600', color: themeColors.text,
                 }}
                 >
-All systems operational
-</p>
+                  {getHealthTitle(healthStatus)}
+                </p>
                 <p style={{
                   margin: 0, fontSize: '13px', color: themeColors.gray600, marginTop: themeSpace.xs,
                 }}
                 >
-Your Camp Card ecosystem is running smoothly.
-</p>
+                  {getHealthSubtitle(healthStatus)}
+                </p>
               </div>
             </div>
             <button
@@ -588,8 +635,8 @@ Your Camp Card ecosystem is running smoothly.
               onClick={() => router.push('/health')}
               style={{
                 background: themeColors.white,
-                border: `1px solid ${themeColors.success200}`,
-                color: themeColors.success600,
+                border: `1px solid ${getHealthBorderColor(healthStatus)}`,
+                color: getHealthTextColor(healthStatus),
                 padding: `${themeSpace.sm} ${themeSpace.lg}`,
                 borderRadius: themeRadius.sm,
                 cursor: 'pointer',
@@ -626,29 +673,40 @@ Your Camp Card ecosystem is running smoothly.
                 Recent Activity
 </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: themeSpace.md }}>
-                {[{ name: 'users', title: 'New merchant onboarded', time: '2 hours ago', last: false }, { name: 'report', title: 'Bulk user import completed', time: '5 hours ago', last: false }, { name: 'offers', title: 'New promotional offer created', time: '1 day ago', last: false }, { name: 'config', title: 'System backup completed', time: '2 days ago', last: true }].map((item) => (
-                  <div
-                    key={item.title} style={{
-                     display: 'flex', gap: themeSpace.md, paddingBottom: !item.last ? themeSpace.md : 0, borderBottom: !item.last ? `1px solid ${themeColors.gray100}` : 'none',
-                   }}
-                  >
-                    <div style={{ color: themeColors.primary600, display: 'flex', alignItems: 'center' }}>
-                     <Icon name={item.name} size={18} color={themeColors.primary600} />
-                   </div>
-                    <div style={{ flex: 1 }}>
-                     <p style={{
-                     margin: 0, fontSize: '14px', fontWeight: '500', color: themeColors.text,
-                   }}
-                   >{item.title}
-                   </p>
-                     <p style={{
-                     margin: 0, fontSize: '12px', color: themeColors.gray500, marginTop: themeSpace.xs,
-                   }}
-                   >{item.time}
-                   </p>
-                   </div>
-                  </div>
-                ))}
+                {(() => {
+                  const activityItems = [
+                    { name: 'users', title: `${formatNumber(stats.activeUsers)} active users in the platform`, detail: `${dashboardData?.newUsersLast30Days || 0} new in last 30 days` },
+                    { name: 'merchants', title: `${formatNumber(stats.merchants)} merchants participating`, detail: `${dashboardData?.activeMerchants || stats.merchants} currently active` },
+                    { name: 'offers', title: `${formatNumber(stats.liveOffers)} live offers available`, detail: `${dashboardData?.totalOffers || stats.liveOffers} total offers created` },
+                    { name: 'cards', title: `${formatNumber(stats.redemptions)} total redemptions`, detail: `${dashboardData?.totalCardsSold || 0} cards sold` },
+                  ];
+                  return activityItems.map((item, index) => (
+                    <div
+                      key={item.title}
+                      style={{
+                        display: 'flex', gap: themeSpace.md, paddingBottom: index < activityItems.length - 1 ? themeSpace.md : 0, borderBottom: index < activityItems.length - 1 ? `1px solid ${themeColors.gray100}` : 'none',
+                      }}
+                    >
+                      <div style={{ color: themeColors.primary600, display: 'flex', alignItems: 'center' }}>
+                        <Icon name={item.name} size={18} color={themeColors.primary600} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{
+                          margin: 0, fontSize: '14px', fontWeight: '500', color: themeColors.text,
+                        }}
+                        >
+                          {statsLoading ? 'Loading...' : item.title}
+                        </p>
+                        <p style={{
+                          margin: 0, fontSize: '12px', color: themeColors.gray500, marginTop: themeSpace.xs,
+                        }}
+                        >
+                          {statsLoading ? '' : item.detail}
+                        </p>
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 

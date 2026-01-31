@@ -1,21 +1,70 @@
 // Troop Leader Dashboard showing troop management and quick actions
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { apiClient } from '../../services/apiClient';
+
+interface DashboardStats {
+  activeScouts: number;
+  fundsRaised: number;
+  cardsSold: number;
+  redemptions: number;
+}
 
 export default function TroopLeaderDashboardScreen() {
   const navigation = useNavigation<RootNavigation>();
   const { user } = useAuthStore();
+  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState<DashboardStats>({
+    activeScouts: 0,
+    fundsRaised: 0,
+    cardsSold: 0,
+    redemptions: 0,
+  });
+
+  const loadStats = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/api/v1/dashboard/summary');
+      const data = response.data;
+      if (data) {
+        const funds = data.totalSales ? Number(data.totalSales) : 0;
+        const fundsFromCents = !funds && data.totalRevenueCents ? data.totalRevenueCents / 100 : funds;
+        setStats({
+          activeScouts: data.activeScouts ? Number(data.activeScouts) : 0,
+          fundsRaised: fundsFromCents,
+          cardsSold: data.totalCardsSold || 0,
+          redemptions: data.totalRedemptions ? Number(data.totalRedemptions) : 0,
+        });
+      }
+    } catch (error) {
+      console.log('Failed to load dashboard stats:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadStats();
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Troop Dashboard</Text>
@@ -76,21 +125,21 @@ export default function TroopLeaderDashboardScreen() {
           <Text style={styles.sectionTitle}>Troop Overview</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>0</Text>
+              <Text style={styles.statValue}>{stats.activeScouts}</Text>
               <Text style={styles.statLabel}>Active Scouts</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>$0</Text>
+              <Text style={styles.statValue}>${stats.fundsRaised.toLocaleString()}</Text>
               <Text style={styles.statLabel}>Funds Raised</Text>
             </View>
           </View>
           <View style={[styles.statsGrid, { marginTop: 12 }]}>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>0</Text>
+              <Text style={styles.statValue}>{stats.cardsSold}</Text>
               <Text style={styles.statLabel}>Cards Sold</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>0</Text>
+              <Text style={styles.statValue}>{stats.redemptions}</Text>
               <Text style={styles.statLabel}>Redemptions</Text>
             </View>
           </View>

@@ -265,9 +265,9 @@ export const scoutApi = {
       password: `TempPass${Date.now()}!`, // Temporary password, user will reset via email
     }),
 
-  // Get scouts for a troop
-  getTroopScouts: (troopId: string) =>
-    apiClient.get(`/api/v1/troops/${troopId}/scouts`),
+  // Get scouts for a troop (paginated roster)
+  getTroopScouts: (troopId: string, page = 0, size = 100) =>
+    apiClient.get(`/api/v1/scouts/troop/${troopId}/roster`, { params: { page, size } }),
 };
 
 export const referralApi = {

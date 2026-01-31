@@ -226,29 +226,32 @@ function TroopLeaderDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* Recent Activity */}
+        {/* Troop Summary */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <Text style={styles.sectionTitle}>Troop Summary</Text>
           <View style={styles.activityCard}>
             <View style={styles.activityItem}>
               <View style={[styles.activityDot, { backgroundColor: COLORS.success }]} />
               <View style={styles.activityContent}>
-                <Text style={styles.activityText}>New subscription from referral</Text>
-                <Text style={styles.activityTime}>2 hours ago</Text>
+                <Text style={styles.activityText}>
+                  {stats.totalReferrals} total referrals generated
+                </Text>
               </View>
             </View>
             <View style={styles.activityItem}>
               <View style={[styles.activityDot, { backgroundColor: '#003F87' }]} />
               <View style={styles.activityContent}>
-                <Text style={styles.activityText}>Ethan A. earned $25 commission</Text>
-                <Text style={styles.activityTime}>5 hours ago</Text>
+                <Text style={styles.activityText}>
+                  {stats.totalConversions} referrals converted to subscribers
+                </Text>
               </View>
             </View>
             <View style={styles.activityItem}>
               <View style={[styles.activityDot, { backgroundColor: '#F57C00' }]} />
               <View style={styles.activityContent}>
-                <Text style={styles.activityText}>5 new QR code scans</Text>
-                <Text style={styles.activityTime}>Yesterday</Text>
+                <Text style={styles.activityText}>
+                  {stats.totalCardsSold} cards sold by your troop
+                </Text>
               </View>
             </View>
           </View>

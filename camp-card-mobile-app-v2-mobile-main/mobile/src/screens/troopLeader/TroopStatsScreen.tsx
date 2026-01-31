@@ -2,7 +2,7 @@
 // Per requirements: See Troop Metrics, See their Cash Code to give to customers
 // Metrics: # of cards, TotalSold, # of Referrals, # of Conversions - Broken up by Units / Scouts
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../store/authStore';
+import { apiClient, scoutApi } from '../../services/apiClient';
 
 interface TroopStats {
   totalFundsRaised: number;
@@ -49,25 +50,66 @@ export default function TroopStatsScreen() {
   const cashCode = `TROOP-${troopId}-${new Date().getFullYear()}`;
   const cashCodeLink = `https://www.campcardapp.org/support/${cashCode}`;
 
-  // Mock stats - will be replaced with API call
-  const [stats] = useState<TroopStats>({
-    totalFundsRaised: 1250,
+  const [stats, setStats] = useState<TroopStats>({
+    totalFundsRaised: 0,
     goalAmount: 5000,
-    totalCardsSold: 50,
-    activeScouts: 12,
-    totalRedemptions: 87,
-    totalReferrals: 156,
-    totalConversions: 42,
-    conversionRate: 26.9,
+    totalCardsSold: 0,
+    activeScouts: 0,
+    totalRedemptions: 0,
+    totalReferrals: 0,
+    totalConversions: 0,
+    conversionRate: 0,
   });
 
-  const [topPerformers] = useState<ScoutPerformance[]>([
-    { id: '1', name: 'Sophia Martinez', cardsSold: 12, referrals: 28, conversions: 8, totalRaised: 200 },
-    { id: '2', name: 'Ethan Anderson', cardsSold: 9, referrals: 22, conversions: 5, totalRaised: 150 },
-    { id: '3', name: 'Olivia Brown', cardsSold: 8, referrals: 20, conversions: 6, totalRaised: 180 },
-    { id: '4', name: 'Noah Taylor', cardsSold: 6, referrals: 15, conversions: 3, totalRaised: 75 },
-    { id: '5', name: 'Liam Wilson', cardsSold: 5, referrals: 12, conversions: 2, totalRaised: 50 },
-  ]);
+  const [topPerformers, setTopPerformers] = useState<ScoutPerformance[]>([]);
+
+  const loadStats = useCallback(async () => {
+    try {
+      // Fetch dashboard summary for troop-level stats
+      const dashResponse = await apiClient.get('/api/v1/dashboard/summary');
+      const data = dashResponse.data;
+      if (data) {
+        const fundsRaised = data.totalSales ? Number(data.totalSales) : 0;
+        const fundsFromCents = !fundsRaised && data.totalRevenueCents ? data.totalRevenueCents / 100 : fundsRaised;
+        setStats({
+          totalFundsRaised: fundsFromCents,
+          goalAmount: 5000,
+          totalCardsSold: data.totalCardsSold || 0,
+          activeScouts: data.activeScouts ? Number(data.activeScouts) : 0,
+          totalRedemptions: data.totalRedemptions ? Number(data.totalRedemptions) : 0,
+          totalReferrals: data.totalReferrals ? Number(data.totalReferrals) : 0,
+          totalConversions: data.successfulReferrals ? Number(data.successfulReferrals) : 0,
+          conversionRate: data.referralConversionRate ? Number(data.referralConversionRate) : 0,
+        });
+      }
+
+      // Fetch scout roster for top performers
+      if (troopId) {
+        const scoutsResponse = await scoutApi.getTroopScouts(String(troopId));
+        const scoutsData = scoutsResponse.data?.content || scoutsResponse.data || [];
+        if (Array.isArray(scoutsData) && scoutsData.length > 0) {
+          const performers: ScoutPerformance[] = scoutsData
+            .map((s: any) => ({
+              id: String(s.id || s.uuid),
+              name: s.fullName || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
+              cardsSold: s.cardsSold || 0,
+              referrals: 0,
+              conversions: 0,
+              totalRaised: s.totalSales ? Number(s.totalSales) : 0,
+            }))
+            .sort((a: ScoutPerformance, b: ScoutPerformance) => b.totalRaised - a.totalRaised)
+            .slice(0, 5);
+          setTopPerformers(performers);
+        }
+      }
+    } catch (error) {
+      console.log('Failed to load troop stats:', error);
+    }
+  }, [troopId]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   const progressPercentage = Math.min(
     (stats.totalFundsRaised / stats.goalAmount) * 100,
@@ -76,9 +118,8 @@ export default function TroopStatsScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // TODO: Fetch stats from API
-    // GET /api/v1/troops/{troopId}/stats
-    setTimeout(() => setRefreshing(false), 1000);
+    await loadStats();
+    setRefreshing(false);
   };
 
   const handleCopyCashCode = async () => {
