@@ -54,11 +54,9 @@ export default function ScoutDashboardScreen() {
   const [affiliateCode, setAffiliateCode] = useState('');
   const [isLoadingQR, setIsLoadingQR] = useState(true);
 
-  const scoutId = user?.id || 'scout123';
-
   useEffect(() => {
     loadScoutData();
-  }, [scoutId]);
+  }, [user?.id]);
 
   const loadScoutData = async () => {
     await Promise.all([loadScoutStats(), loadQRCode()]);
@@ -76,7 +74,7 @@ export default function ScoutDashboardScreen() {
     } catch (error) {
       console.log('Failed to load QR code, using fallback:', error);
       // Fallback to local generation if API fails
-      const fallbackCode = `SC-${scoutId.slice(0, 8).toUpperCase()}`;
+      const fallbackCode = `SC-${(user?.id || '').slice(0, 8).toUpperCase()}`;
       setAffiliateCode(fallbackCode);
       setAffiliateLink(`https://www.campcardapp.org/subscribe/?scout=${fallbackCode}`);
     } finally {
@@ -87,7 +85,7 @@ export default function ScoutDashboardScreen() {
   const loadScoutStats = async () => {
     try {
       // Fetch scout stats from API
-      const response = await scoutApi.getStats(scoutId);
+      const response = await scoutApi.getStats();
       const data = response.data;
 
       setStats({
@@ -189,7 +187,7 @@ export default function ScoutDashboardScreen() {
                 </View>
               ) : affiliateLink ? (
                 <QRCode
-                  value={affiliateLink}
+                  value={affiliateLink + (affiliateLink.includes('?') ? '&' : '?') + 'source=qr'}
                   size={180}
                   color={COLORS.text}
                   backgroundColor={COLORS.surface}

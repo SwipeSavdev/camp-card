@@ -601,10 +601,11 @@
     // Update totals for initial price
     updateTotal();
 
-    // Track referral link click
+    // Track referral link click (source=qr if arrived via QR code scan)
     if (scoutCode || customerRefCode) {
       var trackCode = scoutCode || customerRefCode;
-      var trackSource = scoutCode ? 'scout_link' : 'referral_link';
+      var urlSource = params.get('source');
+      var trackSource = urlSource === 'qr' ? 'qr' : (scoutCode ? 'scout_link' : 'referral_link');
       fetch(API_BASE + '/referrals/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

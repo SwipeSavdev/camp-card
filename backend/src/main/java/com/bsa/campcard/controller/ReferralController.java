@@ -73,6 +73,16 @@ public class ReferralController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/my-stats")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get scout stats", description = "Get link clicks, QR scans, referral counts, and earnings for the authenticated user")
+    public ResponseEntity<Map<String, Object>> getMyStats(Authentication authentication) {
+        UUID userId = getUserIdFromAuth(authentication);
+        log.info("Getting scout stats for user: {}", userId);
+        Map<String, Object> stats = referralService.getScoutStats(userId);
+        return ResponseEntity.ok(stats);
+    }
+
     @PostMapping("/track")
     @Operation(summary = "Track referral link click", description = "Public endpoint to track clicks on referral/scout links")
     public ResponseEntity<Map<String, String>> trackClick(

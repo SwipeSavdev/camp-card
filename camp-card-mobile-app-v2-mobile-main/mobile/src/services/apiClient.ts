@@ -239,8 +239,8 @@ export const merchantsApi = {
 
 export const scoutApi = {
   // Get scout stats (fundraising metrics, link performance)
-  getStats: (scoutId: string) =>
-    apiClient.get(`/api/v1/scouts/${scoutId}/stats`),
+  getStats: () =>
+    apiClient.get('/api/v1/referrals/my-stats'),
 
   // Record a sale/subscription attributed to scout
   recordSale: (scoutId: string, data: { customerId: string; amount: number; transactionId?: string }) =>

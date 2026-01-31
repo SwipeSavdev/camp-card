@@ -20,7 +20,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -290,6 +293,61 @@ public class ReferralService {
             log.warn("Failed to look up QR code for user {}: {}", userId, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Get scout stats for the dashboard: link clicks, QR scans, referral counts, earnings.
+     */
+    public Map<String, Object> getScoutStats(UUID userId) {
+        log.info("Getting scout stats for user: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        String referralCode = user.getReferralCode();
+        String qrCode = getQrCodeForUser(userId);
+
+        // Build list of all codes belonging to this user
+        List<String> codes = new ArrayList<>();
+        if (referralCode != null && !referralCode.isBlank()) codes.add(referralCode);
+        if (qrCode != null && !qrCode.isBlank() && !codes.contains(qrCode)) codes.add(qrCode);
+
+        // Count clicks by source
+        long linkClicks = 0;
+        long qrScans = 0;
+        long totalClicks = 0;
+
+        if (!codes.isEmpty()) {
+            totalClicks = referralClickRepository.countByReferralCodeIn(codes);
+            qrScans = referralClickRepository.countByReferralCodeInAndSource(codes, "qr");
+            linkClicks = totalClicks - qrScans;
+        }
+
+        // Get referral counts
+        List<Referral> allReferrals = referralRepository.findByReferrerId(userId);
+        long directReferrals = allReferrals.stream()
+                .filter(r -> r.getStatus() != Referral.ReferralStatus.PENDING)
+                .count();
+        long totalSubscribers = allReferrals.stream()
+                .filter(r -> r.getStatus() == Referral.ReferralStatus.SUBSCRIBED ||
+                             r.getStatus() == Referral.ReferralStatus.COMPLETED ||
+                             r.getStatus() == Referral.ReferralStatus.REWARDED)
+                .count();
+
+        // Calculate earnings
+        Double totalRewards = referralRepository.getTotalRewardsEarned(userId);
+        double totalEarnings = totalRewards != null ? totalRewards : 0.0;
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalSubscribers", totalSubscribers);
+        stats.put("directReferrals", directReferrals);
+        stats.put("indirectReferrals", 0); // Chain referrals not yet implemented
+        stats.put("linkClicks", linkClicks);
+        stats.put("qrScans", qrScans);
+        stats.put("totalEarnings", totalEarnings);
+        stats.put("redemptionsUsed", 0); // TODO: integrate with offer redemptions
+        stats.put("savingsEarned", 0.0); // TODO: integrate with savings tracking
+        return stats;
     }
 
     private ReferralResponse toResponse(Referral referral) {

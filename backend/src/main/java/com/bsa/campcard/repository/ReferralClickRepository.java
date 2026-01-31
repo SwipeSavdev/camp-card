@@ -11,5 +11,11 @@ public interface ReferralClickRepository extends JpaRepository<ReferralClick, Lo
 
     long countByReferralCode(String referralCode);
 
+    long countByReferralCodeAndSource(String referralCode, String source);
+
+    long countByReferralCodeIn(List<String> referralCodes);
+
+    long countByReferralCodeInAndSource(List<String> referralCodes, String source);
+
     List<ReferralClick> findByReferralCodeOrderByCreatedAtDesc(String referralCode);
 }
