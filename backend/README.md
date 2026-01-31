@@ -15,7 +15,7 @@
 Multi-tenant RESTful API providing:
 - JWT-based authentication & RBAC authorization
 - Scout referral attribution with viral chain tracking
-- Stripe subscription management
+- Authorize.Net payment processing & subscription management
 - Merchant & offer CRUD operations
 - Real-time event streaming via Kafka
 - Redis caching for dashboard performance

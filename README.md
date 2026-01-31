@@ -1,139 +1,182 @@
-# BSA Camp Card Platform
+# BSA Camp Card
 
-A multi-repository platform for digitalizing Boy Scouts of America fundraising through Camp Card sales.
+Digital fundraising platform for Boy Scouts of America, replacing traditional paper camp cards with a modern mobile and web experience.
+
+## Architecture
+
+The platform consists of three independent codebases:
+
+| Component | Stack | Port | Directory |
+|-----------|-------|------|-----------|
+| **Backend API** | Java 21 / Spring Boot 3.2 | 7010 | `backend/` |
+| **Web Admin Portal** | Next.js 14.1 / React 18 | 7020 | `camp-card-mobile-app-v2-web-main/repos/camp-card-web/` |
+| **Mobile App** | React Native 0.81 / Expo 54 | -- | `camp-card-mobile-app-v2-mobile-main/mobile/` |
+
+Supporting services: PostgreSQL 16, Redis 7, Apache Kafka 3.6, Firebase (push notifications), Authorize.Net (payments).
 
 ## Production URLs
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Static Website** | https://www.campcardapp.org | Marketing/landing page |
-| **API** | https://api.campcardapp.org | Backend REST API |
-| **Admin Portal** | https://admin.campcardapp.org | Web portal for admins/councils |
+| Service | URL |
+|---------|-----|
+| Marketing Website | https://www.campcardapp.org |
+| Backend API | https://api.campcardapp.org |
+| Admin Portal | https://admin.campcardapp.org |
+| Health Check | https://api.campcardapp.org/api/v1/public/health |
 
-## Platform Components
+## Quick Start (Local Development)
 
-| Component | Technology | Port | Description |
-|-----------|------------|------|-------------|
-| Backend API | Java 21 / Spring Boot 3.2 | 7010 | REST API server |
-| Web Portal | Next.js 14.1 | 7020 | Admin/council dashboard |
-| Mobile App | React Native / Expo 54 | - | Scout & parent app |
+### Prerequisites
 
-## Quick Start
+- Java 21 (JDK)
+- Node.js 18+
+- Docker & Docker Compose
 
-### Local Development
+### Backend
 
 ```bash
-# Start supporting services (PostgreSQL, Redis, Kafka)
 cd backend
-docker-compose up -d
-
-# Start backend API
+docker-compose up -d                              # Start PostgreSQL, Redis, Kafka
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-
-# Start web portal (in another terminal)
-cd camp-card-mobile-app-v2-web-main/repos/camp-card-web
-npm install && npm run dev
 ```
 
-**Full guide:** [docs/QUICKSTART_LOCAL.md](docs/QUICKSTART_LOCAL.md)
-
-### AWS Deployment
+### Web Portal
 
 ```bash
-# SSH to EC2
-ssh -i ~/.ssh/campcard-github-actions ubuntu@18.190.69.205
-
-# Deploy backend
-cd /home/ubuntu/camp-card/backend
-sudo git pull origin main
-sudo docker build -t campcard-backend:latest .
-# See full deployment commands in AWS guide
+cd camp-card-mobile-app-v2-web-main/repos/camp-card-web
+npm install
+npm run dev
 ```
 
-**Full guide:** [docs/QUICKSTART_AWS.md](docs/QUICKSTART_AWS.md)
+### Mobile App
 
-## Documentation
+```bash
+cd camp-card-mobile-app-v2-mobile-main/mobile
+npm install
+npm start
+```
 
-| Document | Description |
-|----------|-------------|
-| [QUICKSTART_LOCAL.md](docs/QUICKSTART_LOCAL.md) | Local development setup guide |
-| [QUICKSTART_AWS.md](docs/QUICKSTART_AWS.md) | AWS deployment procedures |
-| [DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) | Complete database documentation |
-| [CLAUDE.md](CLAUDE.md) | Full project context and conventions |
+## Repository Structure
 
-## Local Service Ports
-
-| Service | Port |
-|---------|------|
-| PostgreSQL | 7001 |
-| Redis | 7002 |
-| Zookeeper | 7003 |
-| Kafka | 7004 |
-| Kafka UI | 7005 |
-| Mailhog SMTP | 7006 |
-| Mailhog UI | 7007 |
-| LocalStack | 7008 |
-| Backend API | 7010 |
-| Web Portal | 7020 |
-
-## Test Credentials
-
-| User | Email | Password | Role |
-|------|-------|----------|------|
-| Admin | admin@campcard.org | Password123 | NATIONAL_ADMIN |
-| Test User | test@campcard.org | Password123 | SCOUT |
+```
+camp-card/
+├── backend/                                    # Java Spring Boot REST API
+│   ├── src/main/java/
+│   │   ├── org/bsa/campcard/                  # API, domain, config, security
+│   │   └── com/bsa/campcard/                  # Entities, repos, services, DTOs
+│   └── src/main/resources/db/migration/       # Flyway SQL migrations
+├── camp-card-mobile-app-v2-web-main/
+│   └── repos/camp-card-web/                   # Next.js Admin Portal
+│       ├── app/                               # App Router pages
+│       ├── lib/api.ts                         # API client
+│       └── components/                        # Shared UI components
+├── camp-card-mobile-app-v2-mobile-main/
+│   └── mobile/                                # React Native / Expo App
+│       ├── src/screens/                       # Role-based screens
+│       ├── src/navigation/                    # Role-based navigators
+│       └── src/stores/                        # Zustand state management
+├── camp-card-mobile-app-v2-infrastructure-main/
+│   └── infrastructure/                        # Terraform AWS IaC
+├── docker-compose-local.yml                   # Full stack local dev
+└── CLAUDE.md                                  # Detailed project documentation
+```
 
 ## User Roles
 
+| Role | Description |
+|------|-------------|
+| `NATIONAL_ADMIN` | Full platform access, manages councils and system settings |
+| `COUNCIL_ADMIN` | Manages troops, merchants, and offers within their council |
+| `TROOP_LEADER` | Manages scouts, tracks fundraising progress |
+| `PARENT` | Browses offers, views merchants |
+| `SCOUT` | QR code affiliate tracking, referrals, card management |
+
+## Key Features
+
+- **Multi-tenant architecture** with JWT auth and Row-Level Security (RLS)
+- **Role-based access control** across all three platforms
+- **Authorize.Net payment processing** (Accept Hosted / Accept.js)
+- **Council-specific payment configs** with AES-256-GCM encryption
+- **Scout referral tracking** with QR codes and viral chain attribution
+- **Real-time analytics** dashboards for admin, council, and troop leaders
+- **AI Marketing** campaign management with segment targeting
+- **EAS managed builds** for iOS App Store and Google Play Store
+
+## Deployment
+
+### EC2 (Backend + Web)
+
+Deployed on a single EC2 instance with Docker containers behind Nginx reverse proxy.
+
+```bash
+# SSH access
+ssh -i ~/.ssh/campcard-github-actions ec2-user@3.137.164.102
+
+# Backend: build and restart
+cd /home/ec2-user/camp-card/backend
+sudo git pull origin main
+sudo docker build -t campcard-backend:latest .
+sudo docker stop campcard-backend && sudo docker rm campcard-backend
+sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010 \
+  --env-file /home/ec2-user/camp-card/.env.aws \
+  -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 -e REDIS_SSL=false \
+  -e KAFKA_BOOTSTRAP_SERVERS=campcard-kafka:9092 \
+  --network campcard_campcard-network campcard-backend:latest
+
+# Web: build and restart
+cd /home/ec2-user/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
+sudo git pull origin main
+sudo docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1 -t campcard-web:latest .
+sudo docker stop campcard-web && sudo docker rm campcard-web
+sudo docker run -d --name campcard-web --restart unless-stopped -p 7020:7020 \
+  -e NEXTAUTH_URL=https://admin.campcardapp.org \
+  -e NEXTAUTH_SECRET='bsa-campcard-nextauth-secret-key-2025-very-long' \
+  -e NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1 \
+  --network campcard_campcard-network campcard-web:latest
 ```
-NATIONAL_ADMIN  - Full system access
-COUNCIL_ADMIN   - Council-level management
-TROOP_LEADER    - Troop management
-PARENT          - Parent/guardian access
-SCOUT           - Scout member (default)
+
+### Mobile (EAS)
+
+```bash
+cd camp-card-mobile-app-v2-mobile-main/mobile
+npx eas build --profile production --platform all --non-interactive
+npx eas submit --platform all
 ```
 
-## Technology Stack
+## API Documentation
 
-### Backend
-- Java 21, Spring Boot 3.2, Maven
-- PostgreSQL 16, Redis 7, Apache Kafka 3.6
-- JWT authentication, BCrypt password hashing
-- Flyway migrations
+- Swagger UI: `http://localhost:7010/swagger-ui.html`
+- OpenAPI spec: `http://localhost:7010/v3/api-docs`
 
-### Web Portal
-- Next.js 14.1, React 18, TypeScript
-- TanStack Query, Zustand, Zod
-- TailwindCSS, Radix UI
-- NextAuth.js
+## Testing
 
-### Mobile App
-- React Native 0.81, Expo 54
-- React Navigation
-- Firebase (push notifications)
+```bash
+# Backend
+cd backend && ./mvnw test
 
-### Payments
-- Stripe, Authorize.Net
+# Web Portal
+cd camp-card-mobile-app-v2-web-main/repos/camp-card-web && npm test
 
-## AWS Infrastructure
+# Mobile
+cd camp-card-mobile-app-v2-mobile-main/mobile && npm test
+```
 
-| Component | Details |
-|-----------|---------|
-| EC2 Server | 18.190.69.205 (Ubuntu) |
-| RDS Database | PostgreSQL 16 |
-| Domain | campcardapp.org |
-| DNS | AWS Route 53 |
-| SSL | Let's Encrypt (auto-renewal) |
-| Email | AWS SES (DKIM verified) |
+## Infrastructure
 
-### Domain Structure
+| Service | Details |
+|---------|---------|
+| **Compute** | EC2 (us-east-2), instance i-059295c02fec401db |
+| **Database** | Amazon RDS PostgreSQL 16, schema `campcard` |
+| **Cache** | Redis 7 (Docker on EC2) |
+| **Messaging** | Kafka 3.6 (Docker on EC2) |
+| **DNS** | Route 53 (campcardapp.org) |
+| **SSL** | Let's Encrypt via Certbot |
+| **Email** | AWS SES (us-east-2), domain: campcardapp.org |
+| **Payments** | Authorize.Net (Sandbox) |
+| **Mobile Builds** | Expo Application Services (EAS) |
 
-| Subdomain | Service | SSL |
-|-----------|---------|-----|
-| www.campcardapp.org | Static website | ✓ |
-| api.campcardapp.org | Backend API | ✓ |
-| admin.campcardapp.org | Admin portal | ✓ |
+## Documentation
 
-## License
-
-Proprietary - SwipeSavvy Development
+- [CLAUDE.md](CLAUDE.md) - Detailed project documentation, deployment procedures, and architecture notes
+- [Backend README](backend/README.md) - Backend API details
+- [Web Portal README](camp-card-mobile-app-v2-web-main/repos/camp-card-web/README.md) - Web admin portal details
+- [Mobile README](camp-card-mobile-app-v2-mobile-main/mobile/README.md) - Mobile app details

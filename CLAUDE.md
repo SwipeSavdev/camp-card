@@ -250,42 +250,41 @@ The Nginx configuration (`/etc/nginx/sites-available/campcardapp`) routes traffi
 - `admin.campcardapp.org` → Web portal at port 7020 (with `/api/v1/` proxied to backend)
 - `campcardapp.org` → Redirects to `www.campcardapp.org`
 
+### Environment File (.env.aws)
+
+All secrets and credentials are stored in `/home/ec2-user/camp-card/.env.aws` on EC2 (NOT in version control). This file uses `KEY=VALUE` format compatible with Docker `--env-file`.
+
+**Contents of .env.aws** (keys only):
+```
+SPRING_PROFILES_ACTIVE=aws
+DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD
+JWT_SECRET, JWT_EXPIRATION
+REDIS_PASSWORD
+SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD
+CAMPCARD_BASE_URL, CAMPCARD_WEB_PORTAL_URL
+AUTHORIZE_NET_API_LOGIN_ID, AUTHORIZE_NET_TRANSACTION_KEY, AUTHORIZE_NET_ENVIRONMENT
+```
+
+**IMPORTANT**: `.env.aws` does NOT contain `REDIS_HOST`, `REDIS_PORT`, or `KAFKA_BOOTSTRAP_SERVERS` because these reference Docker container names on the internal network. They must be passed explicitly via `-e` flags.
+
 ### Deployment Commands
 
 ```bash
 # SSH to EC2
 ssh -i ~/.ssh/campcard-github-actions ec2-user@3.137.164.102
 
-# Backend deployment
+# === BACKEND DEPLOYMENT ===
 cd /home/ec2-user/camp-card/backend
 sudo git pull origin main
 sudo docker build -t campcard-backend:latest .
 sudo docker stop campcard-backend && sudo docker rm campcard-backend
 sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010 \
-  -e SPRING_PROFILES_ACTIVE=aws \
-  -e DB_HOST=camp-card-db.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
-  -e DB_PORT=5432 -e DB_NAME=campcard \
-  -e DB_USERNAME=campcard_app -e DB_PASSWORD=CampCardApp2024Secure \
-  -e JWT_SECRET='bsa-camp-card-super-secret-jwt-key-2025-that-is-very-long-and-secure' \
-  -e JWT_EXPIRATION=86400000 \
-  -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
-  -e REDIS_PASSWORD=campcard123 \
-  -e REDIS_SSL=false \
+  --env-file /home/ec2-user/camp-card/.env.aws \
+  -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 -e REDIS_SSL=false \
   -e KAFKA_BOOTSTRAP_SERVERS=campcard-kafka:9092 \
-  -e SMTP_HOST=email-smtp.us-east-2.amazonaws.com \
-  -e SMTP_PORT=587 \
-  -e SMTP_USERNAME=${SMTP_USERNAME} \
-  -e SMTP_PASSWORD=${SMTP_PASSWORD} \
-  -e CAMPCARD_BASE_URL=https://api.campcardapp.org \
-  -e CAMPCARD_WEB_PORTAL_URL=https://admin.campcardapp.org \
-  -e AUTHORIZE_NET_API_LOGIN_ID=${AUTHORIZE_NET_API_LOGIN_ID} \
-  -e AUTHORIZE_NET_TRANSACTION_KEY=${AUTHORIZE_NET_TRANSACTION_KEY} \
-  -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
   --network campcard_campcard-network campcard-backend:latest
 
-# NOTE: SMTP and Authorize.net credentials stored in AWS Secrets Manager or .env.aws (not in git)
-
-# Frontend deployment
+# === WEB PORTAL DEPLOYMENT ===
 cd /home/ec2-user/camp-card/camp-card-mobile-app-v2-web-main/repos/camp-card-web
 sudo git pull origin main
 sudo docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1 -t campcard-web:latest .
@@ -296,15 +295,41 @@ sudo docker run -d --name campcard-web --restart unless-stopped -p 7020:7020 \
   -e NEXT_PUBLIC_API_URL=https://api.campcardapp.org/api/v1 \
   --network campcard_campcard-network campcard-web:latest
 
-# Check container status
-sudo docker ps -a
+# === MOBILE APP (EAS BUILD) ===
+cd /home/ec2-user/camp-card/camp-card-mobile-app-v2-mobile-main/mobile
+# Production builds are done via EAS from a local machine, not on EC2:
+npx eas build --profile production --platform all --non-interactive
 
-# View logs
+# === VERIFICATION ===
+sudo docker ps -a
 sudo docker logs --tail 50 campcard-backend
 sudo docker logs --tail 50 campcard-web
+# Health check: curl https://api.campcardapp.org/api/v1/public/health
 
 # Clean up disk space
 sudo docker system prune -a --volumes -f
+```
+
+### Remote Deployment via AWS SSM
+
+Deployments can also be triggered remotely via AWS Systems Manager (SSM) without SSH:
+
+```bash
+# Create a JSON command file (e.g., /tmp/ssm-command.json)
+# Format: {"Parameters": {"commands": ["cmd1", "cmd2"]}}
+
+aws ssm send-command \
+  --instance-ids i-059295c02fec401db \
+  --document-name "AWS-RunShellScript" \
+  --cli-input-json file:///tmp/ssm-command.json \
+  --timeout-seconds 600 \
+  --region us-east-2
+
+# Check command status
+aws ssm get-command-invocation \
+  --command-id <command-id> \
+  --instance-id i-059295c02fec401db \
+  --region us-east-2
 ```
 
 ### Expo Go Mobile Testing
@@ -364,38 +389,6 @@ Backend `@PreAuthorize` annotations must also use these exact role names with `R
 - `0c59056` - fix: Use uppercase role constants consistently throughout Users page
 - `917e5f0` - fix: Use uppercase SCOUT role in setters to match UserRole type
 - `3f2fc7c` - fix: Align backend role names with UserRole enum and fix frontend API integration
-
-### Backend Container Configuration (January 2026)
-
-The backend container requires specific environment variables for Redis:
-
-```bash
-sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010 \
-  -e SPRING_PROFILES_ACTIVE=aws \
-  -e DB_HOST=camp-card-db.cn00u2kgkr3j.us-east-2.rds.amazonaws.com \
-  -e DB_PORT=5432 -e DB_NAME=campcard \
-  -e DB_USERNAME=campcard_app -e DB_PASSWORD=CampCardApp2024Secure \
-  -e JWT_SECRET='bsa-camp-card-super-secret-jwt-key-2025-that-is-very-long-and-secure' \
-  -e JWT_EXPIRATION=86400000 \
-  -e REDIS_HOST=campcard-redis -e REDIS_PORT=6379 \
-  -e REDIS_PASSWORD=campcard123 \
-  -e REDIS_SSL=false \
-  -e KAFKA_BOOTSTRAP_SERVERS=campcard-kafka:9092 \
-  -e SMTP_HOST=email-smtp.us-east-2.amazonaws.com \
-  -e SMTP_PORT=587 \
-  -e SMTP_USERNAME=${SMTP_USERNAME} \
-  -e SMTP_PASSWORD=${SMTP_PASSWORD} \
-  -e CAMPCARD_BASE_URL=https://api.campcardapp.org \
-  -e CAMPCARD_WEB_PORTAL_URL=https://admin.campcardapp.org \
-  -e AUTHORIZE_NET_API_LOGIN_ID=${AUTHORIZE_NET_API_LOGIN_ID} \
-  -e AUTHORIZE_NET_TRANSACTION_KEY=${AUTHORIZE_NET_TRANSACTION_KEY} \
-  -e AUTHORIZE_NET_ENVIRONMENT=SANDBOX \
-  --network campcard_campcard-network campcard-backend:latest
-```
-
-**NOTE**: Credentials (SMTP_USERNAME, SMTP_PASSWORD, AUTHORIZE_NET_*) are stored in `.env.aws` file on EC2 server, NOT in version control.
-
-**Important**: `REDIS_SSL=false` is required because the local Redis container on EC2 doesn't use TLS (the AWS profile defaults to SSL enabled).
 
 ### RDS Database Details (Updated January 2026)
 
@@ -501,10 +494,69 @@ sudo docker run -d --name campcard-backend --restart unless-stopped -p 7010:7010
 - `.env.aws`: Updated `PUBLIC_API_URL`, `CAMPCARD_BASE_URL`, `CAMPCARD_WEB_PORTAL_URL`
 - Docker containers rebuilt with new environment variables
 
+### Health Endpoint Fix (January 2026)
+
+**Problem**: Web admin dashboard showed 403 error when checking backend health.
+
+**Root Cause**: The `getHealth()` function in `lib/api.ts` called `/health` which resolved to `/api/v1/health` (requires authentication). The public health endpoint is at `/api/v1/public/health`.
+
+**Fix**: Changed `lib/api.ts` to call `/public/health` instead of `/health`.
+
+**Public Health Endpoint**: `GET /api/v1/public/health` (no auth required)
+- Returns: `{"status": "UP", "timestamp": "...", "service": "camp-card-api"}`
+- Controller: `HealthController.java` with `@RequestMapping("/api/v1/public")`
+- Security: Permitted via `SecurityConfig.java` → `.requestMatchers("/api/v1/public/**").permitAll()`
+
+### Dashboard & Analytics Data (January 2026)
+
+All dashboards across web and mobile now use **real API data only** - no mock/stub data remains.
+
+**Web Admin Portal**:
+- **Analytics page** (`app/analytics/page.tsx`): All metrics from `api.getDashboard()` with 30-second auto-refresh
+- **AI Marketing page** (`app/ai-marketing/page.tsx`): All 4 tabs (campaigns, segments, analytics, merchants) use real API calls
+- Revenue data comes from `dashboardData.totalRevenueCents` (cents → dollars conversion)
+- System uptime uses backend value with 99.9% fallback
+
+**Mobile App**:
+- Scout dashboard: Real card data, QR codes, affiliate stats from API
+- Troop Leader dashboard: Real troop metrics, scout data from API
+- Parent dashboard: Real offers, merchant data from API
+
+### Database Cleanup (January 2026)
+
+A comprehensive database cleanup was performed removing all test/E2E/load-test data:
+
+**Deleted**:
+- 85 test users (matching `@loadtest.campcard.org`, `e2e-test-*`, `@example.com`, `@test.com`, `@mailinator.com`, `@bsa.swipesavvy.com`)
+- 22 camp cards (2 test user cards + 20 orphaned)
+- 13 subscriptions (11 orphaned + 2 test)
+- 14 soft-deleted merchants (hard-deleted)
+- 22 orphaned merchant locations
+- 2 orphaned card orders
+- 1 test referral click
+
+**Current Production State** (after cleanup):
+- 20 real users
+- 4 active merchants
+- 8 merchant locations
+- 27 camp cards
+- 7 card orders
+- 2 active subscriptions
+
+**Cleanup SQL Pattern** (for future use):
+```sql
+-- Identify test users by email pattern
+DELETE FROM users WHERE email LIKE '%@loadtest.campcard.org'
+   OR email LIKE 'e2e-test-%' OR email LIKE '%@example.com'
+   OR email LIKE '%@test.com' OR email LIKE '%@mailinator.com';
+-- Must delete child records first (camp_cards, card_orders, subscriptions, parental_consents)
+-- Must nullify self-referencing FK: UPDATE camp_cards SET replaced_by_card_id = NULL WHERE ...
+-- parental_consents uses column names: minor_user_id, parent_user_id (NOT child_user_id)
+```
+
 ### Expo Go Mobile Testing
 
 The mobile container runs Expo in tunnel mode:
-- **Current Tunnel URL**: `https://easl_4o-anonymous-8081.exp.direct`
 - Check for current URL: `sudo docker logs campcard-mobile | grep "Tunnel URL"`
 - Install Expo Go on your phone and enter the tunnel URL to test the app
 
@@ -626,9 +678,15 @@ npm run eas:submit:android  # Play Store
 npm run eas:submit:all      # Both stores
 ```
 
+#### EAS Account & Build Details
+- **EAS Account**: swipesavvy2026
+- **Apple Team ID**: CL5DJUWXZY
+- **ASC App ID**: 6758056347
+- **Expo Project**: Managed workflow (no native ios/android directories in git)
+
 #### Required Setup Before First Build
 
-1. **EAS Login**: `eas login`
+1. **EAS Login**: `eas login` (account: swipesavvy2026)
 2. **Initialize Project**: `eas init` (updates app.json with projectId)
 3. **Firebase Config Files**:
    - `GoogleService-Info.plist` (iOS) - from Firebase Console
