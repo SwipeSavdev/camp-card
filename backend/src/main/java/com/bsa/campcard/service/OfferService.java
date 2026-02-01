@@ -369,15 +369,19 @@ public class OfferService {
         redemption.setVerificationCode(verificationCode);
         
         OfferRedemption savedRedemption = redemptionRepository.save(redemption);
-        
+
         // Increment offer redemption count
         offer.setTotalRedemptions(offer.getTotalRedemptions() + 1);
         offerRepository.save(offer);
-        
+
         // Update merchant redemption stats
         updateMerchantRedemptionStats(offer.getMerchantId());
-        
-        return OfferRedemptionResponse.fromEntity(savedRedemption);
+
+        OfferRedemptionResponse response = OfferRedemptionResponse.fromEntity(savedRedemption);
+        response.setOfferTitle(offer.getTitle());
+        merchantRepository.findById(offer.getMerchantId())
+            .ifPresent(m -> response.setMerchantName(m.getBusinessName()));
+        return response;
     }
     
     @Transactional
@@ -397,8 +401,25 @@ public class OfferService {
     }
     
     public Page<OfferRedemptionResponse> getUserRedemptions(UUID userId, Pageable pageable) {
-        return redemptionRepository.findUserRedemptionHistory(userId, pageable)
-            .map(OfferRedemptionResponse::fromEntity);
+        Page<OfferRedemption> redemptions = redemptionRepository.findUserRedemptionHistory(userId, pageable);
+
+        // Collect unique merchant and offer IDs for batch lookup
+        Set<Long> merchantIds = redemptions.getContent().stream()
+            .map(OfferRedemption::getMerchantId).collect(Collectors.toSet());
+        Set<Long> offerIds = redemptions.getContent().stream()
+            .map(OfferRedemption::getOfferId).collect(Collectors.toSet());
+
+        Map<Long, String> merchantNames = merchantRepository.findAllById(merchantIds).stream()
+            .collect(Collectors.toMap(Merchant::getId, Merchant::getBusinessName));
+        Map<Long, String> offerTitles = offerRepository.findAllById(offerIds).stream()
+            .collect(Collectors.toMap(Offer::getId, Offer::getTitle));
+
+        return redemptions.map(r -> {
+            OfferRedemptionResponse resp = OfferRedemptionResponse.fromEntity(r);
+            resp.setMerchantName(merchantNames.getOrDefault(r.getMerchantId(), "Unknown Merchant"));
+            resp.setOfferTitle(offerTitles.getOrDefault(r.getOfferId(), "Offer"));
+            return resp;
+        });
     }
     
     public Page<OfferRedemptionResponse> getMerchantRedemptions(Long merchantId, Pageable pageable) {

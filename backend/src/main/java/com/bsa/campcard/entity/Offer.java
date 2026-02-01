@@ -135,34 +135,38 @@ public class Offer {
     }
     
     public BigDecimal calculateDiscount(BigDecimal purchaseAmount) {
-        if (purchaseAmount == null) {
-            return BigDecimal.ZERO;
-        }
-        
-        if (minPurchaseAmount != null && purchaseAmount.compareTo(minPurchaseAmount) < 0) {
-            return BigDecimal.ZERO;
-        }
-        
         BigDecimal discount = BigDecimal.ZERO;
-        
+
         switch (discountType) {
             case PERCENTAGE:
                 if (discountValue != null) {
-                    discount = purchaseAmount.multiply(discountValue).divide(new BigDecimal("100"));
+                    if (purchaseAmount != null) {
+                        if (minPurchaseAmount != null && purchaseAmount.compareTo(minPurchaseAmount) < 0) {
+                            return BigDecimal.ZERO;
+                        }
+                        discount = purchaseAmount.multiply(discountValue).divide(new BigDecimal("100"));
+                    } else {
+                        // No purchase amount provided — return discountValue as the expected savings
+                        discount = discountValue;
+                    }
                 }
                 break;
             case FIXED_AMOUNT:
+                if (purchaseAmount != null && minPurchaseAmount != null && purchaseAmount.compareTo(minPurchaseAmount) < 0) {
+                    return BigDecimal.ZERO;
+                }
                 discount = discountValue != null ? discountValue : BigDecimal.ZERO;
                 break;
             default:
-                // BUY_ONE_GET_ONE, FREE_ITEM, SPECIAL_PRICE require manual calculation
+                // BUY_ONE_GET_ONE, FREE_ITEM, SPECIAL_PRICE — use discountValue if available
+                discount = discountValue != null ? discountValue : BigDecimal.ZERO;
                 break;
         }
-        
+
         if (maxDiscountAmount != null && discount.compareTo(maxDiscountAmount) > 0) {
             discount = maxDiscountAmount;
         }
-        
+
         return discount;
     }
 }
