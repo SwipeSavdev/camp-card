@@ -47,6 +47,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/referrals/track").permitAll()
                 // Public parental consent verification (parents don't have accounts)
                 .requestMatchers("/api/v1/consent/verify/**").permitAll()
+                // Public gift card claim endpoints (recipients may not have accounts)
+                .requestMatchers("/api/v1/cards/claim/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()

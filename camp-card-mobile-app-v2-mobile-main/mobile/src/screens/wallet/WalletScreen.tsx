@@ -147,7 +147,7 @@ export default function WalletScreen() {
         id: r.id,
         merchantName: r.merchantName || r.offer?.merchantName || 'Unknown Merchant',
         category: r.offer?.category || 'Other',
-        savings: r.savingsAmount || r.offer?.discountValue || 0,
+        savings: r.discountAmount || r.savingsAmount || 0,
         redeemedAt: r.redeemedAt || r.createdAt,
       })));
     } catch (error) {

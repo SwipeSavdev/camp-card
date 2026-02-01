@@ -67,6 +67,10 @@ public class OfferRedemption {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean cleared = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

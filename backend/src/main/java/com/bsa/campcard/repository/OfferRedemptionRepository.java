@@ -5,6 +5,7 @@ import com.bsa.campcard.entity.OfferRedemption.RedemptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,7 +29,8 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
     Page<OfferRedemption> findByMerchantId(Long merchantId, Pageable pageable);
     
     @Query("SELECT COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
-           "AND r.offerId = :offerId AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED')")
+           "AND r.offerId = :offerId AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED') " +
+           "AND r.cleared = false")
     int countUserRedemptions(@Param("userId") UUID userId,
                             @Param("offerId") Long offerId);
     
@@ -58,7 +60,7 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
 
     @Query("SELECT r.offerId, COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
            "AND r.offerId IN :offerIds AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED') " +
-           "GROUP BY r.offerId")
+           "AND r.cleared = false GROUP BY r.offerId")
     List<Object[]> countUserRedemptionsByOfferIds(@Param("userId") UUID userId,
                                                    @Param("offerIds") List<Long> offerIds);
 
@@ -82,9 +84,12 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
     List<OfferRedemption> findByUserId(UUID userId);
 
     /**
-     * Delete all redemptions for a user (used for offer replenishment on renewal)
+     * Mark all active redemptions as cleared for a user (used for offer replenishment on renewal).
+     * Cleared redemptions still count toward lifetime analytics but no longer block one-time offer availability.
      */
-    void deleteByUserId(UUID userId);
+    @Modifying
+    @Query("UPDATE OfferRedemption r SET r.cleared = true WHERE r.userId = :userId AND r.cleared = false")
+    int clearByUserId(@Param("userId") UUID userId);
 
     /**
      * Delete all redemptions for an offer (used when deleting an offer)

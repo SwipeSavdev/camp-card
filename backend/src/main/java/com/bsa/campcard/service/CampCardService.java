@@ -316,9 +316,9 @@ public class CampCardService {
         card.activate();
         card = campCardRepository.save(card);
 
-        // Clear offer redemptions for this user (replenish offers)
-        offerRedemptionRepository.deleteByUserId(userId);
-        log.info("Offers replenished for user {}", userId);
+        // Mark existing redemptions as cleared (replenish offers while preserving lifetime stats)
+        int cleared = offerRedemptionRepository.clearByUserId(userId);
+        log.info("Offers replenished for user {} ({} redemptions cleared)", userId, cleared);
 
         return toCardResponse(card);
     }

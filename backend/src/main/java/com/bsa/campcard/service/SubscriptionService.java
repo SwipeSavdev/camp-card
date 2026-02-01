@@ -294,13 +294,15 @@ public class SubscriptionService {
     }
 
     /**
-     * Replenish all one-time offers for a user by clearing their redemption history
+     * Replenish all one-time offers for a user by marking redemptions as cleared.
+     * Cleared redemptions still count toward lifetime analytics (offers used, total savings)
+     * but no longer block one-time offer availability.
      */
     @Transactional
     public void replenishOffers(UUID userId) {
         log.info("Replenishing offers for user: {}", userId);
-        offerRedemptionRepository.deleteByUserId(userId);
-        log.info("Offer redemptions cleared for user: {}", userId);
+        int cleared = offerRedemptionRepository.clearByUserId(userId);
+        log.info("Offer redemptions cleared for user: {} ({} records)", userId, cleared);
     }
 
     /**
