@@ -16,6 +16,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -377,6 +380,35 @@ public class ReferralService {
         Double totalRewards = referralRepository.getTotalRewardsEarned(userId);
         double totalEarnings = totalRewards != null ? totalRewards : 0.0;
 
+        // Calculate conversion rate
+        double conversionRate = totalClicks > 0 ? (double) totalSubscribers / totalClicks * 100.0 : 0.0;
+
+        // Calculate troop size and rank
+        long troopSize = 0;
+        long rankInTroop = 0;
+        UUID troopId = user.getTroopId();
+        if (troopId != null) {
+            Page<User> troopScouts = userRepository.findByTroopIdAndRole(
+                    troopId, User.UserRole.SCOUT, Pageable.unpaged());
+            troopSize = troopScouts.getTotalElements();
+
+            // Rank by subscriber count (1 = best)
+            long betterThanMe = 0;
+            for (User scout : troopScouts.getContent()) {
+                if (!scout.getId().equals(userId)) {
+                    long scoutSubs = referralRepository.findByReferrerId(scout.getId()).stream()
+                            .filter(r -> r.getStatus() == Referral.ReferralStatus.SUBSCRIBED ||
+                                         r.getStatus() == Referral.ReferralStatus.COMPLETED ||
+                                         r.getStatus() == Referral.ReferralStatus.REWARDED)
+                            .count();
+                    if (scoutSubs > totalSubscribers) {
+                        betterThanMe++;
+                    }
+                }
+            }
+            rankInTroop = betterThanMe + 1;
+        }
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalSubscribers", totalSubscribers);
         stats.put("directReferrals", directReferrals);
@@ -384,6 +416,9 @@ public class ReferralService {
         stats.put("linkClicks", linkClicks);
         stats.put("qrScans", qrScans);
         stats.put("totalEarnings", totalEarnings);
+        stats.put("conversionRate", Math.round(conversionRate * 10.0) / 10.0);
+        stats.put("rankInTroop", rankInTroop);
+        stats.put("troopSize", troopSize);
         long redemptionsUsed = offerRedemptionRepository.countCompletedByUserId(userId);
         BigDecimal savingsEarned = offerRedemptionRepository.sumSavingsByUserId(userId);
         stats.put("redemptionsUsed", redemptionsUsed);

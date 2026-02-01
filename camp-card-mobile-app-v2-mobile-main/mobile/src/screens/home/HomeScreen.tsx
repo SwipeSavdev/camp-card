@@ -300,7 +300,7 @@ function ScoutDashboard() {
       setStats(prev => ({
         ...prev,
         totalEarned: referralData?.totalEarnings || 0,
-        totalSubscribers: referralData?.totalReferrals || 0,
+        totalSubscribers: referralData?.totalSubscribers || 0,
         linkClicks: referralData?.linkClicks || 0,
         qrScans: referralData?.qrScans || 0,
         conversionRate: referralData?.conversionRate || 0,
