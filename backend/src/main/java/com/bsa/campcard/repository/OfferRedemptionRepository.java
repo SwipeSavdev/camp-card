@@ -28,12 +28,12 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
     Page<OfferRedemption> findByMerchantId(Long merchantId, Pageable pageable);
     
     @Query("SELECT COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
-           "AND r.offerId = :offerId AND r.status IN ('VERIFIED', 'COMPLETED')")
-    int countUserRedemptions(@Param("userId") UUID userId, 
+           "AND r.offerId = :offerId AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED')")
+    int countUserRedemptions(@Param("userId") UUID userId,
                             @Param("offerId") Long offerId);
     
     @Query("SELECT r FROM OfferRedemption r WHERE r.userId = :userId " +
-           "AND r.status IN ('VERIFIED', 'COMPLETED') " +
+           "AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED') " +
            "ORDER BY r.createdAt DESC")
     Page<OfferRedemption> findUserRedemptionHistory(@Param("userId") UUID userId,
                                                     Pageable pageable);
@@ -46,7 +46,7 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
                                                              @Param("endDate") LocalDateTime endDate);
     
     @Query("SELECT COUNT(r) FROM OfferRedemption r WHERE r.offerId = :offerId " +
-           "AND r.status IN ('VERIFIED', 'COMPLETED')")
+           "AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED')")
     long countOfferRedemptions(@Param("offerId") Long offerId);
     
     @Query("SELECT SUM(r.discountAmount) FROM OfferRedemption r " +
@@ -57,21 +57,21 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
                                                          LocalDateTime dateTime);
 
     @Query("SELECT r.offerId, COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
-           "AND r.offerId IN :offerIds AND r.status IN ('VERIFIED', 'COMPLETED') " +
+           "AND r.offerId IN :offerIds AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED') " +
            "GROUP BY r.offerId")
     List<Object[]> countUserRedemptionsByOfferIds(@Param("userId") UUID userId,
                                                    @Param("offerIds") List<Long> offerIds);
 
     @Query("SELECT COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
-           "AND r.status IN ('VERIFIED', 'COMPLETED')")
+           "AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED')")
     long countCompletedByUserId(@Param("userId") UUID userId);
 
     @Query("SELECT COALESCE(SUM(r.discountAmount), 0) FROM OfferRedemption r " +
-           "WHERE r.userId = :userId AND r.status IN ('VERIFIED', 'COMPLETED')")
+           "WHERE r.userId = :userId AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED')")
     java.math.BigDecimal sumSavingsByUserId(@Param("userId") UUID userId);
 
     @Query("SELECT COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
-           "AND r.status IN ('VERIFIED', 'COMPLETED') " +
+           "AND r.status IN ('PENDING', 'VERIFIED', 'COMPLETED') " +
            "AND r.createdAt >= :since")
     long countCompletedByUserIdSince(@Param("userId") UUID userId,
                                       @Param("since") LocalDateTime since);
