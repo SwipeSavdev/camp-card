@@ -123,6 +123,9 @@ public class SubscriptionService {
         subscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
         subscription = subscriptionRepository.save(subscription);
 
+        // Replenish all one-time offers for the user
+        replenishOffers(userId);
+
         // Send subscription confirmation email
         sendSubscriptionConfirmationEmail(userId);
 
