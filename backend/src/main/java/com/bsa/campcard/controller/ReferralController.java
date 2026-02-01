@@ -51,13 +51,13 @@ public class ReferralController {
 
     @GetMapping("/my-referrals")
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Get my referrals", description = "Get list of users I have referred")
-    public ResponseEntity<List<ReferralResponse>> getMyReferrals(Authentication authentication) {
+    @Operation(summary = "Get my referrals", description = "Get list of users I have referred with earnings summary")
+    public ResponseEntity<Map<String, Object>> getMyReferrals(Authentication authentication) {
         UUID userId = getUserIdFromAuth(authentication);
 
         log.info("Getting referrals for user: {}", userId);
-        List<ReferralResponse> referrals = referralService.getUserReferrals(userId);
-        return ResponseEntity.ok(referrals);
+        Map<String, Object> response = referralService.getUserReferralsWithStats(userId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{referralId}/claim")

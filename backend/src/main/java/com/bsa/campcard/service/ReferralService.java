@@ -211,12 +211,49 @@ public class ReferralService {
      */
     public List<ReferralResponse> getUserReferrals(UUID userId) {
         log.info("Getting referrals for user: {}", userId);
-        
+
         List<Referral> referrals = referralRepository.findByReferrerId(userId);
-        
+
         return referrals.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get user's referrals with aggregated earnings stats.
+     * Returns the structure the mobile Referrals screen expects.
+     */
+    public Map<String, Object> getUserReferralsWithStats(UUID userId) {
+        log.info("Getting referrals with stats for user: {}", userId);
+
+        List<Referral> referrals = referralRepository.findByReferrerId(userId);
+        List<ReferralResponse> referralResponses = referrals.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+
+        // Calculate earnings
+        Double totalRewards = referralRepository.getTotalRewardsEarned(userId);
+        double totalEarnings = totalRewards != null ? totalRewards : 0.0;
+
+        BigDecimal pendingEarnings = referrals.stream()
+                .filter(r -> (r.getStatus() == Referral.ReferralStatus.SUBSCRIBED ||
+                              r.getStatus() == Referral.ReferralStatus.COMPLETED) &&
+                             Boolean.FALSE.equals(r.getRewardClaimed()))
+                .map(Referral::getRewardAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long directCount = referrals.stream()
+                .filter(r -> r.getStatus() != Referral.ReferralStatus.PENDING)
+                .count();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("referrals", referralResponses);
+        response.put("totalReferrals", referrals.size());
+        response.put("directReferrals", directCount);
+        response.put("indirectReferrals", 0);
+        response.put("totalEarnings", totalEarnings);
+        response.put("pendingEarnings", pendingEarnings);
+        return response;
     }
     
     /**

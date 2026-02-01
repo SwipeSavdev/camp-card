@@ -75,17 +75,21 @@ export default function ReferralScreen() {
       const data = response.data;
 
       // Map API response to local format
-      const mappedReferrals: Referral[] = (data.referrals || []).map((r: any) => ({
-        id: r.id,
-        firstName: r.referredUser?.firstName || r.firstName || 'Unknown',
-        lastName: r.referredUser?.lastName || r.lastName || '',
-        email: r.referredUser?.email || r.email || '',
-        subscriptionDate: r.createdAt || r.subscriptionDate,
-        planType: r.planType || 'Annual',
-        status: r.status || 'active',
-        isDirectReferral: r.isDirectReferral ?? r.level === 1,
-        referredBy: r.referredByName || r.referredBy,
-      }));
+      const mappedReferrals: Referral[] = (data.referrals || []).map((r: any) => {
+        // Backend returns referredUserName as "First Last", split it
+        const nameParts = (r.referredUserName || '').split(' ');
+        return {
+          id: r.id,
+          firstName: r.referredUser?.firstName || r.firstName || nameParts[0] || 'Unknown',
+          lastName: r.referredUser?.lastName || r.lastName || nameParts.slice(1).join(' ') || '',
+          email: r.referredUser?.email || r.email || r.referredUserEmail || '',
+          subscriptionDate: r.createdAt || r.subscriptionDate,
+          planType: r.planType || 'Annual',
+          status: r.status || 'active',
+          isDirectReferral: r.isDirectReferral ?? r.level === 1,
+          referredBy: r.referredByName || r.referredBy,
+        };
+      });
 
       setReferrals(mappedReferrals);
 
@@ -319,13 +323,13 @@ export default function ReferralScreen() {
           </View>
           <View style={styles.earningsRow}>
             <View style={styles.earningsItem}>
-              <Text style={styles.earningsValue}>${stats.totalEarnings}</Text>
+              <Text style={styles.earningsValue}>${Number(stats.totalEarnings).toFixed(2)}</Text>
               <Text style={styles.earningsLabel}>Total Earned</Text>
             </View>
             <View style={styles.earningsDivider} />
             <View style={styles.earningsItem}>
               <Text style={[styles.earningsValue, { color: COLORS.warning }]}>
-                ${stats.pendingEarnings}
+                ${Number(stats.pendingEarnings).toFixed(2)}
               </Text>
               <Text style={styles.earningsLabel}>Pending</Text>
             </View>
