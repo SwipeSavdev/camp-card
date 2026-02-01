@@ -276,6 +276,31 @@ public class SubscriptionPurchaseService {
             }
         }
 
+        // Fallback: handle mobile app fallback codes in format "SC-{first8CharsOfUUID}"
+        // The mobile app generates these locally when the QR code API fails
+        if (code.startsWith("SC-") && code.length() == 11) {
+            String uuidPrefix = code.substring(3).toLowerCase();
+            // Search for a Scout user whose UUID starts with this prefix
+            List<User> scouts = userRepository.findByRole(User.UserRole.SCOUT,
+                    org.springframework.data.domain.PageRequest.of(0, 1000)).getContent();
+            for (User scout : scouts) {
+                if (scout.getId().toString().replace("-", "").startsWith(uuidPrefix) &&
+                    Boolean.TRUE.equals(scout.getIsActive()) &&
+                    scout.getDeletedAt() == null) {
+                    log.info("Matched SC- fallback code {} to scout {}", code, scout.getId());
+                    // Store in Redis so future lookups are faster
+                    try {
+                        redisTemplate.opsForValue().set(
+                                QR_CODE_PREFIX + scout.getId().toString(), code,
+                                30, java.util.concurrent.TimeUnit.DAYS);
+                    } catch (Exception e) {
+                        log.warn("Failed to cache SC- code in Redis: {}", e.getMessage());
+                    }
+                    return scout.getId();
+                }
+            }
+        }
+
         log.warn("Could not find active Scout for code: {}", code);
         return null;
     }
