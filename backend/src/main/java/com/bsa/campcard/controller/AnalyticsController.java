@@ -1,6 +1,7 @@
 package com.bsa.campcard.controller;
 
 import com.bsa.campcard.dto.WalletAnalyticsResponse;
+import com.bsa.campcard.repository.FavoriteOfferRepository;
 import com.bsa.campcard.repository.OfferRedemptionRepository;
 import com.bsa.campcard.repository.ReferralRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -26,6 +28,7 @@ public class AnalyticsController {
 
     private final OfferRedemptionRepository offerRedemptionRepository;
     private final ReferralRepository referralRepository;
+    private final FavoriteOfferRepository favoriteOfferRepository;
 
     @GetMapping("/wallet")
     @PreAuthorize("isAuthenticated()")
@@ -43,11 +46,14 @@ public class AnalyticsController {
         int referralsMade = referralRepository.findByReferrerId(userId).size();
         Long successfulReferrals = referralRepository.countSuccessfulReferrals(userId);
 
+        List<String> topCategories = favoriteOfferRepository.findTopCategoriesByUserId(userId);
+        String favoriteCategory = topCategories.isEmpty() ? "None yet" : topCategories.get(0);
+
         WalletAnalyticsResponse response = WalletAnalyticsResponse.builder()
                 .totalRedemptions((int) totalRedemptions)
                 .totalSavings(totalSavings != null ? totalSavings.doubleValue() : 0.0)
                 .thisMonth((int) thisMonth)
-                .favoriteCategory("None yet")
+                .favoriteCategory(favoriteCategory)
                 .referralsMade(referralsMade)
                 .referralChain(successfulReferrals != null ? successfulReferrals.intValue() : 0)
                 .recentSavings(totalSavings != null ? totalSavings.doubleValue() : 0.0)

@@ -168,7 +168,7 @@ export default function OfferDetailScreen() {
       const response = await apiClient.post('/api/v1/offers/redeem', {
         offerId: offer.id,
         userId: user?.id,
-        merchantLocationId: offer.merchantId || null,
+        merchantLocationId: null,
         purchaseAmount: null,
         redemptionMethod: selectedMethod, // Track which method was used
         notes: `Redeemed via ${selectedMethod === 'show_to_cashier' ? 'Show to Cashier' : 'Scan Merchant Code'}`,

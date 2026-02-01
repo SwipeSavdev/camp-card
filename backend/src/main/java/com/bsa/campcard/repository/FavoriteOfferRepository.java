@@ -27,4 +27,7 @@ public interface FavoriteOfferRepository extends JpaRepository<FavoriteOffer, Lo
 
     @Query("SELECT f.offerId FROM FavoriteOffer f WHERE f.userId = :userId")
     List<Long> findOfferIdsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT o.category FROM FavoriteOffer f JOIN Offer o ON f.offerId = o.id WHERE f.userId = :userId GROUP BY o.category ORDER BY COUNT(o.category) DESC")
+    List<String> findTopCategoriesByUserId(@Param("userId") UUID userId);
 }
