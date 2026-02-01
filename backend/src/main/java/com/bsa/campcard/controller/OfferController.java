@@ -4,6 +4,8 @@ import com.bsa.campcard.dto.*;
 import com.bsa.campcard.dto.offer.QrCodeData;
 import com.bsa.campcard.dto.offer.QrScanRequest;
 import com.bsa.campcard.dto.offer.QrScanResponse;
+import com.bsa.campcard.entity.FavoriteOffer;
+import com.bsa.campcard.repository.FavoriteOfferRepository;
 import com.bsa.campcard.service.OfferQrService;
 import com.bsa.campcard.service.OfferService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +33,7 @@ public class OfferController {
 
     private final OfferService offerService;
     private final OfferQrService offerQrService;
+    private final FavoriteOfferRepository favoriteOfferRepository;
     
     @PostMapping
     @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'GLOBAL_SYSTEM_ADMIN')")
@@ -299,5 +302,49 @@ public class OfferController {
         }
 
         return request.getRemoteAddr();
+    }
+
+    // ==================== Favorite / Heart Endpoints ====================
+
+    @PostMapping("/{offerId}/favorite")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Toggle favorite", description = "Add or remove an offer from the user's favorites")
+    public ResponseEntity<java.util.Map<String, Boolean>> toggleFavorite(@PathVariable Long offerId) {
+        org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User)
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UUID userId = user.getId();
+
+        boolean nowFavorited;
+        if (favoriteOfferRepository.existsByUserIdAndOfferId(userId, offerId)) {
+            favoriteOfferRepository.deleteByUserIdAndOfferId(userId, offerId);
+            nowFavorited = false;
+        } else {
+            favoriteOfferRepository.save(FavoriteOffer.builder()
+                    .userId(userId)
+                    .offerId(offerId)
+                    .build());
+            nowFavorited = true;
+        }
+
+        return ResponseEntity.ok(java.util.Map.of("favorited", nowFavorited));
+    }
+
+    @GetMapping("/favorites")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get favorites", description = "Get the authenticated user's favorite offer IDs")
+    public ResponseEntity<java.util.List<Long>> getFavoriteOfferIds() {
+        org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User)
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(favoriteOfferRepository.findOfferIdsByUserId(user.getId()));
+    }
+
+    @DeleteMapping("/{offerId}/favorite")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Remove favorite", description = "Remove an offer from the user's favorites")
+    public ResponseEntity<Void> removeFavorite(@PathVariable Long offerId) {
+        org.bsa.campcard.domain.user.User user = (org.bsa.campcard.domain.user.User)
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        favoriteOfferRepository.deleteByUserIdAndOfferId(user.getId(), offerId);
+        return ResponseEntity.ok().build();
     }
 }

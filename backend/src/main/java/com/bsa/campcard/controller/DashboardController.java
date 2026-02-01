@@ -112,13 +112,23 @@ public class DashboardController {
         log.info("Dashboard summary requested by: {}, authorities: {}",
             authentication != null ? authentication.getName() : "anonymous",
             authentication != null ? authentication.getAuthorities() : "none");
-        DashboardResponse response = dashboardService.getDashboardData();
-        // Clear detailed data for summary view
-        response.setTroopSales(null);
-        response.setTroopRecruiting(null);
-        response.setScoutSales(null);
-        response.setScoutReferrals(null);
-        response.setCustomerReferrals(null);
+
+        Long troopId = getTroopIdForUnitLeader(authentication);
+
+        DashboardResponse response;
+        if (troopId != null) {
+            // UNIT_LEADER gets troop-scoped summary
+            response = dashboardService.getTroopSummary(troopId);
+        } else {
+            response = dashboardService.getDashboardData();
+            // Clear detailed data for summary view
+            response.setTroopSales(null);
+            response.setTroopRecruiting(null);
+            response.setScoutSales(null);
+            response.setScoutReferrals(null);
+            response.setCustomerReferrals(null);
+        }
+
         return ResponseEntity.ok(response);
     }
 

@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { apiClient } from '../../utils/api';
+import { apiClient, favoritesApi } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 
 interface Offer {
@@ -48,11 +48,13 @@ export default function OffersScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const navigation = useNavigation();
   const { user } = useAuthStore();
 
   const categories = [
     'ALL',
+    'FAVORITES',
     'RESTAURANTS',
     'RETAIL',
     'SERVICES',
@@ -64,11 +66,40 @@ export default function OffersScreen() {
 
   useEffect(() => {
     loadOffers();
+    loadFavorites();
   }, []);
+
+  const loadFavorites = async () => {
+    try {
+      const response = await favoritesApi.getAll();
+      const ids: number[] = response.data || [];
+      setFavoriteIds(new Set(ids));
+    } catch (error) {
+      console.log('Failed to load favorites:', error);
+    }
+  };
+
+  const toggleFavorite = async (offerId: number) => {
+    try {
+      const response = await favoritesApi.toggle(offerId);
+      const nowFavorited = response.data?.favorited;
+      setFavoriteIds(prev => {
+        const next = new Set(prev);
+        if (nowFavorited) {
+          next.add(offerId);
+        } else {
+          next.delete(offerId);
+        }
+        return next;
+      });
+    } catch (error) {
+      console.log('Failed to toggle favorite:', error);
+    }
+  };
 
   useEffect(() => {
     filterOffers();
-  }, [selectedCategory, searchQuery, offers]);
+  }, [selectedCategory, searchQuery, offers, favoriteIds]);
 
   const loadOffers = async (isRefresh = false) => {
     try {
@@ -120,7 +151,9 @@ export default function OffersScreen() {
       );
     }
 
-    if (selectedCategory !== 'ALL') {
+    if (selectedCategory === 'FAVORITES') {
+      filtered = filtered.filter(o => favoriteIds.has(o.id));
+    } else if (selectedCategory !== 'ALL') {
       filtered = filtered.filter(o => o.category === selectedCategory);
     }
 
@@ -172,6 +205,21 @@ export default function OffersScreen() {
         <View style={styles.discountBadge}>
           <Text style={styles.discountText}>{getDiscountText(item)}</Text>
         </View>
+        {/* Heart / Favorite Button */}
+        <TouchableOpacity
+          style={styles.heartButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            toggleFavorite(item.id);
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons
+            name={favoriteIds.has(item.id) ? 'heart' : 'heart-outline'}
+            size={24}
+            color={favoriteIds.has(item.id) ? '#ce1126' : '#fff'}
+          />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.offerContent}>
@@ -434,6 +482,17 @@ const styles = StyleSheet.create({
   },
   offerContent: {
     padding: 16,
+  },
+  heartButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   discountBadge: {
     position: 'absolute',

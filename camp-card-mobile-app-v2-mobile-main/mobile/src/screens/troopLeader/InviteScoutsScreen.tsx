@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../store/authStore';
+import { scoutApi } from '../../services/apiClient';
 
 export default function InviteScoutsScreen() {
   const { user } = useAuthStore();
@@ -40,8 +41,7 @@ export default function InviteScoutsScreen() {
 
     setSending(true);
     try {
-      // TODO: Call API to send invite email
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await scoutApi.invite({ email: email.trim(), scoutName: '' });
       Alert.alert('Success', `Invitation sent to ${email}`);
       setEmail('');
     } catch (error) {

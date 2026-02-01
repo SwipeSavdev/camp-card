@@ -40,6 +40,8 @@ public class ScoutResponse {
     private String status;
     private String profileImageUrl;
     private LocalDateTime createdAt;
+    private Integer referralCount;
+    private Integer conversionCount;
     
     public static ScoutResponse fromEntity(Scout scout) {
         ScoutResponse response = new ScoutResponse();

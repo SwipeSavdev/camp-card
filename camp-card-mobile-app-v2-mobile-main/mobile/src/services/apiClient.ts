@@ -259,6 +259,9 @@ export const scoutApi = {
     unitNumber: string;
     troopId?: string;
     role?: string;
+    birthDate?: string;
+    parentName?: string;
+    parentEmail?: string;
   }) =>
     apiClient.post('/api/v1/auth/register', {
       ...data,
@@ -268,6 +271,10 @@ export const scoutApi = {
   // Get scouts for a troop (paginated roster)
   getTroopScouts: (troopId: string, page = 0, size = 100) =>
     apiClient.get(`/api/v1/scouts/troop/${troopId}/roster`, { params: { page, size } }),
+
+  // Send a scout invitation email
+  invite: (data: { email: string; scoutName: string }) =>
+    apiClient.post('/api/v1/scouts/invite', data),
 };
 
 export const referralApi = {
@@ -300,6 +307,20 @@ export const analyticsApi = {
   // Get wallet/card analytics
   getWalletStats: () =>
     apiClient.get('/api/v1/analytics/wallet'),
+};
+
+export const favoritesApi = {
+  // Toggle favorite on/off for an offer
+  toggle: (offerId: number) =>
+    apiClient.post(`/api/v1/offers/${offerId}/favorite`),
+
+  // Get list of favorite offer IDs
+  getAll: () =>
+    apiClient.get<number[]>('/api/v1/offers/favorites'),
+
+  // Remove a favorite
+  remove: (offerId: number) =>
+    apiClient.delete(`/api/v1/offers/${offerId}/favorite`),
 };
 
 export const qrCodeApi = {
@@ -417,6 +438,34 @@ export const paymentsApi = {
   // Verify a subscription payment transaction
   verifyPayment: (transactionId: string) =>
     apiClient.get(`/api/v1/payments/subscribe/verify/${transactionId}`),
+};
+
+// Payment Methods API (CIM stored cards for auto-renew)
+export const paymentMethodsApi = {
+  // Save a new payment method (card stored via Authorize.net CIM)
+  save: (data: {
+    cardNumber: string;
+    expirationDate: string; // MMYY format
+    cvv: string;
+    firstName?: string;
+    lastName?: string;
+    setAsDefault?: boolean;
+  }) => apiClient.post('/api/v1/payments/payment-methods', data),
+
+  // Get all saved payment methods
+  getAll: () =>
+    apiClient.get<Array<{
+      id: number;
+      cardLastFour: string;
+      cardType: string;
+      expirationMonth: number;
+      expirationYear: number;
+      isDefault: boolean;
+    }>>('/api/v1/payments/payment-methods'),
+
+  // Remove a saved payment method
+  remove: (id: number) =>
+    apiClient.delete(`/api/v1/payments/payment-methods/${id}`),
 };
 
 // COPPA Parental Consent API

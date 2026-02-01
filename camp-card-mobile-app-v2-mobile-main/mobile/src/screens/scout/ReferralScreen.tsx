@@ -1,7 +1,7 @@
 // Scout Referral Screen - FR-16, FR-17, FR-19
 // Shows QR code, shareable link, and referral tracking with chain attribution
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -45,6 +46,8 @@ export default function ReferralScreen() {
     totalEarnings: 0,
     pendingEarnings: 0,
   });
+
+  const qrRef = useRef<any>(null);
 
   // Generate Scout's unique affiliate link (FR-16)
   const scoutId = user?.id || 'scout123';
@@ -134,6 +137,25 @@ export default function ReferralScreen() {
 
   // FR-19: Generate printable poster with QR code
   const handlePrintPoster = async () => {
+    // Extract QR code as base64 PNG from the rendered QRCode component
+    const getQRBase64 = (): Promise<string> => {
+      return new Promise((resolve) => {
+        if (qrRef.current) {
+          qrRef.current.toDataURL((base64: string) => {
+            resolve(base64);
+          });
+        } else {
+          resolve('');
+        }
+      });
+    };
+
+    const qrBase64 = await getQRBase64();
+
+    const qrImageHtml = qrBase64
+      ? `<img src="data:image/png;base64,${qrBase64}" width="250" height="250" style="display:block;" />`
+      : `<div style="width:250px;height:250px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#666;border:2px dashed #ccc;">QR Code unavailable</div>`;
+
     const posterHtml = `
       <!DOCTYPE html>
       <html>
@@ -164,17 +186,6 @@ export default function ReferralScreen() {
             border: 3px solid #003F87;
             border-radius: 20px;
             display: inline-block;
-          }
-          .qr-placeholder {
-            width: 200px;
-            height: 200px;
-            background: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: #666;
-            border: 2px dashed #ccc;
           }
           .code {
             font-size: 32px;
@@ -220,9 +231,7 @@ export default function ReferralScreen() {
         <div class="subheader">Support Scout Fundraising!</div>
 
         <div class="qr-container">
-          <div class="qr-placeholder">
-            [QR Code: ${affiliateLink}]
-          </div>
+          ${qrImageHtml}
         </div>
 
         <div class="code">${affiliateCode}</div>
@@ -343,7 +352,13 @@ export default function ReferralScreen() {
           {/* QR Code Card */}
           <View style={styles.qrCard}>
             <View style={styles.qrPlaceholder}>
-              <Ionicons name="qr-code" size={120} color={COLORS.secondary} />
+              <QRCode
+                value={affiliateLink + (affiliateLink.includes('?') ? '&' : '?') + 'source=qr'}
+                size={180}
+                color="#003F87"
+                backgroundColor="white"
+                getRef={(ref: any) => { qrRef.current = ref; }}
+              />
               <Text style={styles.qrHint}>Scan to join</Text>
             </View>
             <Text style={styles.affiliateCode}>{affiliateCode}</Text>

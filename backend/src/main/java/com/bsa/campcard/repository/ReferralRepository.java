@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,4 +29,11 @@ public interface ReferralRepository extends JpaRepository<Referral, Long> {
     
     @Query("SELECT COUNT(r) FROM Referral r WHERE r.referrerId = ?1 AND (r.status = 'COMPLETED' OR r.status = 'SUBSCRIBED')")
     Long countSuccessfulReferrals(UUID referrerId);
+
+    @Query("SELECT r.referrerId, COUNT(r) FROM Referral r WHERE r.referrerId IN :referrerIds GROUP BY r.referrerId")
+    List<Object[]> countReferralsByReferrerIds(@Param("referrerIds") List<UUID> referrerIds);
+
+    @Query("SELECT r.referrerId, COUNT(r) FROM Referral r WHERE r.referrerId IN :referrerIds " +
+           "AND r.status IN ('COMPLETED', 'SUBSCRIBED', 'REWARDED') GROUP BY r.referrerId")
+    List<Object[]> countConversionsByReferrerIds(@Param("referrerIds") List<UUID> referrerIds);
 }

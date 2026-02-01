@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Switch
+  Switch,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { apiClient, paymentsApi } from '../../utils/api';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { apiClient, paymentsApi, paymentMethodsApi } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
 import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
@@ -53,6 +56,20 @@ export default function SubscriptionScreen() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<SubscriptionPlan | null>(null);
+  const [showUpdatePaymentModal, setShowUpdatePaymentModal] = useState(false);
+  const [savedCards, setSavedCards] = useState<Array<{
+    id: number;
+    cardLastFour: string;
+    cardType: string;
+    expirationMonth: number;
+    expirationYear: number;
+    isDefault: boolean;
+  }>>([]);
+  const [newCardNumber, setNewCardNumber] = useState('');
+  const [newCardExpiry, setNewCardExpiry] = useState('');
+  const [newCardCvv, setNewCardCvv] = useState('');
+  const [newCardName, setNewCardName] = useState('');
+  const [savingCard, setSavingCard] = useState(false);
   const navigation = useNavigation<TroopLeaderNavProp>();
   const { user } = useAuthStore();
 
@@ -222,9 +239,92 @@ export default function SubscriptionScreen() {
     );
   };
 
-  const handleUpdatePayment = () => {
-    // In production, this would open Authorize.net payment method update flow
-    Alert.alert('Update Payment', 'This would integrate with Authorize.net to update card details');
+  const loadSavedCards = async () => {
+    try {
+      const response = await paymentMethodsApi.getAll();
+      setSavedCards(response.data || []);
+    } catch (error) {
+      console.error('Error loading saved cards:', error);
+    }
+  };
+
+  const handleUpdatePayment = async () => {
+    await loadSavedCards();
+    setShowUpdatePaymentModal(true);
+  };
+
+  const handleSaveNewCard = async () => {
+    if (!newCardNumber || !newCardExpiry || !newCardCvv) {
+      Alert.alert('Missing Info', 'Please fill in all card fields.');
+      return;
+    }
+
+    // Validate expiry format (MMYY)
+    const expiryClean = newCardExpiry.replace(/\//g, '');
+    if (expiryClean.length !== 4) {
+      Alert.alert('Invalid Expiry', 'Enter expiration as MM/YY.');
+      return;
+    }
+
+    setSavingCard(true);
+    try {
+      const nameParts = newCardName.trim().split(' ');
+      await paymentMethodsApi.save({
+        cardNumber: newCardNumber.replace(/\s/g, ''),
+        expirationDate: expiryClean,
+        cvv: newCardCvv,
+        firstName: nameParts[0] || undefined,
+        lastName: nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined,
+        setAsDefault: true,
+      });
+
+      Alert.alert('Success', 'Payment method saved for auto-renew.');
+      setNewCardNumber('');
+      setNewCardExpiry('');
+      setNewCardCvv('');
+      setNewCardName('');
+      await loadSavedCards();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.errorMessage || 'Failed to save card. Please check your details.');
+    } finally {
+      setSavingCard(false);
+    }
+  };
+
+  const handleRemoveCard = (cardId: number, lastFour: string) => {
+    Alert.alert(
+      'Remove Card',
+      `Remove card ending in ${lastFour}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await paymentMethodsApi.remove(cardId);
+              await loadSavedCards();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to remove card.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const formatCardInput = (text: string) => {
+    const cleaned = text.replace(/\D/g, '');
+    const groups = cleaned.match(/.{1,4}/g);
+    return groups ? groups.join(' ') : '';
+  };
+
+  const formatExpiryInput = (text: string) => {
+    const cleaned = text.replace(/\D/g, '');
+    if (cleaned.length >= 3) {
+      return cleaned.substring(0, 2) + '/' + cleaned.substring(2, 4);
+    }
+    return cleaned;
   };
 
   const toggleAutoRenew = async (value: boolean) => {
@@ -264,7 +364,8 @@ export default function SubscriptionScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+    <ScrollView style={{flex: 1}}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -495,6 +596,108 @@ export default function SubscriptionScreen() {
         </>
       )}
 
+      {/* Update Payment Method Modal */}
+      <Modal
+        visible={showUpdatePaymentModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowUpdatePaymentModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Payment Methods</Text>
+            <TouchableOpacity onPress={() => setShowUpdatePaymentModal(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {/* Saved Cards */}
+            {savedCards.length > 0 && (
+              <View style={styles.savedCardsSection}>
+                <Text style={styles.savedCardsTitle}>Saved Cards</Text>
+                {savedCards.map((card) => (
+                  <View key={card.id} style={styles.savedCardRow}>
+                    <View style={styles.savedCardInfo}>
+                      <Ionicons name="card" size={24} color="#003f87" />
+                      <View style={styles.savedCardDetails}>
+                        <Text style={styles.savedCardType}>
+                          {card.cardType} ending in {card.cardLastFour}
+                          {card.isDefault ? ' (Default)' : ''}
+                        </Text>
+                        <Text style={styles.savedCardExpiry}>
+                          Expires {String(card.expirationMonth).padStart(2, '0')}/{card.expirationYear}
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity onPress={() => handleRemoveCard(card.id, card.cardLastFour)}>
+                      <Ionicons name="trash-outline" size={20} color="#f44336" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Add New Card */}
+            <View style={styles.addCardSection}>
+              <Text style={styles.addCardTitle}>
+                {savedCards.length > 0 ? 'Replace Payment Method' : 'Add Payment Method'}
+              </Text>
+              <Text style={styles.addCardDescription}>
+                Your card will be securely stored for subscription auto-renewal.
+              </Text>
+
+              <TextInput
+                style={styles.cardInput}
+                placeholder="Cardholder Name"
+                value={newCardName}
+                onChangeText={setNewCardName}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={styles.cardInput}
+                placeholder="Card Number"
+                value={newCardNumber}
+                onChangeText={(text) => setNewCardNumber(formatCardInput(text))}
+                keyboardType="number-pad"
+                maxLength={19}
+              />
+              <View style={styles.cardInputRow}>
+                <TextInput
+                  style={[styles.cardInput, styles.cardInputHalf]}
+                  placeholder="MM/YY"
+                  value={newCardExpiry}
+                  onChangeText={(text) => setNewCardExpiry(formatExpiryInput(text))}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                />
+                <TextInput
+                  style={[styles.cardInput, styles.cardInputHalf]}
+                  placeholder="CVV"
+                  value={newCardCvv}
+                  onChangeText={setNewCardCvv}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  secureTextEntry
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.saveCardButton, savingCard && styles.saveCardButtonDisabled]}
+                onPress={handleSaveNewCard}
+                disabled={savingCard}
+              >
+                {savingCard ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={styles.saveCardButtonText}>Save Payment Method</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
       {/* Payment Modal */}
       <CardPaymentModal
         visible={showPaymentModal}
@@ -509,6 +712,7 @@ export default function SubscriptionScreen() {
         processPayment={processPayment}
       />
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -527,7 +731,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 12,
     paddingBottom: 20,
     backgroundColor: 'white',
     borderBottomWidth: 1,
@@ -812,6 +1016,123 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   renewButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#003f87',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  savedCardsSection: {
+    marginBottom: 24,
+  },
+  savedCardsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  savedCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  savedCardInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  savedCardDetails: {
+    marginLeft: 12,
+  },
+  savedCardType: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+  },
+  savedCardExpiry: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
+  },
+  addCardSection: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  addCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#003f87',
+    marginBottom: 4,
+  },
+  addCardDescription: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 16,
+  },
+  cardInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 14,
+    fontSize: 16,
+    marginBottom: 12,
+    backgroundColor: '#fafafa',
+  },
+  cardInputRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cardInputHalf: {
+    flex: 1,
+  },
+  saveCardButton: {
+    backgroundColor: '#003f87',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  saveCardButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveCardButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',

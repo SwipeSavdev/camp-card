@@ -62,6 +62,20 @@ public interface OfferRedemptionRepository extends JpaRepository<OfferRedemption
     List<Object[]> countUserRedemptionsByOfferIds(@Param("userId") UUID userId,
                                                    @Param("offerIds") List<Long> offerIds);
 
+    @Query("SELECT COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
+           "AND r.status IN ('VERIFIED', 'COMPLETED')")
+    long countCompletedByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COALESCE(SUM(r.discountAmount), 0) FROM OfferRedemption r " +
+           "WHERE r.userId = :userId AND r.status IN ('VERIFIED', 'COMPLETED')")
+    java.math.BigDecimal sumSavingsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(r) FROM OfferRedemption r WHERE r.userId = :userId " +
+           "AND r.status IN ('VERIFIED', 'COMPLETED') " +
+           "AND r.createdAt >= :since")
+    long countCompletedByUserIdSince(@Param("userId") UUID userId,
+                                      @Param("since") LocalDateTime since);
+
     /**
      * Find all redemptions for a user that can be replenished (one-time offers)
      */

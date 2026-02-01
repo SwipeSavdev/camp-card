@@ -5,6 +5,7 @@ import com.bsa.campcard.entity.Referral;
 import com.bsa.campcard.entity.ReferralClick;
 import org.bsa.campcard.domain.user.User;
 import com.bsa.campcard.exception.ResourceNotFoundException;
+import com.bsa.campcard.repository.OfferRedemptionRepository;
 import com.bsa.campcard.repository.ReferralClickRepository;
 import com.bsa.campcard.repository.ReferralRepository;
 import org.bsa.campcard.domain.user.UserRepository;
@@ -34,6 +35,7 @@ public class ReferralService {
     
     private final ReferralRepository referralRepository;
     private final ReferralClickRepository referralClickRepository;
+    private final OfferRedemptionRepository offerRedemptionRepository;
     private final UserRepository userRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -382,8 +384,10 @@ public class ReferralService {
         stats.put("linkClicks", linkClicks);
         stats.put("qrScans", qrScans);
         stats.put("totalEarnings", totalEarnings);
-        stats.put("redemptionsUsed", 0); // TODO: integrate with offer redemptions
-        stats.put("savingsEarned", 0.0); // TODO: integrate with savings tracking
+        long redemptionsUsed = offerRedemptionRepository.countCompletedByUserId(userId);
+        BigDecimal savingsEarned = offerRedemptionRepository.sumSavingsByUserId(userId);
+        stats.put("redemptionsUsed", redemptionsUsed);
+        stats.put("savingsEarned", savingsEarned != null ? savingsEarned.doubleValue() : 0.0);
         return stats;
     }
 

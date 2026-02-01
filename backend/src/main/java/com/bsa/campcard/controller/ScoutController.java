@@ -181,4 +181,29 @@ public class ScoutController {
         scoutService.deleteScout(id);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/invite")
+    @PreAuthorize("hasAnyRole('NATIONAL_ADMIN', 'COUNCIL_ADMIN', 'UNIT_LEADER')")
+    public ResponseEntity<Void> inviteScout(
+            @RequestBody InviteScoutRequest request,
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        String inviterName = user.getFirstName() + " " + user.getLastName();
+
+        // Resolve troop number from the authenticated user's troopId
+        String troopNumber = "Unknown";
+        if (user.getTroopId() != null) {
+            troopNumber = troopRepository.findByUuid(user.getTroopId())
+                .map(Troop::getTroopNumber)
+                .orElse("Unknown");
+        }
+
+        scoutService.inviteScout(
+                request.getEmail(),
+                request.getScoutName(),
+                troopNumber,
+                inviterName);
+
+        return ResponseEntity.ok().build();
+    }
 }

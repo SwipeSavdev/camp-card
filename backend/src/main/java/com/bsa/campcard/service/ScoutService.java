@@ -4,18 +4,26 @@ import com.bsa.campcard.dto.*;
 import com.bsa.campcard.entity.Scout;
 import com.bsa.campcard.entity.Scout.ScoutStatus;
 import com.bsa.campcard.entity.Scout.ScoutRank;
+import com.bsa.campcard.repository.ReferralRepository;
 import com.bsa.campcard.repository.ScoutRepository;
 import com.bsa.campcard.repository.TroopRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ScoutService {
@@ -23,6 +31,9 @@ public class ScoutService {
     private final ScoutRepository scoutRepository;
     private final TroopRepository troopRepository;
     private final TroopService troopService;
+    private final ReferralRepository referralRepository;
+    private final EmailService emailService;
+    private final RedisTemplate<String, Object> redisTemplate;
     
     @Transactional
     public ScoutResponse createScout(CreateScoutRequest request) {
@@ -100,13 +111,17 @@ public class ScoutService {
     }
     
     public Page<ScoutResponse> getTroopRoster(Long troopId, Pageable pageable) {
-        return scoutRepository.findByTroopId(troopId, pageable)
+        Page<ScoutResponse> page = scoutRepository.findByTroopId(troopId, pageable)
             .map(ScoutResponse::fromEntity);
+        enrichWithReferralCounts(page.getContent());
+        return page;
     }
     
     public Page<ScoutResponse> getActiveTroopRoster(Long troopId, Pageable pageable) {
-        return scoutRepository.findByTroopIdAndStatus(troopId, ScoutStatus.ACTIVE, pageable)
+        Page<ScoutResponse> page = scoutRepository.findByTroopIdAndStatus(troopId, ScoutStatus.ACTIVE, pageable)
             .map(ScoutResponse::fromEntity);
+        enrichWithReferralCounts(page.getContent());
+        return page;
     }
     
     public Page<ScoutResponse> searchScouts(String search, Pageable pageable) {
@@ -210,11 +225,58 @@ public class ScoutService {
     public void deleteScout(Long scoutId) {
         Scout scout = scoutRepository.findById(scoutId)
             .orElseThrow(() -> new IllegalArgumentException("Scout not found"));
-        
+
         Long troopId = scout.getTroopId();
         scoutRepository.delete(scout);
-        
+
         // Update troop stats
         troopService.updateTroopStats(troopId);
+    }
+
+    /**
+     * Send a scout invitation email and store the invite token in Redis (7-day TTL).
+     */
+    public void inviteScout(String email, String scoutName, String troopNumber, String inviterName) {
+        log.info("Sending scout invitation to {} for troop {}", email, troopNumber);
+
+        String inviteToken = UUID.randomUUID().toString();
+        String redisKey = "invite:scout:" + inviteToken;
+        Map<String, String> tokenData = new HashMap<>();
+        tokenData.put("email", email);
+        tokenData.put("scoutName", scoutName);
+        tokenData.put("troopNumber", troopNumber);
+        redisTemplate.opsForHash().putAll(redisKey, tokenData);
+        redisTemplate.expire(redisKey, Duration.ofDays(7));
+
+        emailService.sendScoutInvitationEmail(email, scoutName, troopNumber, inviterName, inviteToken);
+    }
+
+    /**
+     * Batch-enrich a list of ScoutResponse objects with referral and conversion counts.
+     */
+    private void enrichWithReferralCounts(List<ScoutResponse> scouts) {
+        List<UUID> userIds = scouts.stream()
+            .map(ScoutResponse::getUserId)
+            .filter(java.util.Objects::nonNull)
+            .collect(Collectors.toList());
+
+        if (userIds.isEmpty()) return;
+
+        Map<UUID, Integer> referralCounts = new HashMap<>();
+        for (Object[] row : referralRepository.countReferralsByReferrerIds(userIds)) {
+            referralCounts.put((UUID) row[0], ((Number) row[1]).intValue());
+        }
+
+        Map<UUID, Integer> conversionCounts = new HashMap<>();
+        for (Object[] row : referralRepository.countConversionsByReferrerIds(userIds)) {
+            conversionCounts.put((UUID) row[0], ((Number) row[1]).intValue());
+        }
+
+        for (ScoutResponse scout : scouts) {
+            if (scout.getUserId() != null) {
+                scout.setReferralCount(referralCounts.getOrDefault(scout.getUserId(), 0));
+                scout.setConversionCount(conversionCounts.getOrDefault(scout.getUserId(), 0));
+            }
+        }
     }
 }

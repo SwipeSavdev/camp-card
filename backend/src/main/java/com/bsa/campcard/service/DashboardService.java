@@ -489,6 +489,58 @@ public class DashboardService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get a lightweight summary scoped to a single troop (for UNIT_LEADER role).
+     */
+    public DashboardResponse getTroopSummary(Long troopId) {
+        log.info("Fetching troop summary for troopId: {}", troopId);
+
+        Troop troop = troopRepository.findById(troopId).orElse(null);
+        if (troop == null) {
+            return DashboardResponse.builder().build();
+        }
+
+        long activeScouts = scoutRepository.countByTroopIdAndStatus(troopId, Scout.ScoutStatus.ACTIVE);
+        BigDecimal totalSales = scoutRepository.sumSalesByTroop(troopId);
+        if (totalSales == null) totalSales = BigDecimal.ZERO;
+        Integer cardsSold = scoutRepository.sumCardsSoldByTroop(troopId);
+
+        // Count redemptions and referrals across all scouts in the troop
+        List<Scout> troopScouts = scoutRepository.findActiveTroopMembers(troopId);
+        long totalRedemptions = 0;
+        long totalReferrals = 0;
+        long successfulReferrals = 0;
+
+        for (Scout scout : troopScouts) {
+            if (scout.getUserId() != null) {
+                totalRedemptions += offerRedemptionRepository.countCompletedByUserId(scout.getUserId());
+                List<Referral> referrals = referralRepository.findByReferrerId(scout.getUserId());
+                totalReferrals += referrals.size();
+                successfulReferrals += referrals.stream()
+                        .filter(r -> r.getStatus() == Referral.ReferralStatus.COMPLETED ||
+                                     r.getStatus() == Referral.ReferralStatus.REWARDED)
+                        .count();
+            }
+        }
+
+        double referralConversionRate = totalReferrals > 0
+                ? (double) successfulReferrals / totalReferrals * 100 : 0.0;
+
+        return DashboardResponse.builder()
+                .totalTroops(1L)
+                .activeTroops(troop.getStatus() == Troop.TroopStatus.ACTIVE ? 1L : 0L)
+                .totalScouts((long) troopScouts.size())
+                .activeScouts(activeScouts)
+                .totalSales(totalSales)
+                .totalCardsSold(cardsSold != null ? cardsSold : 0)
+                .totalReferrals(totalReferrals)
+                .successfulReferrals(successfulReferrals)
+                .referralConversionRate(Math.round(referralConversionRate * 10.0) / 10.0)
+                .totalRedemptions(totalRedemptions)
+                .totalRevenueCents(totalSales.multiply(BigDecimal.valueOf(100)).longValue())
+                .build();
+    }
+
     private Double calculateTrend() {
         // No historical period comparison data available yet
         return 0.0;

@@ -6,7 +6,11 @@ import com.bsa.campcard.exception.PaymentException;
 import lombok.extern.slf4j.Slf4j;
 import net.authorize.Environment;
 import net.authorize.api.contract.v1.*;
+import net.authorize.api.controller.CreateCustomerPaymentProfileController;
+import net.authorize.api.controller.CreateCustomerProfileController;
 import net.authorize.api.controller.CreateTransactionController;
+import net.authorize.api.controller.DeleteCustomerPaymentProfileController;
+import net.authorize.api.controller.GetCustomerProfileController;
 import net.authorize.api.controller.GetHostedPaymentPageController;
 import net.authorize.api.controller.GetTransactionDetailsController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -725,6 +729,290 @@ public class PaymentService {
      */
     public AcceptHostedTokenResponse getAcceptHostedToken(AcceptHostedTokenRequest request) {
         return getAcceptHostedToken(null, request);
+    }
+
+    // ========================================================================
+    // CIM (Customer Information Manager) — Stored Payment Profiles
+    // ========================================================================
+
+    /**
+     * Create an Authorize.net CIM customer profile.
+     *
+     * @param email Customer email for the profile
+     * @param merchantCustomerId Unique ID for this customer (typically the user UUID)
+     * @return The Authorize.net customer profile ID
+     */
+    public String createCustomerProfile(String email, String merchantCustomerId) {
+        log.info("Creating CIM customer profile for: {}", email);
+
+        GatewayCredentials creds = resolveGateway(null);
+
+        try {
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
+            CustomerProfileType profile = new CustomerProfileType();
+            profile.setMerchantCustomerId(merchantCustomerId);
+            profile.setEmail(email);
+
+            CreateCustomerProfileRequest apiRequest = new CreateCustomerProfileRequest();
+            apiRequest.setMerchantAuthentication(merchantAuth);
+            apiRequest.setProfile(profile);
+            apiRequest.setValidationMode(ValidationModeEnum.NONE);
+
+            CreateCustomerProfileController controller = new CreateCustomerProfileController(apiRequest);
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
+            controller.execute();
+
+            CreateCustomerProfileResponse response = controller.getApiResponse();
+
+            if (response != null && response.getMessages().getResultCode() == MessageTypeEnum.OK) {
+                log.info("CIM customer profile created: {}", response.getCustomerProfileId());
+                return response.getCustomerProfileId();
+            }
+
+            String errorMessage = response != null
+                    ? response.getMessages().getMessage().get(0).getText()
+                    : "No response from gateway";
+            throw new PaymentException("Failed to create customer profile: " + errorMessage);
+
+        } catch (PaymentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error creating CIM customer profile", e);
+            throw new PaymentException("Failed to create customer profile: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Add a payment profile (card) to an existing CIM customer profile.
+     *
+     * @param customerProfileId The Authorize.net customer profile ID
+     * @param cardNumber Full card number
+     * @param expirationDate Expiration in YYYY-MM format
+     * @param cvv Card verification code
+     * @param firstName Cardholder first name
+     * @param lastName Cardholder last name
+     * @return The Authorize.net payment profile ID
+     */
+    public String createPaymentProfile(String customerProfileId, String cardNumber,
+                                        String expirationDate, String cvv,
+                                        String firstName, String lastName) {
+        log.info("Creating CIM payment profile for customer profile: {}", customerProfileId);
+
+        GatewayCredentials creds = resolveGateway(null);
+
+        try {
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
+            CreditCardType creditCard = new CreditCardType();
+            creditCard.setCardNumber(cardNumber);
+            creditCard.setExpirationDate(expirationDate);
+            creditCard.setCardCode(cvv);
+
+            PaymentType payment = new PaymentType();
+            payment.setCreditCard(creditCard);
+
+            CustomerAddressType billTo = new CustomerAddressType();
+            billTo.setFirstName(firstName);
+            billTo.setLastName(lastName);
+
+            CustomerPaymentProfileType paymentProfile = new CustomerPaymentProfileType();
+            paymentProfile.setPayment(payment);
+            paymentProfile.setBillTo(billTo);
+
+            CreateCustomerPaymentProfileRequest apiRequest = new CreateCustomerPaymentProfileRequest();
+            apiRequest.setMerchantAuthentication(merchantAuth);
+            apiRequest.setCustomerProfileId(customerProfileId);
+            apiRequest.setPaymentProfile(paymentProfile);
+            apiRequest.setValidationMode(ValidationModeEnum.LIVE_MODE);
+
+            CreateCustomerPaymentProfileController controller = new CreateCustomerPaymentProfileController(apiRequest);
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
+            controller.execute();
+
+            CreateCustomerPaymentProfileResponse response = controller.getApiResponse();
+
+            if (response != null && response.getMessages().getResultCode() == MessageTypeEnum.OK) {
+                log.info("CIM payment profile created: {}", response.getCustomerPaymentProfileId());
+                return response.getCustomerPaymentProfileId();
+            }
+
+            String errorMessage = response != null
+                    ? response.getMessages().getMessage().get(0).getText()
+                    : "No response from gateway";
+            throw new PaymentException("Failed to create payment profile: " + errorMessage);
+
+        } catch (PaymentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error creating CIM payment profile", e);
+            throw new PaymentException("Failed to create payment profile: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Charge a stored CIM payment profile.
+     *
+     * @param customerProfileId The Authorize.net customer profile ID
+     * @param paymentProfileId The Authorize.net payment profile ID
+     * @param amount Amount to charge
+     * @param description Transaction description
+     * @return PaymentResponse with transaction details
+     */
+    public PaymentResponse chargeCustomerProfile(String customerProfileId, String paymentProfileId,
+                                                  BigDecimal amount, String description) {
+        log.info("Charging CIM profile {} / {} for ${}", customerProfileId, paymentProfileId, amount);
+
+        GatewayCredentials creds = resolveGateway(null);
+
+        try {
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
+            CustomerProfilePaymentType profilePayment = new CustomerProfilePaymentType();
+            profilePayment.setCustomerProfileId(customerProfileId);
+            PaymentProfile pp = new PaymentProfile();
+            pp.setPaymentProfileId(paymentProfileId);
+            profilePayment.setPaymentProfile(pp);
+
+            OrderType order = new OrderType();
+            order.setInvoiceNumber("CIM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            order.setDescription(description != null ? description : "Camp Card Subscription Renewal");
+
+            TransactionRequestType txnRequest = new TransactionRequestType();
+            txnRequest.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value());
+            txnRequest.setAmount(amount);
+            txnRequest.setProfile(profilePayment);
+            txnRequest.setOrder(order);
+
+            CreateTransactionRequest apiRequest = new CreateTransactionRequest();
+            apiRequest.setMerchantAuthentication(merchantAuth);
+            apiRequest.setTransactionRequest(txnRequest);
+
+            CreateTransactionController controller = new CreateTransactionController(apiRequest);
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
+            controller.execute();
+
+            CreateTransactionResponse response = controller.getApiResponse();
+
+            if (response != null && response.getMessages().getResultCode() == MessageTypeEnum.OK) {
+                TransactionResponse txnResponse = response.getTransactionResponse();
+
+                if (txnResponse != null && txnResponse.getMessages() != null) {
+                    log.info("CIM charge successful. Transaction ID: {}", txnResponse.getTransId());
+
+                    return PaymentResponse.builder()
+                            .transactionId(txnResponse.getTransId())
+                            .status("SUCCESS")
+                            .amount(amount)
+                            .currency("USD")
+                            .message(txnResponse.getMessages().getMessage().get(0).getDescription())
+                            .authCode(txnResponse.getAuthCode())
+                            .cardType(txnResponse.getAccountType())
+                            .timestamp(LocalDateTime.now())
+                            .build();
+                } else {
+                    String errorMessage = txnResponse != null && txnResponse.getErrors() != null
+                            ? txnResponse.getErrors().getError().get(0).getErrorText()
+                            : "Transaction failed";
+                    return PaymentResponse.builder()
+                            .status("FAILED")
+                            .amount(amount)
+                            .currency("USD")
+                            .errorMessage(errorMessage)
+                            .timestamp(LocalDateTime.now())
+                            .build();
+                }
+            }
+
+            String errorMessage = response != null
+                    ? response.getMessages().getMessage().get(0).getText()
+                    : "No response from gateway";
+            throw new PaymentException("CIM charge failed: " + errorMessage);
+
+        } catch (PaymentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error charging CIM profile", e);
+            throw new PaymentException("Failed to charge stored payment method: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Delete a payment profile from an Authorize.net CIM customer profile.
+     *
+     * @param customerProfileId The Authorize.net customer profile ID
+     * @param paymentProfileId The Authorize.net payment profile ID
+     */
+    public void deletePaymentProfile(String customerProfileId, String paymentProfileId) {
+        log.info("Deleting CIM payment profile {} from customer {}", paymentProfileId, customerProfileId);
+
+        GatewayCredentials creds = resolveGateway(null);
+
+        try {
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
+            DeleteCustomerPaymentProfileRequest apiRequest = new DeleteCustomerPaymentProfileRequest();
+            apiRequest.setMerchantAuthentication(merchantAuth);
+            apiRequest.setCustomerProfileId(customerProfileId);
+            apiRequest.setCustomerPaymentProfileId(paymentProfileId);
+
+            DeleteCustomerPaymentProfileController controller = new DeleteCustomerPaymentProfileController(apiRequest);
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
+            controller.execute();
+
+            net.authorize.api.contract.v1.DeleteCustomerPaymentProfileResponse response = controller.getApiResponse();
+
+            if (response != null && response.getMessages().getResultCode() == MessageTypeEnum.OK) {
+                log.info("CIM payment profile deleted: {}", paymentProfileId);
+            } else {
+                String errorMessage = response != null
+                        ? response.getMessages().getMessage().get(0).getText()
+                        : "No response from gateway";
+                throw new PaymentException("Failed to delete payment profile: " + errorMessage);
+            }
+
+        } catch (PaymentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error deleting CIM payment profile", e);
+            throw new PaymentException("Failed to delete payment profile: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get a customer profile from Authorize.net CIM (for validation/sync).
+     *
+     * @param customerProfileId The Authorize.net customer profile ID
+     * @return The customer profile details, or null if not found
+     */
+    public GetCustomerProfileResponse getCustomerProfile(String customerProfileId) {
+        log.info("Fetching CIM customer profile: {}", customerProfileId);
+
+        GatewayCredentials creds = resolveGateway(null);
+
+        try {
+            MerchantAuthenticationType merchantAuth = buildMerchantAuth(creds);
+
+            GetCustomerProfileRequest apiRequest = new GetCustomerProfileRequest();
+            apiRequest.setMerchantAuthentication(merchantAuth);
+            apiRequest.setCustomerProfileId(customerProfileId);
+
+            GetCustomerProfileController controller = new GetCustomerProfileController(apiRequest);
+            net.authorize.api.controller.base.ApiOperationBase.setEnvironment(getEnvironmentFromString(creds.environment));
+            controller.execute();
+
+            GetCustomerProfileResponse response = controller.getApiResponse();
+
+            if (response != null && response.getMessages().getResultCode() == MessageTypeEnum.OK) {
+                return response;
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            log.error("Error fetching CIM customer profile", e);
+            return null;
+        }
     }
 
     /**

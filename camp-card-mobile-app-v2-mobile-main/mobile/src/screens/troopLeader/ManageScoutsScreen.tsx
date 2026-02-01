@@ -57,6 +57,9 @@ export default function ManageScoutsScreen() {
   const [newScoutUnitNumber, setNewScoutUnitNumber] = useState('');
   const [showUnitTypePicker, setShowUnitTypePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newScoutDOB, setNewScoutDOB] = useState('');
+  const [newScoutParentName, setNewScoutParentName] = useState('');
+  const [newScoutParentEmail, setNewScoutParentEmail] = useState('');
 
   const { user } = useAuthStore();
 
@@ -134,9 +137,29 @@ export default function ManageScoutsScreen() {
       return;
     }
 
+    if (!newScoutDOB.trim() || newScoutDOB.length !== 10) {
+      Alert.alert('Error', 'Please enter a valid date of birth (MM/DD/YYYY)');
+      return;
+    }
+
+    if (!newScoutParentName.trim()) {
+      Alert.alert('Error', 'Please enter a parent/guardian name');
+      return;
+    }
+
+    if (!newScoutParentEmail.trim()) {
+      Alert.alert('Error', 'Please enter a parent/guardian email');
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newScoutEmail)) {
       Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    if (!emailRegex.test(newScoutParentEmail)) {
+      Alert.alert('Error', 'Please enter a valid parent/guardian email address');
       return;
     }
 
@@ -145,6 +168,10 @@ export default function ManageScoutsScreen() {
       Alert.alert('Error', 'A scout with this email already exists');
       return;
     }
+
+    // Parse DOB from MM/DD/YYYY to YYYY-MM-DD for the API
+    const [month, day, year] = newScoutDOB.split('/');
+    const birthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
     setIsSubmitting(true);
 
@@ -158,6 +185,9 @@ export default function ManageScoutsScreen() {
         unitNumber: newScoutUnitNumber.trim(),
         troopId: user?.troopId,
         role: 'SCOUT',
+        birthDate,
+        parentName: newScoutParentName.trim(),
+        parentEmail: newScoutParentEmail.trim().toLowerCase(),
       };
 
       const response = await scoutApi.createScout(scoutData);
@@ -197,6 +227,9 @@ export default function ManageScoutsScreen() {
     setNewScoutLastName('');
     setNewScoutUnitType('');
     setNewScoutUnitNumber('');
+    setNewScoutDOB('');
+    setNewScoutParentName('');
+    setNewScoutParentEmail('');
     setShowUnitTypePicker(false);
   };
 
@@ -500,6 +533,64 @@ export default function ManageScoutsScreen() {
                   value={newScoutUnitNumber}
                   onChangeText={setNewScoutUnitNumber}
                   keyboardType="number-pad"
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              {/* COPPA / Parental Consent Fields */}
+              <View style={styles.coppaHeader}>
+                <Ionicons name="shield-checkmark" size={20} color={COLORS.secondary} />
+                <Text style={styles.coppaTitle}>Parental Consent (COPPA)</Text>
+              </View>
+              <Text style={styles.coppaDescription}>
+                Required for scouts under 13. A parental consent email will be sent automatically.
+              </Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Date of Birth *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="MM/DD/YYYY"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={newScoutDOB}
+                  onChangeText={(text) => {
+                    // Auto-format as MM/DD/YYYY
+                    const cleaned = text.replace(/\D/g, '');
+                    let formatted = cleaned;
+                    if (cleaned.length > 2) formatted = cleaned.slice(0, 2) + '/' + cleaned.slice(2);
+                    if (cleaned.length > 4) formatted = cleaned.slice(0, 2) + '/' + cleaned.slice(2, 4) + '/' + cleaned.slice(4, 8);
+                    setNewScoutDOB(formatted);
+                  }}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Parent/Guardian Name *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Enter parent or guardian's full name"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={newScoutParentName}
+                  onChangeText={setNewScoutParentName}
+                  autoCapitalize="words"
+                  editable={!isSubmitting}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Parent/Guardian Email *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Enter parent or guardian's email"
+                  placeholderTextColor={COLORS.textSecondary}
+                  value={newScoutParentEmail}
+                  onChangeText={setNewScoutParentEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   editable={!isSubmitting}
                 />
               </View>
@@ -1005,5 +1096,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.error,
+  },
+  coppaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+    marginTop: 8,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  coppaTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.secondary,
+  },
+  coppaDescription: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginBottom: 16,
+    lineHeight: 18,
   },
 });

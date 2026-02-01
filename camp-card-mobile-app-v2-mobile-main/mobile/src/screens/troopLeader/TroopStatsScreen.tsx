@@ -93,8 +93,8 @@ export default function TroopStatsScreen() {
               id: String(s.id || s.uuid),
               name: s.fullName || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
               cardsSold: s.cardsSold || 0,
-              referrals: 0,
-              conversions: 0,
+              referrals: s.referralCount || 0,
+              conversions: s.conversionCount || 0,
               totalRaised: s.totalSales ? Number(s.totalSales) : 0,
             }))
             .sort((a: ScoutPerformance, b: ScoutPerformance) => b.totalRaised - a.totalRaised)

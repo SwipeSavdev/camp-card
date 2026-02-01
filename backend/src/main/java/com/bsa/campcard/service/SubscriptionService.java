@@ -1,9 +1,11 @@
 package com.bsa.campcard.service;
 
 import com.bsa.campcard.dto.subscription.*;
+import com.bsa.campcard.entity.CustomerPaymentProfile;
 import com.bsa.campcard.entity.Subscription;
 import com.bsa.campcard.entity.SubscriptionPlan;
 import com.bsa.campcard.exception.ResourceNotFoundException;
+import com.bsa.campcard.repository.CustomerPaymentProfileRepository;
 import com.bsa.campcard.repository.OfferRedemptionRepository;
 import com.bsa.campcard.repository.SubscriptionPlanRepository;
 import com.bsa.campcard.repository.SubscriptionRepository;
@@ -14,10 +16,12 @@ import org.bsa.campcard.domain.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -33,6 +37,7 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
+    private final CustomerPaymentProfileRepository paymentProfileRepository;
     private final PaymentService paymentService;
     private final EmailService emailService;
     private final UserRepository userRepository;
@@ -315,16 +320,23 @@ public class SubscriptionService {
                 subscription.setStatus(Subscription.SubscriptionStatus.CANCELED);
                 log.info("Subscription canceled at period end: {}", subscription.getId());
             } else {
-                // Renew subscription
+                // Renew subscription — charge stored payment method if available
                 SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
                         .orElse(null);
-                
+
                 if (plan != null) {
-                    LocalDateTime newPeriodEnd = calculatePeriodEnd(now, plan.getBillingInterval());
-                    subscription.setCurrentPeriodStart(now);
-                    subscription.setCurrentPeriodEnd(newPeriodEnd);
-                    
-                    log.info("Subscription renewed: {} until {}", subscription.getId(), newPeriodEnd);
+                    boolean paymentSuccess = chargeStoredPaymentForRenewal(subscription, plan);
+
+                    if (paymentSuccess) {
+                        LocalDateTime newPeriodEnd = calculatePeriodEnd(now, plan.getBillingInterval());
+                        subscription.setCurrentPeriodStart(now);
+                        subscription.setCurrentPeriodEnd(newPeriodEnd);
+                        log.info("Subscription renewed: {} until {}", subscription.getId(), newPeriodEnd);
+                    } else {
+                        // No stored payment method or charge failed — suspend
+                        subscription.setStatus(Subscription.SubscriptionStatus.SUSPENDED);
+                        log.warn("Subscription {} suspended — renewal payment failed", subscription.getId());
+                    }
                 }
             }
             
@@ -375,8 +387,48 @@ public class SubscriptionService {
         }
     }
     
+    /**
+     * Attempt to charge a stored payment method for subscription renewal.
+     *
+     * @return true if payment succeeded or no payment is needed, false if charge failed
+     */
+    private boolean chargeStoredPaymentForRenewal(Subscription subscription, SubscriptionPlan plan) {
+        UUID userId = subscription.getUserId();
+
+        Optional<CustomerPaymentProfile> defaultProfile =
+                paymentProfileRepository.findByUserIdAndIsDefaultTrue(userId);
+
+        if (defaultProfile.isEmpty()) {
+            log.warn("No stored payment method for user: {} — cannot auto-renew", userId);
+            return false;
+        }
+
+        CustomerPaymentProfile profile = defaultProfile.get();
+        BigDecimal amount = new BigDecimal(plan.getPriceCents()).divide(BigDecimal.valueOf(100));
+
+        try {
+            com.bsa.campcard.dto.payment.PaymentResponse result = paymentService.chargeCustomerProfile(
+                    profile.getAuthorizeCustomerProfileId(),
+                    profile.getAuthorizePaymentProfileId(),
+                    amount,
+                    "Camp Card Subscription Renewal"
+            );
+
+            if ("SUCCESS".equals(result.getStatus())) {
+                log.info("Auto-renewal charge successful for user: {}, txn: {}", userId, result.getTransactionId());
+                return true;
+            } else {
+                log.error("Auto-renewal charge failed for user: {}: {}", userId, result.getErrorMessage());
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("Auto-renewal charge exception for user: {}", userId, e);
+            return false;
+        }
+    }
+
     // Helper methods
-    
+
     private LocalDateTime calculatePeriodEnd(LocalDateTime start, SubscriptionPlan.BillingInterval interval) {
         return switch (interval) {
             case MONTHLY -> start.plusMonths(1);

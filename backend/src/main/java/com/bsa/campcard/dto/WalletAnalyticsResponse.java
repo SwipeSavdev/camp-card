@@ -15,4 +15,7 @@ public class WalletAnalyticsResponse {
     private Double totalSavings;
     private Integer thisMonth;
     private String favoriteCategory;
+    private Integer referralsMade;
+    private Integer referralChain;
+    private Double recentSavings;
 }

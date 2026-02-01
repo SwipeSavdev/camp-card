@@ -2,6 +2,8 @@ package com.bsa.campcard.controller;
 
 import com.bsa.campcard.dto.payment.*;
 import com.bsa.campcard.dto.payment.SubscriptionCheckoutRequest;
+import com.bsa.campcard.entity.CustomerPaymentProfile;
+import com.bsa.campcard.repository.CustomerPaymentProfileRepository;
 import com.bsa.campcard.service.PaymentService;
 import com.bsa.campcard.service.SubscriptionPurchaseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,10 +11,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bsa.campcard.domain.user.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -23,6 +30,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final SubscriptionPurchaseService subscriptionPurchaseService;
+    private final CustomerPaymentProfileRepository paymentProfileRepository;
 
     @PostMapping("/charge")
     @PreAuthorize("hasAnyRole('SCOUT', 'PARENT', 'UNIT_LEADER', 'COUNCIL_ADMIN', 'NATIONAL_ADMIN', 'GLOBAL_SYSTEM_ADMIN', 'TROOP_LEADER')")
@@ -208,5 +216,152 @@ public class PaymentController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+    }
+
+    // ========================================================================
+    // PAYMENT METHOD MANAGEMENT (CIM - stored cards for auto-renew)
+    // ========================================================================
+
+    @PostMapping("/payment-methods")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Save a payment method",
+            description = "Tokenize and store a credit card via Authorize.net CIM for future charges (e.g., auto-renew)")
+    public ResponseEntity<PaymentMethodResponse> savePaymentMethod(
+            @Valid @RequestBody SavePaymentMethodRequest request,
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        UUID userId = user.getId();
+        log.info("Saving payment method for user: {}", userId);
+
+        try {
+            // Find or create the CIM customer profile
+            String customerProfileId;
+            var existing = paymentProfileRepository.findByUserId(userId);
+            if (!existing.isEmpty()) {
+                customerProfileId = existing.get(0).getAuthorizeCustomerProfileId();
+            } else {
+                customerProfileId = paymentService.createCustomerProfile(
+                        user.getEmail(), userId.toString());
+            }
+
+            // Parse expiration: mobile sends MMYY, CIM expects YYYY-MM
+            String expDate = request.getExpirationDate();
+            String cimExpDate;
+            if (expDate.length() == 4) {
+                cimExpDate = "20" + expDate.substring(2) + "-" + expDate.substring(0, 2);
+            } else {
+                cimExpDate = expDate;
+            }
+
+            String firstName = request.getFirstName() != null ? request.getFirstName() : user.getFirstName();
+            String lastName = request.getLastName() != null ? request.getLastName() : user.getLastName();
+
+            // Create payment profile in Authorize.net
+            String paymentProfileId = paymentService.createPaymentProfile(
+                    customerProfileId, request.getCardNumber(), cimExpDate,
+                    request.getCvv(), firstName, lastName);
+
+            // If setAsDefault, unset previous defaults
+            if (Boolean.TRUE.equals(request.getSetAsDefault())) {
+                for (CustomerPaymentProfile p : existing) {
+                    if (Boolean.TRUE.equals(p.getIsDefault())) {
+                        p.setIsDefault(false);
+                        paymentProfileRepository.save(p);
+                    }
+                }
+            }
+
+            // Derive card metadata
+            String cardLastFour = request.getCardNumber().length() >= 4
+                    ? request.getCardNumber().substring(request.getCardNumber().length() - 4)
+                    : request.getCardNumber();
+            int expMonth = Integer.parseInt(expDate.substring(0, 2));
+            int expYear = 2000 + Integer.parseInt(expDate.substring(2, 4));
+
+            // Persist locally
+            CustomerPaymentProfile profile = CustomerPaymentProfile.builder()
+                    .userId(userId)
+                    .authorizeCustomerProfileId(customerProfileId)
+                    .authorizePaymentProfileId(paymentProfileId)
+                    .cardLastFour(cardLastFour)
+                    .cardType(detectCardType(request.getCardNumber()))
+                    .expirationMonth(expMonth)
+                    .expirationYear(expYear)
+                    .isDefault(Boolean.TRUE.equals(request.getSetAsDefault()) || existing.isEmpty())
+                    .build();
+
+            profile = paymentProfileRepository.save(profile);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(toPaymentMethodResponse(profile));
+
+        } catch (Exception e) {
+            log.error("Failed to save payment method for user: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    PaymentMethodResponse.builder().build());
+        }
+    }
+
+    @GetMapping("/payment-methods")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get saved payment methods",
+            description = "Returns the user's stored payment methods (card last four, type, expiration)")
+    public ResponseEntity<List<PaymentMethodResponse>> getPaymentMethods(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        UUID userId = user.getId();
+
+        List<PaymentMethodResponse> methods = paymentProfileRepository.findByUserId(userId).stream()
+                .map(this::toPaymentMethodResponse)
+                .toList();
+
+        return ResponseEntity.ok(methods);
+    }
+
+    @DeleteMapping("/payment-methods/{id}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Remove a saved payment method",
+            description = "Deletes a stored payment method from both local DB and Authorize.net CIM")
+    public ResponseEntity<Void> deletePaymentMethod(
+            @PathVariable Long id, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        UUID userId = user.getId();
+
+        CustomerPaymentProfile profile = paymentProfileRepository.findById(id).orElse(null);
+        if (profile == null || !profile.getUserId().equals(userId)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            paymentService.deletePaymentProfile(
+                    profile.getAuthorizeCustomerProfileId(),
+                    profile.getAuthorizePaymentProfileId());
+        } catch (Exception e) {
+            log.warn("Failed to delete CIM profile (may already be removed): {}", e.getMessage());
+        }
+
+        paymentProfileRepository.delete(profile);
+        return ResponseEntity.noContent().build();
+    }
+
+    private PaymentMethodResponse toPaymentMethodResponse(CustomerPaymentProfile profile) {
+        return PaymentMethodResponse.builder()
+                .id(profile.getId())
+                .cardLastFour(profile.getCardLastFour())
+                .cardType(profile.getCardType())
+                .expirationMonth(profile.getExpirationMonth())
+                .expirationYear(profile.getExpirationYear())
+                .isDefault(profile.getIsDefault())
+                .build();
+    }
+
+    private String detectCardType(String cardNumber) {
+        if (cardNumber == null || cardNumber.isEmpty()) return "Unknown";
+        char first = cardNumber.charAt(0);
+        return switch (first) {
+            case '4' -> "Visa";
+            case '5' -> "Mastercard";
+            case '3' -> cardNumber.startsWith("34") || cardNumber.startsWith("37") ? "Amex" : "Other";
+            case '6' -> "Discover";
+            default -> "Other";
+        };
     }
 }

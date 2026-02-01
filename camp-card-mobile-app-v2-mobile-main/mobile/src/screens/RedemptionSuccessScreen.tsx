@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
 
 interface Redemption {
@@ -74,7 +75,7 @@ export default function RedemptionSuccessScreen() {
   });
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Animated.View 
         style={[
           styles.content,
@@ -155,7 +156,7 @@ export default function RedemptionSuccessScreen() {
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 20,
   },
   iconContainer: {
     marginBottom: 20,
