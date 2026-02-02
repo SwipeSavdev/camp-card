@@ -29,7 +29,8 @@ interface TroopLeaderStats {
   goalAmount: number;
   totalCardsSold: number;
   activeScouts: number;
-  totalReferrals: number;
+  directReferrals: number;
+  indirectReferrals: number;
   totalConversions: number;
   weeklyGrowth: number;
   topScout: { name: string; amount: number };
@@ -44,7 +45,8 @@ function TroopLeaderDashboard() {
     goalAmount: 5000,
     totalCardsSold: 0,
     activeScouts: 0,
-    totalReferrals: 0,
+    directReferrals: 0,
+    indirectReferrals: 0,
     totalConversions: 0,
     weeklyGrowth: 0,
     topScout: { name: '--', amount: 0 },
@@ -63,7 +65,8 @@ function TroopLeaderDashboard() {
         goalAmount: 5000,
         totalCardsSold: data.totalCardsSold || 0,
         activeScouts: data.activeScouts || 0,
-        totalReferrals: referralData?.directReferrals || data.totalReferrals || 0,
+        directReferrals: referralData?.directReferrals || 0,
+        indirectReferrals: referralData?.indirectReferrals || 0,
         totalConversions: data.totalConversions || 0,
         weeklyGrowth: data.weeklyGrowthPercent || 0,
         topScout: data.topScout || { name: '--', amount: 0 },
@@ -167,18 +170,18 @@ function TroopLeaderDashboard() {
 
             <View style={styles.metricCard}>
               <View style={[styles.metricIcon, { backgroundColor: '#FFF3E0' }]}>
-                <Ionicons name="git-network" size={24} color="#F57C00" />
+                <Ionicons name="people" size={24} color="#F57C00" />
               </View>
-              <Text style={styles.metricValue}>{stats.totalReferrals}</Text>
-              <Text style={styles.metricLabel}>Referrals</Text>
+              <Text style={styles.metricValue}>{stats.directReferrals}</Text>
+              <Text style={styles.metricLabel}>Direct Referrals</Text>
             </View>
 
             <View style={styles.metricCard}>
               <View style={[styles.metricIcon, { backgroundColor: '#FCE4EC' }]}>
-                <Ionicons name="checkmark-done" size={24} color={COLORS.primary} />
+                <Ionicons name="git-network" size={24} color={COLORS.primary} />
               </View>
-              <Text style={styles.metricValue}>{stats.totalConversions}</Text>
-              <Text style={styles.metricLabel}>Conversions</Text>
+              <Text style={styles.metricValue}>{stats.indirectReferrals}</Text>
+              <Text style={styles.metricLabel}>Indirect Referrals</Text>
             </View>
           </View>
         </View>
@@ -512,8 +515,8 @@ function ScoutDashboard() {
 interface ParentStats {
   totalSavings: number;
   offersRedeemed: number;
-  referralsMade: number;
-  referralChain: number;
+  directReferrals: number;
+  indirectReferrals: number;
   supportedScout: { name: string; troopNumber: string } | null;
   recentSavings: number;
   memberSince: string;
@@ -527,8 +530,8 @@ function CustomerDashboard() {
   const [stats, setStats] = useState<ParentStats>({
     totalSavings: 0,
     offersRedeemed: 0,
-    referralsMade: 0,
-    referralChain: 0,
+    directReferrals: 0,
+    indirectReferrals: 0,
     supportedScout: null,
     recentSavings: 0,
     memberSince: '--',
@@ -557,8 +560,8 @@ function CustomerDashboard() {
         ...prev,
         totalSavings: cardsData?.totalSavings || analyticsData?.totalSavings || 0,
         offersRedeemed: analyticsData?.totalRedemptions || 0,
-        referralsMade: referralData?.directReferrals || 0,
-        referralChain: referralData?.totalSubscribers || 0,
+        directReferrals: referralData?.directReferrals || 0,
+        indirectReferrals: referralData?.indirectReferrals || 0,
         supportedScout: cardsData?.activeCard?.scoutName
           ? { name: cardsData.activeCard.scoutName, troopNumber: '--' }
           : null,
@@ -657,16 +660,16 @@ function CustomerDashboard() {
               <View style={[styles.metricIcon, { backgroundColor: '#E3F2FD' }]}>
                 <Ionicons name="people" size={24} color={COLORS.secondary} />
               </View>
-              <Text style={styles.metricValue}>{stats.referralsMade}</Text>
-              <Text style={styles.metricLabel}>Your Referrals</Text>
+              <Text style={styles.metricValue}>{stats.directReferrals}</Text>
+              <Text style={styles.metricLabel}>Direct Referrals</Text>
             </View>
 
             <View style={styles.metricCard}>
               <View style={[styles.metricIcon, { backgroundColor: '#FFF3E0' }]}>
                 <Ionicons name="git-network" size={24} color="#F57C00" />
               </View>
-              <Text style={styles.metricValue}>{stats.referralChain}</Text>
-              <Text style={styles.metricLabel}>Referral Chain</Text>
+              <Text style={styles.metricValue}>{stats.indirectReferrals}</Text>
+              <Text style={styles.metricLabel}>Indirect Referrals</Text>
             </View>
 
             <View style={styles.metricCard}>

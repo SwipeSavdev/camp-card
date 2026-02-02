@@ -19,6 +19,8 @@ interface ReferralData {
   referralCode: string;
   shareableLink: string;
   totalReferrals: number;
+  directReferrals: number;
+  indirectReferrals: number;
   successfulReferrals: number;
   totalRewardsEarned: number;
   pendingRewards: number;
@@ -47,12 +49,19 @@ export default function ReferralScreen() {
 
   const loadReferralData = async () => {
     try {
-      const [codeResponse, referralsResponse] = await Promise.all([
+      const [codeResponse, referralsResponse, statsResponse] = await Promise.all([
         apiClient.get('/referrals/my-code'),
-        apiClient.get('/referrals/my-referrals')
+        apiClient.get('/referrals/my-referrals'),
+        apiClient.get('/referrals/my-stats').catch(() => ({ data: null })),
       ]);
-      
-      setReferralData(codeResponse.data);
+
+      const codeData = codeResponse.data;
+      const statsData = statsResponse.data;
+      setReferralData({
+        ...codeData,
+        directReferrals: statsData?.directReferrals || codeData?.directReferrals || 0,
+        indirectReferrals: statsData?.indirectReferrals || codeData?.indirectReferrals || 0,
+      });
       setReferrals(referralsResponse.data);
     } catch (error) {
       console.error('Error loading referral data:', error);
@@ -165,20 +174,20 @@ export default function ReferralScreen() {
             <View style={styles.statsContainer}>
               <View style={styles.statCard}>
                 <Ionicons name="people" size={32} color="#003f87" />
-                <Text style={styles.statValue}>{referralData?.totalReferrals || 0}</Text>
-                <Text style={styles.statLabel}>Total Referrals</Text>
+                <Text style={styles.statValue}>{referralData?.directReferrals || 0}</Text>
+                <Text style={styles.statLabel}>Direct Referrals</Text>
               </View>
-              
+
               <View style={styles.statCard}>
-                <Ionicons name="checkmark-circle" size={32} color="#4CAF50" />
-                <Text style={styles.statValue}>{referralData?.successfulReferrals || 0}</Text>
-                <Text style={styles.statLabel}>Successful</Text>
+                <Ionicons name="git-network" size={32} color="#F57C00" />
+                <Text style={styles.statValue}>{referralData?.indirectReferrals || 0}</Text>
+                <Text style={styles.statLabel}>Indirect Referrals</Text>
               </View>
-              
+
               <View style={styles.statCard}>
                 <Ionicons name="cash" size={32} color="#ce1126" />
                 <Text style={styles.statValue}>
-                  ${referralData?.totalRewardsEarned.toFixed(2) || '0.00'}
+                  ${referralData?.totalRewardsEarned?.toFixed(2) || '0.00'}
                 </Text>
                 <Text style={styles.statLabel}>Total Earned</Text>
               </View>
