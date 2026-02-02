@@ -34,6 +34,9 @@ public class EmailService {
     @Value("${campcard.notifications.email.enabled:true}")
     private boolean emailEnabled;
 
+    // SES Configuration Set for transactional emails (bypasses account-level suppression)
+    private static final String TRANSACTIONAL_CONFIG_SET = "campcard-transactional";
+
     // BSA Brand Colors
     private static final String BSA_NAVY = "#003f87";
     private static final String BSA_RED = "#ce1126";
@@ -92,7 +95,7 @@ public class EmailService {
             Supporting Scouts, One Card at a Time
             """.formatted(verifyUrl);
 
-        sendEmail(to, subject, htmlBody, textBody);
+        sendEmail(to, subject, htmlBody, textBody, TRANSACTIONAL_CONFIG_SET);
         log.info("Verification email sent to: {}", to);
     }
 
@@ -140,7 +143,7 @@ public class EmailService {
             Supporting Scouts, One Card at a Time
             """.formatted(resetUrl);
 
-        sendEmail(to, subject, htmlBody, textBody);
+        sendEmail(to, subject, htmlBody, textBody, TRANSACTIONAL_CONFIG_SET);
         log.info("Password reset email sent to: {}", to);
     }
 
@@ -184,7 +187,7 @@ public class EmailService {
             Supporting Scouts, One Card at a Time
             """.formatted(firstName);
 
-        sendEmail(to, subject, htmlBody, textBody);
+        sendEmail(to, subject, htmlBody, textBody, TRANSACTIONAL_CONFIG_SET);
         log.info("Password changed confirmation sent to: {}", to);
     }
 
@@ -2581,7 +2584,7 @@ public class EmailService {
             Supporting Scouts, One Card at a Time
             """.formatted(parentName, minorName, minorAge, consentUrl);
 
-        sendEmail(parentEmail, subject, htmlBody, textBody);
+        sendEmail(parentEmail, subject, htmlBody, textBody, TRANSACTIONAL_CONFIG_SET);
         log.info("Parental consent request email sent to: {} for minor: {}", parentEmail, minorName);
     }
 
@@ -2646,7 +2649,7 @@ public class EmailService {
             Supporting Scouts, One Card at a Time
             """.formatted(firstName, locationEnabled ? "Enabled" : "Disabled", loginUrl);
 
-        sendEmail(to, subject, htmlBody, textBody);
+        sendEmail(to, subject, htmlBody, textBody, TRANSACTIONAL_CONFIG_SET);
         log.info("Consent granted email sent to: {}", to);
     }
 
@@ -2705,7 +2708,7 @@ public class EmailService {
             Supporting Scouts, One Card at a Time
             """.formatted(firstName);
 
-        sendEmail(to, subject, htmlBody, textBody);
+        sendEmail(to, subject, htmlBody, textBody, TRANSACTIONAL_CONFIG_SET);
         log.info("Consent denied email sent to: {}", to);
     }
 
@@ -2714,11 +2717,15 @@ public class EmailService {
     // ========================================================================
 
     private void sendEmail(String to, String subject, String htmlBody, String textBody) {
+        sendEmail(to, subject, htmlBody, textBody, null);
+    }
+
+    private void sendEmail(String to, String subject, String htmlBody, String textBody, String configurationSetName) {
         try {
             // Use friendly From name for better deliverability
             String fromAddress = "BSA Camp Card <" + fromEmail + ">";
 
-            SendEmailRequest request = SendEmailRequest.builder()
+            SendEmailRequest.Builder requestBuilder = SendEmailRequest.builder()
                     .source(fromAddress)
                     .replyToAddresses("support@campcardapp.org")
                     .destination(Destination.builder()
@@ -2739,10 +2746,13 @@ public class EmailService {
                                             .data(textBody)
                                             .build())
                                     .build())
-                            .build())
-                    .build();
+                            .build());
 
-            sesClient.sendEmail(request);
+            if (configurationSetName != null) {
+                requestBuilder.configurationSetName(configurationSetName);
+            }
+
+            sesClient.sendEmail(requestBuilder.build());
         } catch (SesException e) {
             log.error("Failed to send email to: {} - {}", to, e.getMessage());
             throw new RuntimeException("Failed to send email", e);

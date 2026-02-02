@@ -218,19 +218,6 @@ function TroopLeaderDashboard() {
             <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => navigation.navigate('InviteScouts')}
-          >
-            <View style={[styles.actionRowIcon, { backgroundColor: '#FFF3E0' }]}>
-              <Ionicons name="person-add" size={24} color="#F57C00" />
-            </View>
-            <View style={styles.actionRowContent}>
-              <Text style={styles.actionRowTitle}>Invite Scouts</Text>
-              <Text style={styles.actionRowSubtitle}>Send invitations to new scouts</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
-          </TouchableOpacity>
         </View>
 
         {/* Troop Summary */}
