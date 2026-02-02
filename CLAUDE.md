@@ -202,6 +202,20 @@ Closes #123
 
 ## AWS Deployment
 
+### AWS Services Region Map (IMPORTANT)
+
+| Service | Region | Notes |
+|---------|--------|-------|
+| **EC2** (backend, web, Docker) | us-east-2 | Instance i-059295c02fec401db |
+| **RDS** (PostgreSQL) | us-east-2 | camp-card-db endpoint |
+| **Route 53** | Global | campcardapp.org hosted zone |
+| **SES** (email sending) | **us-east-1** | HEALTHY. `campcardapp.org` DKIM verified |
+| **SES** (email sending) | ~~us-east-2~~ | **SHUTDOWN — DO NOT USE** |
+| **SNS** (push notifications) | us-east-1 | iOS + Android platform apps |
+| **SSM** (deployments) | us-east-2 | Same region as EC2 |
+
+**CRITICAL**: Email (SES + SMTP) must always use **us-east-1**. See "AWS SES Email Configuration" section below for details.
+
 ### Production URLs (campcardapp.org)
 
 | Service | URL | Description |
@@ -260,7 +274,7 @@ SPRING_PROFILES_ACTIVE=aws
 DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD
 JWT_SECRET, JWT_EXPIRATION
 REDIS_PASSWORD
-SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD
+SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD  # MUST use us-east-1 (see SES docs below)
 CAMPCARD_BASE_URL, CAMPCARD_WEB_PORTAL_URL
 AUTHORIZE_NET_API_LOGIN_ID, AUTHORIZE_NET_TRANSACTION_KEY, AUTHORIZE_NET_ENVIRONMENT
 ```
@@ -437,40 +451,76 @@ Backend `@PreAuthorize` annotations must also use these exact role names with `R
 - `backend/src/main/resources/application-aws.yml` - JWT expiration from 900000 to 86400000
 - `camp-card-web/app/api/auth/[...nextauth]/route.ts` - Added token refresh logic
 
-### Email Service Configuration (January 2026)
+### AWS SES Email Configuration (IMPORTANT)
 
-**Problem**: Password reset emails were not being sent. Backend health check showed mail service DOWN with authentication error.
+**The backend uses AWS SES in us-east-1 for ALL email sending. DO NOT use us-east-2 for SES.**
 
-**Root Cause**:
-- AWS SES SMTP credentials were not configured in environment variables
-- Backend expected `SMTP_USERNAME` and `SMTP_PASSWORD` but they were missing
+#### Active SES Region: us-east-1
 
-**Solution**:
-1. **Created AWS SES SMTP credentials**:
-   - IAM User: Created dedicated SES SMTP user
-   - Access Key: Stored in `.env.aws` on EC2 (NOT in version control)
-   - Converted IAM secret key to SES SMTP password using AWS algorithm
+| Setting | Value |
+|---------|-------|
+| **SES Region** | **us-east-1** (HEALTHY, production access) |
+| **Domain** | `campcardapp.org` (DKIM verified, signing enabled) |
+| **From Address** | `no-reply@campcardapp.org` |
+| **IAM SMTP User** | `ses-smtp-user.20250815-034311` |
+| **IAM Group** | `AWSSESSendingGroupDoNotRename` (ses:SendRawEmail on *) |
+| **Config Set** | `campcard-transactional` (suppression disabled) |
 
-2. **Updated environment variables** (`.env.aws` on EC2):
-   ```bash
-   SMTP_HOST=email-smtp.us-east-2.amazonaws.com
-   SMTP_PORT=587
-   SMTP_USERNAME=<stored in .env.aws>
-   SMTP_PASSWORD=<stored in .env.aws>
-   ```
+#### How Email Sending Works
 
-3. **Verified domain and sender**:
-   - Domain: `campcardapp.org` (verified in SES with DKIM)
-   - Sender: `no-reply@campcardapp.org` (verified)
+The backend uses **two paths** for email — both MUST point to **us-east-1**:
 
-**Test Results**:
-- Backend health check: Mail service UP ✓
-- Forgot password endpoint: Returns 200 OK ✓
-- Email delivery: Confirmed in backend logs ✓
+1. **SES SDK (primary)** — `sesClient.sendEmail()` in `EmailService.java`
+   - Region configured in `AwsConfig.java`: `@Value("${aws.ses.region:us-east-1}")`
+   - This is how all 35+ email templates are sent
+   - Transactional emails (verification, password reset, COPA) use the `campcard-transactional` configuration set to bypass suppression
 
-**Files Modified**:
-- `.env.aws` - Added SMTP configuration
-- Backend container command updated with SMTP environment variables
+2. **SMTP (health check)** — Spring Boot `spring.mail.*` in `application-aws.yml`
+   - Used by Spring Boot auto-config for mail health indicator
+   - Host: `email-smtp.us-east-1.amazonaws.com` (configured via `SMTP_HOST` env var)
+   - Credentials: IAM access key converted to SES SMTP password (region-specific)
+
+#### Environment Variables (.env.aws on EC2)
+
+```bash
+SMTP_HOST=email-smtp.us-east-1.amazonaws.com
+SMTP_PORT=587
+SMTP_USERNAME=<IAM access key for ses-smtp-user>
+SMTP_PASSWORD=<derived SMTP password for us-east-1>
+```
+
+**CRITICAL**: SES SMTP passwords are **region-specific**. If you rotate credentials:
+1. Create new IAM access key for `ses-smtp-user.20250815-034311`
+2. Derive the SMTP password using the AWS SES SMTP signing algorithm **for us-east-1**
+3. Update both `SMTP_USERNAME` and `SMTP_PASSWORD` in `.env.aws`
+
+#### Why NOT us-east-2
+
+The SES account in **us-east-2** has `EnforcementStatus: SHUTDOWN` due to a historical bounce rate incident (1,500+ bounced test email addresses from a data import error in Jan 2026). An AWS support case was filed for reinstatement (case ID: `case-858955002750-muen-2026-84973bb5beebf102`), but us-east-1 is the active, healthy region.
+
+**DO NOT configure SES, SMTP, or email-related services to use us-east-2.**
+
+#### Transactional Configuration Set
+
+The `campcard-transactional` configuration set (exists in **both** us-east-1 and us-east-2) has account-level suppression **disabled**. This is used for critical transactional emails that must be delivered even if the recipient previously bounced:
+
+- `sendVerificationEmail()` — Account verification
+- `sendPasswordResetEmail()` — Password reset
+- `sendPasswordChangedConfirmation()` — Password change notification
+- `sendParentalConsentRequestEmail()` — COPPA parental consent
+- `sendConsentGrantedEmail()` — Consent approval notification
+- `sendConsentDeniedEmail()` — Consent denial notification
+
+All other emails (welcome, subscription, referral, etc.) use the default config (no config set) and respect the account suppression list.
+
+#### Key Files
+
+| File | Purpose |
+|------|---------|
+| `AwsConfig.java` | SES SDK client bean (`aws.ses.region:us-east-1`) |
+| `EmailService.java` | All email templates + `sendEmail()` helper with optional `configurationSetName` |
+| `application-aws.yml` | Spring mail SMTP config (`SMTP_HOST` env var) |
+| `.env.aws` (EC2) | SMTP credentials (NOT in version control) |
 
 ### Domain Migration to campcardapp.org (January 2026)
 
@@ -487,7 +537,7 @@ Backend `@PreAuthorize` annotations must also use these exact role names with `R
 1. **Route 53**: Created hosted zone for `campcardapp.org` with A records for all subdomains
 2. **Nginx**: Updated `/etc/nginx/sites-available/campcardapp` with routing for all subdomains
 3. **SSL**: Let's Encrypt certificates for all domains via Certbot
-4. **AWS SES**: Domain verified with DKIM for email sending from `campcardapp.org`
+4. **AWS SES (us-east-1)**: Domain `campcardapp.org` verified with DKIM for email sending
 
 **Files Updated**:
 - `mobile/src/config/constants.ts`: `API_BASE_URL` → `https://api.campcardapp.org`
