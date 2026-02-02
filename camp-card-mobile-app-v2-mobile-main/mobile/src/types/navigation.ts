@@ -48,7 +48,6 @@ export type RootStackParamList = {
   TroopLeaderDashboard: undefined;
   ManageScouts: undefined;
   TroopStats: undefined;
-  InviteScouts: undefined;
 };
 
 // ============================================================================
@@ -112,7 +111,6 @@ export type TroopLeaderStackParamList = {
   Notifications: undefined;
   ManageScouts: undefined;
   TroopStats: undefined;
-  InviteScouts: undefined;
   Subscription: undefined;
   SelectScoutForSubscription: { planId: string };
   QRScanner: undefined;

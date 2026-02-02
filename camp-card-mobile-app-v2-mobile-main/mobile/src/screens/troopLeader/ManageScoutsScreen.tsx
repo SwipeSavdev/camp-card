@@ -1,7 +1,8 @@
 // Manage Scouts screen for Troop Leaders - Add/Remove/View Scouts
 // Per Troop Leader Portal requirements: Add/Remove Scouts, See Troop Metrics
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -14,6 +15,8 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -86,9 +89,11 @@ export default function ManageScoutsScreen() {
     }
   }, [user?.troopId]);
 
-  useEffect(() => {
-    loadScouts();
-  }, [loadScouts]);
+  useFocusEffect(
+    useCallback(() => {
+      loadScouts();
+    }, [loadScouts])
+  );
 
   const filteredScouts = scouts.filter(
     (scout) =>
@@ -318,7 +323,7 @@ export default function ManageScoutsScreen() {
   const totalSales = scouts.reduce((sum, s) => sum + s.totalSales, 0);
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header with Add Button */}
       <View style={styles.header}>
         <View>
@@ -427,7 +432,8 @@ export default function ManageScoutsScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView style={styles.modalScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={styles.modalContent}>
               <Text style={styles.modalDescription}>
                 Enter the scout's information below. They will receive an invitation email to join your troop.
@@ -603,6 +609,7 @@ export default function ManageScoutsScreen() {
               </View>
             </View>
           </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
 

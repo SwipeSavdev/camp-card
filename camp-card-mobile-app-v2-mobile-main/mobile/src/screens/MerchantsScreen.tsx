@@ -193,6 +193,7 @@ export default function MerchantsScreen() {
           styles.categoryText,
           selectedCategory === item.id && styles.categoryTextActive,
         ]}
+        numberOfLines={1}
       >
         {item.name}
       </Text>
@@ -429,14 +430,15 @@ const styles = StyleSheet.create({
   },
   categoryButton: {
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     marginHorizontal: 4,
     borderRadius: 20,
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    minWidth: 80,
+    minWidth: 72,
+    minHeight: 64,
   },
   categoryButtonActive: {
     backgroundColor: '#f0f7ff',

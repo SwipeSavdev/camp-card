@@ -37,4 +37,9 @@ public class RegisterRequest {
     // Unit type and number for Scouts (e.g., Pack, BSA Troop for Boys, etc.)
     private String unitType;
     private String unitNumber;
+
+    // COPPA fields for Scout registration (parent/guardian info)
+    private String parentEmail;
+    private String parentName;
+    private String birthDate;
 }

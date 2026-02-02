@@ -30,6 +30,7 @@ public class AuthService {
     private final SmsService smsService;
     private final SubscriptionRepository subscriptionRepository;
     private final ParentalConsentRepository parentalConsentRepository;
+    private final ParentalConsentService parentalConsentService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -63,6 +64,22 @@ public class AuthService {
                 .build();
 
         User savedUser = userRepository.save(user);
+
+        // Trigger COPPA parental consent if registering a Scout with parent info
+        if (userRole == User.UserRole.SCOUT && request.getParentEmail() != null && !request.getParentEmail().isBlank()) {
+            try {
+                parentalConsentService.createConsentRequest(
+                        savedUser.getId(),
+                        request.getParentEmail().trim().toLowerCase(),
+                        request.getParentName() != null ? request.getParentName().trim() : "",
+                        null
+                );
+                log.info("COPPA consent request sent to parent {} for scout {}", request.getParentEmail(), savedUser.getEmail());
+            } catch (Exception e) {
+                log.warn("Failed to create COPPA consent request for scout: {}", savedUser.getEmail(), e);
+                // Non-blocking: don't fail registration if consent email fails
+            }
+        }
 
         // Send verification email
         emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getEmailVerificationToken());

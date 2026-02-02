@@ -154,7 +154,7 @@ export default function OffersScreen() {
     if (selectedCategory === 'FAVORITES') {
       filtered = filtered.filter(o => favoriteIds.has(o.id));
     } else if (selectedCategory !== 'ALL') {
-      filtered = filtered.filter(o => o.category === selectedCategory);
+      filtered = filtered.filter(o => o.category?.toUpperCase() === selectedCategory.toUpperCase());
     }
 
     setFilteredOffers(filtered);

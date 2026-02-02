@@ -362,8 +362,10 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     paddingHorizontal: 24,
-    paddingBottom: 16,
-    paddingTop: 8,
+    paddingBottom: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   headerTextContainer: {
     alignItems: 'center',

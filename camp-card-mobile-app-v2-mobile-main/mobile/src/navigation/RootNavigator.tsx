@@ -31,7 +31,6 @@ import ReferralScreen from '../screens/scout/ReferralScreen';
 import TroopLeaderDashboardScreen from '../screens/troopLeader/TroopLeaderDashboardScreen';
 import ManageScoutsScreen from '../screens/troopLeader/ManageScoutsScreen';
 import TroopStatsScreen from '../screens/troopLeader/TroopStatsScreen';
-import InviteScoutsScreen from '../screens/troopLeader/InviteScoutsScreen';
 import SelectScoutForSubscriptionScreen from '../screens/troopLeader/SelectScoutForSubscriptionScreen';
 
 // Additional Screens
@@ -139,7 +138,6 @@ export type TroopLeaderStackParamList = {
   Notifications: undefined;
   ManageScouts: undefined;
   TroopStats: undefined;
-  InviteScouts: undefined;
   Subscription: undefined;
   SelectScoutForSubscription: { planId: string };
   QRScanner: undefined;
@@ -372,7 +370,6 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
         <TroopLeaderStack.Screen name="ManageScouts" component={ManageScoutsScreen} options={{ headerShown: true, title: 'Manage Scouts' }} />
         <TroopLeaderStack.Screen name="TroopStats" component={TroopStatsScreen} options={{ headerShown: true, title: 'Troop Statistics' }} />
-        <TroopLeaderStack.Screen name="InviteScouts" component={InviteScoutsScreen} options={{ headerShown: true, title: 'Invite Scouts' }} />
         <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
         <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
         <TroopLeaderStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />

@@ -1,7 +1,7 @@
 // Troop Leader Dashboard showing troop management and quick actions
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -105,19 +105,6 @@ export default function TroopLeaderDashboardScreen() {
             <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('InviteScouts')}
-          >
-            <View style={[styles.cardIcon, { backgroundColor: '#FFF3E0' }]}>
-              <Ionicons name="person-add" size={32} color={COLORS.warning} />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Invite Scouts</Text>
-              <Text style={styles.cardSubtitle}>Send invitations to join your troop</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
-          </TouchableOpacity>
         </View>
 
         {/* Troop Stats Overview */}
@@ -165,7 +152,20 @@ export default function TroopLeaderDashboardScreen() {
 
           <TouchableOpacity
             style={styles.browseButton}
-            onPress={() => navigation.navigate('Offers')}
+            onPress={() => {
+              if (user?.subscriptionStatus === 'active') {
+                navigation.navigate('Offers');
+              } else {
+                Alert.alert(
+                  'Subscription Required',
+                  'You need an active subscription to view offers. Would you like to subscribe?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Subscribe', onPress: () => navigation.navigate('Subscription') },
+                  ]
+                );
+              }
+            }}
           >
             <Ionicons name="pricetag" size={20} color={COLORS.surface} />
             <Text style={styles.browseText}>View Available Offers</Text>

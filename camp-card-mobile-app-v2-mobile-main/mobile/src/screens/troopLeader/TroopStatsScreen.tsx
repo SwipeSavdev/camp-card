@@ -48,7 +48,7 @@ export default function TroopStatsScreen() {
   // Troop Leader's Cash Code - unique code for customers to use
   const troopId = user?.troopId || '101';
   const cashCode = `TROOP-${troopId}-${new Date().getFullYear()}`;
-  const cashCodeLink = `https://www.campcardapp.org/support/${cashCode}`;
+  const cashCodeLink = `https://www.campcardapp.org/subscribe/?troop=${cashCode}`;
 
   const [stats, setStats] = useState<TroopStats>({
     totalFundsRaised: 0,
@@ -139,7 +139,7 @@ export default function TroopStatsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView
         style={styles.content}
         refreshControl={

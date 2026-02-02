@@ -20,7 +20,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
-import { referralApi, qrCodeApi } from '../../services/apiClient';
+import { referralApi, qrCodeApi, scoutApi } from '../../services/apiClient';
 
 interface Referral {
   id: string;
@@ -45,6 +45,8 @@ export default function ReferralScreen() {
     indirectReferrals: 0,
     totalEarnings: 0,
     pendingEarnings: 0,
+    qrScans: 0,
+    linkClicks: 0,
   });
 
   const qrRef = useRef<any>(null);
@@ -110,6 +112,21 @@ export default function ReferralScreen() {
     } catch (error) {
       console.log('Failed to load referrals:', error);
       // Keep empty state on error
+    }
+
+    // Fetch QR scan and link click stats
+    try {
+      const statsResponse = await scoutApi.getStats();
+      const statsData = statsResponse.data;
+      if (statsData) {
+        setStats(prev => ({
+          ...prev,
+          qrScans: statsData.qrScans || 0,
+          linkClicks: statsData.linkClicks || 0,
+        }));
+      }
+    } catch (error) {
+      console.log('Failed to load scan stats:', error);
     }
   };
 
@@ -317,7 +334,7 @@ export default function ReferralScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -403,6 +420,16 @@ export default function ReferralScreen() {
             <View style={styles.statCard}>
               <Text style={[styles.statValue, { color: COLORS.secondary }]}>{stats.indirectReferrals}</Text>
               <Text style={styles.statLabel}>Indirect</Text>
+            </View>
+          </View>
+          <View style={[styles.statsRow, { marginTop: 12 }]}>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.qrScans}</Text>
+              <Text style={styles.statLabel}>QR Scans</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.linkClicks}</Text>
+              <Text style={styles.statLabel}>Link Clicks</Text>
             </View>
           </View>
         </View>
