@@ -91,7 +91,7 @@ export default function ReferralScreen() {
           subscriptionDate: r.createdAt || r.subscriptionDate,
           planType: r.planType || 'Annual',
           status: r.status || 'active',
-          isDirectReferral: r.isDirectReferral ?? r.level === 1,
+          isDirectReferral: r.isDirectReferral ?? (r.level === undefined ? true : r.level === 1),
           referredBy: r.referredByName || r.referredBy,
         };
       });
@@ -103,11 +103,11 @@ export default function ReferralScreen() {
       const indirectCount = mappedReferrals.filter(r => !r.isDirectReferral).length;
 
       setStats({
-        totalReferrals: data.totalReferrals || mappedReferrals.length,
-        directReferrals: data.directReferrals || directCount,
-        indirectReferrals: data.indirectReferrals || indirectCount,
-        totalEarnings: data.totalEarnings || 0,
-        pendingEarnings: data.pendingEarnings || 0,
+        totalReferrals: data.totalReferrals ?? mappedReferrals.length,
+        directReferrals: data.directReferrals ?? directCount,
+        indirectReferrals: data.indirectReferrals ?? indirectCount,
+        totalEarnings: data.totalEarnings ?? 0,
+        pendingEarnings: data.pendingEarnings ?? 0,
       });
     } catch (error) {
       console.log('Failed to load referrals:', error);
