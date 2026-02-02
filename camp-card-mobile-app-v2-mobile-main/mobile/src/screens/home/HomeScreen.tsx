@@ -52,14 +52,18 @@ function TroopLeaderDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const response = await apiClient.get('/api/v1/dashboard/summary');
-      const data = response.data;
+      const [dashboardResponse, referralResponse] = await Promise.all([
+        apiClient.get('/api/v1/dashboard/summary'),
+        apiClient.get('/api/v1/referrals/my-stats').catch(() => ({ data: null })),
+      ]);
+      const data = dashboardResponse.data;
+      const referralData = referralResponse.data;
       setStats({
         totalFundsRaised: data.totalRevenueCents ? data.totalRevenueCents / 100 : 0,
         goalAmount: 5000,
         totalCardsSold: data.totalCardsSold || 0,
         activeScouts: data.activeScouts || 0,
-        totalReferrals: data.totalReferrals || 0,
+        totalReferrals: referralData?.directReferrals || data.totalReferrals || 0,
         totalConversions: data.totalConversions || 0,
         weeklyGrowth: data.weeklyGrowthPercent || 0,
         topScout: data.topScout || { name: '--', amount: 0 },
@@ -532,14 +536,16 @@ function CustomerDashboard() {
 
   const loadParentStats = async () => {
     try {
-      // Fetch wallet analytics and redemption data
-      const [analyticsResponse, cardsResponse] = await Promise.all([
+      // Fetch wallet analytics, cards, and referral data
+      const [analyticsResponse, cardsResponse, referralResponse] = await Promise.all([
         apiClient.get('/api/v1/analytics/wallet').catch(() => ({ data: null })),
         apiClient.get('/api/v1/cards/my-cards').catch(() => ({ data: null })),
+        apiClient.get('/api/v1/referrals/my-stats').catch(() => ({ data: null })),
       ]);
 
       const analyticsData = analyticsResponse.data;
       const cardsData = cardsResponse.data;
+      const referralData = referralResponse.data;
 
       // Calculate member since from user data
       const userAny = user as any;
@@ -551,8 +557,8 @@ function CustomerDashboard() {
         ...prev,
         totalSavings: cardsData?.totalSavings || analyticsData?.totalSavings || 0,
         offersRedeemed: analyticsData?.totalRedemptions || 0,
-        referralsMade: analyticsData?.referralsMade || 0,
-        referralChain: analyticsData?.referralChain || 0,
+        referralsMade: referralData?.directReferrals || 0,
+        referralChain: referralData?.totalSubscribers || 0,
         supportedScout: cardsData?.activeCard?.scoutName
           ? { name: cardsData.activeCard.scoutName, troopNumber: '--' }
           : null,

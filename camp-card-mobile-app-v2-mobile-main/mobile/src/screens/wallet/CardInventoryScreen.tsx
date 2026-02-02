@@ -113,7 +113,7 @@ export default function CardInventoryScreen() {
               Alert.alert('Success', 'Card activated! Your offers have been refreshed.');
               loadCards();
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to activate card.');
+              Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to activate card.');
             } finally {
               setActivatingCardId(null);
             }
@@ -142,7 +142,7 @@ export default function CardInventoryScreen() {
               Alert.alert('Gift Canceled', 'The card has been returned to your unused cards.');
               loadCards();
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to cancel gift.');
+              Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to cancel gift.');
             }
           },
         },
@@ -155,7 +155,7 @@ export default function CardInventoryScreen() {
       await apiClient.post(`/api/v1/cards/${cardId}/resend-gift`);
       Alert.alert('Email Sent', 'Gift notification email has been resent to the recipient.');
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to resend gift email.');
+      Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to resend gift email.');
     }
   };
 

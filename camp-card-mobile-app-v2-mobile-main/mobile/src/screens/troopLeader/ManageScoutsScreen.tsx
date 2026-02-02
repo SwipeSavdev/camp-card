@@ -219,7 +219,7 @@ export default function ManageScoutsScreen() {
       console.error('Error creating scout:', error);
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'Failed to add scout. Please try again.'
+        error.response?.data?.error || error.response?.data?.message || 'Failed to add scout. Please try again.'
       );
     } finally {
       setIsSubmitting(false);

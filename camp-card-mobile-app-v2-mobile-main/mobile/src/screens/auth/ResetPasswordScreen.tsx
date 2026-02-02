@@ -88,7 +88,7 @@ export default function ResetPasswordScreen() {
       });
       setResetSuccess(true);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to reset password. The link may have expired.';
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to reset password. The link may have expired.';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);

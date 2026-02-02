@@ -35,7 +35,7 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AuthenticationException("Email already registered");
+            throw new IllegalStateException("Email already registered");
         }
 
         // Determine the role - default to PARENT (customer) for mobile signups

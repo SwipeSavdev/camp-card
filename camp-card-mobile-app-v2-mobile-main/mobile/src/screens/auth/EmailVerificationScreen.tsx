@@ -49,7 +49,7 @@ export default function EmailVerificationScreen() {
       setVerificationStatus('success');
     } catch (error: any) {
       setVerificationStatus('error');
-      const message = error.response?.data?.message || 'Verification failed. The link may have expired.';
+      const message = error.response?.data?.error || error.response?.data?.message || 'Verification failed. The link may have expired.';
       setErrorMessage(message);
     } finally {
       setIsLoading(false);

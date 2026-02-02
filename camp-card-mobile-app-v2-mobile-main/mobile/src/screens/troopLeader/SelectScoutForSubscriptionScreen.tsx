@@ -189,7 +189,7 @@ export default function SelectScoutForSubscriptionScreen() {
               console.error('Subscription error:', error);
               Alert.alert(
                 'Subscription Failed',
-                error.response?.data?.message || 'Failed to create subscription. Please try again.'
+                error.response?.data?.error || error.response?.data?.message || 'Failed to create subscription. Please try again.'
               );
             } finally {
               setProcessingSubscription(false);

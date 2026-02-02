@@ -55,7 +55,7 @@ export default function ConsentPendingScreen() {
         [{ text: 'OK' }]
       );
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to send email. Please try again.';
+      const message = error.response?.data?.error || error.response?.data?.message || 'Failed to send email. Please try again.';
       Alert.alert('Error', message);
     } finally {
       setIsResending(false);
@@ -87,7 +87,7 @@ export default function ConsentPendingScreen() {
       setNewParentEmail('');
       setNewParentName('');
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to update parent info. Please try again.';
+      const message = error.response?.data?.error || error.response?.data?.message || 'Failed to update parent info. Please try again.';
       Alert.alert('Error', message);
     } finally {
       setIsUpdating(false);

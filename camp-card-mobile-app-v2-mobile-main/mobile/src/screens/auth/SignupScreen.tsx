@@ -111,11 +111,10 @@ export default function SignupScreen() {
       // The auth store handles the navigation
     } catch (error: any) {
       console.error('Signup error:', error);
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message;
       Alert.alert(
         'Signup Failed',
-        error.response?.data?.message || 
-        error.message || 
-        'Unable to create account. The backend server may not be running.'
+        errorMsg || 'Unable to create account. Please try again.'
       );
     }
   };

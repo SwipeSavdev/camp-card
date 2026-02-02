@@ -70,6 +70,7 @@ export default function EditProfileScreen() {
     } catch (error: any) {
       console.error('Profile update error:', error);
       const errorMessage =
+        error.response?.data?.error ||
         error.response?.data?.message ||
         error.message ||
         'Failed to update profile. Please try again.';

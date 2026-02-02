@@ -73,7 +73,7 @@ export default function ReplenishCardScreen() {
                 ]
               );
             } catch (error: any) {
-              const message = error.response?.data?.message || 'Failed to activate card';
+              const message = error.response?.data?.error || error.response?.data?.message || 'Failed to activate card';
               Alert.alert('Error', message);
             } finally {
               setActivating(null);

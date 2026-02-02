@@ -100,7 +100,7 @@ export default function ClaimGiftScreen() {
       console.error('Error claiming gift:', err);
       Alert.alert(
         'Claim Failed',
-        err.response?.data?.message || 'Unable to claim the gift. Please try again.'
+        err.response?.data?.error || err.response?.data?.message || 'Unable to claim the gift. Please try again.'
       );
     } finally {
       setClaiming(false);
@@ -152,7 +152,7 @@ export default function ClaimGiftScreen() {
       console.error('Error claiming gift as new user:', err);
       Alert.alert(
         'Registration Failed',
-        err.response?.data?.message || 'Unable to create account. Please try again.'
+        err.response?.data?.error || err.response?.data?.message || 'Unable to create account. Please try again.'
       );
     } finally {
       setClaiming(false);

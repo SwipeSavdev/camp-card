@@ -186,7 +186,7 @@ export default function SubscriptionScreen() {
               Alert.alert('Subscription Canceled', 'Your subscription will end at the current billing period.');
               loadSubscriptionData();
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to cancel subscription');
+              Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to cancel subscription');
             } finally {
               setLoading(false);
             }
@@ -203,7 +203,7 @@ export default function SubscriptionScreen() {
       Alert.alert('Success!', 'Your subscription has been reactivated');
       loadSubscriptionData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to reactivate subscription');
+      Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to reactivate subscription');
     } finally {
       setLoading(false);
     }
@@ -229,7 +229,7 @@ export default function SubscriptionScreen() {
               );
               loadSubscriptionData();
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to renew subscription');
+              Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to renew subscription');
             } finally {
               setLoading(false);
             }
@@ -285,7 +285,7 @@ export default function SubscriptionScreen() {
       setNewCardName('');
       await loadSavedCards();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.errorMessage || 'Failed to save card. Please check your details.');
+      Alert.alert('Error', error.response?.data?.error || error.response?.data?.errorMessage || 'Failed to save card. Please check your details.');
     } finally {
       setSavingCard(false);
     }

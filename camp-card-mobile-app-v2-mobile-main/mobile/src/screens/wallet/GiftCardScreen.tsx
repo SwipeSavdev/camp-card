@@ -72,7 +72,7 @@ export default function GiftCardScreen() {
         ]
       );
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to send gift. Please try again.';
+      const message = error.response?.data?.error || error.response?.data?.message || 'Failed to send gift. Please try again.';
       Alert.alert('Error', message);
     } finally {
       setSending(false);

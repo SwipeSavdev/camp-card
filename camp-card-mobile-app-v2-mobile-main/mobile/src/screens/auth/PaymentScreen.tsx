@@ -145,7 +145,8 @@ export default function PaymentScreen() {
       });
     } catch (error: any) {
       console.error('Payment error:', error);
-      const message = error.response?.data?.errorMessage ||
+      const message = error.response?.data?.error ||
+                      error.response?.data?.errorMessage ||
                       error.response?.data?.message ||
                       error.message ||
                       'There was an error processing your payment. Please try again.';

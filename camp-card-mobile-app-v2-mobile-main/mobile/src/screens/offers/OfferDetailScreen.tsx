@@ -189,7 +189,7 @@ export default function OfferDetailScreen() {
       setShowSuccessModal(true);
     } catch (err: any) {
       console.error('Redemption error:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to redeem offer. Please try again.';
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to redeem offer. Please try again.';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsRedeeming(false);

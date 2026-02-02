@@ -154,7 +154,8 @@ export default function CardPaymentModal({
 
       onPaymentSuccess(result.transactionId);
     } catch (error: any) {
-      const message = error.response?.data?.errorMessage ||
+      const message = error.response?.data?.error ||
+                      error.response?.data?.errorMessage ||
                       error.response?.data?.message ||
                       error.message ||
                       'Payment failed. Please try again.';

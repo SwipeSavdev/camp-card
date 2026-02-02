@@ -99,6 +99,7 @@ export default function ChangePasswordScreen() {
     } catch (error: any) {
       console.error('Change password error:', error);
       const errorMessage =
+        error.response?.data?.error ||
         error.response?.data?.message ||
         error.message ||
         'Failed to change password. Please try again.';

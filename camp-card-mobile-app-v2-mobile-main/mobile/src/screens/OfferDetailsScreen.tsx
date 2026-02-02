@@ -57,7 +57,7 @@ export default function OfferDetailsScreen() {
             } catch (error: any) {
               Alert.alert(
                 'Redemption Failed',
-                error.response?.data?.message || 'Unable to redeem offer. Please try again.',
+                error.response?.data?.error || error.response?.data?.message || 'Unable to redeem offer. Please try again.',
                 [{ text: 'OK' }]
               );
             } finally {

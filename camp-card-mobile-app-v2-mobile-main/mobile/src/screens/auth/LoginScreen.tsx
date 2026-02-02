@@ -99,9 +99,9 @@ export default function LoginScreen() {
       // Provide more specific error messages for debugging
       let errorMessage = 'Invalid email or password';
 
-      if (error.response?.data?.message) {
+      if (error.response?.data?.error || error.response?.data?.message) {
         // Server returned an error message
-        errorMessage = error.response.data.message;
+        errorMessage = error.response.data.error || error.response.data.message;
       } else if (error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
         // Network error - can't reach the server
         errorMessage = 'Cannot connect to server. Please check your network connection.';

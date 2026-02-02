@@ -95,7 +95,7 @@ export default function ReferralScreen() {
       Alert.alert('Success!', 'Your reward has been claimed and will be processed shortly.');
       loadReferralData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to claim reward');
+      Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to claim reward');
     }
   };
 
