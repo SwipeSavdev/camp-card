@@ -43,8 +43,15 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     // Validation
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !phone || !password) {
       Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    // Phone validation (at least 10 digits)
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      Alert.alert('Error', 'Please enter a valid phone number (at least 10 digits)');
       return;
     }
 
@@ -72,7 +79,7 @@ export default function SignupScreen() {
         password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        phone: phone ? phone.trim() : undefined,
+        phone: phone.trim(),
         role: 'PARENT' as const, // Default to customer role for mobile signups
       };
 
@@ -235,7 +242,7 @@ export default function SignupScreen() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Phone (optional)"
+                placeholder="Phone Number"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"

@@ -28,6 +28,8 @@ public class RegisterRequest {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
+    @NotBlank(message = "Phone number is required")
+    @Size(min = 10, max = 20, message = "Phone number must be between 10 and 20 characters")
     private String phone;
 
     private String role;
