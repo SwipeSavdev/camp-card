@@ -195,26 +195,15 @@ export default function ManageScoutsScreen() {
         parentEmail: newScoutParentEmail.trim().toLowerCase(),
       };
 
-      const response = await scoutApi.createScout(scoutData);
-      const createdScout = response.data;
+      await scoutApi.createScout(scoutData);
 
-      const newScout: Scout = {
-        id: createdScout.id || Date.now().toString(),
-        firstName: newScoutFirstName.trim(),
-        lastName: newScoutLastName.trim(),
-        email: newScoutEmail.trim().toLowerCase(),
-        subscriptionStatus: 'inactive',
-        totalSales: 0,
-        redemptions: 0,
-        referrals: 0,
-        joinedDate: new Date().toISOString().split('T')[0],
-      };
-
-      setScouts([...scouts, newScout]);
       setShowAddModal(false);
       resetAddForm();
 
-      Alert.alert('Success', `${newScout.firstName} ${newScout.lastName} has been added to your troop. An invitation email will be sent.`);
+      // Reload scouts from API to get the persisted data
+      await loadScouts();
+
+      Alert.alert('Success', `${newScoutFirstName.trim()} ${newScoutLastName.trim()} has been added to your troop. An invitation email will be sent.`);
     } catch (error: any) {
       console.error('Error creating scout:', error);
       Alert.alert(

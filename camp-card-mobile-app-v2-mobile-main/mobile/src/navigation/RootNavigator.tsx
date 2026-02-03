@@ -370,7 +370,7 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
         <TroopLeaderStack.Screen name="ManageScouts" component={ManageScoutsScreen} options={{ headerShown: true, title: 'Manage Scouts' }} />
         <TroopLeaderStack.Screen name="TroopStats" component={TroopStatsScreen} options={{ headerShown: true, title: 'Troop Statistics' }} />
-        <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: true, title: 'Subscription' }} />
+        <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
         <TroopLeaderStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="CardInventory" component={CardInventoryScreen} options={{ headerShown: false }} />

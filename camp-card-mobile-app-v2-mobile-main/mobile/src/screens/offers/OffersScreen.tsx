@@ -151,8 +151,12 @@ export default function OffersScreen() {
       );
     }
 
+    const knownCategories = ['RESTAURANTS', 'RETAIL', 'SERVICES', 'ENTERTAINMENT', 'AUTOMOTIVE', 'HEALTH'];
+
     if (selectedCategory === 'FAVORITES') {
       filtered = filtered.filter(o => favoriteIds.has(o.id));
+    } else if (selectedCategory === 'OTHER') {
+      filtered = filtered.filter(o => !o.category || !knownCategories.includes(o.category.toUpperCase()));
     } else if (selectedCategory !== 'ALL') {
       filtered = filtered.filter(o => o.category?.toUpperCase() === selectedCategory.toUpperCase());
     }

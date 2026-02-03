@@ -2,7 +2,10 @@ package com.bsa.campcard.service;
 
 import com.bsa.campcard.entity.ParentalConsent;
 import com.bsa.campcard.entity.ParentalConsent.ConsentStatus;
+import com.bsa.campcard.entity.Scout;
+import com.bsa.campcard.entity.Scout.ScoutStatus;
 import com.bsa.campcard.repository.ParentalConsentRepository;
+import com.bsa.campcard.repository.ScoutRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bsa.campcard.domain.user.User;
@@ -26,6 +29,7 @@ public class ParentalConsentService {
 
     private final ParentalConsentRepository consentRepository;
     private final UserRepository userRepository;
+    private final ScoutRepository scoutRepository;
     private final EmailService emailService;
 
     private static final int TOKEN_LENGTH = 32;
@@ -187,10 +191,26 @@ public class ParentalConsentService {
         consent = consentRepository.save(consent);
         log.info("Consent {} for minor user: {}", granted ? "GRANTED" : "DENIED", consent.getMinorUserId());
 
-        // Update user's consent status (when columns are added to DB)
-        // updateUserConsentStatus(consent);
+        if (granted) {
+            // Update scout status to ACTIVE now that parent has approved
+            scoutRepository.findByUserId(consent.getMinorUserId()).ifPresent(scout -> {
+                scout.setStatus(ScoutStatus.ACTIVE);
+                scoutRepository.save(scout);
+                log.info("Scout {} status updated to ACTIVE after parental consent", scout.getId());
+            });
 
-        // Send notification to scout
+            // Send password setup email so the scout can complete registration
+            userRepository.findById(consent.getMinorUserId()).ifPresent(minor -> {
+                String resetToken = UUID.randomUUID().toString();
+                minor.setPasswordResetToken(resetToken);
+                minor.setPasswordResetExpiresAt(LocalDateTime.now().plusHours(24));
+                userRepository.save(minor);
+                emailService.sendPasswordResetEmail(minor.getEmail(), resetToken);
+                log.info("Password setup email sent to scout: {}", minor.getEmail());
+            });
+        }
+
+        // Send consent decision notification to scout
         sendConsentDecisionEmail(consent);
 
         return consent;

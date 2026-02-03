@@ -251,7 +251,8 @@ export const scoutApi = {
     apiClient.get(`/api/v1/scouts/${scoutId}/sales`),
 
   // Create a new scout (by Unit Leader)
-  createScout: (data: {
+  // Step 1: Register user account, Step 2: Create Scout entity linked to troop
+  createScout: async (data: {
     firstName: string;
     lastName: string;
     email: string;
@@ -262,11 +263,26 @@ export const scoutApi = {
     birthDate?: string;
     parentName?: string;
     parentEmail?: string;
-  }) =>
-    apiClient.post('/api/v1/auth/register', {
+  }) => {
+    // Register user account
+    const registerResponse = await apiClient.post('/api/v1/auth/register', {
       ...data,
-      password: `TempPass${Date.now()}!`, // Temporary password, user will reset via email
-    }),
+      password: `TempPass${Date.now()}!`,
+    });
+    const userId = registerResponse.data.user?.id;
+
+    // Create Scout entity linked to troop
+    const scoutResponse = await apiClient.post('/api/v1/scouts', {
+      userId,
+      troopId: data.troopId ? Number(data.troopId) : undefined,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      birthDate: data.birthDate || undefined,
+      parentName: data.parentName || undefined,
+      parentEmail: data.parentEmail || undefined,
+    });
+    return scoutResponse;
+  },
 
   // Get scouts for a troop (paginated roster)
   getTroopScouts: (troopId: string, page = 0, size = 100) =>

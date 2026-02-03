@@ -71,7 +71,7 @@ export default function SubscriptionScreen() {
   const [newCardName, setNewCardName] = useState('');
   const [savingCard, setSavingCard] = useState(false);
   const navigation = useNavigation<TroopLeaderNavProp>();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
 
   // Check if user is a Troop Leader - they need to select a scout before subscribing
   const isTroopLeader = user?.role === 'UNIT_LEADER';
@@ -155,11 +155,18 @@ export default function SubscriptionScreen() {
     return { transactionId: response.data.transactionId };
   };
 
-  const handlePaymentSuccess = (transactionId: string) => {
+  const handlePaymentSuccess = async (transactionId: string) => {
     setShowPaymentModal(false);
     setPendingPlan(null);
     Alert.alert('Success!', 'Your subscription is now active');
-    loadSubscriptionData();
+    await loadSubscriptionData();
+    // Refresh user in auth store so Offers tab becomes visible
+    try {
+      const meResponse = await apiClient.get('/api/v1/auth/me');
+      updateUser(meResponse.data);
+    } catch (e) {
+      console.log('Failed to refresh user after subscription:', e);
+    }
   };
 
   const handlePaymentError = (error: string) => {
