@@ -7,7 +7,6 @@ import com.bsa.campcard.exception.ResourceNotFoundException;
 import com.bsa.campcard.repository.OfferRedemptionRepository;
 import com.bsa.campcard.repository.SubscriptionPlanRepository;
 import com.bsa.campcard.repository.SubscriptionRepository;
-import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +25,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -478,7 +476,7 @@ class SubscriptionServiceTest {
             subscriptionService.renewSubscription(testUserId);
 
             // Then
-            verify(offerRedemptionRepository).deleteByUserId(testUserId);
+            verify(offerRedemptionRepository).replenishByUserId(testUserId);
         }
     }
 
@@ -487,13 +485,13 @@ class SubscriptionServiceTest {
     class ReplenishOffersTests {
 
         @Test
-        @DisplayName("Should delete all redemptions for user")
-        void shouldDeleteAllRedemptionsForUser() {
+        @DisplayName("Should mark all redemptions as replenished for user")
+        void shouldReplenishAllRedemptionsForUser() {
             // When
             subscriptionService.replenishOffers(testUserId);
 
             // Then
-            verify(offerRedemptionRepository).deleteByUserId(testUserId);
+            verify(offerRedemptionRepository).replenishByUserId(testUserId);
         }
     }
 }

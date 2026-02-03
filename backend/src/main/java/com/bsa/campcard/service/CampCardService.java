@@ -33,11 +33,9 @@ public class CampCardService {
     private final CardOrderRepository cardOrderRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final UserRepository userRepository;
-    private final CouncilRepository councilRepository;
     private final OfferRepository offerRepository;
     private final OfferRedemptionRepository offerRedemptionRepository;
     private final EmailService emailService;
-    private final PaymentService paymentService;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String CLAIM_TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
