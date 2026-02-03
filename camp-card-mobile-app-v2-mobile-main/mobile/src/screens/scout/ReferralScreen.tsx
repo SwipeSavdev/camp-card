@@ -102,13 +102,14 @@ export default function ReferralScreen() {
       const directCount = mappedReferrals.filter(r => r.isDirectReferral).length;
       const indirectCount = mappedReferrals.filter(r => !r.isDirectReferral).length;
 
-      setStats({
+      setStats(prev => ({
+        ...prev,
         totalReferrals: data.totalReferrals ?? mappedReferrals.length,
         directReferrals: data.directReferrals ?? directCount,
         indirectReferrals: data.indirectReferrals ?? indirectCount,
         totalEarnings: data.totalEarnings ?? 0,
         pendingEarnings: data.pendingEarnings ?? 0,
-      });
+      }));
     } catch (error) {
       console.log('Failed to load referrals:', error);
       // Keep empty state on error

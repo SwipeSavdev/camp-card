@@ -31,10 +31,14 @@ export type RootStackParamList = {
   // Common screens
   Scan: undefined;
   Profile: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
   Notifications: undefined;
   QRScanner: undefined;
   Settings: undefined;
   HelpSupport: undefined;
+  CardInventory: undefined;
+  SubscriptionSelection: { scoutCode?: string } | undefined;
 
   // Scout-specific screens
   Scout: undefined;

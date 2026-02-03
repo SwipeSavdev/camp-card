@@ -162,7 +162,7 @@ export * from '@testing-library/react-native';
 export { customRender as render };
 
 // Mock API Response Helpers
-export const mockApiResponse = <T>(data: T, status = 200) => ({
+export const mockApiResponse = <T,>(data: T, status = 200) => ({
   data,
   status,
   statusText: 'OK',

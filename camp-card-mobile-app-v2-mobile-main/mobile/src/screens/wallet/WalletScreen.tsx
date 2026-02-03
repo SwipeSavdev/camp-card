@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    perspective: 1000,
+    transform: [{ perspective: 1000 }],
   },
   cardFace: {
     position: 'absolute',

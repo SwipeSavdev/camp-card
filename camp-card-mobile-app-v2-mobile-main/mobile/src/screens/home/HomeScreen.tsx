@@ -228,7 +228,7 @@ function TroopLeaderDashboard() {
               <View style={[styles.activityDot, { backgroundColor: COLORS.success }]} />
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>
-                  {stats.totalReferrals} total referrals generated
+                  {stats.directReferrals + stats.indirectReferrals} total referrals generated
                 </Text>
               </View>
             </View>
@@ -733,7 +733,7 @@ function CustomerDashboard() {
                 <Ionicons name="git-branch" size={14} color="#fff" />
               </View>
               <Text style={styles.tipText}>
-                <Text style={{ fontWeight: 'bold' }}>{stats.referralChain}</Text> people in your referral chain are also supporting scouts
+                <Text style={{ fontWeight: 'bold' }}>{stats.directReferrals + stats.indirectReferrals}</Text> people in your referral chain are also supporting scouts
               </Text>
             </View>
             <View style={styles.tipItem}>

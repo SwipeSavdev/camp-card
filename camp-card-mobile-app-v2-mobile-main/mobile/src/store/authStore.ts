@@ -18,6 +18,7 @@ interface User {
   troopId?: string;
   subscriptionStatus?: 'active' | 'inactive' | 'expired' | 'none';
   subscriptionExpiresAt?: string;
+  phone?: string;
   // COPPA compliance fields
   consentStatus?: ConsentStatus;
   locationAllowed?: boolean;

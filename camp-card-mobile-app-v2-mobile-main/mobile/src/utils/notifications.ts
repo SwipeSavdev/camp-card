@@ -31,13 +31,13 @@ export interface NotificationData {
 export const useNotifications = () => {
   const [expoPushToken, setExpoPushToken] = useState<string | undefined>();
   const [notification, setNotification] = useState<Notifications.Notification | undefined>();
-  const { isAuthenticated, token } = useAuthStore();
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const { isAuthenticated, accessToken } = useAuthStore();
+  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   useEffect(() => {
     // Only register for notifications if user is authenticated
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated || !accessToken) {
       return;
     }
 
@@ -61,14 +61,10 @@ export const useNotifications = () => {
     });
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
     };
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, accessToken]);
 
   const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
     const data = response.notification.request.content.data as NotificationData;
