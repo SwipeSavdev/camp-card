@@ -35,6 +35,7 @@ const UNIT_TYPES = [
 
 interface Scout {
   id: string;
+  userId: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -103,6 +104,7 @@ export default function ManageScoutsScreen() {
       if (Array.isArray(scoutsData)) {
         setScouts(scoutsData.map((s: any) => ({
           id: String(s.id || s.uuid),
+          userId: s.userId || '',
           firstName: s.firstName || '',
           lastName: s.lastName || '',
           email: s.parentEmail || '',
@@ -277,10 +279,21 @@ export default function ManageScoutsScreen() {
           text: 'Remove',
           style: 'destructive',
           onPress: () => {
-            setScouts(scouts.filter(s => s.id !== scout.id));
-            setShowScoutModal(false);
-            setSelectedScout(null);
-            Alert.alert('Removed', `${scout.firstName} ${scout.lastName} has been removed from your troop.`);
+            const doRemove = async () => {
+              try {
+                if (scout.userId) {
+                  await scoutApi.removeFromTroop(scout.userId);
+                }
+                setScouts(scouts.filter(s => s.id !== scout.id));
+                setShowScoutModal(false);
+                setSelectedScout(null);
+                Alert.alert('Removed', `${scout.firstName} ${scout.lastName} has been removed from your troop.`);
+              } catch (error) {
+                console.error('Failed to remove scout:', error);
+                Alert.alert('Error', 'Failed to remove scout. Please try again.');
+              }
+            };
+            doRemove();
           },
         },
       ]

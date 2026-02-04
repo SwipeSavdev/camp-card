@@ -1,5 +1,6 @@
 package org.bsa.campcard.domain.user;
 
+import com.bsa.campcard.repository.ScoutRepository;
 import com.bsa.campcard.repository.TroopRepository;
 import com.bsa.campcard.service.ParentalConsentService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ParentalConsentService parentalConsentService;
     private final TroopRepository troopRepository;
+    private final ScoutRepository scoutRepository;
 
     /**
      * Find user by ID
@@ -341,7 +343,9 @@ public class UserService {
     }
 
     /**
-     * Remove user from troop
+     * Remove user from troop.
+     * Also removes the corresponding Scout entity from the scouts table
+     * so the scout no longer appears in the troop roster.
      */
     @Transactional
     @CacheEvict(value = "users", key = "#userId")
@@ -357,6 +361,12 @@ public class UserService {
 
         user.setTroopId(null);
         User savedUser = userRepository.save(user);
+
+        // Also remove the Scout entity so they don't appear in the troop roster
+        scoutRepository.findByUserId(userId).ifPresent(scout -> {
+            scoutRepository.delete(scout);
+            log.info("Scout record {} deleted for user {}", scout.getId(), userId);
+        });
 
         log.info("User {} removed from troop", userId);
         return savedUser;

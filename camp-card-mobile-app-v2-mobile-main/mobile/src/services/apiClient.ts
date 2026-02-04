@@ -302,6 +302,10 @@ export const scoutApi = {
   getTroopScouts: (troopId: string, page = 0, size = 100) =>
     apiClient.get(`/api/v1/scouts/troop/${troopId}/roster`, { params: { page, size } }),
 
+  // Remove a scout from their troop (clears both users and scouts tables)
+  removeFromTroop: (userId: string) =>
+    apiClient.delete(`/api/v1/users/${userId}/troop`),
+
   // Send a scout invitation email
   invite: (data: { email: string; scoutName: string }) =>
     apiClient.post('/api/v1/scouts/invite', data),
