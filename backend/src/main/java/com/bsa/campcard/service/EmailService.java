@@ -148,6 +148,57 @@ public class EmailService {
     }
 
     @Async
+    public void sendPasswordSetupEmail(String to, String firstName, String token) {
+        if (!emailEnabled) {
+            log.info("Email disabled - would send password setup email to: {}", to);
+            return;
+        }
+
+        String subject = "Complete Your BSA Camp Card Account Setup";
+        String setupUrl = webPortalUrl + "/set-password?token=" + token;
+
+        String htmlBody = buildEmailTemplate(
+            "Set Up Your Password",
+            BSA_NAVY,
+            """
+            <p style="font-size: 16px; color: #333333;">Hi %s,</p>
+            <p style="font-size: 16px; color: #333333;">Your email has been verified! There's just one more step to complete your BSA Camp Card account setup.</p>
+            <p style="font-size: 16px; color: #333333;">Please click the button below to create your password:</p>
+            """.formatted(firstName != null ? firstName : "Scout") + buildButton("Set Up My Password", setupUrl, BSA_NAVY) + """
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">Or copy and paste this link into your browser:</p>
+            <p style="font-size: 12px; color: #999999; word-break: break-all;">%s</p>
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-top: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #856404;"><strong>This link expires in 7 days.</strong></p>
+            </div>
+            <p style="font-size: 14px; color: #666666; margin-top: 24px;">If you didn't create this account, you can safely ignore this email.</p>
+            """.formatted(setupUrl)
+        );
+
+        String textBody = """
+            Complete Your BSA Camp Card Account Setup
+
+            Hi %s,
+
+            Your email has been verified! There's just one more step to complete your BSA Camp Card account setup.
+
+            Please click the link below to create your password:
+
+            %s
+
+            This link expires in 7 days.
+
+            If you didn't create this account, you can safely ignore this email.
+
+            ---
+            BSA Camp Card
+            Supporting Scouts, One Card at a Time
+            """.formatted(firstName != null ? firstName : "Scout", setupUrl);
+
+        sendEmail(to, subject, htmlBody, textBody, TRANSACTIONAL_CONFIG_SET);
+        log.info("Password setup email sent to: {}", to);
+    }
+
+    @Async
     public void sendPasswordChangedConfirmation(String to, String firstName) {
         if (!emailEnabled) {
             log.info("Email disabled - would send password changed email to: {}", to);

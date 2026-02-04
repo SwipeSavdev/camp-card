@@ -49,6 +49,11 @@ public class AuthService {
             }
         }
 
+        // Scouts with parent consent start inactive - they must complete:
+        // 1. Parent consent  2. Email verification  3. Password setup
+        boolean requiresParentConsent = userRole == User.UserRole.SCOUT
+                && request.getParentEmail() != null && !request.getParentEmail().isBlank();
+
         User user = User.builder()
                 .email(request.getEmail().toLowerCase())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -56,7 +61,7 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhone())
                 .role(userRole)
-                .isActive(true)
+                .isActive(!requiresParentConsent)
                 .emailVerified(false)
                 .emailVerificationToken(UUID.randomUUID().toString())
                 .emailVerificationExpiresAt(LocalDateTime.now().plusDays(7))
@@ -66,7 +71,7 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         // Trigger COPPA parental consent if registering a Scout with parent info
-        if (userRole == User.UserRole.SCOUT && request.getParentEmail() != null && !request.getParentEmail().isBlank()) {
+        if (requiresParentConsent) {
             try {
                 parentalConsentService.createConsentRequest(
                         savedUser.getId(),
@@ -79,10 +84,12 @@ public class AuthService {
                 log.warn("Failed to create COPPA consent request for scout: {}", savedUser.getEmail(), e);
                 // Non-blocking: don't fail registration if consent email fails
             }
+            // Do NOT send verification email yet - wait for parent consent first
+            log.info("Skipping verification email for scout {} - waiting for parental consent", savedUser.getEmail());
+        } else {
+            // Send verification email for non-scout or self-registered accounts
+            emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getEmailVerificationToken());
         }
-
-        // Send verification email
-        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getEmailVerificationToken());
 
         // Send welcome SMS if phone number provided
         if (savedUser.getPhoneNumber() != null && !savedUser.getPhoneNumber().isBlank()) {
@@ -229,32 +236,51 @@ public class AuthService {
         user.setEmailVerified(true);
         user.setEmailVerificationToken(null);
         user.setEmailVerificationExpiresAt(null);
+
+        // Generate password setup token (reuses passwordResetToken field)
+        String setupToken = UUID.randomUUID().toString();
+        user.setPasswordResetToken(setupToken);
+        user.setPasswordResetExpiresAt(LocalDateTime.now().plusDays(7));
         userRepository.save(user);
 
-        // NOTE: Password setup feature is disabled until DBA adds columns to database
-        // For now, all users go directly to login after email verification
-        boolean requiresPasswordSetup = false;
-        String passwordSetupToken = null;
+        // Send password setup email so user can set their own password
+        emailService.sendPasswordSetupEmail(user.getEmail(), user.getFirstName(), setupToken);
 
-        // Send welcome email
-        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
-
-        log.info("Email verified for: {}", user.getEmail());
+        log.info("Email verified for: {} - password setup email sent", user.getEmail());
 
         return VerifyEmailResponse.builder()
                 .success(true)
-                .message("Email verified successfully")
-                .requiresPasswordSetup(requiresPasswordSetup)
-                .passwordSetupToken(passwordSetupToken)
+                .message("Email verified successfully. Please set your password to complete account setup.")
+                .requiresPasswordSetup(true)
+                .passwordSetupToken(setupToken)
                 .build();
     }
 
     @Transactional
     public void setPassword(String token, String newPassword) {
-        // NOTE: Password setup feature is disabled until DBA adds columns to database
-        // This endpoint will return an error until the columns are added
-        log.warn("setPassword called but feature is disabled - token: {}", token);
-        throw new AuthenticationException("Password setup feature is temporarily unavailable. Please use the forgot password option.");
+        User user = userRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new AuthenticationException("Invalid or expired setup token"));
+
+        if (user.getPasswordResetExpiresAt() != null && user.getPasswordResetExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new AuthenticationException("Setup token has expired. Please request a new verification email.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiresAt(null);
+
+        // Activate user if they were inactive (e.g., scout after consent + verification)
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
+            user.setIsActive(true);
+            log.info("User {} activated after password setup", user.getEmail());
+        }
+
+        userRepository.save(user);
+
+        // Send welcome email now that account is fully set up
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
+
+        log.info("Password set for: {}", user.getEmail());
     }
 
     public UserProfileResponse getCurrentUser(String token) {
