@@ -55,8 +55,8 @@ public class ParentalConsentController {
                         details.status().name(),
                         details.tokenValid()
                 )))
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ConsentVerificationResponse(null, null, null, null, "INVALID", false)));
+                .orElse(ResponseEntity.ok(
+                        new ConsentVerificationResponse(null, null, null, null, "INVALID", false)));
     }
 
     /**
