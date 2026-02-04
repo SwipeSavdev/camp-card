@@ -237,6 +237,11 @@ export const merchantsApi = {
     apiClient.get(`/api/v1/offers/merchant/${merchantId}`),
 };
 
+export const troopApi = {
+  // Get the authenticated user's troop (resolves UUID troopId to full troop data with numeric id)
+  getMyTroop: () => apiClient.get('/api/v1/troops/me'),
+};
+
 export const scoutApi = {
   // Get scout stats (fundraising metrics, link performance)
   getStats: () =>
@@ -258,23 +263,32 @@ export const scoutApi = {
     email: string;
     unitType: string;
     unitNumber: string;
-    troopId?: string;
+    numericTroopId?: number;
     role?: string;
     birthDate?: string;
     parentName?: string;
     parentEmail?: string;
   }) => {
-    // Register user account
+    // Register user account (only send fields RegisterRequest expects)
     const registerResponse = await apiClient.post('/api/v1/auth/register', {
-      ...data,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
       password: `TempPass${Date.now()}!`,
+      phone: '0000000000', // Placeholder - scout/parent will update during account setup
+      role: data.role || 'SCOUT',
+      unitType: data.unitType,
+      unitNumber: data.unitNumber,
+      birthDate: data.birthDate,
+      parentName: data.parentName,
+      parentEmail: data.parentEmail,
     });
     const userId = registerResponse.data.user?.id;
 
-    // Create Scout entity linked to troop
+    // Create Scout entity linked to troop (troopId must be numeric Long, NOT UUID)
     const scoutResponse = await apiClient.post('/api/v1/scouts', {
       userId,
-      troopId: data.troopId ? Number(data.troopId) : undefined,
+      troopId: data.numericTroopId || undefined,
       firstName: data.firstName,
       lastName: data.lastName,
       birthDate: data.birthDate || undefined,

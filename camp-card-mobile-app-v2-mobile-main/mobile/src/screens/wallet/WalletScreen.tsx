@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   Dimensions,
   RefreshControl,
@@ -21,6 +20,8 @@ import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
 import { RootNavigation } from '../../types/navigation';
 import { apiClient } from '../../services/apiClient';
+import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus';
+import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_WIDTH = screenWidth - 40;
@@ -66,6 +67,15 @@ export default function WalletScreen() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [activeCard, setActiveCard] = useState<ActiveCardData | null>(null);
 
+  // Combined subscription + card status
+  const {
+    subscriptionStatus,
+    combinedStatus,
+    statusMessage,
+    actionType,
+    refresh: refreshStatus,
+  } = useSubscriptionCardStatus();
+
   // Animation values
   const flipAnimation = useRef(new Animated.Value(0)).current;
 
@@ -99,7 +109,7 @@ export default function WalletScreen() {
     memberSince: userAny?.createdAt
       ? new Date(userAny.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
       : '--',
-    status: activeCard?.status === 'ACTIVE' ? 'active' : user?.subscriptionStatus === 'active' ? 'active' : 'pending',
+    status: combinedStatus === 'HEALTHY' ? 'active' : combinedStatus === 'SUBSCRIPTION_EXPIRED' ? 'expired' : 'pending',
     troopNumber: userAny?.troopNumber || '--',
     councilName: userAny?.councilName || 'Not assigned',
     email: user?.email,
@@ -189,7 +199,7 @@ export default function WalletScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadActiveCard(), loadWalletStats(), loadRecentRedemptions()]);
+    await Promise.all([loadActiveCard(), loadWalletStats(), loadRecentRedemptions(), refreshStatus()]);
     setRefreshing(false);
   };
 
@@ -264,6 +274,31 @@ export default function WalletScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Subscription + Card Status Banner */}
+        {combinedStatus !== 'HEALTHY' && (
+          <SubscriptionCardBanner
+            combinedStatus={combinedStatus}
+            statusMessage={statusMessage}
+            onAction={() => {
+              switch (actionType) {
+                case 'renew_subscription':
+                case 'subscribe':
+                  (navigation as any).navigate('Subscription');
+                  break;
+                case 'activate_card':
+                  (navigation as any).navigate('CardInventory');
+                  break;
+                case 'purchase_cards':
+                  (navigation as any).navigate('BuyMoreCards');
+                  break;
+                case 'contact_support':
+                  (navigation as any).navigate('HelpSupport');
+                  break;
+              }
+            }}
+          />
+        )}
+
         {/* Digital Card with Flip */}
         <View style={styles.cardSection}>
           <View style={styles.cardTitleRow}>
@@ -278,20 +313,11 @@ export default function WalletScreen() {
             {/* Front of Card */}
             <Animated.View style={[styles.cardFace, frontAnimatedStyle]}>
               <ImageBackground
-                source={require('../../../assets/campcard_bg.png')}
+                source={require('../../../assets/campcard_skin.jpg')}
                 style={styles.card}
                 imageStyle={styles.cardBackgroundImage}
                 resizeMode="cover"
               >
-                {/* Lockup Logo Centered */}
-                <View style={styles.cardContent}>
-                  <Image
-                    source={require('../../../assets/campcard_lockup_left.png')}
-                    style={styles.cardLockup}
-                    resizeMode="contain"
-                  />
-                </View>
-
                 {/* Status Badge */}
                 <View style={styles.cardStatusContainer}>
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(cardData.status) }]}>
@@ -335,9 +361,17 @@ export default function WalletScreen() {
                     </View>
                   </View>
 
-                  <View style={styles.cardBackRow}>
-                    <Text style={styles.cardBackLabel}>Council</Text>
-                    <Text style={styles.cardBackValue}>{cardData.councilName}</Text>
+                  <View style={styles.cardBackRowDouble}>
+                    <View style={styles.cardBackCol}>
+                      <Text style={styles.cardBackLabel}>Council</Text>
+                      <Text style={styles.cardBackValue}>{cardData.councilName}</Text>
+                    </View>
+                    <View style={styles.cardBackCol}>
+                      <Text style={styles.cardBackLabel}>Subscription</Text>
+                      <Text style={styles.cardBackValue}>
+                        {subscriptionStatus === 'ACTIVE' ? 'Active' : subscriptionStatus === 'NONE' ? 'None' : subscriptionStatus}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
@@ -480,12 +514,12 @@ export default function WalletScreen() {
 
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={() => (navigation as any).navigate('ReplenishCard')}
+              onPress={() => (navigation as any).navigate('Subscription')}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#FCE4EC' }]}>
-                <Ionicons name="refresh" size={24} color={COLORS.primary} />
+                <Ionicons name="card" size={24} color={COLORS.primary} />
               </View>
-              <Text style={styles.actionLabel}>Replenish</Text>
+              <Text style={styles.actionLabel}>Subscription</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -594,16 +628,6 @@ const styles = StyleSheet.create({
   },
   cardBackgroundImage: {
     borderRadius: 16,
-  },
-  cardContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  cardLockup: {
-    width: '85%',
-    height: '70%',
   },
   cardStatusContainer: {
     position: 'absolute',

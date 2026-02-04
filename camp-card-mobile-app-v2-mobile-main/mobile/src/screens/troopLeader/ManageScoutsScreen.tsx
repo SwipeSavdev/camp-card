@@ -21,8 +21,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
-import { scoutApi } from '../../services/apiClient';
-import { useAuthStore } from '../../store/authStore';
+import { scoutApi, troopApi } from '../../services/apiClient';
 
 // Unit Types from backend enum
 const UNIT_TYPES = [
@@ -64,12 +63,42 @@ export default function ManageScoutsScreen() {
   const [newScoutParentName, setNewScoutParentName] = useState('');
   const [newScoutParentEmail, setNewScoutParentEmail] = useState('');
 
-  const { user } = useAuthStore();
+  // Troop data fetched from backend (resolves UUID to numeric id)
+  const [numericTroopId, setNumericTroopId] = useState<number | null>(null);
+  const [troopNumber, setTroopNumber] = useState('');
+  const [troopType, setTroopType] = useState('');
+
+  // Map backend TroopType to mobile UnitType for auto-population
+  const mapTroopTypeToUnitType = (backendType: string): string => {
+    const mapping: Record<string, string> = {
+      CUB_SCOUTS: 'PACK',
+      SCOUTS_BSA: 'BSA_TROOP_BOYS',
+      VENTURING: 'CREW',
+      SEA_SCOUTS: 'SHIP',
+      EXPLORING: 'CREW',
+    };
+    return mapping[backendType] || '';
+  };
+
+  // Fetch troop data to resolve UUID → numeric id and get troop details
+  const loadTroopData = useCallback(async () => {
+    try {
+      const response = await troopApi.getMyTroop();
+      const troop = response.data;
+      if (troop) {
+        setNumericTroopId(troop.id);
+        setTroopNumber(troop.troopNumber || '');
+        setTroopType(troop.troopType || '');
+      }
+    } catch (error) {
+      console.log('Failed to load troop data:', error);
+    }
+  }, []);
 
   const loadScouts = useCallback(async () => {
-    if (!user?.troopId) return;
+    if (!numericTroopId) return;
     try {
-      const response = await scoutApi.getTroopScouts(String(user.troopId));
+      const response = await scoutApi.getTroopScouts(String(numericTroopId));
       const scoutsData = response.data?.content || response.data || [];
       if (Array.isArray(scoutsData)) {
         setScouts(scoutsData.map((s: any) => ({
@@ -87,12 +116,22 @@ export default function ManageScoutsScreen() {
     } catch (error) {
       console.log('Failed to load scouts:', error);
     }
-  }, [user?.troopId]);
+  }, [numericTroopId]);
 
+  // Load troop data on screen focus
   useFocusEffect(
     useCallback(() => {
-      loadScouts();
-    }, [loadScouts])
+      loadTroopData();
+    }, [loadTroopData])
+  );
+
+  // Load scouts once we have the numeric troop id
+  useFocusEffect(
+    useCallback(() => {
+      if (numericTroopId) {
+        loadScouts();
+      }
+    }, [numericTroopId, loadScouts])
   );
 
   const filteredScouts = scouts.filter(
@@ -104,9 +143,10 @@ export default function ManageScoutsScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    await loadTroopData();
     await loadScouts();
     setRefreshing(false);
-  }, [loadScouts]);
+  }, [loadTroopData, loadScouts]);
 
   const getStatusColor = (status: Scout['subscriptionStatus']) => {
     switch (status) {
@@ -188,7 +228,7 @@ export default function ManageScoutsScreen() {
         email: newScoutEmail.trim().toLowerCase(),
         unitType: newScoutUnitType,
         unitNumber: newScoutUnitNumber.trim(),
-        troopId: user?.troopId,
+        numericTroopId: numericTroopId || undefined,
         role: 'SCOUT',
         birthDate,
         parentName: newScoutParentName.trim(),
@@ -319,7 +359,12 @@ export default function ManageScoutsScreen() {
           <Text style={styles.headerTitle}>Your Troop</Text>
           <Text style={styles.headerSubtitle}>Manage scouts in your troop</Text>
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
+        <TouchableOpacity style={styles.addButton} onPress={() => {
+          // Auto-populate unit fields from troop data
+          if (troopNumber) setNewScoutUnitNumber(troopNumber);
+          if (troopType) setNewScoutUnitType(mapTroopTypeToUnitType(troopType));
+          setShowAddModal(true);
+        }}>
           <Ionicons name="person-add" size={20} color={COLORS.surface} />
           <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>

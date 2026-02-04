@@ -19,6 +19,8 @@ import { apiClient, paymentsApi, paymentMethodsApi } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
 import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
+import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus';
+import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
 
 interface SubscriptionPlan {
   id: number;
@@ -72,6 +74,17 @@ export default function SubscriptionScreen() {
   const [savingCard, setSavingCard] = useState(false);
   const navigation = useNavigation<TroopLeaderNavProp>();
   const { user, updateUser } = useAuthStore();
+
+  // Combined subscription + card status
+  const {
+    activeCard: statusActiveCard,
+    hasActiveCard,
+    unusedCardCount,
+    totalCardCount,
+    combinedStatus,
+    statusMessage,
+    actionType,
+  } = useSubscriptionCardStatus();
 
   // Check if user is a Troop Leader - they need to select a scout before subscribing
   const isTroopLeader = user?.role === 'UNIT_LEADER';
@@ -188,7 +201,7 @@ export default function SubscriptionScreen() {
             try {
               setLoading(true);
               await apiClient.patch('/api/v1/subscriptions/me', {
-                cancel_at_period_end: true
+                cancelAtPeriodEnd: true
               });
               Alert.alert('Subscription Canceled', 'Your subscription will end at the current billing period.');
               loadSubscriptionData();
@@ -337,7 +350,7 @@ export default function SubscriptionScreen() {
   const toggleAutoRenew = async (value: boolean) => {
     try {
       await apiClient.patch('/api/v1/subscriptions/me', {
-        cancel_at_period_end: !value
+        cancelAtPeriodEnd: !value
       });
       loadSubscriptionData();
     } catch (error: any) {
@@ -381,6 +394,21 @@ export default function SubscriptionScreen() {
         <Text style={styles.title}>Subscription</Text>
         <View style={{ width: 24 }} />
       </View>
+
+      {/* Card Status Banner (only card-related alerts, not subscription alerts since we're on that page) */}
+      {(combinedStatus === 'NEEDS_CARD_ACTIVATION' || combinedStatus === 'NEEDS_CARDS') && (
+        <SubscriptionCardBanner
+          combinedStatus={combinedStatus}
+          statusMessage={statusMessage}
+          onAction={() => {
+            if (actionType === 'activate_card') {
+              (navigation as any).navigate('CardInventory');
+            } else if (actionType === 'purchase_cards') {
+              (navigation as any).navigate('BuyMoreCards');
+            }
+          }}
+        />
+      )}
 
       {subscription ? (
         <>
@@ -502,6 +530,53 @@ export default function SubscriptionScreen() {
               </View>
             ))}
           </View>
+
+          {/* Your Cards */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Your Cards</Text>
+
+            {hasActiveCard ? (
+              <View style={styles.infoRow}>
+                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                <Text style={styles.infoText}>
+                  Active card: {statusActiveCard?.cardNumber}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.warningBox}>
+                <Ionicons name="alert-circle-outline" size={20} color="#ff9800" />
+                <Text style={styles.warningText}>
+                  {unusedCardCount > 0
+                    ? `No active card. You have ${unusedCardCount} unused card${unusedCardCount !== 1 ? 's' : ''} to activate.`
+                    : 'No cards yet. Purchase cards to start using offers at merchants.'}
+                </Text>
+              </View>
+            )}
+
+            {totalCardCount > 0 && (
+              <View style={styles.infoRow}>
+                <Ionicons name="layers-outline" size={20} color="#666" />
+                <Text style={styles.infoText}>Total cards: {totalCardCount}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                if (hasActiveCard || unusedCardCount > 0) {
+                  (navigation as any).navigate('CardInventory');
+                } else {
+                  (navigation as any).navigate('BuyMoreCards');
+                }
+              }}
+            >
+              <Ionicons name="wallet-outline" size={24} color="#003f87" />
+              <Text style={styles.actionButtonText}>
+                {hasActiveCard ? 'View Cards' : unusedCardCount > 0 ? 'Activate a Card' : 'Purchase Cards'}
+              </Text>
+              <Ionicons name="chevron-forward" size={24} color="#ccc" />
+            </TouchableOpacity>
+          </View>
         </>
       ) : (
         <>
@@ -512,6 +587,17 @@ export default function SubscriptionScreen() {
               Choose a plan below to start saving at local merchants!
             </Text>
           </View>
+
+          {totalCardCount > 0 && (
+            <View style={styles.card}>
+              <View style={styles.warningBox}>
+                <Ionicons name="information-circle-outline" size={20} color="#2196F3" />
+                <Text style={[styles.warningText, { color: '#1565C0' }]}>
+                  You have {totalCardCount} card{totalCardCount !== 1 ? 's' : ''} but need an active subscription to use them at merchants.
+                </Text>
+              </View>
+            </View>
+          )}
 
           <Text style={styles.sectionTitle}>Available Plans</Text>
 

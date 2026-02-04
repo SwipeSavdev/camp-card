@@ -41,6 +41,16 @@ public class TroopController {
         return ResponseEntity.ok(troop);
     }
     
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TroopResponse> getMyTroop(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof User user && user.getTroopId() != null) {
+            TroopResponse troop = troopService.getTroopByUuid(user.getTroopId());
+            return ResponseEntity.ok(troop);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<TroopResponse> getTroop(@PathVariable Long id) {
         TroopResponse troop = troopService.getTroop(id);
