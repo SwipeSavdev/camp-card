@@ -2812,16 +2812,10 @@ public class EmailService {
 
     private String buildButton(String text, String url, String color) {
         return """
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 24px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 24px auto;">
                 <tr>
-                    <td align="center">
-                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td align="center" bgcolor="%s" style="background-color: %s; border-radius: 8px;">
-                                    <a href="%s" target="_blank" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px; line-height: 20px;">%s</a>
-                                </td>
-                            </tr>
-                        </table>
+                    <td align="center" bgcolor="%s" style="background-color: %s; border-radius: 8px;">
+                        <a href="%s" target="_blank" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px; line-height: 20px;">%s</a>
                     </td>
                 </tr>
             </table>
