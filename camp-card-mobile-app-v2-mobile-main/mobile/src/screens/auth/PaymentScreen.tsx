@@ -16,9 +16,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../config/constants';
+import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS } from '../../config/constants';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
 import { paymentsApi } from '../../services/apiClient';
+import { useIAP } from '../../hooks/useIAP';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
@@ -29,11 +30,12 @@ export default function PaymentScreen() {
   const route = useRoute<PaymentScreenRouteProp>();
   const { selectedPlan, quantity = 1, scoutCode } = route.params;
   const { width } = useWindowDimensions();
+  const isIOS = Platform.OS === 'ios';
 
   // Calculate totals
   const unitPrice = selectedPlan.priceCents;
   const subtotal = unitPrice * quantity;
-  const processingFee = Math.round(subtotal * 0.03); // 3% credit card processing fee
+  const processingFee = isIOS ? 0 : Math.round(subtotal * 0.03); // 3% credit card processing fee (Android only)
   const totalPrice = subtotal + processingFee;
 
   const [cardNumber, setCardNumber] = useState('');
@@ -42,6 +44,57 @@ export default function PaymentScreen() {
   const [cardholderName, setCardholderName] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  // Determine the IAP product SKU based on plan and quantity
+  // Note: Scout referral pricing ($10/yr) is only available externally via web portal,
+  // not through in-app purchase. All IAP subscriptions use the standard $14.99/yr SKU.
+  const getIAPSku = (): string => {
+    // Check if this is a subscription plan
+    if (selectedPlan.billingInterval === 'ANNUAL' || selectedPlan.billingInterval === 'MONTHLY') {
+      return IAP_PRODUCTS.SUBSCRIPTION_ANNUAL;
+    }
+    // Card purchase — find matching IAP tier
+    const cardProduct = IAP_CARD_PRODUCTS.find(p => p.quantity === quantity);
+    return cardProduct?.productId || IAP_PRODUCTS.CARDS_1;
+  };
+
+  // Apple IAP hook (only active on iOS)
+  const {
+    purchasing: iapPurchasing,
+    purchaseProduct,
+    purchaseSubscription,
+    getLocalizedPrice,
+  } = useIAP({
+    autoInit: isIOS,
+    onPurchaseComplete: (result) => {
+      // Navigate to signup with IAP transaction info (no userId yet — signup flow)
+      (navigation as any).navigate('Signup', {
+        selectedPlan: selectedPlan,
+        paymentCompleted: true,
+        quantity: quantity,
+        scoutCode: scoutCode,
+        transactionId: result.transactionId,
+      });
+    },
+    onPurchaseError: (error) => {
+      Alert.alert('Purchase Failed', error);
+    },
+  });
+
+  const handleIAPPurchase = async () => {
+    const sku = getIAPSku();
+    try {
+      const isSubscription = selectedPlan.billingInterval === 'ANNUAL' || selectedPlan.billingInterval === 'MONTHLY';
+      if (isSubscription) {
+        await purchaseSubscription(sku);
+      } else {
+        await purchaseProduct(sku);
+      }
+      // Result handled by onPurchaseComplete callback
+    } catch (error: any) {
+      console.error('IAP purchase error:', error);
+    }
+  };
 
   const expiryRef = useRef<TextInput>(null);
   const cvvRef = useRef<TextInput>(null);
@@ -201,12 +254,19 @@ export default function PaymentScreen() {
                   {quantity} Camp Card{quantity > 1 ? 's' : ''} × {formatPrice(unitPrice)}
                 </Text>
               </View>
-              <Text style={styles.planPrice}>{formatPrice(subtotal)}</Text>
+              <Text style={styles.planPrice}>
+                {isIOS
+                  ? (getLocalizedPrice(getIAPSku()) || formatPrice(subtotal))
+                  : formatPrice(subtotal)
+                }
+              </Text>
             </View>
-            <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>Credit Card Processing Fee (3%)</Text>
-              <Text style={styles.feeAmount}>{formatPrice(processingFee)}</Text>
-            </View>
+            {!isIOS && (
+              <View style={styles.feeRow}>
+                <Text style={styles.feeLabel}>Credit Card Processing Fee (3%)</Text>
+                <Text style={styles.feeAmount}>{formatPrice(processingFee)}</Text>
+              </View>
+            )}
             {scoutCode ? (
               <View style={styles.scoutRow}>
                 <Text style={styles.scoutLabel}>Scout Referral: {scoutCode}</Text>
@@ -215,142 +275,166 @@ export default function PaymentScreen() {
             <View style={styles.divider} />
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total Due Today</Text>
-              <Text style={styles.totalAmount}>{formatPrice(totalPrice)}</Text>
+              <Text style={styles.totalAmount}>
+                {isIOS
+                  ? (getLocalizedPrice(getIAPSku()) || formatPrice(subtotal))
+                  : formatPrice(totalPrice)
+                }
+              </Text>
             </View>
           </View>
 
-          {/* Payment Form */}
-          <View style={styles.paymentForm}>
-            <Text style={styles.sectionTitle}>Payment Details</Text>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Card Number</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="card-outline" size={20} color="#999" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="1234 5678 9012 3456"
-                  placeholderTextColor="#999"
-                  value={cardNumber}
-                  onChangeText={handleCardNumberChange}
-                  keyboardType="numeric"
-                  maxLength={19}
-                  returnKeyType="next"
-                />
+          {isIOS ? (
+            <>
+              {/* iOS IAP Info */}
+              <View style={styles.paymentForm}>
+                <Text style={styles.sectionTitle}>Apple In-App Purchase</Text>
+                <View style={styles.securityNotice}>
+                  <Ionicons name="logo-apple" size={20} color="#333" />
+                  <Text style={styles.securityText}>
+                    Your purchase will be processed securely through your Apple ID. No card details needed.
+                  </Text>
+                </View>
               </View>
-            </View>
+            </>
+          ) : (
+            <>
+              {/* Payment Form (Android — Authorize.net) */}
+              <View style={styles.paymentForm}>
+                <Text style={styles.sectionTitle}>Payment Details</Text>
 
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.inputLabel}>Expiry Date</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    ref={expiryRef}
-                    style={styles.input}
-                    placeholder="MM/YY"
-                    placeholderTextColor="#999"
-                    value={expiryDate}
-                    onChangeText={handleExpiryChange}
-                    keyboardType="numeric"
-                    maxLength={5}
-                    returnKeyType="next"
-                  />
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Card Number</Text>
+                  <View style={styles.inputWrapper}>
+                    <Ionicons name="card-outline" size={20} color="#999" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="1234 5678 9012 3456"
+                      placeholderTextColor="#999"
+                      value={cardNumber}
+                      onChangeText={handleCardNumberChange}
+                      keyboardType="numeric"
+                      maxLength={19}
+                      returnKeyType="next"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.row}>
+                  <View style={[styles.inputGroup, styles.halfWidth]}>
+                    <Text style={styles.inputLabel}>Expiry Date</Text>
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        ref={expiryRef}
+                        style={styles.input}
+                        placeholder="MM/YY"
+                        placeholderTextColor="#999"
+                        value={expiryDate}
+                        onChangeText={handleExpiryChange}
+                        keyboardType="numeric"
+                        maxLength={5}
+                        returnKeyType="next"
+                      />
+                    </View>
+                  </View>
+
+                  <View style={[styles.inputGroup, styles.halfWidth]}>
+                    <Text style={styles.inputLabel}>CVV</Text>
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        ref={cvvRef}
+                        style={styles.input}
+                        placeholder="123"
+                        placeholderTextColor="#999"
+                        value={cvv}
+                        onChangeText={handleCvvChange}
+                        keyboardType="numeric"
+                        maxLength={4}
+                        secureTextEntry
+                        returnKeyType="next"
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Cardholder Name</Text>
+                  <View style={styles.inputWrapper}>
+                    <Ionicons name="person-outline" size={20} color="#999" style={styles.inputIcon} />
+                    <TextInput
+                      ref={nameRef}
+                      style={styles.input}
+                      placeholder="John Doe"
+                      placeholderTextColor="#999"
+                      value={cardholderName}
+                      onChangeText={setCardholderName}
+                      autoCapitalize="words"
+                      returnKeyType="next"
+                      onSubmitEditing={() => zipRef.current?.focus()}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Billing ZIP Code</Text>
+                  <View style={styles.inputWrapper}>
+                    <Ionicons name="location-outline" size={20} color="#999" style={styles.inputIcon} />
+                    <TextInput
+                      ref={zipRef}
+                      style={styles.input}
+                      placeholder="12345"
+                      placeholderTextColor="#999"
+                      value={zipCode}
+                      onChangeText={(text) => setZipCode(text.replace(/\D/g, '').substring(0, 5))}
+                      keyboardType="numeric"
+                      maxLength={5}
+                      returnKeyType="done"
+                    />
+                  </View>
                 </View>
               </View>
 
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.inputLabel}>CVV</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    ref={cvvRef}
-                    style={styles.input}
-                    placeholder="123"
-                    placeholderTextColor="#999"
-                    value={cvv}
-                    onChangeText={handleCvvChange}
-                    keyboardType="numeric"
-                    maxLength={4}
-                    secureTextEntry
-                    returnKeyType="next"
-                  />
-                </View>
+              {/* Security Notice (Android only) */}
+              <View style={styles.securityNotice}>
+                <Ionicons name="shield-checkmark" size={20} color="#4CAF50" />
+                <Text style={styles.securityText}>
+                  Your payment is secured by Authorize.net with 256-bit SSL encryption
+                </Text>
               </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Cardholder Name</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="person-outline" size={20} color="#999" style={styles.inputIcon} />
-                <TextInput
-                  ref={nameRef}
-                  style={styles.input}
-                  placeholder="John Doe"
-                  placeholderTextColor="#999"
-                  value={cardholderName}
-                  onChangeText={setCardholderName}
-                  autoCapitalize="words"
-                  returnKeyType="next"
-                  onSubmitEditing={() => zipRef.current?.focus()}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Billing ZIP Code</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="location-outline" size={20} color="#999" style={styles.inputIcon} />
-                <TextInput
-                  ref={zipRef}
-                  style={styles.input}
-                  placeholder="12345"
-                  placeholderTextColor="#999"
-                  value={zipCode}
-                  onChangeText={(text) => setZipCode(text.replace(/\D/g, '').substring(0, 5))}
-                  keyboardType="numeric"
-                  maxLength={5}
-                  returnKeyType="done"
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Security Notice */}
-          <View style={styles.securityNotice}>
-            <Ionicons name="shield-checkmark" size={20} color="#4CAF50" />
-            <Text style={styles.securityText}>
-              Your payment is secured by Authorize.net with 256-bit SSL encryption
-            </Text>
-          </View>
+            </>
+          )}
         </ScrollView>
 
         {/* Pay Button */}
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={[styles.payButton, processing && styles.payButtonDisabled]}
-            onPress={handlePayment}
-            disabled={processing}
+            style={[styles.payButton, (processing || iapPurchasing) && styles.payButtonDisabled]}
+            onPress={isIOS ? handleIAPPurchase : handlePayment}
+            disabled={processing || iapPurchasing}
           >
-            {processing ? (
+            {processing || iapPurchasing ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
-                <Ionicons name="lock-closed" size={20} color="#fff" />
+                <Ionicons name={isIOS ? 'logo-apple' : 'lock-closed'} size={20} color="#fff" />
                 <Text style={styles.payButtonText}>
-                  Pay {formatPrice(totalPrice)}
+                  {isIOS ? 'Purchase with Apple' : `Pay ${formatPrice(totalPrice)}`}
                 </Text>
               </>
             )}
           </TouchableOpacity>
 
-          <View style={styles.cardLogos}>
-            <Text style={styles.acceptedText}>We accept</Text>
-            <View style={styles.logoRow}>
-              <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>VISA</Text></View>
-              <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>MC</Text></View>
-              <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>AMEX</Text></View>
-              <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>DISC</Text></View>
+          {!isIOS && (
+            <View style={styles.cardLogos}>
+              <Text style={styles.acceptedText}>We accept</Text>
+              <View style={styles.logoRow}>
+                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>VISA</Text></View>
+                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>MC</Text></View>
+                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>AMEX</Text></View>
+                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>DISC</Text></View>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

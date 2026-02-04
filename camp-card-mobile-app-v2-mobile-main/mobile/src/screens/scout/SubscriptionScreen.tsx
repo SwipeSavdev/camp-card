@@ -10,6 +10,8 @@ import {
   Switch,
   Modal,
   TextInput,
+  Platform,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +23,8 @@ import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
 import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
 import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus';
 import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
+import { useIAP } from '../../hooks/useIAP';
+import { IAP_PRODUCTS } from '../../config/constants';
 
 interface SubscriptionPlan {
   id: number;
@@ -55,7 +59,7 @@ export default function SubscriptionScreen() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<SubscriptionPlan | null>(null);
   const [showUpdatePaymentModal, setShowUpdatePaymentModal] = useState(false);
@@ -88,6 +92,31 @@ export default function SubscriptionScreen() {
 
   // Check if user is a Troop Leader - they need to select a scout before subscribing
   const isTroopLeader = user?.role === 'UNIT_LEADER';
+  const isIOS = Platform.OS === 'ios';
+
+  // Apple IAP hook (only active on iOS)
+  const {
+    purchasing: iapPurchasing,
+    purchaseSubscription,
+    restorePurchases,
+    getLocalizedPrice,
+  } = useIAP({
+    autoInit: isIOS,
+    userId: user?.id,
+    onPurchaseComplete: async (result) => {
+      Alert.alert('Success!', 'Your subscription is now active');
+      await loadSubscriptionData();
+      try {
+        const meResponse = await apiClient.get('/api/v1/auth/me');
+        updateUser(meResponse.data);
+      } catch (e) {
+        console.log('Failed to refresh user after IAP subscription:', e);
+      }
+    },
+    onPurchaseError: (error) => {
+      Alert.alert('Purchase Failed', error);
+    },
+  });
 
   useEffect(() => {
     loadSubscriptionData();
@@ -130,7 +159,19 @@ export default function SubscriptionScreen() {
       return;
     }
 
-    // For Scouts and Parents, show payment modal
+    // iOS: Use Apple In-App Purchase
+    if (isIOS) {
+      try {
+        const sku = IAP_PRODUCTS.SUBSCRIPTION_ANNUAL;
+        await purchaseSubscription(sku);
+        // Result handled by onPurchaseComplete callback in useIAP
+      } catch (error: any) {
+        console.error('IAP subscription error:', error);
+      }
+      return;
+    }
+
+    // Android: Show credit card payment modal (Authorize.net)
     setPendingPlan(plan);
     setShowPaymentModal(true);
   };
@@ -189,6 +230,23 @@ export default function SubscriptionScreen() {
   const handleCancelSubscription = () => {
     if (!subscription) return;
 
+    // iOS: Direct to Apple's subscription management
+    if (isIOS) {
+      Alert.alert(
+        'Manage Subscription',
+        'Your subscription is managed through Apple. You\'ll be taken to your Apple ID subscription settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions'),
+          }
+        ]
+      );
+      return;
+    }
+
+    // Android: Cancel via backend
     Alert.alert(
       'Cancel Subscription',
       `Are you sure you want to cancel? You've saved $${subscription.totalSavings.toFixed(2)} this year!\n\nYour subscription will remain active until ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}.`,
@@ -463,62 +521,100 @@ export default function SubscriptionScreen() {
             )}
           </View>
 
-          {/* Auto-Renew Toggle */}
-          <View style={styles.card}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Auto-Renew</Text>
-                <Text style={styles.settingDescription}>
-                  Automatically renew at end of billing period
-                </Text>
+          {/* Auto-Renew / Subscription Management */}
+          {isIOS ? (
+            <>
+              {/* iOS: Apple manages auto-renew */}
+              <View style={styles.card}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingTitle}>Auto-Renew</Text>
+                    <Text style={styles.settingDescription}>
+                      Auto-renewal is managed in your Apple ID settings
+                    </Text>
+                  </View>
+                  <Ionicons name="logo-apple" size={24} color="#333" />
+                </View>
               </View>
-              <Switch
-                value={!subscription.cancelAtPeriodEnd}
-                onValueChange={toggleAutoRenew}
-                trackColor={{ false: '#ccc', true: '#003f87' }}
-              />
-            </View>
-          </View>
 
-          {/* Renew Now Button */}
-          <View style={styles.renewCard}>
-            <View style={styles.renewInfo}>
-              <Ionicons name="sparkles" size={24} color="#003f87" />
-              <View style={styles.renewTextContainer}>
-                <Text style={styles.renewTitle}>Ready for more savings?</Text>
-                <Text style={styles.renewDescription}>
-                  Renew now to replenish all one-time offers
-                </Text>
+              {/* iOS: Actions */}
+              <View style={styles.card}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => Linking.openURL('https://apps.apple.com/account/subscriptions')}
+                >
+                  <Ionicons name="settings-outline" size={24} color="#003f87" />
+                  <Text style={styles.actionButtonText}>Manage Subscription</Text>
+                  <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionButton} onPress={restorePurchases}>
+                  <Ionicons name="refresh-outline" size={24} color="#003f87" />
+                  <Text style={styles.actionButtonText}>Restore Purchases</Text>
+                  <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                </TouchableOpacity>
               </View>
-            </View>
-            <TouchableOpacity style={styles.renewButton} onPress={handleRenewNow}>
-              <Ionicons name="refresh" size={20} color="white" />
-              <Text style={styles.renewButtonText}>Renew Now</Text>
-            </TouchableOpacity>
-          </View>
+            </>
+          ) : (
+            <>
+              {/* Android: Auto-Renew Toggle */}
+              <View style={styles.card}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingTitle}>Auto-Renew</Text>
+                    <Text style={styles.settingDescription}>
+                      Automatically renew at end of billing period
+                    </Text>
+                  </View>
+                  <Switch
+                    value={!subscription.cancelAtPeriodEnd}
+                    onValueChange={toggleAutoRenew}
+                    trackColor={{ false: '#ccc', true: '#003f87' }}
+                  />
+                </View>
+              </View>
 
-          {/* Actions */}
-          <View style={styles.card}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleUpdatePayment}>
-              <Ionicons name="card-outline" size={24} color="#003f87" />
-              <Text style={styles.actionButtonText}>Update Payment Method</Text>
-              <Ionicons name="chevron-forward" size={24} color="#ccc" />
-            </TouchableOpacity>
+              {/* Android: Renew Now Button */}
+              <View style={styles.renewCard}>
+                <View style={styles.renewInfo}>
+                  <Ionicons name="sparkles" size={24} color="#003f87" />
+                  <View style={styles.renewTextContainer}>
+                    <Text style={styles.renewTitle}>Ready for more savings?</Text>
+                    <Text style={styles.renewDescription}>
+                      Renew now to replenish all one-time offers
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.renewButton} onPress={handleRenewNow}>
+                  <Ionicons name="refresh" size={20} color="white" />
+                  <Text style={styles.renewButtonText}>Renew Now</Text>
+                </TouchableOpacity>
+              </View>
 
-            {subscription.cancelAtPeriodEnd ? (
-              <TouchableOpacity style={styles.actionButton} onPress={handleReactivate}>
-                <Ionicons name="refresh-outline" size={24} color="#4CAF50" />
-                <Text style={[styles.actionButtonText, { color: '#4CAF50' }]}>Reactivate Subscription</Text>
-                <Ionicons name="chevron-forward" size={24} color="#ccc" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.actionButton} onPress={handleCancelSubscription}>
-                <Ionicons name="close-circle-outline" size={24} color="#f44336" />
-                <Text style={[styles.actionButtonText, { color: '#f44336' }]}>Cancel Subscription</Text>
-                <Ionicons name="chevron-forward" size={24} color="#ccc" />
-              </TouchableOpacity>
-            )}
-          </View>
+              {/* Android: Actions */}
+              <View style={styles.card}>
+                <TouchableOpacity style={styles.actionButton} onPress={handleUpdatePayment}>
+                  <Ionicons name="card-outline" size={24} color="#003f87" />
+                  <Text style={styles.actionButtonText}>Update Payment Method</Text>
+                  <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                </TouchableOpacity>
+
+                {subscription.cancelAtPeriodEnd ? (
+                  <TouchableOpacity style={styles.actionButton} onPress={handleReactivate}>
+                    <Ionicons name="refresh-outline" size={24} color="#4CAF50" />
+                    <Text style={[styles.actionButtonText, { color: '#4CAF50' }]}>Reactivate Subscription</Text>
+                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={styles.actionButton} onPress={handleCancelSubscription}>
+                    <Ionicons name="close-circle-outline" size={24} color="#f44336" />
+                    <Text style={[styles.actionButtonText, { color: '#f44336' }]}>Cancel Subscription</Text>
+                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
 
           {/* Features */}
           <View style={styles.card}>
@@ -621,7 +717,10 @@ export default function SubscriptionScreen() {
               
               <View style={styles.priceContainer}>
                 <Text style={styles.planCardPrice}>
-                  ${(plan.priceCents / 100).toFixed(2)}
+                  {isIOS
+                    ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || `$${(plan.priceCents / 100).toFixed(2)}`)
+                    : `$${(plan.priceCents / 100).toFixed(2)}`
+                  }
                 </Text>
                 <Text style={styles.planCardInterval}>
                   /{plan.billingInterval.toLowerCase()}
@@ -649,8 +748,15 @@ export default function SubscriptionScreen() {
                   plan.billingInterval === 'ANNUAL' && styles.subscribeButtonRecommended
                 ]}
                 onPress={() => handleSubscribe(plan)}
+                disabled={isIOS && iapPurchasing}
               >
-                <Text style={styles.subscribeButtonText}>Subscribe Now</Text>
+                {isIOS && iapPurchasing ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={styles.subscribeButtonText}>
+                    {isIOS ? 'Subscribe with Apple' : 'Subscribe Now'}
+                  </Text>
+                )}
               </TouchableOpacity>
             </TouchableOpacity>
           ))}
@@ -689,8 +795,8 @@ export default function SubscriptionScreen() {
         </>
       )}
 
-      {/* Update Payment Method Modal */}
-      <Modal
+      {/* Update Payment Method Modal (Android only — iOS uses Apple's payment management) */}
+      {!isIOS && <Modal
         visible={showUpdatePaymentModal}
         animationType="slide"
         presentationStyle="pageSheet"
@@ -789,10 +895,10 @@ export default function SubscriptionScreen() {
             </View>
           </ScrollView>
         </SafeAreaView>
-      </Modal>
+      </Modal>}
 
-      {/* Payment Modal */}
-      <CardPaymentModal
+      {/* Payment Modal (Android only — iOS uses Apple IAP) */}
+      {!isIOS && <CardPaymentModal
         visible={showPaymentModal}
         onClose={() => {
           setShowPaymentModal(false);
@@ -803,7 +909,7 @@ export default function SubscriptionScreen() {
         amount={pendingPlan?.priceCents || 0}
         description={pendingPlan ? `${pendingPlan.name} Subscription` : 'Subscription'}
         processPayment={processPayment}
-      />
+      />}
     </ScrollView>
     </SafeAreaView>
   );

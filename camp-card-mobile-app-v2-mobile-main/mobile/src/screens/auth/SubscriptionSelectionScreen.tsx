@@ -7,12 +7,14 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
-import { COLORS } from '../../config/constants';
+import { COLORS, IAP_PRODUCTS } from '../../config/constants';
+import { useIAP } from '../../hooks/useIAP';
 
 type SubscriptionSelectionRouteProp = RouteProp<{
   SubscriptionSelection: {
@@ -39,6 +41,10 @@ export default function SubscriptionSelectionScreen() {
   const navigation = useNavigation();
   const route = useRoute<SubscriptionSelectionRouteProp>();
   const scoutCode = route.params?.scoutCode;
+  const isIOS = Platform.OS === 'ios';
+
+  // Apple IAP hook for localized pricing (only active on iOS)
+  const { getLocalizedPrice } = useIAP({ autoInit: isIOS });
 
   useEffect(() => {
     loadPlans();
@@ -123,7 +129,10 @@ export default function SubscriptionSelectionScreen() {
             )}
           </View>
           <Text style={styles.planPrice}>
-            {formatPrice(plan.priceCents, plan.billingInterval)}
+            {isIOS
+              ? `${getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || formatPrice(plan.priceCents, plan.billingInterval)}`
+              : formatPrice(plan.priceCents, plan.billingInterval)
+            }
           </Text>
         </View>
 
@@ -205,8 +214,10 @@ export default function SubscriptionSelectionScreen() {
       {/* Bottom CTA */}
       <View style={styles.bottomSection}>
         <View style={styles.securePayment}>
-          <Ionicons name="shield-checkmark" size={16} color="#4CAF50" />
-          <Text style={styles.securePaymentText}>Secure payment powered by Authorize.net</Text>
+          <Ionicons name={isIOS ? 'logo-apple' : 'shield-checkmark'} size={16} color={isIOS ? '#333' : '#4CAF50'} />
+          <Text style={styles.securePaymentText}>
+            {isIOS ? 'Secure payment through Apple' : 'Secure payment powered by Authorize.net'}
+          </Text>
         </View>
 
         <TouchableOpacity

@@ -502,6 +502,16 @@ export const paymentMethodsApi = {
     apiClient.delete(`/api/v1/payments/payment-methods/${id}`),
 };
 
+// Apple In-App Purchase API
+export const appleIAPApi = {
+  verifyReceipt: (data: {
+    receiptData: string;
+    productId: string;
+    transactionId: string;
+    userId?: string;
+  }) => apiClient.post('/api/v1/apple/verify-receipt', data),
+};
+
 // COPPA Parental Consent API
 export const consentApi = {
   // Get current user's consent status

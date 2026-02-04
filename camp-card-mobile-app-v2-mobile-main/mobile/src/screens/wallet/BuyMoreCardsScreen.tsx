@@ -1,6 +1,6 @@
 // BuyMoreCardsScreen - Allows existing users to purchase additional Camp Cards
 // Supports quantity selection (1-10)
-// In-app purchases are $15 per card (direct purchase price) + 3% processing fee
+// iOS IAP: $14.99 per card | Android: $15 per card + 3% processing fee
 
 import React, { useState } from 'react';
 import {
@@ -11,29 +11,56 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../config/constants';
+import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS } from '../../config/constants';
 import { cardsApi, paymentsApi } from '../../services/apiClient';
 import { useAuthStore } from '../../store/authStore';
 import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
+import { useIAP } from '../../hooks/useIAP';
 
 // In-app direct purchase price is $15 per card
 const CARD_PRICE_CENTS = 1500; // $15 per card
 const PROCESSING_FEE_PERCENT = 3; // 3% credit card processing fee
 
+// Valid iOS IAP tier quantities
+const IAP_TIERS = [1, 3, 5, 10] as const;
+
 export default function BuyMoreCardsScreen() {
   const navigation = useNavigation();
   const { user } = useAuthStore();
+  const isIOS = Platform.OS === 'ios';
 
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  // Apple IAP hook (only active on iOS)
+  const {
+    purchasing: iapPurchasing,
+    purchaseProduct,
+    getProductForQuantity,
+    getLocalizedPrice,
+  } = useIAP({
+    autoInit: isIOS,
+    userId: user?.id,
+    onPurchaseComplete: () => {
+      Alert.alert(
+        'Purchase Successful!',
+        `You have purchased ${quantity} Camp Card${quantity !== 1 ? 's' : ''}. Check your Card Inventory to view and activate them.`,
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    },
+    onPurchaseError: (error) => {
+      Alert.alert('Purchase Failed', error);
+    },
+  });
+
   const subtotal = quantity * CARD_PRICE_CENTS;
-  const processingFee = Math.round(subtotal * (PROCESSING_FEE_PERCENT / 100));
+  const processingFee = isIOS ? 0 : Math.round(subtotal * (PROCESSING_FEE_PERCENT / 100));
   const totalPrice = subtotal + processingFee;
 
   const handleQuantityChange = (delta: number) => {
@@ -43,8 +70,23 @@ export default function BuyMoreCardsScreen() {
     }
   };
 
-  const handlePurchasePress = () => {
-    // Show payment modal to collect card details
+  const handlePurchasePress = async () => {
+    if (isIOS) {
+      // iOS: Use Apple In-App Purchase
+      const product = getProductForQuantity(quantity);
+      if (!product) {
+        Alert.alert('Error', 'This card quantity is not available for purchase.');
+        return;
+      }
+      try {
+        await purchaseProduct(product.id);
+        // Result handled by onPurchaseComplete callback in useIAP
+      } catch (error: any) {
+        console.error('IAP card purchase error:', error);
+      }
+      return;
+    }
+    // Android: Show payment modal to collect card details
     setShowPaymentModal(true);
   };
 
@@ -117,50 +159,62 @@ export default function BuyMoreCardsScreen() {
 
         {/* Quantity Selector */}
         <View style={styles.quantitySection}>
-          <Text style={styles.sectionTitle}>How many cards?</Text>
+          <Text style={styles.sectionTitle}>
+            {isIOS ? 'Select a package' : 'How many cards?'}
+          </Text>
 
-          <View style={styles.quantitySelector}>
-            <TouchableOpacity
-              style={[styles.quantityButton, quantity <= 1 && styles.quantityButtonDisabled]}
-              onPress={() => handleQuantityChange(-1)}
-              disabled={quantity <= 1}
-            >
-              <Ionicons
-                name="remove"
-                size={28}
-                color={quantity <= 1 ? COLORS.border : COLORS.text}
-              />
-            </TouchableOpacity>
+          {/* +/- quantity selector (Android only — iOS uses fixed tiers) */}
+          {!isIOS && (
+            <View style={styles.quantitySelector}>
+              <TouchableOpacity
+                style={[styles.quantityButton, quantity <= 1 && styles.quantityButtonDisabled]}
+                onPress={() => handleQuantityChange(-1)}
+                disabled={quantity <= 1}
+              >
+                <Ionicons
+                  name="remove"
+                  size={28}
+                  color={quantity <= 1 ? COLORS.border : COLORS.text}
+                />
+              </TouchableOpacity>
 
-            <View style={styles.quantityDisplay}>
-              <Text style={styles.quantityNumber}>{quantity}</Text>
-              <Text style={styles.quantityLabel}>card{quantity !== 1 ? 's' : ''}</Text>
+              <View style={styles.quantityDisplay}>
+                <Text style={styles.quantityNumber}>{quantity}</Text>
+                <Text style={styles.quantityLabel}>card{quantity !== 1 ? 's' : ''}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.quantityButton, quantity >= 10 && styles.quantityButtonDisabled]}
+                onPress={() => handleQuantityChange(1)}
+                disabled={quantity >= 10}
+              >
+                <Ionicons
+                  name="add"
+                  size={28}
+                  color={quantity >= 10 ? COLORS.border : COLORS.text}
+                />
+              </TouchableOpacity>
             </View>
+          )}
 
-            <TouchableOpacity
-              style={[styles.quantityButton, quantity >= 10 && styles.quantityButtonDisabled]}
-              onPress={() => handleQuantityChange(1)}
-              disabled={quantity >= 10}
-            >
-              <Ionicons
-                name="add"
-                size={28}
-                color={quantity >= 10 ? COLORS.border : COLORS.text}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Quick Select Buttons */}
+          {/* Tier buttons — on iOS these are the only selection method */}
           <View style={styles.quickSelectRow}>
-            {[1, 3, 5, 10].map((num) => (
+            {(isIOS ? IAP_TIERS : [1, 3, 5, 10]).map((num) => (
               <TouchableOpacity
                 key={num}
                 style={[styles.quickSelectButton, quantity === num && styles.quickSelectButtonActive]}
                 onPress={() => setQuantity(num)}
               >
                 <Text style={[styles.quickSelectText, quantity === num && styles.quickSelectTextActive]}>
-                  {num}
+                  {num} {isIOS ? (num === 1 ? 'Card' : 'Cards') : num}
                 </Text>
+                {isIOS && (
+                  <Text style={[styles.quickSelectPrice, quantity === num && styles.quickSelectTextActive]}>
+                    {getLocalizedPrice(
+                      IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.productId || ''
+                    ) || formatPrice(num * CARD_PRICE_CENTS)}
+                  </Text>
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -171,27 +225,42 @@ export default function BuyMoreCardsScreen() {
           <Text style={styles.sectionTitle}>Price Summary</Text>
 
           <View style={styles.priceCard}>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>
-                {quantity} Camp Card{quantity !== 1 ? 's' : ''} × {formatPrice(CARD_PRICE_CENTS)}
-              </Text>
-              <Text style={styles.priceValue}>{formatPrice(subtotal)}</Text>
-            </View>
-
-            <View style={styles.priceRow}>
-              <View style={styles.feeLabel}>
-                <Ionicons name="card-outline" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.feeText}>Processing Fee ({PROCESSING_FEE_PERCENT}%)</Text>
+            {isIOS ? (
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>
+                  {quantity} Camp Card{quantity !== 1 ? 's' : ''}
+                </Text>
+                <Text style={styles.totalValue}>
+                  {getLocalizedPrice(
+                    IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
+                  ) || formatPrice(subtotal)}
+                </Text>
               </View>
-              <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
-            </View>
+            ) : (
+              <>
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceLabel}>
+                    {quantity} Camp Card{quantity !== 1 ? 's' : ''} × {formatPrice(CARD_PRICE_CENTS)}
+                  </Text>
+                  <Text style={styles.priceValue}>{formatPrice(subtotal)}</Text>
+                </View>
 
-            <View style={styles.divider} />
+                <View style={styles.priceRow}>
+                  <View style={styles.feeLabel}>
+                    <Ionicons name="card-outline" size={16} color={COLORS.textSecondary} />
+                    <Text style={styles.feeText}>Processing Fee ({PROCESSING_FEE_PERCENT}%)</Text>
+                  </View>
+                  <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
+                </View>
 
-            <View style={styles.priceRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>{formatPrice(totalPrice)}</Text>
-            </View>
+                <View style={styles.divider} />
+
+                <View style={styles.priceRow}>
+                  <Text style={styles.totalLabel}>Total</Text>
+                  <Text style={styles.totalValue}>{formatPrice(totalPrice)}</Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
 
@@ -240,7 +309,7 @@ export default function BuyMoreCardsScreen() {
         <View style={styles.pricingNote}>
           <Ionicons name="information-circle-outline" size={20} color={COLORS.secondary} />
           <Text style={styles.pricingNoteText}>
-            In-app price: $15/card. Buy from a Scout for only $10/card and support their fundraising goals!
+            In-app price: $14.99/card. Buy from a Scout for only $10/card and support their fundraising goals!
           </Text>
         </View>
 
@@ -256,25 +325,28 @@ export default function BuyMoreCardsScreen() {
       {/* Purchase Button */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.purchaseButton, loading && styles.purchaseButtonDisabled]}
+          style={[styles.purchaseButton, (loading || iapPurchasing) && styles.purchaseButtonDisabled]}
           onPress={handlePurchasePress}
-          disabled={loading}
+          disabled={loading || iapPurchasing}
         >
-          {loading ? (
+          {loading || iapPurchasing ? (
             <ActivityIndicator size="small" color={COLORS.surface} />
           ) : (
             <>
-              <Ionicons name="card" size={24} color={COLORS.surface} />
+              <Ionicons name={isIOS ? 'logo-apple' : 'card'} size={24} color={COLORS.surface} />
               <Text style={styles.purchaseButtonText}>
-                Purchase {quantity} Card{quantity !== 1 ? 's' : ''} - {formatPrice(totalPrice)}
+                {isIOS
+                  ? `Purchase ${quantity} Card${quantity !== 1 ? 's' : ''}`
+                  : `Purchase ${quantity} Card${quantity !== 1 ? 's' : ''} - ${formatPrice(totalPrice)}`
+                }
               </Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* Payment Modal */}
-      <CardPaymentModal
+      {/* Payment Modal (Android only — iOS uses Apple IAP) */}
+      {!isIOS && <CardPaymentModal
         visible={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onPaymentSuccess={handlePaymentSuccess}
@@ -282,7 +354,7 @@ export default function BuyMoreCardsScreen() {
         amount={totalPrice}
         description={`${quantity} Camp Card${quantity !== 1 ? 's' : ''}`}
         processPayment={processPayment}
-      />
+      />}
     </SafeAreaView>
   );
 }
@@ -398,6 +470,11 @@ const styles = StyleSheet.create({
   },
   quickSelectTextActive: {
     color: COLORS.surface,
+  },
+  quickSelectPrice: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
   priceSection: {
     marginBottom: 24,

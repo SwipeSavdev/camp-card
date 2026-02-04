@@ -1,4 +1,5 @@
 // CardPaymentModal - Secure credit card collection form for Authorize.net payments
+// This modal is only used on Android. iOS uses Apple In-App Purchase (StoreKit 2).
 // Collects card details and sends to backend for processing
 
 import React, { useState, useRef } from 'react';

@@ -7,11 +7,13 @@ import {
   ScrollView,
   Image,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../config/constants';
+import { COLORS, IAP_CARD_PRODUCTS } from '../../config/constants';
+import { useIAP } from '../../hooks/useIAP';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
@@ -29,23 +31,28 @@ type QuantitySelectionRouteProp = RouteProp<{
 }, 'QuantitySelection'>;
 
 const QUANTITY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const IAP_TIER_OPTIONS = [1, 3, 5, 10]; // iOS only supports these fixed tiers
 
 export default function QuantitySelectionScreen() {
   const navigation = useNavigation();
   const route = useRoute<QuantitySelectionRouteProp>();
   const { selectedPlan, scoutCode } = route.params;
   const { width } = useWindowDimensions();
+  const isIOS = Platform.OS === 'ios';
 
   const [quantity, setQuantity] = useState(1);
 
   const headerLogoSize = Math.min(80, Math.max(60, Math.round(width * 0.2)));
+
+  // Apple IAP hook for localized pricing (only active on iOS)
+  const { getLocalizedPrice } = useIAP({ autoInit: isIOS });
 
   const formatPrice = (priceCents: number) => {
     return `$${(priceCents / 100).toFixed(2)}`;
   };
 
   const subtotal = selectedPlan.priceCents * quantity;
-  const processingFee = Math.round(subtotal * 0.03); // 3% credit card processing fee
+  const processingFee = isIOS ? 0 : Math.round(subtotal * 0.03); // 3% credit card processing fee (Android only)
   const totalPrice = subtotal + processingFee;
 
   const handleContinue = () => {
@@ -96,19 +103,27 @@ export default function QuantitySelectionScreen() {
             <Ionicons name="pricetag" size={20} color={COLORS.primary} />
             <Text style={styles.planName}>{selectedPlan.name}</Text>
           </View>
-          <Text style={styles.pricePerCard}>{formatPrice(selectedPlan.priceCents)} per card</Text>
+          <Text style={styles.pricePerCard}>
+            {isIOS
+              ? `${getLocalizedPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.productId || '') || formatPrice(selectedPlan.priceCents)} per card`
+              : `${formatPrice(selectedPlan.priceCents)} per card`
+            }
+          </Text>
         </View>
 
         {/* Quantity Selector */}
         <View style={styles.quantitySection}>
-          <Text style={styles.sectionLabel}>Select Quantity (1-10)</Text>
+          <Text style={styles.sectionLabel}>
+            {isIOS ? 'Select a Package' : 'Select Quantity (1-10)'}
+          </Text>
 
           <View style={styles.quantityGrid}>
-            {QUANTITY_OPTIONS.map((num) => (
+            {(isIOS ? IAP_TIER_OPTIONS : QUANTITY_OPTIONS).map((num) => (
               <TouchableOpacity
                 key={num}
                 style={[
                   styles.quantityButton,
+                  isIOS && styles.quantityButtonWide,
                   quantity === num && styles.quantityButtonSelected,
                 ]}
                 onPress={() => setQuantity(num)}
@@ -118,8 +133,18 @@ export default function QuantitySelectionScreen() {
                   styles.quantityButtonText,
                   quantity === num && styles.quantityButtonTextSelected,
                 ]}>
-                  {num}
+                  {isIOS ? `${num} Card${num > 1 ? 's' : ''}` : num}
                 </Text>
+                {isIOS && (
+                  <Text style={[
+                    styles.quantityButtonPrice,
+                    quantity === num && styles.quantityButtonTextSelected,
+                  ]}>
+                    {getLocalizedPrice(
+                      IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.productId || ''
+                    ) || formatPrice(num * selectedPlan.priceCents)}
+                  </Text>
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -198,16 +223,32 @@ export default function QuantitySelectionScreen() {
         <View style={styles.orderSummary}>
           <View style={styles.orderRow}>
             <Text style={styles.orderLabel}>{quantity} Card{quantity > 1 ? 's' : ''} × {formatPrice(selectedPlan.priceCents)}</Text>
-            <Text style={styles.orderValue}>{formatPrice(subtotal)}</Text>
+            <Text style={styles.orderValue}>
+              {isIOS
+                ? (getLocalizedPrice(
+                    IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
+                  ) || formatPrice(subtotal))
+                : formatPrice(subtotal)
+              }
+            </Text>
           </View>
-          <View style={styles.orderRow}>
-            <Text style={styles.feeLabel}>Processing Fee (3%)</Text>
-            <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
-          </View>
+          {!isIOS && (
+            <View style={styles.orderRow}>
+              <Text style={styles.feeLabel}>Processing Fee (3%)</Text>
+              <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
+            </View>
+          )}
           <View style={styles.divider} />
           <View style={styles.orderRow}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>{formatPrice(totalPrice)}</Text>
+            <Text style={styles.totalValue}>
+              {isIOS
+                ? (getLocalizedPrice(
+                    IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
+                  ) || formatPrice(subtotal))
+                : formatPrice(totalPrice)
+              }
+            </Text>
           </View>
         </View>
 
@@ -323,6 +364,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.border,
   },
+  quantityButtonWide: {
+    width: '46%',
+    aspectRatio: undefined,
+    paddingVertical: 16,
+  },
   quantityButtonSelected: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
@@ -331,6 +377,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
+  },
+  quantityButtonPrice: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 4,
   },
   quantityButtonTextSelected: {
     color: '#fff',

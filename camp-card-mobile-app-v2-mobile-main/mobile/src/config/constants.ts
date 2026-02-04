@@ -86,6 +86,35 @@ export const MAP_CONFIG = {
   defaultRadius: 25, // miles
 };
 
+// Apple In-App Purchase Product IDs
+export const IAP_PRODUCTS = {
+  SUBSCRIPTION_ANNUAL: 'org.bsa.campcard.subscription.annual',
+  SUBSCRIPTION_ANNUAL_SCOUT: 'org.bsa.campcard.subscription.annual.scout',
+  CARDS_1: 'org.bsa.campcard.cards.1',
+  CARDS_3: 'org.bsa.campcard.cards.3',
+  CARDS_5: 'org.bsa.campcard.cards.5',
+  CARDS_10: 'org.bsa.campcard.cards.10',
+} as const;
+
+export const IAP_SUBSCRIPTION_SKUS = [
+  IAP_PRODUCTS.SUBSCRIPTION_ANNUAL,
+  IAP_PRODUCTS.SUBSCRIPTION_ANNUAL_SCOUT,
+];
+
+export const IAP_CARD_SKUS = [
+  IAP_PRODUCTS.CARDS_1,
+  IAP_PRODUCTS.CARDS_3,
+  IAP_PRODUCTS.CARDS_5,
+  IAP_PRODUCTS.CARDS_10,
+];
+
+export const IAP_CARD_PRODUCTS = [
+  { productId: IAP_PRODUCTS.CARDS_1, quantity: 1 },
+  { productId: IAP_PRODUCTS.CARDS_3, quantity: 3 },
+  { productId: IAP_PRODUCTS.CARDS_5, quantity: 5 },
+  { productId: IAP_PRODUCTS.CARDS_10, quantity: 10 },
+] as const;
+
 // Subscription Plans
 export const SUBSCRIPTION_PLANS = {
   BASIC: {

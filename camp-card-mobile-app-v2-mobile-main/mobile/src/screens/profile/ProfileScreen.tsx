@@ -1,18 +1,44 @@
 // Profile Screen with Settings and Navigation
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { useIAP } from '../../hooks/useIAP';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const navigation = useNavigation<RootNavigation>();
+  const isIOS = Platform.OS === 'ios';
+
+  // Apple IAP hook for restore purchases (only active on iOS)
+  const { restorePurchases } = useIAP({
+    autoInit: isIOS,
+    userId: user?.id,
+    onPurchaseComplete: () => {
+      Alert.alert('Restored', 'Your purchases have been restored successfully.');
+    },
+    onPurchaseError: (error) => {
+      Alert.alert('Restore Failed', error);
+    },
+  });
+
+  const handleRestorePurchases = async () => {
+    setIsRestoring(true);
+    try {
+      await restorePurchases();
+    } catch (error: any) {
+      Alert.alert('Restore Failed', error.message || 'Could not restore purchases. Please try again.');
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   // Filter menu items based on user role (Troop Leaders don't have referrals)
   const allMenuItems = [
@@ -85,6 +111,27 @@ export default function ProfileScreen() {
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
+
+          {isIOS && (
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleRestorePurchases}
+              disabled={isRestoring}
+            >
+              <View style={styles.menuIconContainer}>
+                <Ionicons name="refresh-outline" size={24} color={COLORS.primary} />
+              </View>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuTitle}>Restore Purchases</Text>
+                <Text style={styles.menuSubtitle}>Restore previous Apple purchases</Text>
+              </View>
+              {isRestoring ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+              )}
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.menuItem}

@@ -49,6 +49,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/consent/verify/**").permitAll()
                 // Public gift card claim endpoints (recipients may not have accounts)
                 .requestMatchers("/api/v1/cards/claim/**").permitAll()
+                // Apple In-App Purchase receipt validation and webhooks
+                .requestMatchers("/api/v1/apple/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
