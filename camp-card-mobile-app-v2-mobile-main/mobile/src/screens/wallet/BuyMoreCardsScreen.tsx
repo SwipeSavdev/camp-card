@@ -1,6 +1,6 @@
 // BuyMoreCardsScreen - Allows existing users to purchase additional Camp Cards
 // Supports quantity selection (1-10)
-// iOS IAP: $14.99 per card | Android: $15 per card + 3% processing fee
+// iOS IAP: $14.99 per card | Android: $14.99 per card + 3% processing fee
 
 import React, { useState } from 'react';
 import {
@@ -22,8 +22,8 @@ import { useAuthStore } from '../../store/authStore';
 import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
 import { useIAP } from '../../hooks/useIAP';
 
-// In-app direct purchase price is $15 per card
-const CARD_PRICE_CENTS = 1500; // $15 per card
+// In-app direct purchase price: iOS IAP = $14.99, Android = $14.99 per card
+const CARD_PRICE_CENTS = 1499; // $14.99 per card (Android only — iOS uses StoreKit pricing)
 const PROCESSING_FEE_PERCENT = 3; // 3% credit card processing fee
 
 // Valid iOS IAP tier quantities
@@ -212,7 +212,7 @@ export default function BuyMoreCardsScreen() {
                   <Text style={[styles.quickSelectPrice, quantity === num && styles.quickSelectTextActive]}>
                     {getLocalizedPrice(
                       IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.productId || ''
-                    ) || formatPrice(num * CARD_PRICE_CENTS)}
+                    ) || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.priceCents || num * 1499)}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -233,7 +233,7 @@ export default function BuyMoreCardsScreen() {
                 <Text style={styles.totalValue}>
                   {getLocalizedPrice(
                     IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
-                  ) || formatPrice(subtotal)}
+                  ) || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499)}
                 </Text>
               </View>
             ) : (
@@ -309,7 +309,7 @@ export default function BuyMoreCardsScreen() {
         <View style={styles.pricingNote}>
           <Ionicons name="information-circle-outline" size={20} color={COLORS.secondary} />
           <Text style={styles.pricingNoteText}>
-            In-app price: $14.99/card. Buy from a Scout for only $10/card and support their fundraising goals!
+In-app price: $14.99/card. Buy from a Scout for only $10/card and support their fundraising goals!
           </Text>
         </View>
 

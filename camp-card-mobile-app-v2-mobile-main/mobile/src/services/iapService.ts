@@ -104,6 +104,15 @@ class IAPService {
 
   async purchaseProduct(sku: string): Promise<void> {
     if (!this.connected) await this.init();
+
+    // Verify the product exists before attempting purchase
+    const products = await this.fetchProducts();
+    const product = products.find(p => p.id === sku);
+    if (!product) {
+      console.error('[IAP] Product SKU not found:', sku, 'Available:', products.map(p => p.id));
+      throw new Error(`SKU not found: ${sku}. Please ensure the product is configured in App Store Connect.`);
+    }
+
     try {
       await expoRequestPurchase({
         request: { apple: { sku } },
@@ -117,6 +126,15 @@ class IAPService {
 
   async purchaseSubscriptionProduct(sku: string): Promise<void> {
     if (!this.connected) await this.init();
+
+    // Verify the subscription product exists before attempting purchase
+    const subs = await this.fetchSubscriptions();
+    const product = subs.find(s => s.id === sku);
+    if (!product) {
+      console.error('[IAP] Subscription SKU not found:', sku, 'Available:', subs.map(s => s.id));
+      throw new Error(`SKU not found: ${sku}. Please ensure the subscription is configured in App Store Connect.`);
+    }
+
     try {
       await expoRequestPurchase({
         request: { apple: { sku } },

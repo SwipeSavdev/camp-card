@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, IAP_CARD_PRODUCTS } from '../../config/constants';
+import { COLORS, IAP_CARD_PRODUCTS, IAP_PRICES, IAP_PRODUCTS } from '../../config/constants';
 import { useIAP } from '../../hooks/useIAP';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
@@ -105,8 +105,8 @@ export default function QuantitySelectionScreen() {
           </View>
           <Text style={styles.pricePerCard}>
             {isIOS
-              ? `${getLocalizedPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.productId || '') || formatPrice(selectedPlan.priceCents)} per card`
-              : `${formatPrice(selectedPlan.priceCents)} per card`
+              ? (getLocalizedPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.productId || '') || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.priceCents || 1499)) + ' per card'
+              : formatPrice(selectedPlan.priceCents) + ' per card'
             }
           </Text>
         </View>
@@ -142,7 +142,7 @@ export default function QuantitySelectionScreen() {
                   ]}>
                     {getLocalizedPrice(
                       IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.productId || ''
-                    ) || formatPrice(num * selectedPlan.priceCents)}
+                    ) || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.priceCents || num * 1499)}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -221,21 +221,34 @@ export default function QuantitySelectionScreen() {
       <View style={styles.bottomSection}>
         {/* Order Summary */}
         <View style={styles.orderSummary}>
+          {/* Cards Line Item */}
           <View style={styles.orderRow}>
-            <Text style={styles.orderLabel}>{quantity} Card{quantity > 1 ? 's' : ''} × {formatPrice(selectedPlan.priceCents)}</Text>
+            <Text style={styles.orderLabel}>
+              {quantity} Camp Card{quantity > 1 ? 's' : ''}
+            </Text>
             <Text style={styles.orderValue}>
               {isIOS
                 ? (getLocalizedPrice(
                     IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
-                  ) || formatPrice(subtotal))
+                  ) || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499))
                 : formatPrice(subtotal)
+              }
+            </Text>
+          </View>
+          {/* Subscription Line Item */}
+          <View style={styles.orderRow}>
+            <Text style={styles.orderLabel}>Annual Subscription</Text>
+            <Text style={styles.orderValue}>
+              {isIOS
+                ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || formatPrice(IAP_PRICES.SUBSCRIPTION_ANNUAL))
+                : formatPrice(selectedPlan.priceCents)
               }
             </Text>
           </View>
           {!isIOS && (
             <View style={styles.orderRow}>
               <Text style={styles.feeLabel}>Processing Fee (3%)</Text>
-              <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
+              <Text style={styles.feeValue}>{formatPrice(processingFee + Math.round(selectedPlan.priceCents * 0.03))}</Text>
             </View>
           )}
           <View style={styles.divider} />
@@ -243,10 +256,10 @@ export default function QuantitySelectionScreen() {
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>
               {isIOS
-                ? (getLocalizedPrice(
-                    IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
-                  ) || formatPrice(subtotal))
-                : formatPrice(totalPrice)
+                ? formatPrice(
+                    (IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499) + IAP_PRICES.SUBSCRIPTION_ANNUAL
+                  )
+                : formatPrice(totalPrice + selectedPlan.priceCents + Math.round(selectedPlan.priceCents * 0.03))
               }
             </Text>
           </View>

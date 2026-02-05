@@ -24,7 +24,7 @@ import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
 import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus';
 import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
 import { useIAP } from '../../hooks/useIAP';
-import { IAP_PRODUCTS } from '../../config/constants';
+import { IAP_PRODUCTS, IAP_PRICES } from '../../config/constants';
 
 interface SubscriptionPlan {
   id: number;
@@ -484,7 +484,10 @@ export default function SubscriptionScreen() {
             <View style={styles.planInfo}>
               <Text style={styles.planName}>{subscription.plan.name}</Text>
               <Text style={styles.planPrice}>
-                ${(subscription.plan.priceCents / 100).toFixed(2)}/{subscription.plan.billingInterval.toLowerCase()}
+                {isIOS
+                  ? `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`
+                  : `$${(subscription.plan.priceCents / 100).toFixed(2)}`
+                }/{subscription.plan.billingInterval.toLowerCase()}
               </Text>
             </View>
 
@@ -718,7 +721,7 @@ export default function SubscriptionScreen() {
               <View style={styles.priceContainer}>
                 <Text style={styles.planCardPrice}>
                   {isIOS
-                    ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || `$${(plan.priceCents / 100).toFixed(2)}`)
+                    ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`)
                     : `$${(plan.priceCents / 100).toFixed(2)}`
                   }
                 </Text>
@@ -727,11 +730,7 @@ export default function SubscriptionScreen() {
                 </Text>
               </View>
 
-              {plan.trialDays > 0 && (
-                <Text style={styles.trialText}>
-                  {plan.trialDays} days free trial
-                </Text>
-              )}
+{/* Trial text removed - no trial offered */}
 
               <View style={styles.featuresContainer}>
                 {plan.features.map((feature, index) => (

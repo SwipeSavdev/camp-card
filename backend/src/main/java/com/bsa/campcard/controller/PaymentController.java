@@ -96,7 +96,7 @@ public class PaymentController {
     @PostMapping("/subscribe/mobile-charge")
     @Operation(summary = "Process mobile subscription payment",
             description = "Charge a credit card for Camp Card purchases via mobile app. " +
-                    "Supports $15 self-service signups and multi-card purchases (1-10+ cards). " +
+                    "Supports $14.99 self-service signups and multi-card purchases (1-10+ cards). " +
                     "No authentication required for new subscribers.")
     public ResponseEntity<PaymentResponse> chargeMobileSubscription(@Valid @RequestBody ChargeRequest request) {
         log.info("Processing mobile subscription charge for amount: {}", request.getAmount());

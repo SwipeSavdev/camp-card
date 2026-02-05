@@ -463,7 +463,7 @@ public class SubscriptionPurchaseService {
             // Step 2: Determine subscription amount based on referral type
             java.math.BigDecimal amount = request.getScoutCode() != null && !request.getScoutCode().isEmpty()
                     ? new java.math.BigDecimal("10.00")  // Scout referral = $10
-                    : new java.math.BigDecimal("15.00"); // Regular or customer referral = $15
+                    : new java.math.BigDecimal("14.99"); // Regular or customer referral = $14.99
 
             // Step 3: Process payment
             ChargeRequest chargeRequest = new ChargeRequest();

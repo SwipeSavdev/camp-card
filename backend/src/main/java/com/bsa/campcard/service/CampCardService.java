@@ -42,8 +42,8 @@ public class CampCardService {
 
     // ==================== PURCHASE OPERATIONS ====================
 
-    // In-app direct purchase price: $15/card
-    private static final int IN_APP_PRICE_CENTS = 1500;
+    // In-app direct purchase price: $14.99/card
+    private static final int IN_APP_PRICE_CENTS = 1499;
 
     /**
      * Purchase multiple camp cards

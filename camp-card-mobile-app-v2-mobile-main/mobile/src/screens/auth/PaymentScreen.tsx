@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS } from '../../config/constants';
+import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS, IAP_PRICES } from '../../config/constants';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
 import { paymentsApi } from '../../services/apiClient';
 import { useIAP } from '../../hooks/useIAP';
@@ -32,11 +32,19 @@ export default function PaymentScreen() {
   const { width } = useWindowDimensions();
   const isIOS = Platform.OS === 'ios';
 
-  // Calculate totals
-  const unitPrice = selectedPlan.priceCents;
-  const subtotal = unitPrice * quantity;
-  const processingFee = isIOS ? 0 : Math.round(subtotal * 0.03); // 3% credit card processing fee (Android only)
-  const totalPrice = subtotal + processingFee;
+  // Get card product details for the selected quantity
+  const cardProduct = IAP_CARD_PRODUCTS.find(p => p.quantity === quantity);
+  const cardPriceCents = isIOS
+    ? (cardProduct?.priceCents || IAP_PRICES.CARDS_1)
+    : selectedPlan.priceCents * quantity;
+  const subscriptionPriceCents = isIOS ? IAP_PRICES.SUBSCRIPTION_ANNUAL : selectedPlan.priceCents;
+
+  // Calculate totals: Cards + Subscription
+  const cardsSubtotal = cardPriceCents;
+  const subscriptionSubtotal = subscriptionPriceCents;
+  const combinedSubtotal = cardsSubtotal + subscriptionSubtotal;
+  const processingFee = isIOS ? 0 : Math.round(combinedSubtotal * 0.03); // 3% credit card processing fee (Android only)
+  const totalPrice = combinedSubtotal + processingFee;
 
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -44,17 +52,10 @@ export default function PaymentScreen() {
   const [cardholderName, setCardholderName] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [purchaseStep, setPurchaseStep] = useState<'idle' | 'subscription' | 'cards' | 'complete'>('idle');
 
-  // Determine the IAP product SKU based on plan and quantity
-  // Note: Scout referral pricing ($10/yr) is only available externally via web portal,
-  // not through in-app purchase. All IAP subscriptions use the standard $14.99/yr SKU.
-  const getIAPSku = (): string => {
-    // Check if this is a subscription plan
-    if (selectedPlan.billingInterval === 'ANNUAL' || selectedPlan.billingInterval === 'MONTHLY') {
-      return IAP_PRODUCTS.SUBSCRIPTION_ANNUAL;
-    }
-    // Card purchase — find matching IAP tier
-    const cardProduct = IAP_CARD_PRODUCTS.find(p => p.quantity === quantity);
+  // Get the card product SKU for the selected quantity
+  const getCardSku = (): string => {
     return cardProduct?.productId || IAP_PRODUCTS.CARDS_1;
   };
 
@@ -67,32 +68,54 @@ export default function PaymentScreen() {
   } = useIAP({
     autoInit: isIOS,
     onPurchaseComplete: (result) => {
-      // Navigate to signup with IAP transaction info (no userId yet — signup flow)
-      (navigation as any).navigate('Signup', {
-        selectedPlan: selectedPlan,
-        paymentCompleted: true,
-        quantity: quantity,
-        scoutCode: scoutCode,
-        transactionId: result.transactionId,
-      });
+      // Handle sequential purchase flow
+      if (purchaseStep === 'subscription') {
+        // Subscription purchased, now purchase cards
+        setPurchaseStep('cards');
+        handleCardsPurchase();
+      } else if (purchaseStep === 'cards') {
+        // Both purchases complete, navigate to signup
+        setPurchaseStep('complete');
+        (navigation as any).navigate('Signup', {
+          selectedPlan: selectedPlan,
+          paymentCompleted: true,
+          quantity: quantity,
+          scoutCode: scoutCode,
+          transactionId: result.transactionId,
+        });
+      }
     },
     onPurchaseError: (error) => {
-      Alert.alert('Purchase Failed', error);
+      setPurchaseStep('idle');
+      if (purchaseStep === 'subscription') {
+        Alert.alert('Subscription Purchase Failed', error);
+      } else {
+        Alert.alert('Card Purchase Failed', error);
+      }
     },
   });
 
+  // Step 1: Purchase subscription
   const handleIAPPurchase = async () => {
-    const sku = getIAPSku();
+    setPurchaseStep('subscription');
     try {
-      const isSubscription = selectedPlan.billingInterval === 'ANNUAL' || selectedPlan.billingInterval === 'MONTHLY';
-      if (isSubscription) {
-        await purchaseSubscription(sku);
-      } else {
-        await purchaseProduct(sku);
-      }
-      // Result handled by onPurchaseComplete callback
+      await purchaseSubscription(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL);
+      // Success handled by onPurchaseComplete callback
     } catch (error: any) {
-      console.error('IAP purchase error:', error);
+      console.error('IAP subscription purchase error:', error);
+      setPurchaseStep('idle');
+    }
+  };
+
+  // Step 2: Purchase cards (called after subscription succeeds)
+  const handleCardsPurchase = async () => {
+    try {
+      await purchaseProduct(getCardSku());
+      // Success handled by onPurchaseComplete callback
+    } catch (error: any) {
+      console.error('IAP cards purchase error:', error);
+      setPurchaseStep('idle');
+      Alert.alert('Card Purchase Failed', 'Your subscription was successful but card purchase failed. Please try again from the Buy Cards screen.');
     }
   };
 
@@ -174,12 +197,13 @@ export default function PaymentScreen() {
     try {
       // Process payment via Authorize.net using the public mobile-charge endpoint
       // This endpoint doesn't require authentication (for signup flow)
+      // Charging for: Cards + Annual Subscription
       const response = await paymentsApi.mobileCharge({
-        amount: totalPrice / 100, // Convert cents to dollars
+        amount: totalPrice / 100, // Convert cents to dollars (cards + subscription + fee)
         cardNumber: cardNumber.replace(/\s/g, ''),
         expirationDate: expiryDate.replace('/', ''), // MMYY format
         cvv,
-        description: `Camp Card Purchase - ${quantity} card${quantity > 1 ? 's' : ''} (${selectedPlan.name})`,
+        description: `Camp Card - ${quantity} card${quantity > 1 ? 's' : ''} + Annual Subscription`,
         customerName: cardholderName.trim(),
         billingZip: zipCode,
       });
@@ -247,20 +271,39 @@ export default function PaymentScreen() {
           {/* Order Summary */}
           <View style={styles.orderSummary}>
             <Text style={styles.sectionTitle}>Order Summary</Text>
+
+            {/* Line 1: Camp Cards */}
             <View style={styles.orderItem}>
               <View style={styles.orderItemLeft}>
-                <Text style={styles.planName}>{selectedPlan.name}</Text>
+                <Text style={styles.planName}>{quantity} Camp Card{quantity > 1 ? 's' : ''}</Text>
                 <Text style={styles.planInterval}>
-                  {quantity} Camp Card{quantity > 1 ? 's' : ''} × {formatPrice(unitPrice)}
+                  {isIOS ? 'One-time purchase' : `${quantity} × ${formatPrice(selectedPlan.priceCents)}`}
                 </Text>
               </View>
               <Text style={styles.planPrice}>
                 {isIOS
-                  ? (getLocalizedPrice(getIAPSku()) || formatPrice(subtotal))
-                  : formatPrice(subtotal)
+                  ? (getLocalizedPrice(getCardSku()) || formatPrice(cardsSubtotal))
+                  : formatPrice(cardsSubtotal)
                 }
               </Text>
             </View>
+
+            {/* Line 2: Annual Subscription */}
+            <View style={[styles.orderItem, { marginTop: 12 }]}>
+              <View style={styles.orderItemLeft}>
+                <Text style={styles.planName}>Annual Subscription</Text>
+                <Text style={styles.planInterval}>
+                  Access to all merchant discounts
+                </Text>
+              </View>
+              <Text style={styles.planPrice}>
+                {isIOS
+                  ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || formatPrice(subscriptionSubtotal))
+                  : formatPrice(subscriptionSubtotal)
+                }
+              </Text>
+            </View>
+
             {!isIOS && (
               <View style={styles.feeRow}>
                 <Text style={styles.feeLabel}>Credit Card Processing Fee (3%)</Text>
@@ -276,12 +319,14 @@ export default function PaymentScreen() {
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total Due Today</Text>
               <Text style={styles.totalAmount}>
-                {isIOS
-                  ? (getLocalizedPrice(getIAPSku()) || formatPrice(subtotal))
-                  : formatPrice(totalPrice)
-                }
+                {formatPrice(isIOS ? combinedSubtotal : totalPrice)}
               </Text>
             </View>
+            {isIOS && (
+              <Text style={styles.iapNote}>
+                You will be prompted twice: once for the subscription and once for the cards.
+              </Text>
+            )}
           </View>
 
           {isIOS ? (
@@ -558,6 +603,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: COLORS.primary,
+  },
+  iapNote: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
+    marginTop: 12,
+    textAlign: 'center',
   },
   paymentForm: {
     backgroundColor: COLORS.surface,

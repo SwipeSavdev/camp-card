@@ -109,11 +109,20 @@ export const IAP_CARD_SKUS = [
 ];
 
 export const IAP_CARD_PRODUCTS = [
-  { productId: IAP_PRODUCTS.CARDS_1, quantity: 1 },
-  { productId: IAP_PRODUCTS.CARDS_3, quantity: 3 },
-  { productId: IAP_PRODUCTS.CARDS_5, quantity: 5 },
-  { productId: IAP_PRODUCTS.CARDS_10, quantity: 10 },
+  { productId: IAP_PRODUCTS.CARDS_1, quantity: 1, priceCents: 1499 },
+  { productId: IAP_PRODUCTS.CARDS_3, quantity: 3, priceCents: 4499 },
+  { productId: IAP_PRODUCTS.CARDS_5, quantity: 5, priceCents: 7499 },
+  { productId: IAP_PRODUCTS.CARDS_10, quantity: 10, priceCents: 14999 },
 ] as const;
+
+// Apple IAP pricing (in cents) - for fallback display when StoreKit unavailable
+export const IAP_PRICES = {
+  SUBSCRIPTION_ANNUAL: 1499, // $14.99/year
+  CARDS_1: 1499,             // $14.99
+  CARDS_3: 4499,             // $44.99
+  CARDS_5: 7499,             // $74.99
+  CARDS_10: 14999,           // $149.99
+} as const;
 
 // Subscription Plans
 export const SUBSCRIPTION_PLANS = {

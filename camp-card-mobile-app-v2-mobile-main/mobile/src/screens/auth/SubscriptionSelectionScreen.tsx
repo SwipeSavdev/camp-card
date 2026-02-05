@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
-import { COLORS, IAP_PRODUCTS } from '../../config/constants';
+import { COLORS, IAP_PRODUCTS, IAP_PRICES } from '../../config/constants';
 import { useIAP } from '../../hooks/useIAP';
 
 type SubscriptionSelectionRouteProp = RouteProp<{
@@ -130,7 +130,7 @@ export default function SubscriptionSelectionScreen() {
           </View>
           <Text style={styles.planPrice}>
             {isIOS
-              ? `${getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || formatPrice(plan.priceCents, plan.billingInterval)}`
+              ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || '$' + (IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2) + '/year')
               : formatPrice(plan.priceCents, plan.billingInterval)
             }
           </Text>
@@ -151,12 +151,7 @@ export default function SubscriptionSelectionScreen() {
           </View>
         )}
 
-        {plan.trialDays > 0 && (
-          <View style={styles.trialBadge}>
-            <Ionicons name="gift-outline" size={14} color="#FF9800" />
-            <Text style={styles.trialText}>{plan.trialDays}-day free trial</Text>
-          </View>
-        )}
+{/* Trial badge removed - no trial offered */}
       </TouchableOpacity>
     );
   };
