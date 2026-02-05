@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, IAP_CARD_PRODUCTS, IAP_PRICES, IAP_PRODUCTS } from '../../config/constants';
+import { COLORS, IAP_CARD_PRODUCTS } from '../../config/constants';
 import { useIAP } from '../../hooks/useIAP';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
@@ -221,7 +221,7 @@ export default function QuantitySelectionScreen() {
       <View style={styles.bottomSection}>
         {/* Order Summary */}
         <View style={styles.orderSummary}>
-          {/* Cards Line Item */}
+          {/* Cards Line Item - subscription is included in first card */}
           <View style={styles.orderRow}>
             <Text style={styles.orderLabel}>
               {quantity} Camp Card{quantity > 1 ? 's' : ''}
@@ -235,20 +235,14 @@ export default function QuantitySelectionScreen() {
               }
             </Text>
           </View>
-          {/* Subscription Line Item */}
-          <View style={styles.orderRow}>
-            <Text style={styles.orderLabel}>Annual Subscription</Text>
-            <Text style={styles.orderValue}>
-              {isIOS
-                ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || formatPrice(IAP_PRICES.SUBSCRIPTION_ANNUAL))
-                : formatPrice(selectedPlan.priceCents)
-              }
-            </Text>
-          </View>
+          {/* Note about subscription included */}
+          <Text style={styles.subscriptionIncludedNote}>
+            Annual subscription included with first card
+          </Text>
           {!isIOS && (
             <View style={styles.orderRow}>
               <Text style={styles.feeLabel}>Processing Fee (3%)</Text>
-              <Text style={styles.feeValue}>{formatPrice(processingFee + Math.round(selectedPlan.priceCents * 0.03))}</Text>
+              <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
             </View>
           )}
           <View style={styles.divider} />
@@ -256,10 +250,8 @@ export default function QuantitySelectionScreen() {
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>
               {isIOS
-                ? formatPrice(
-                    (IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499) + IAP_PRICES.SUBSCRIPTION_ANNUAL
-                  )
-                : formatPrice(totalPrice + selectedPlan.priceCents + Math.round(selectedPlan.priceCents * 0.03))
+                ? formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499)
+                : formatPrice(totalPrice)
               }
             </Text>
           </View>
@@ -486,6 +478,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.text,
     fontWeight: '500',
+  },
+  subscriptionIncludedNote: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
+    marginTop: 4,
+    marginBottom: 8,
   },
   divider: {
     height: 1,
