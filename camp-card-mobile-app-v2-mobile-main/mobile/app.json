@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "63",
+      "buildNumber": "64",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -51,7 +51,7 @@
     },
     "android": {
       "package": "org.bsa.campcard",
-      "versionCode": 58,
+      "versionCode": 59,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
@@ -134,7 +134,7 @@
         }
       ]
     ],
-    "runtimeVersion": "1.0.30-63",
+    "runtimeVersion": "1.0.30-64",
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"
