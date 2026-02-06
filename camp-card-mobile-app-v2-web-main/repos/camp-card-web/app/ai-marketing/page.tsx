@@ -410,9 +410,9 @@ export default function AIMarketingPage() {
     const totalConverted = campaigns.reduce((sum, c) => sum + c.converted, 0);
     const campaignsWithSent = campaigns.filter((c) => c.sent > 0);
     const avgOpenRate = campaignsWithSent.length > 0
-      ? (totalOpened / totalSent * 100) : 0;
+      ? ((totalOpened / totalSent) * 100) : 0;
     const avgConversionRate = campaignsWithSent.length > 0
-      ? (totalConverted / totalSent * 100) : 0;
+      ? ((totalConverted / totalSent) * 100) : 0;
 
     // Parse ROI values
     const roiValues = campaigns
@@ -465,7 +465,7 @@ export default function AIMarketingPage() {
       sent: d.sent,
       opened: d.opened,
       converted: d.converted,
-      rate: d.sent > 0 ? parseFloat((d.converted / d.sent * 100).toFixed(1)) : 0,
+      rate: d.sent > 0 ? parseFloat(((d.converted / d.sent) * 100).toFixed(1)) : 0,
     }));
 
     // Segment performance from campaigns

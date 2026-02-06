@@ -40,6 +40,8 @@ export default function BuyMoreCardsScreen() {
 
   // Apple IAP hook (only active on iOS)
   const {
+    products: iapProducts,
+    loading: iapLoading,
     purchasing: iapPurchasing,
     purchaseProduct,
     getProductForQuantity,
@@ -59,6 +61,10 @@ export default function BuyMoreCardsScreen() {
     },
   });
 
+  // Check if the selected quantity product is available
+  const selectedProduct = getProductForQuantity(quantity);
+  const iapProductAvailable = !!selectedProduct;
+
   const subtotal = quantity * CARD_PRICE_CENTS;
   const processingFee = isIOS ? 0 : Math.round(subtotal * (PROCESSING_FEE_PERCENT / 100));
   const totalPrice = subtotal + processingFee;
@@ -73,16 +79,36 @@ export default function BuyMoreCardsScreen() {
   const handlePurchasePress = async () => {
     if (isIOS) {
       // iOS: Use Apple In-App Purchase
-      const product = getProductForQuantity(quantity);
-      if (!product) {
-        Alert.alert('Error', 'This card quantity is not available for purchase.');
+      if (iapLoading) {
+        Alert.alert('Please Wait', 'Loading payment options. Please try again in a moment.');
         return;
       }
+
+      if (!iapProductAvailable || !selectedProduct) {
+        Alert.alert(
+          'Product Unavailable',
+          'This card package is not available for purchase. Please ensure you are using a Sandbox tester account.',
+          [
+            { text: 'OK' },
+            {
+              text: 'View Details',
+              onPress: () => {
+                console.log('[IAP] Available products:', iapProducts.map(p => p.id));
+                Alert.alert('Debug Info', `Available products: ${iapProducts.length}\n\n${iapProducts.map(p => p.id).join('\n') || 'None loaded'}`);
+              },
+            },
+          ]
+        );
+        return;
+      }
+
       try {
-        await purchaseProduct(product.id);
+        await purchaseProduct(selectedProduct.id);
         // Result handled by onPurchaseComplete callback in useIAP
       } catch (error: any) {
         console.error('IAP card purchase error:', error);
+        const message = error?.message || 'Unable to process purchase. Please try again.';
+        Alert.alert('Purchase Error', message);
       }
       return;
     }
@@ -325,18 +351,24 @@ In-app price: $14.99/card. Buy from a Scout for only $10/card and support their 
       {/* Purchase Button */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.purchaseButton, (loading || iapPurchasing) && styles.purchaseButtonDisabled]}
+          style={[
+            styles.purchaseButton,
+            (loading || iapPurchasing || (isIOS && iapLoading)) && styles.purchaseButtonDisabled,
+            isIOS && !iapLoading && !iapProductAvailable && styles.purchaseButtonWarning,
+          ]}
           onPress={handlePurchasePress}
-          disabled={loading || iapPurchasing}
+          disabled={loading || iapPurchasing || (isIOS && iapLoading)}
         >
-          {loading || iapPurchasing ? (
+          {loading || iapPurchasing || (isIOS && iapLoading) ? (
             <ActivityIndicator size="small" color={COLORS.surface} />
           ) : (
             <>
               <Ionicons name={isIOS ? 'logo-apple' : 'card'} size={24} color={COLORS.surface} />
               <Text style={styles.purchaseButtonText}>
                 {isIOS
-                  ? `Purchase ${quantity} Card${quantity !== 1 ? 's' : ''}`
+                  ? (iapProductAvailable
+                      ? `Purchase ${quantity} Card${quantity !== 1 ? 's' : ''}`
+                      : 'Product Unavailable')
                   : `Purchase ${quantity} Card${quantity !== 1 ? 's' : ''} - ${formatPrice(totalPrice)}`
                 }
               </Text>
@@ -609,6 +641,9 @@ const styles = StyleSheet.create({
   },
   purchaseButtonDisabled: {
     opacity: 0.6,
+  },
+  purchaseButtonWarning: {
+    backgroundColor: '#FF9800',
   },
   purchaseButtonText: {
     color: COLORS.surface,

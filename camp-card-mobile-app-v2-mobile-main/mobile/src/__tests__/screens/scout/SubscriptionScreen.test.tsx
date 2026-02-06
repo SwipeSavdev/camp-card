@@ -91,7 +91,7 @@ const mockSubscriptionPlans = {
       priceCents: 500,
       currency: 'USD',
       billingInterval: 'MONTHLY',
-      trialDays: 7,
+      trialDays: 0, // No trial period offered
       features: ['Access to all local offers'],
     },
   ],

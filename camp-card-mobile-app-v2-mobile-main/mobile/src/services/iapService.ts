@@ -33,12 +33,20 @@ class IAPService {
   private onExpoPurchaseError: ((error: ExpoPurchaseError) => void) | null = null;
 
   async init(): Promise<boolean> {
-    if (Platform.OS !== 'ios') return false;
-    if (this.connected) return true;
+    if (Platform.OS !== 'ios') {
+      console.log('[IAP] Skipping init - not iOS');
+      return false;
+    }
+    if (this.connected) {
+      console.log('[IAP] Already connected');
+      return true;
+    }
 
     try {
+      console.log('[IAP] Initializing StoreKit connection...');
       const result = await initConnection();
       this.connected = !!result;
+      console.log('[IAP] Connection result:', result, 'Connected:', this.connected);
       return this.connected;
     } catch (error) {
       console.error('[IAP] Failed to initialize connection:', error);
@@ -81,9 +89,19 @@ class IAPService {
   }
 
   async fetchProducts(): Promise<Product[]> {
-    if (!this.connected) await this.init();
+    if (!this.connected) {
+      console.log('[IAP] Not connected, initializing...');
+      const initResult = await this.init();
+      console.log('[IAP] Init result for fetchProducts:', initResult);
+    }
     try {
-      const products = await expoFetchProducts({ skus: IAP_CARD_SKUS, type: 'in-app' });
+      console.log('[IAP] Fetching products with SKUs:', IAP_CARD_SKUS);
+      // Note: expo-iap uses 'inapp' (not 'in-app') for consumables
+      const products = await expoFetchProducts({ skus: IAP_CARD_SKUS, type: 'inapp' });
+      console.log('[IAP] Fetched products:', products?.length || 0, products?.map(p => p.id));
+      if (!products || products.length === 0) {
+        console.warn('[IAP] No products returned. Ensure products are configured in App Store Connect and you are using a Sandbox tester account.');
+      }
       return (products || []) as Product[];
     } catch (error) {
       console.error('[IAP] Failed to fetch products:', error);
@@ -92,9 +110,17 @@ class IAPService {
   }
 
   async fetchSubscriptions(): Promise<ProductSubscription[]> {
-    if (!this.connected) await this.init();
+    if (!this.connected) {
+      console.log('[IAP] Not connected, initializing...');
+      await this.init();
+    }
     try {
+      console.log('[IAP] Fetching subscriptions with SKUs:', IAP_SUBSCRIPTION_SKUS);
       const subs = await expoFetchProducts({ skus: IAP_SUBSCRIPTION_SKUS, type: 'subs' });
+      console.log('[IAP] Fetched subscriptions:', subs?.length || 0, subs?.map(s => s.id));
+      if (!subs || subs.length === 0) {
+        console.warn('[IAP] No subscriptions returned. Ensure subscriptions are configured in App Store Connect.');
+      }
       return (subs || []) as ProductSubscription[];
     } catch (error) {
       console.error('[IAP] Failed to fetch subscriptions:', error);
@@ -116,7 +142,7 @@ class IAPService {
     try {
       await expoRequestPurchase({
         request: { apple: { sku } },
-        type: 'in-app',
+        type: 'inapp',
       });
     } catch (error) {
       console.error('[IAP] Purchase request failed:', error);

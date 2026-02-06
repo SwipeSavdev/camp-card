@@ -57,6 +57,8 @@ export default function PaymentScreen() {
 
   // Apple IAP hook (only active on iOS)
   const {
+    products: iapProducts,
+    loading: iapLoading,
     purchasing: iapPurchasing,
     purchaseProduct,
     getLocalizedPrice,
@@ -77,13 +79,43 @@ export default function PaymentScreen() {
     },
   });
 
+  // Check if the required IAP product is available
+  const iapProductAvailable = iapProducts.some(p => p.id === getCardSku());
+
   // Purchase cards (subscription is included in price)
   const handleIAPPurchase = async () => {
+    // Check if IAP products are loaded
+    if (iapLoading) {
+      Alert.alert('Please Wait', 'Loading payment options. Please try again in a moment.');
+      return;
+    }
+
+    if (!iapProductAvailable) {
+      Alert.alert(
+        'Product Unavailable',
+        'This product is not available for purchase at this time. Please ensure you are using a Sandbox tester account and the products are configured in App Store Connect.',
+        [
+          { text: 'OK' },
+          {
+            text: 'View Details',
+            onPress: () => {
+              console.log('[IAP] Available products:', iapProducts.map(p => p.id));
+              console.log('[IAP] Requested SKU:', getCardSku());
+              Alert.alert('Debug Info', `Requested: ${getCardSku()}\nAvailable: ${iapProducts.length} products\n\n${iapProducts.map(p => p.id).join('\n') || 'None loaded'}`);
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     try {
       await purchaseProduct(getCardSku());
       // Success handled by onPurchaseComplete callback
     } catch (error: any) {
       console.error('IAP purchase error:', error);
+      const message = error?.message || 'Unable to process purchase. Please try again.';
+      Alert.alert('Purchase Error', message);
     }
   };
 
@@ -405,17 +437,23 @@ export default function PaymentScreen() {
         {/* Pay Button */}
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={[styles.payButton, (processing || iapPurchasing) && styles.payButtonDisabled]}
+            style={[
+              styles.payButton,
+              (processing || iapPurchasing || (isIOS && iapLoading)) && styles.payButtonDisabled,
+              isIOS && !iapLoading && !iapProductAvailable && styles.payButtonWarning,
+            ]}
             onPress={isIOS ? handleIAPPurchase : handlePayment}
-            disabled={processing || iapPurchasing}
+            disabled={processing || iapPurchasing || (isIOS && iapLoading)}
           >
-            {processing || iapPurchasing ? (
+            {processing || iapPurchasing || (isIOS && iapLoading) ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
                 <Ionicons name={isIOS ? 'logo-apple' : 'lock-closed'} size={20} color="#fff" />
                 <Text style={styles.payButtonText}>
-                  {isIOS ? 'Purchase with Apple' : `Pay ${formatPrice(totalPrice)}`}
+                  {isIOS
+                    ? (iapProductAvailable ? 'Purchase with Apple' : 'Product Unavailable')
+                    : `Pay ${formatPrice(totalPrice)}`}
                 </Text>
               </>
             )}
@@ -637,6 +675,9 @@ const styles = StyleSheet.create({
   },
   payButtonDisabled: {
     opacity: 0.6,
+  },
+  payButtonWarning: {
+    backgroundColor: '#FF9800',
   },
   payButtonText: {
     color: '#fff',

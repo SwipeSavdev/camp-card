@@ -1,0 +1,31 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "info": {
+      "en-US": {
+        "title": "Camp Card",
+        "subtitle": "Scout Fundraising Discounts",
+        "privacyPolicyUrl": "https://www.campcardapp.org/privacy",
+        "description": "Camp Card brings the beloved BSA Camp Card fundraising program into the digital age. Support your local Scout troop while enjoying exclusive discounts at participating merchants in your community.\n\nHOW IT WORKS\n\n1. Purchase a Camp Card subscription to support a Scout\n2. Browse exclusive offers from local merchants\n3. Show your digital card or QR code to redeem discounts\n4. Track your savings and see the impact you're making\n\nSUPPORT SCOUTS, SAVE MONEY\n\nEvery Camp Card purchase directly supports Scout fundraising. When you buy through a Scout's referral link, a portion goes directly to their troop, funding camping trips, merit badge programs, and community service projects.\n\nKEY FEATURES\n\n• Digital Discount Card - Access your Camp Card anytime on your phone\n• Exclusive Merchant Offers - Save at restaurants, retail stores, services, and more\n• Easy QR Code Redemption - Simply show your code to redeem offers\n• Scout Attribution - See which Scout you're supporting with each purchase\n• Gift Cards to Friends & Family - Share the savings and spread the support\n• Track Your Savings - See how much you've saved throughout the year\n• Find Nearby Merchants - Discover participating businesses in your area\n\nMULTIPLE CARDS, MORE IMPACT\n\nPurchase 1 to 10 Camp Cards at once. Keep one for yourself and gift the rest to friends and family. Each card supports Scouting and provides a full year of savings.\n\nFOR SCOUTS & TROOP LEADERS\n\nScouts can share their unique referral link or QR code. When someone purchases a Camp Card through their link, the Scout and their troop receive credit for the fundraising.\n\nTroop Leaders can track their troop's fundraising progress, manage Scout rosters, and monitor overall campaign performance.\n\nABOUT CAMP CARD\n\nThe Camp Card program has been a cornerstone of Scout fundraising for decades. Now, with the Camp Card app, the tradition continues in a modern, convenient digital format.\n\nPRIVACY & SECURITY\n\n• Secure payments processed through Apple In-App Purchase\n• Your personal information is protected\n• COPPA compliant for users under 13\n\nDownload Camp Card today and start saving while supporting the next generation of Scout leaders!",
+        "keywords": ["scout", "fundraising", "discount", "BSA", "coupons", "local deals", "charity", "camping", "troop", "savings"],
+        "marketingUrl": "https://www.campcardapp.org",
+        "promoText": "Support local Scouts while saving money! Get exclusive discounts at participating merchants. Every purchase helps fund Scouting adventures.",
+        "supportUrl": "https://www.campcardapp.org/support",
+        "releaseNotes": "Welcome to Camp Card!\n\n• Digital discount cards supporting Scout fundraising\n• Browse and redeem exclusive merchant offers\n• Track your savings and impact\n• Gift cards to friends and family\n• Scout referral tracking and attribution"
+      }
+    },
+    "categories": ["SHOPPING", "LIFESTYLE"],
+    "copyright": "2026 Swipe Savvy, LLC",
+    "version": "1.0.30",
+    "review": {
+      "firstName": "App",
+      "lastName": "Review",
+      "email": "support@campcardapp.org",
+      "phone": "+1 800 555 0199",
+      "demoUsername": "test@campcard.org",
+      "demoPassword": "Password123",
+      "demoRequired": true,
+      "notes": "Camp Card is a digital discount card app supporting Boy Scouts of America fundraising.\n\nTEST ACCOUNT:\nEmail: test@campcard.org\nPassword: Password123\n\nIN-APP PURCHASE TESTING:\nPlease use a Sandbox tester account to test In-App Purchases.\n\nLOCATION USAGE:\nLocation is used to show nearby participating merchants."
+    }
+  }
+}

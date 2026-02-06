@@ -97,3 +97,4 @@ logs/
 # Expo
 .expo/
 google-play-service-account.json
+credentials.json

@@ -1,0 +1,26 @@
+# Fastlane Snapshot Configuration for Camp Card
+
+# Device types for App Store screenshots
+devices([
+  "iPhone 16 Pro Max",
+  "iPhone 15 Plus",
+  "iPhone 8 Plus",
+  "iPad Pro (12.9-inch) (6th generation)"
+])
+
+# Languages
+languages([
+  "en-US"
+])
+
+# Output directory
+output_directory("./fastlane/screenshots")
+
+# Clear previous screenshots
+clear_previous_screenshots(true)
+
+# Scheme (update if needed)
+scheme("CampCard")
+
+# Screenshots to capture
+# Note: This requires UI tests with snapshot() calls

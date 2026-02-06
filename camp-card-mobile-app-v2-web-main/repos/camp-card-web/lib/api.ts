@@ -1190,8 +1190,7 @@ export const api = {
   },
 
   // ============ NOTIFICATIONS ============
-  getNotifications: async (page = 0, size = 50, session?: Session | null) =>
-    apiCall<{
+  getNotifications: async (page = 0, size = 50, session?: Session | null) => apiCall<{
       content: Array<{
         id: number;
         title: string;
@@ -1207,19 +1206,15 @@ export const api = {
       number: number;
     }>(`/notifications/me?page=${page}&size=${size}`, {}, session),
 
-  getUnreadNotificationCount: async (session?: Session | null) =>
-    apiCall<number>('/notifications/me/unread-count', {}, session),
+  getUnreadNotificationCount: async (session?: Session | null) => apiCall<number>('/notifications/me/unread-count', {}, session),
 
-  markNotificationAsRead: async (id: number, session?: Session | null) =>
-    apiCall<void>(`/notifications/${id}/read`, { method: 'PUT' }, session),
+  markNotificationAsRead: async (id: number, session?: Session | null) => apiCall<void>(`/notifications/${id}/read`, { method: 'PUT' }, session),
 
-  markAllNotificationsAsRead: async (session?: Session | null) =>
-    apiCall<void>('/notifications/mark-all-read', { method: 'PUT' }, session),
+  markAllNotificationsAsRead: async (session?: Session | null) => apiCall<void>('/notifications/mark-all-read', { method: 'PUT' }, session),
 
   // ============ MOBILE MODULE CONFIG ============
 
-  getMobileModules: async (session?: Session | null) =>
-    apiCall<Array<{
+  getMobileModules: async (session?: Session | null) => apiCall<Array<{
       id: number;
       moduleId: string;
       name: string;
@@ -1230,8 +1225,7 @@ export const api = {
       updatedAt: string;
     }>>('/config/modules', {}, session),
 
-  toggleMobileModule: async (moduleId: string, enabled: boolean, session?: Session | null) =>
-    apiCall<{
+  toggleMobileModule: async (moduleId: string, enabled: boolean, session?: Session | null) => apiCall<{
       id: number;
       moduleId: string;
       name: string;
@@ -1245,8 +1239,7 @@ export const api = {
       body: JSON.stringify({ enabled }),
     }, session),
 
-  bulkToggleMobileModules: async (modules: Record<string, boolean>, session?: Session | null) =>
-    apiCall<Array<{
+  bulkToggleMobileModules: async (modules: Record<string, boolean>, session?: Session | null) => apiCall<Array<{
       id: number;
       moduleId: string;
       name: string;
@@ -1260,8 +1253,7 @@ export const api = {
       body: JSON.stringify({ modules }),
     }, session),
 
-  resetMobileModules: async (session?: Session | null) =>
-    apiCall<Array<{
+  resetMobileModules: async (session?: Session | null) => apiCall<Array<{
       id: number;
       moduleId: string;
       name: string;

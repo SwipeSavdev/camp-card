@@ -105,7 +105,7 @@ function SubscriptionRenewContent() {
           ? new Date(result.currentPeriodEnd).toLocaleDateString()
           : subscriptionDetails?.nextExpiry || 'N/A';
 
-        setSubscriptionDetails((prev) => prev ? { ...prev, nextExpiry: newEnd, status: result.status || 'ACTIVE' } : prev);
+        setSubscriptionDetails((prev) => (prev ? { ...prev, nextExpiry: newEnd, status: result.status || 'ACTIVE' } : prev));
         setRenewStatus('success');
       } else {
         setRenewStatus('error');

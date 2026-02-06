@@ -172,7 +172,8 @@ export default function PrivacyPolicyPage() {
       </section>
 
       {/* 3. Children's Privacy (COPPA) */}
-      <section id="coppa" style={{
+      <section
+id="coppa" style={{
         marginBottom: '40px',
         backgroundColor: '#fef9e7',
         border: '2px solid #f59e0b',
@@ -290,7 +291,8 @@ export default function PrivacyPolicyPage() {
       </section>
 
       {/* 5. Scout Data Usage Limitation */}
-      <section id="scout-data-limitation" style={{
+      <section
+id="scout-data-limitation" style={{
         marginBottom: '40px',
         backgroundColor: '#eff6ff',
         border: '2px solid #3b82f6',
