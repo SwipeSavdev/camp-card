@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camp Card iOS - App Store Testing Checklist</title>
+    <style>
+        :root {
+            --primary: #003F87;
+            --primary-light: #1565C0;
+            --accent: #CE1126;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --error: #F44336;
+            --background: #F5F7FA;
+            --surface: #FFFFFF;
+            --text: #1A1A1A;
+            --text-secondary: #666666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header .version {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .section h2 {
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h3 {
+            color: var(--text);
+            font-size: 1.1rem;
+            margin: 20px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section h2 .icon {
+            font-size: 1.5rem;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist li {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: var(--background);
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checklist li:hover {
+            background: #E3F2FD;
+        }
+
+        .checklist li.checked {
+            background: #E8F5E9;
+        }
+
+        .checklist li.checked .checkbox {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .checklist li.checked .checkbox::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2px solid #CCC;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .item-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .product-table th,
+        .product-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #EEE;
+        }
+
+        .product-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .product-table tr:hover {
+            background: #F5F5F5;
+        }
+
+        .product-table code {
+            background: #F5F5F5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-consumable {
+            background: #E3F2FD;
+            color: var(--primary);
+        }
+
+        .badge-pending {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .badge-ready {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .badge-required {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .info-box {
+            background: #E3F2FD;
+            border-left: 4px solid var(--primary);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box.warning {
+            background: #FFF3E0;
+            border-color: var(--warning);
+        }
+
+        .info-box.success {
+            background: #E8F5E9;
+            border-color: var(--success);
+        }
+
+        .info-box.error {
+            background: #FFEBEE;
+            border-color: var(--error);
+        }
+
+        .info-box h4 {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-box li {
+            margin-bottom: 6px;
+        }
+
+        .progress-bar {
+            background: #E0E0E0;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, #81C784 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .step-number {
+            background: var(--primary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .code-block {
+            background: #1E1E1E;
+            color: #D4D4D4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .code-block .comment {
+            color: #6A9955;
+        }
+
+        .code-block .string {
+            color: #CE9178;
+        }
+
+        .code-block .keyword {
+            color: #569CD6;
+        }
+
+        .requirements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .requirement-card {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .requirement-card h4 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .requirement-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .test-scenario {
+            background: #FAFAFA;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .test-scenario h4 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-scenario .expected {
+            background: #E8F5E9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .test-scenario .expected strong {
+            color: var(--success);
+        }
+
+        .toc {
+            background: var(--background);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .toc h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .toc ul {
+            list-style: none;
+            columns: 2;
+        }
+
+        .toc li {
+            margin-bottom: 8px;
+        }
+
+        .toc a {
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .toc a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        @media print {
+            .header {
+                background: var(--primary) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .section {
+                break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .toc ul {
+                columns: 1;
+            }
+            .requirements-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏕️ Camp Card iOS</h1>
+        <div class="subtitle">In-App Purchase Testing & App Store Submission Guide</div>
+        <div class="version">Version 1.0.30 (Build 62)</div>
+    </div>
+
+    <div class="container">
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h3>📑 Table of Contents</h3>
+            <ul>
+                <li><a href="#progress">Testing Progress</a></li>
+                <li><a href="#requirements">IAP Requirements</a></li>
+                <li><a href="#products">IAP Products</a></li>
+                <li><a href="#sandbox-setup">Sandbox Account Setup</a></li>
+                <li><a href="#device-setup">Device Configuration</a></li>
+                <li><a href="#purchase-flow">Purchase Flow Testing</a></li>
+                <li><a href="#product-tests">Individual Product Tests</a></li>
+                <li><a href="#error-handling">Error Handling</a></li>
+                <li><a href="#edge-cases">Edge Cases</a></li>
+                <li><a href="#receipt-validation">Receipt Validation</a></li>
+                <li><a href="#review-guidelines">Apple Review Guidelines</a></li>
+                <li><a href="#submission">App Store Submission</a></li>
+            </ul>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="section" id="progress">
+            <h2><span class="icon">📊</span> Testing Progress</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0 of 45 tests completed</div>
+            <button onclick="resetProgress()" style="margin-top: 15px; padding: 8px 16px; background: #F5F5F5; border: 1px solid #DDD; border-radius: 4px; cursor: pointer;">Reset Progress</button>
+        </div>
+
+        <!-- IAP Requirements -->
+        <div class="section" id="requirements">
+            <h2><span class="icon">📋</span> IAP Testing Requirements</h2>
+
+            <div class="info-box error">
+                <h4>🚨 Critical Requirements</h4>
+                <p>All items below MUST be completed before submitting for App Review:</p>
+            </div>
+
+            <div class="requirements-grid">
+                <div class="requirement-card">
+                    <h4>✅ Paid Applications Agreement</h4>
+                    <p>Must be signed in App Store Connect → Agreements, Tax, and Banking</p>
+                </div>
+                <div class="requirement-card">
+                    <h4>✅ Banking Information</h4>
+                    <p>Bank account configured for receiving IAP revenue</p>
+                </div>
+                <div class="requirement-card">
+                    <h4>✅ Tax Forms</h4>
+                    <p>W-9 or appropriate tax documentation submitted</p>
+                </div>
+                <div class="requirement-card">
+                    <h4>✅ IAP Products Created</h4>
+                    <p>All 4 consumable products configured with pricing</p>
+                </div>
+                <div class="requirement-card">
+                    <h4>✅ Review Screenshots</h4>
+                    <p>640×920 screenshots for each IAP product</p>
+                </div>
+                <div class="requirement-card">
+                    <h4>✅ Sandbox Tester Account</h4>
+                    <p>At least one sandbox tester created for testing</p>
+                </div>
+            </div>
+
+            <ul class="checklist" id="requirementsChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Paid Applications Agreement signed</div>
+                        <div class="item-desc">App Store Connect → Agreements, Tax, and Banking → Paid Apps</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Banking information configured</div>
+                        <div class="item-desc">Valid bank account added for IAP revenue deposits</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Tax forms submitted and approved</div>
+                        <div class="item-desc">W-9 (US) or W-8BEN (international) completed</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">All IAP products status "Ready to Submit"</div>
+                        <div class="item-desc">Each product shows green status in App Store Connect</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- IAP Products -->
+        <div class="section" id="products">
+            <h2><span class="icon">💳</span> In-App Purchase Products</h2>
+            <p style="margin-bottom: 15px; color: var(--text-secondary);">Camp Card uses <strong>Consumable</strong> IAP products. Each purchase grants the user Camp Cards that can be used once.</p>
+
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th>Product ID</th>
+                        <th>Display Name</th>
+                        <th>Price (USD)</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>org.bsa.campcard.cards.1</code></td>
+                        <td>1 Camp Card</td>
+                        <td>$14.99</td>
+                        <td><span class="badge badge-consumable">Consumable</span></td>
+                        <td><span class="badge badge-ready">Ready</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>org.bsa.campcard.cards.3</code></td>
+                        <td>3 Camp Cards</td>
+                        <td>$44.99</td>
+                        <td><span class="badge badge-consumable">Consumable</span></td>
+                        <td><span class="badge badge-ready">Ready</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>org.bsa.campcard.cards.5</code></td>
+                        <td>5 Camp Cards</td>
+                        <td>$74.99</td>
+                        <td><span class="badge badge-consumable">Consumable</span></td>
+                        <td><span class="badge badge-ready">Ready</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>org.bsa.campcard.cards.10</code></td>
+                        <td>10 Camp Cards</td>
+                        <td>$149.99</td>
+                        <td><span class="badge badge-consumable">Consumable</span></td>
+                        <td><span class="badge badge-ready">Ready</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <h4>💡 Pricing Note</h4>
+                <p>The <strong>annual subscription is bundled</strong> into the first card purchase. Users pay one price ($14.99 for 1 card) which includes both the card and subscription access.</p>
+            </div>
+        </div>
+
+        <!-- Sandbox Account Setup -->
+        <div class="section" id="sandbox-setup">
+            <h2><span class="icon">🧪</span> Sandbox Account Setup</h2>
+
+            <div class="info-box warning">
+                <h4>⚠️ Important</h4>
+                <p>Sandbox accounts are <strong>separate from real Apple IDs</strong>. Never use a real Apple ID for sandbox testing. Sandbox purchases are free and don't charge real money.</p>
+            </div>
+
+            <h3>📝 Create Sandbox Tester Account</h3>
+            <ul class="checklist" id="sandboxSetupChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">1</div>
+                    <div class="item-content">
+                        <div class="item-title">Open App Store Connect</div>
+                        <div class="item-desc">Go to <a href="https://appstoreconnect.apple.com" target="_blank">appstoreconnect.apple.com</a></div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">2</div>
+                    <div class="item-content">
+                        <div class="item-title">Navigate to Users and Access</div>
+                        <div class="item-desc">Click "Users and Access" in the left sidebar</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">3</div>
+                    <div class="item-content">
+                        <div class="item-title">Select Sandbox Testers tab</div>
+                        <div class="item-desc">Click "Sandbox" tab at the top, then "Testers"</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">4</div>
+                    <div class="item-content">
+                        <div class="item-title">Create new sandbox tester</div>
+                        <div class="item-desc">Click "+" button. Use a fake email (e.g., sandboxtest@campcard.test). This email doesn't need to exist.</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">5</div>
+                    <div class="item-content">
+                        <div class="item-title">Set password and details</div>
+                        <div class="item-desc">Create a password you'll remember. Set country to United States for USD pricing.</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">6</div>
+                    <div class="item-content">
+                        <div class="item-title">Record sandbox credentials</div>
+                        <div class="item-desc">Save the email and password securely for testing</div>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="code-block">
+                <span class="comment">// Example Sandbox Tester Credentials (create your own)</span><br>
+                <span class="keyword">Email:</span> <span class="string">sandbox.tester@campcard.test</span><br>
+                <span class="keyword">Password:</span> <span class="string">[Your chosen password]</span><br>
+                <span class="keyword">Country:</span> <span class="string">United States</span>
+            </div>
+        </div>
+
+        <!-- Device Configuration -->
+        <div class="section" id="device-setup">
+            <h2><span class="icon">📱</span> Device Configuration for Testing</h2>
+
+            <h3>🔧 Prepare Test Device</h3>
+            <ul class="checklist" id="deviceSetupChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">1</div>
+                    <div class="item-content">
+                        <div class="item-title">Sign out of App Store (NOT iCloud)</div>
+                        <div class="item-desc">Settings → App Store → Tap Apple ID → Sign Out. Keep iCloud signed in for TestFlight.</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">2</div>
+                    <div class="item-content">
+                        <div class="item-title">Enable Sandbox Account on device</div>
+                        <div class="item-desc">Settings → App Store → Sandbox Account → Sign in with sandbox credentials</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">3</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify sandbox mode active</div>
+                        <div class="item-desc">Settings → App Store should show "[SANDBOX]" next to account</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">4</div>
+                    <div class="item-content">
+                        <div class="item-title">Install TestFlight build</div>
+                        <div class="item-desc">Open TestFlight → Camp Card → Install Build 62</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">5</div>
+                    <div class="item-content">
+                        <div class="item-title">Clear any previous app data</div>
+                        <div class="item-desc">Delete and reinstall Camp Card app if previously installed</div>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="info-box">
+                <h4>💡 iOS 14+ Sandbox Tip</h4>
+                <p>On iOS 14+, you can manage sandbox accounts directly in Settings → App Store → Sandbox Account. This makes it easier to switch between sandbox testers.</p>
+            </div>
+        </div>
+
+        <!-- Purchase Flow Testing -->
+        <div class="section" id="purchase-flow">
+            <h2><span class="icon">🛒</span> Purchase Flow Testing</h2>
+
+            <h3>📲 Complete Purchase Flow</h3>
+            <ul class="checklist" id="purchaseFlowChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">1</div>
+                    <div class="item-content">
+                        <div class="item-title">Launch Camp Card app</div>
+                        <div class="item-desc">Open the TestFlight build of Camp Card</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">2</div>
+                    <div class="item-content">
+                        <div class="item-title">Tap "Get Started"</div>
+                        <div class="item-desc">Should navigate to subscription selection screen</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">3</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify plan displays correctly</div>
+                        <div class="item-desc">"Camp Card - Direct" shows $14.99/year with features listed</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">4</div>
+                    <div class="item-content">
+                        <div class="item-title">Tap "Continue to Payment"</div>
+                        <div class="item-desc">Navigate to "How Many Cards?" quantity selection</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">5</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify quantity options</div>
+                        <div class="item-desc">4 buttons: 1 Card ($14.99), 3 Cards ($44.99), 5 Cards ($74.99), 10 Cards ($149.99)</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">6</div>
+                    <div class="item-content">
+                        <div class="item-title">Select "1 Card" package</div>
+                        <div class="item-desc">Button highlights, total shows $14.99</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">7</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify "Annual subscription included" text</div>
+                        <div class="item-desc">Note should appear below the price</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">8</div>
+                    <div class="item-content">
+                        <div class="item-title">Tap "Continue to Payment"</div>
+                        <div class="item-desc">Navigate to Payment screen</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">9</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify iOS IAP UI appears</div>
+                        <div class="item-desc">No credit card form shown. "Purchase with Apple" button and Apple logo visible</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">10</div>
+                    <div class="item-content">
+                        <div class="item-title">Tap "Purchase with Apple"</div>
+                        <div class="item-desc">Apple's payment sheet slides up from bottom</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">11</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify payment sheet details</div>
+                        <div class="item-desc">Shows "1 Camp Card", $14.99, and "[Environment: Sandbox]"</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">12</div>
+                    <div class="item-content">
+                        <div class="item-title">Authenticate purchase</div>
+                        <div class="item-desc">Use Face ID, Touch ID, or enter sandbox password</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">13</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify purchase confirmation</div>
+                        <div class="item-desc">Apple shows "Thank you" or confirmation message</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">14</div>
+                    <div class="item-content">
+                        <div class="item-title">Verify navigation to Signup screen</div>
+                        <div class="item-desc">App automatically navigates to account creation after purchase</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Individual Product Tests -->
+        <div class="section" id="product-tests">
+            <h2><span class="icon">🔄</span> Test Each IAP Product</h2>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Complete a full purchase test for each product tier. Consumables can be purchased multiple times.</p>
+
+            <ul class="checklist" id="productTestsChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">✅ 1 Camp Card — $14.99</div>
+                        <div class="item-desc">Product ID: org.bsa.campcard.cards.1 | Purchase completes successfully</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">✅ 3 Camp Cards — $44.99</div>
+                        <div class="item-desc">Product ID: org.bsa.campcard.cards.3 | Purchase completes successfully</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">✅ 5 Camp Cards — $74.99</div>
+                        <div class="item-desc">Product ID: org.bsa.campcard.cards.5 | Purchase completes successfully</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">✅ 10 Camp Cards — $149.99</div>
+                        <div class="item-desc">Product ID: org.bsa.campcard.cards.10 | Purchase completes successfully</div>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="test-scenario">
+                <h4>🧪 Test Scenario: Multiple Purchases</h4>
+                <p>Since these are consumables, verify a user can purchase the same product multiple times.</p>
+                <div class="expected">
+                    <strong>Expected:</strong> Each purchase succeeds independently. No "already purchased" error.
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Handling -->
+        <div class="section" id="error-handling">
+            <h2><span class="icon">🚨</span> Error Handling Tests</h2>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Verify the app handles all error scenarios gracefully.</p>
+
+            <ul class="checklist" id="errorHandlingChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">User cancels purchase</div>
+                        <div class="item-desc">Tap "Cancel" on Apple payment sheet → App stays on payment screen, no error shown</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Network disconnected during purchase</div>
+                        <div class="item-desc">Enable Airplane Mode before tapping purchase → Appropriate error message displayed</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Invalid product ID (dev test)</div>
+                        <div class="item-desc">If product ID doesn't exist → "Product not found" or similar error shown</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Back button during purchase flow</div>
+                        <div class="item-desc">Tap back arrow → Returns to quantity selection without crash</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">App backgrounded during purchase</div>
+                        <div class="item-desc">Press home during Apple payment sheet → Resume app → Purchase completes normally</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Authentication failure</div>
+                        <div class="item-desc">Enter wrong password 3 times → Apple shows error → App handles gracefully</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Edge Cases -->
+        <div class="section" id="edge-cases">
+            <h2><span class="icon">🔍</span> Edge Case Testing</h2>
+
+            <ul class="checklist" id="edgeCasesChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Rapid button taps</div>
+                        <div class="item-desc">Tap "Purchase" button multiple times quickly → Only one purchase initiated</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">App killed during purchase</div>
+                        <div class="item-desc">Force quit app during Apple payment → Reopen app → Purchase recovers or user can retry</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Low storage on device</div>
+                        <div class="item-desc">App should not crash if device storage is low</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Switch between quantity options</div>
+                        <div class="item-desc">Rapidly tap different quantities → UI updates correctly each time</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Screen rotation (if supported)</div>
+                        <div class="item-desc">Rotate device → Layout adjusts correctly (Camp Card is portrait-locked)</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Receipt Validation -->
+        <div class="section" id="receipt-validation">
+            <h2><span class="icon">🧾</span> Receipt Validation</h2>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Verify the backend properly validates Apple receipts.</p>
+
+            <div class="info-box">
+                <h4>📡 Backend Endpoint</h4>
+                <p>POST <code>https://api.campcardapp.org/api/v1/apple/verify-receipt</code></p>
+                <p style="margin-top: 10px;">The mobile app sends the receipt to this endpoint after a successful purchase. The backend validates with Apple and provisions the Camp Cards.</p>
+            </div>
+
+            <ul class="checklist" id="receiptChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Receipt sent to backend after purchase</div>
+                        <div class="item-desc">Check backend logs to confirm receipt validation request received</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Backend validates with Apple servers</div>
+                        <div class="item-desc">Backend calls Apple's verifyReceipt endpoint and receives valid response</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Camp Cards provisioned in database</div>
+                        <div class="item-desc">After validation, correct number of cards created for user</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Transaction finished after validation</div>
+                        <div class="item-desc">App calls finishTransaction() to clear from Apple's queue</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Apple Review Guidelines -->
+        <div class="section" id="review-guidelines">
+            <h2><span class="icon">📖</span> Apple Review Guidelines Compliance</h2>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Ensure compliance with Apple's IAP requirements to avoid rejection.</p>
+
+            <ul class="checklist" id="guidelinesChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">No external payment links</div>
+                        <div class="item-desc">App does not link to external websites for purchasing digital content</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">IAP used for digital goods</div>
+                        <div class="item-desc">Camp Cards are digital discount subscriptions, properly using IAP</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Clear pricing displayed</div>
+                        <div class="item-desc">All prices shown before purchase, matching App Store Connect configuration</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Product descriptions accurate</div>
+                        <div class="item-desc">What user receives matches product description</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">No misleading purchase UI</div>
+                        <div class="item-desc">Purchase buttons clearly indicate they initiate payment</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Privacy policy accessible</div>
+                        <div class="item-desc">Link to privacy policy available (https://www.campcardapp.org/privacy)</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="checkbox"></div>
+                    <div class="item-content">
+                        <div class="item-title">Terms of service accessible</div>
+                        <div class="item-desc">Link to terms available (https://www.campcardapp.org/terms)</div>
+                    </div>
+                </li>
+        </div>
+
+        <!-- App Store Submission -->
+        <div class="section" id="submission">
+            <h2><span class="icon">🚀</span> App Store Submission Steps</h2>
+
+            <div class="info-box success">
+                <h4>✅ Ready to Submit When:</h4>
+                <ul>
+                    <li>All checklist items above are marked complete</li>
+                    <li>No crashes observed during any testing</li>
+                    <li>All 4 IAP products purchase successfully in sandbox</li>
+                    <li>Backend receipt validation working correctly</li>
+                    <li>App Store Connect shows all products "Ready to Submit"</li>
+                </ul>
+            </div>
+
+            <h3>📝 Submission Checklist</h3>
+            <ul class="checklist" id="submissionChecklist">
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">1</div>
+                    <div class="item-content">
+                        <div class="item-title">Select build in App Store Connect</div>
+                        <div class="item-desc">App Store → Camp Card → iOS App → Build → Select 1.0.30 (62)</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">2</div>
+                    <div class="item-content">
+                        <div class="item-title">Add/verify App Store screenshots</div>
+                        <div class="item-desc">Upload 6.7" and 6.5" display screenshots</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">3</div>
+                    <div class="item-content">
+                        <div class="item-title">Complete App Information</div>
+                        <div class="item-desc">Description, keywords, support URL, marketing URL</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">4</div>
+                    <div class="item-content">
+                        <div class="item-title">Set age rating</div>
+                        <div class="item-desc">Complete the age rating questionnaire</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">5</div>
+                    <div class="item-content">
+                        <div class="item-title">Add review notes</div>
+                        <div class="item-desc">Provide sandbox credentials and testing instructions for Apple reviewers</div>
+                    </div>
+                </li>
+                <li onclick="toggleCheck(this)">
+                    <div class="step-number">6</div>
+                    <div class="item-content">
+                        <div class="item-title">Submit for Review</div>
+                        <div class="item-desc">Click "Submit for Review" button</div>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <h4>📋 Review Notes Template for Apple</h4>
+                <div class="code-block" style="background: #F5F5F5; color: #333;">
+Camp Card is a digital discount subscription app supporting Boy Scouts of America fundraising.
+
+TESTING IN-APP PURCHASES:
+1. Launch app and tap "Get Started"
+2. Select the Camp Card plan and tap "Continue"
+3. Choose a card quantity (1, 3, 5, or 10 cards)
+4. Tap "Continue to Payment"
+5. Complete purchase using sandbox credentials below
+
+SANDBOX TEST ACCOUNT:
+Email: [Your sandbox email]
+Password: [Your sandbox password]
+
+The annual subscription is included with the first card purchase.
+All IAP products are consumable cards that unlock local merchant discounts.
+
+Contact: support@campcardapp.org
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Camp Card</strong> by Swipe Savvy, LLC</p>
+        <p>Bundle ID: org.bsa.campcard | Version 1.0.30 | Build 62</p>
+        <p style="margin-top: 10px;">Generated: February 5, 2026</p>
+    </div>
+
+    <script>
+        function toggleCheck(element) {
+            element.classList.toggle('checked');
+            updateProgress();
+            saveProgress();
+        }
+
+        function updateProgress() {
+            const allItems = document.querySelectorAll('.checklist li');
+            const checkedItems = document.querySelectorAll('.checklist li.checked');
+            const total = allItems.length;
+            const completed = checkedItems.length;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressText').textContent =
+                completed + ' of ' + total + ' tests completed (' + percentage + '%)';
+        }
+
+        function saveProgress() {
+            const checkedIndices = [];
+            document.querySelectorAll('.checklist li').forEach((item, index) => {
+                if (item.classList.contains('checked')) {
+                    checkedIndices.push(index);
+                }
+            });
+            localStorage.setItem('campcard-test-progress-v2', JSON.stringify(checkedIndices));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('campcard-test-progress-v2');
+            if (saved) {
+                const indices = JSON.parse(saved);
+                document.querySelectorAll('.checklist li').forEach((item, index) => {
+                    if (indices.includes(index)) {
+                        item.classList.add('checked');
+                    }
+                });
+                updateProgress();
+            }
+        }
+
+        function resetProgress() {
+            if (confirm('Reset all progress? This cannot be undone.')) {
+                localStorage.removeItem('campcard-test-progress-v2');
+                document.querySelectorAll('.checklist li.checked').forEach(item => {
+                    item.classList.remove('checked');
+                });
+                updateProgress();
+            }
+        }
+
+        // Load saved progress on page load
+        document.addEventListener('DOMContentLoaded', loadProgress);
+    </script>
+</body>
+</html>
