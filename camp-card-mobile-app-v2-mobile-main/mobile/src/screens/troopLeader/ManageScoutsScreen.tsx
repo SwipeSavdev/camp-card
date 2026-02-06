@@ -1,5 +1,5 @@
-// Manage Scouts screen for Troop Leaders - Add/Remove/View Scouts
-// Per Troop Leader Portal requirements: Add/Remove Scouts, See Troop Metrics
+// Manage Scouts screen for Unit Leaders - Add/Remove/View Scouts
+// Per Unit Leader Portal requirements: Add/Remove Scouts, See Unit Metrics
 
 import React, { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -245,7 +245,7 @@ export default function ManageScoutsScreen() {
       // Reload scouts from API to get the persisted data
       await loadScouts();
 
-      Alert.alert('Success', `${newScoutFirstName.trim()} ${newScoutLastName.trim()} has been added to your troop. An invitation email will be sent.`);
+      Alert.alert('Success', `${newScoutFirstName.trim()} ${newScoutLastName.trim()} has been added to your unit. An invitation email will be sent.`);
     } catch (error: any) {
       console.error('Error creating scout:', error);
       Alert.alert(
@@ -272,7 +272,7 @@ export default function ManageScoutsScreen() {
   const handleRemoveScout = (scout: Scout) => {
     Alert.alert(
       'Remove Scout',
-      `Are you sure you want to remove ${scout.firstName} ${scout.lastName} from your troop?`,
+      `Are you sure you want to remove ${scout.firstName} ${scout.lastName} from your unit?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -287,7 +287,7 @@ export default function ManageScoutsScreen() {
                 setScouts(scouts.filter(s => s.id !== scout.id));
                 setShowScoutModal(false);
                 setSelectedScout(null);
-                Alert.alert('Removed', `${scout.firstName} ${scout.lastName} has been removed from your troop.`);
+                Alert.alert('Removed', `${scout.firstName} ${scout.lastName} has been removed from your unit.`);
               } catch (error) {
                 console.error('Failed to remove scout:', error);
                 Alert.alert('Error', 'Failed to remove scout. Please try again.');
@@ -369,8 +369,8 @@ export default function ManageScoutsScreen() {
       {/* Header with Add Button */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Your Troop</Text>
-          <Text style={styles.headerSubtitle}>Manage scouts in your troop</Text>
+          <Text style={styles.headerTitle}>Your Unit</Text>
+          <Text style={styles.headerSubtitle}>Manage scouts in your unit</Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={() => {
           // Auto-populate unit fields from troop data
@@ -445,7 +445,7 @@ export default function ManageScoutsScreen() {
             <Text style={styles.emptySubtext}>
               {searchQuery
                 ? 'Try a different search term'
-                : 'Tap "Add" to invite scouts to your troop'}
+                : 'Tap "Add" to invite scouts to your unit'}
             </Text>
           </View>
         }
@@ -483,7 +483,7 @@ export default function ManageScoutsScreen() {
           <ScrollView style={styles.modalScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={styles.modalContent}>
               <Text style={styles.modalDescription}>
-                Enter the scout's information below. They will receive an invitation email to join your troop.
+                Enter the scout's information below. They will receive an invitation email to join your unit.
               </Text>
 
               <View style={styles.inputGroup}>
@@ -740,7 +740,7 @@ export default function ManageScoutsScreen() {
                   onPress={() => handleRemoveScout(selectedScout)}
                 >
                   <Ionicons name="person-remove" size={20} color={COLORS.error} />
-                  <Text style={styles.removeButtonText}>Remove from Troop</Text>
+                  <Text style={styles.removeButtonText}>Remove from Unit</Text>
                 </TouchableOpacity>
               </View>
             </View>

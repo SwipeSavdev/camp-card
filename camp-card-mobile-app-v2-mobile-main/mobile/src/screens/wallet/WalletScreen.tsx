@@ -33,7 +33,7 @@ interface CardData {
   expiryDate: string;
   memberSince: string;
   status: 'active' | 'expired' | 'pending';
-  troopNumber?: string;
+  unitNumber?: string;
   councilName?: string;
   email?: string;
 }
@@ -110,7 +110,7 @@ export default function WalletScreen() {
       ? new Date(userAny.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
       : '--',
     status: combinedStatus === 'HEALTHY' ? 'active' : combinedStatus === 'SUBSCRIPTION_EXPIRED' ? 'expired' : 'pending',
-    troopNumber: userAny?.troopNumber || '--',
+    unitNumber: userAny?.troopNumber || '--',
     councilName: userAny?.councilName || 'Not assigned',
     email: user?.email,
   };

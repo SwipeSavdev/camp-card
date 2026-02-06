@@ -498,7 +498,7 @@ export default function ReferralScreen() {
               • Share at family gatherings and events{'\n'}
               • Post on social media with your story{'\n'}
               • Ask parents to share with neighbors{'\n'}
-              • Hand out printed posters at troop meetings
+              • Hand out printed posters at unit meetings
             </Text>
           </View>
         </View>

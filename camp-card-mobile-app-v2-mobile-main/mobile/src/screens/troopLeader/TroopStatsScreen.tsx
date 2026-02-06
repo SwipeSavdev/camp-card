@@ -1,5 +1,5 @@
-// Troop Statistics screen for Troop Leaders
-// Per requirements: See Troop Metrics, See their Cash Code to give to customers
+// Unit Statistics screen for Unit Leaders
+// Per requirements: See Unit Metrics, See their Cash Code to give to customers
 // Metrics: # of cards, TotalSold, # of Referrals, # of Conversions - Broken up by Units / Scouts
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -45,10 +45,10 @@ export default function TroopStatsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('month');
 
-  // Troop Leader's Cash Code - unique code for customers to use
-  const troopId = user?.troopId || '101';
-  const cashCode = `TROOP-${troopId}-${new Date().getFullYear()}`;
-  const cashCodeLink = `https://www.campcardapp.org/subscribe/?troop=${cashCode}`;
+  // Unit Leader's Cash Code - unique code for customers to use
+  const unitId = user?.troopId || '101';
+  const cashCode = `UNIT-${unitId}-${new Date().getFullYear()}`;
+  const cashCodeLink = `https://www.campcardapp.org/subscribe/?unit=${cashCode}`;
 
   const [stats, setStats] = useState<TroopStats>({
     totalFundsRaised: 0,
@@ -84,8 +84,8 @@ export default function TroopStatsScreen() {
       }
 
       // Fetch scout roster for top performers
-      if (troopId) {
-        const scoutsResponse = await scoutApi.getTroopScouts(String(troopId));
+      if (unitId) {
+        const scoutsResponse = await scoutApi.getTroopScouts(String(unitId));
         const scoutsData = scoutsResponse.data?.content || scoutsResponse.data || [];
         if (Array.isArray(scoutsData) && scoutsData.length > 0) {
           const performers: ScoutPerformance[] = scoutsData
@@ -103,9 +103,9 @@ export default function TroopStatsScreen() {
         }
       }
     } catch (error) {
-      console.log('Failed to load troop stats:', error);
+      console.log('Failed to load unit stats:', error);
     }
-  }, [troopId]);
+  }, [unitId]);
 
   useEffect(() => {
     loadStats();
@@ -130,8 +130,8 @@ export default function TroopStatsScreen() {
   const handleShareCashCode = async () => {
     try {
       await Share.share({
-        message: `Support our Scout Troop ${troopId}! Get great local deals with Camp Card while helping scouts go to camp. Use our troop code: ${cashCode}\n\nSign up: ${cashCodeLink}`,
-        title: 'Support Our Scout Troop',
+        message: `Support our Scout Unit ${unitId}! Get great local deals with Camp Card while helping scouts go to camp. Use our unit code: ${cashCode}\n\nSign up: ${cashCodeLink}`,
+        title: 'Support Our Scout Unit',
       });
     } catch (error) {
       console.error('Share error:', error);
@@ -146,14 +146,14 @@ export default function TroopStatsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Troop Cash Code Section */}
+        {/* Unit Cash Code Section */}
         <View style={styles.cashCodeSection}>
           <View style={styles.cashCodeHeader}>
             <Ionicons name="ticket" size={24} color={COLORS.accent} />
-            <Text style={styles.cashCodeTitle}>Your Troop Cash Code</Text>
+            <Text style={styles.cashCodeTitle}>Your Unit Cash Code</Text>
           </View>
           <Text style={styles.cashCodeDescription}>
-            Share this code with customers to support your troop's fundraising
+            Share this code with customers to support your unit's fundraising
           </Text>
           <View style={styles.cashCodeCard}>
             <Text style={styles.cashCodeText}>{cashCode}</Text>
@@ -329,7 +329,7 @@ export default function TroopStatsScreen() {
               <Text style={styles.redemptionValue}>{stats.totalRedemptions}</Text>
               <Text style={styles.redemptionLabel}>Total Redemptions</Text>
               <Text style={styles.redemptionDescription}>
-                Offers redeemed by customers using your troop's cards
+                Offers redeemed by customers using your unit's cards
               </Text>
             </View>
           </View>

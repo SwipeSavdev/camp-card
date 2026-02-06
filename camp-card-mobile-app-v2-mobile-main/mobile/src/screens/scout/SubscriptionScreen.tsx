@@ -90,8 +90,8 @@ export default function SubscriptionScreen() {
     actionType,
   } = useSubscriptionCardStatus();
 
-  // Check if user is a Troop Leader - they need to select a scout before subscribing
-  const isTroopLeader = user?.role === 'UNIT_LEADER';
+  // Check if user is a Unit Leader - they need to select a scout before subscribing
+  const isUnitLeader = user?.role === 'UNIT_LEADER';
   const isIOS = Platform.OS === 'ios';
 
   // Apple IAP hook (only active on iOS)
@@ -153,8 +153,8 @@ export default function SubscriptionScreen() {
   };
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
-    // Troop Leaders must select a scout before subscribing
-    if (isTroopLeader) {
+    // Unit Leaders must select a scout before subscribing
+    if (isUnitLeader) {
       navigation.navigate('SelectScoutForSubscription', { planId: plan.uuid });
       return;
     }
@@ -509,7 +509,7 @@ export default function SubscriptionScreen() {
               <View style={styles.infoRow}>
                 <Ionicons name="ribbon-outline" size={20} color="#666" />
                 <Text style={styles.infoText}>
-                  Supporting {subscription.scoutAttribution.scoutName}, Troop {subscription.scoutAttribution.troopNumber}
+                  Supporting {subscription.scoutAttribution.scoutName}, Unit {subscription.scoutAttribution.troopNumber}
                 </Text>
               </View>
             )}

@@ -313,8 +313,8 @@ function ScoutMainNavigator() {
 }
 
 // ============================================================================
-// TROOP LEADER NAVIGATION (Blue Theme)
-// Tabs: Home, Offers (only if subscribed), Troop Dashboard, Scouts, Profile
+// UNIT LEADER NAVIGATION (Blue Theme)
+// Tabs: Home, Offers (only if subscribed), Unit Dashboard, Scouts, Profile
 // ============================================================================
 
 function TroopLeaderTabNavigator() {
@@ -323,7 +323,7 @@ function TroopLeaderTabNavigator() {
 
   // Debug log in development
   if (__DEV__) {
-    console.log('TroopLeader subscription check:', {
+    console.log('UnitLeader subscription check:', {
       subscriptionStatus: user?.subscriptionStatus,
       hasActiveSubscription,
     });
@@ -352,7 +352,7 @@ function TroopLeaderTabNavigator() {
       {hasActiveSubscription && (
         <TroopLeaderTab.Screen name="Offers" component={OffersNavigator} />
       )}
-      <TroopLeaderTab.Screen name="Dashboard" component={TroopLeaderDashboardScreen} options={{ tabBarLabel: 'Troop' }} />
+      <TroopLeaderTab.Screen name="Dashboard" component={TroopLeaderDashboardScreen} options={{ tabBarLabel: 'Unit' }} />
       <TroopLeaderTab.Screen name="Scouts" component={ManageScoutsScreen} options={{ tabBarLabel: 'Scouts' }} />
       <TroopLeaderTab.Screen name="Profile" component={ProfileScreen} />
     </TroopLeaderTab.Navigator>
@@ -369,7 +369,7 @@ function TroopLeaderMainNavigator() {
         <TroopLeaderStack.Screen name="OfferDetail" component={OfferDetailScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
         <TroopLeaderStack.Screen name="ManageScouts" component={ManageScoutsScreen} options={{ headerShown: true, title: 'Manage Scouts' }} />
-        <TroopLeaderStack.Screen name="TroopStats" component={TroopStatsScreen} options={{ headerShown: true, title: 'Troop Statistics' }} />
+        <TroopLeaderStack.Screen name="TroopStats" component={TroopStatsScreen} options={{ headerShown: true, title: 'Unit Statistics' }} />
         <TroopLeaderStack.Screen name="Subscription" component={SubscriptionScreen} options={{ headerShown: false }} />
         <TroopLeaderStack.Screen name="SelectScoutForSubscription" component={SelectScoutForSubscriptionScreen} options={{ headerShown: false, title: 'Select Scout' }} />
         <TroopLeaderStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} options={{ headerShown: false }} />
@@ -484,7 +484,7 @@ export default function RootNavigator() {
   // Role-based navigation
   switch (userRole) {
     case 'UNIT_LEADER':
-      // Blue theme - Troop management features
+      // Blue theme - Unit management features
       return <TroopLeaderMainNavigator />;
 
     case 'SCOUT':

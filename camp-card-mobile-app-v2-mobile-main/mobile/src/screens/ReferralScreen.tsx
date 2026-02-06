@@ -229,7 +229,7 @@ export default function ReferralScreen() {
                   <Text style={styles.stepNumberText}>3</Text>
                 </View>
                 <Text style={styles.stepText}>
-                  You both earn rewards to support your troop!
+                  You both earn rewards to support your unit!
                 </Text>
               </View>
             </View>

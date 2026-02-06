@@ -1,5 +1,5 @@
 // Home Screen - Role-based Dashboard
-// Shows analytics dashboard for Troop Leaders and Scouts
+// Shows analytics dashboard for Unit Leaders and Scouts
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -21,7 +21,7 @@ import { useCardExpiry } from '../../hooks/useCardExpiry';
 import { apiClient } from '../../utils/api';
 
 // ============================================================================
-// TROOP LEADER DASHBOARD
+// UNIT LEADER DASHBOARD
 // ============================================================================
 
 interface TroopLeaderStats {
@@ -36,7 +36,7 @@ interface TroopLeaderStats {
   topScout: { name: string; amount: number };
 }
 
-function TroopLeaderDashboard() {
+function UnitLeaderDashboard() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
   const [refreshing, setRefreshing] = useState(false);
@@ -103,7 +103,7 @@ function TroopLeaderDashboard() {
         <View style={[styles.header, { backgroundColor: '#003F87' }]}>
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Hello, {user?.firstName}!</Text>
-            <Text style={styles.roleTag}>Troop Leader</Text>
+            <Text style={styles.roleTag}>Unit Leader</Text>
           </View>
           <TouchableOpacity
             style={styles.notificationButton}
@@ -118,7 +118,7 @@ function TroopLeaderDashboard() {
           <View style={styles.progressHeader}>
             <View style={styles.progressTitleRow}>
               <Ionicons name="trending-up" size={24} color={COLORS.success} />
-              <Text style={styles.progressTitle}>Troop Fundraising</Text>
+              <Text style={styles.progressTitle}>Unit Fundraising</Text>
             </View>
             <View style={styles.growthBadge}>
               <Ionicons name="arrow-up" size={14} color={COLORS.success} />
@@ -150,7 +150,7 @@ function TroopLeaderDashboard() {
 
         {/* Key Metrics Grid */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Troop Metrics</Text>
+          <Text style={styles.sectionTitle}>Unit Metrics</Text>
           <View style={styles.metricsGrid}>
             <View style={styles.metricCard}>
               <View style={[styles.metricIcon, { backgroundColor: '#E3F2FD' }]}>
@@ -199,7 +199,7 @@ function TroopLeaderDashboard() {
             </View>
             <View style={styles.actionRowContent}>
               <Text style={styles.actionRowTitle}>View Detailed Stats</Text>
-              <Text style={styles.actionRowSubtitle}>See full troop analytics & Cash Code</Text>
+              <Text style={styles.actionRowSubtitle}>See full unit analytics & Cash Code</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
           </TouchableOpacity>
@@ -220,9 +220,9 @@ function TroopLeaderDashboard() {
 
         </View>
 
-        {/* Troop Summary */}
+        {/* Unit Summary */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Troop Summary</Text>
+          <Text style={styles.sectionTitle}>Unit Summary</Text>
           <View style={styles.activityCard}>
             <View style={styles.activityItem}>
               <View style={[styles.activityDot, { backgroundColor: COLORS.success }]} />
@@ -244,7 +244,7 @@ function TroopLeaderDashboard() {
               <View style={[styles.activityDot, { backgroundColor: '#F57C00' }]} />
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>
-                  {stats.totalCardsSold} cards sold by your troop
+                  {stats.totalCardsSold} cards sold by your unit
                 </Text>
               </View>
             </View>
@@ -266,8 +266,8 @@ interface ScoutStats {
   linkClicks: number;
   qrScans: number;
   conversionRate: number;
-  rankInTroop: number;
-  troopSize: number;
+  rankInUnit: number;
+  unitSize: number;
 }
 
 function ScoutDashboard() {
@@ -281,8 +281,8 @@ function ScoutDashboard() {
     linkClicks: 0,
     qrScans: 0,
     conversionRate: 0,
-    rankInTroop: 0,
-    troopSize: 0,
+    rankInUnit: 0,
+    unitSize: 0,
   });
 
   const loadScoutStats = async () => {
@@ -298,8 +298,8 @@ function ScoutDashboard() {
         linkClicks: referralData?.linkClicks || 0,
         qrScans: referralData?.qrScans || 0,
         conversionRate: referralData?.conversionRate || 0,
-        rankInTroop: referralData?.rankInTroop || 0,
-        troopSize: referralData?.troopSize || 0,
+        rankInUnit: referralData?.rankInUnit || referralData?.rankInTroop || 0,
+        unitSize: referralData?.unitSize || referralData?.troopSize || 0,
       }));
     } catch (error) {
       console.log('Failed to load scout stats:', error);
@@ -352,7 +352,7 @@ function ScoutDashboard() {
             </View>
             <View style={styles.rankBadge}>
               <Ionicons name="trophy" size={14} color="#F59E0B" />
-              <Text style={styles.rankText}>#{stats.rankInTroop} in Troop</Text>
+              <Text style={styles.rankText}>#{stats.rankInUnit} in Unit</Text>
             </View>
           </View>
 
@@ -504,7 +504,7 @@ interface ParentStats {
   offersRedeemed: number;
   directReferrals: number;
   indirectReferrals: number;
-  supportedScout: { name: string; troopNumber: string } | null;
+  supportedScout: { name: string; unitNumber: string } | null;
   recentSavings: number;
   memberSince: string;
 }
@@ -550,7 +550,7 @@ function CustomerDashboard() {
         directReferrals: referralData?.directReferrals || 0,
         indirectReferrals: referralData?.indirectReferrals || 0,
         supportedScout: cardsData?.activeCard?.scoutName
-          ? { name: cardsData.activeCard.scoutName, troopNumber: '--' }
+          ? { name: cardsData.activeCard.scoutName, unitNumber: '--' }
           : null,
         recentSavings: analyticsData?.recentSavings || 0,
         memberSince: memberSinceDate,
@@ -625,7 +625,7 @@ function CustomerDashboard() {
             <View style={styles.topScoutBanner}>
               <Ionicons name="heart" size={18} color={COLORS.primary} />
               <Text style={styles.topScoutText}>
-                Supporting <Text style={styles.topScoutName}>{stats.supportedScout.name}</Text> - Troop {stats.supportedScout.troopNumber}
+                Supporting <Text style={styles.topScoutName}>{stats.supportedScout.name}</Text> - Unit {stats.supportedScout.unitNumber}
               </Text>
             </View>
           )}
@@ -774,7 +774,7 @@ export default function HomeScreen() {
 
   switch (userRole) {
     case 'UNIT_LEADER':
-      return <TroopLeaderDashboard />;
+      return <UnitLeaderDashboard />;
     case 'SCOUT':
       return <ScoutDashboard />;
     case 'PARENT':

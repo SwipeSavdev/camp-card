@@ -325,7 +325,7 @@ export default function BuyMoreCardsScreen() {
             <View style={styles.benefitContent}>
               <Text style={styles.benefitTitle}>Support Scout Fundraising</Text>
               <Text style={styles.benefitDescription}>
-                Every card purchase helps support local Scout troops
+                Every card purchase helps support local Scout units
               </Text>
             </View>
           </View>

@@ -40,7 +40,7 @@ export default function ProfileScreen() {
     }
   };
 
-  // Filter menu items based on user role (Troop Leaders don't have referrals)
+  // Filter menu items based on user role (Unit Leaders don't have referrals)
   const allMenuItems = [
     {
       icon: 'wallet-outline',

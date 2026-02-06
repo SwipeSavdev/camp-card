@@ -157,7 +157,7 @@ export default function MyQRCodeScreen() {
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={20} color="#666" />
         <Text style={styles.infoBoxText}>
-          Friends who join using your link will help support your troop's fundraising goals!
+          Friends who join using your link will help support your unit's fundraising goals!
         </Text>
       </View>
       </ScrollView>

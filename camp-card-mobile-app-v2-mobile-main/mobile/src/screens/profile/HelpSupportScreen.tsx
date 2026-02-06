@@ -54,7 +54,7 @@ export default function HelpSupportScreen() {
     },
     {
       question: 'How do fundraising credits work?',
-      answer: 'When customers use your referral link to subscribe, a portion of their subscription fee is credited to your Scout troop as fundraising. The exact amount depends on your council\'s arrangement with Camp Card.',
+      answer: 'When customers use your referral link to subscribe, a portion of their subscription fee is credited to your Scout unit as fundraising. The exact amount depends on your council\'s arrangement with Camp Card.',
     },
     {
       question: 'What if an offer doesn\'t work?',

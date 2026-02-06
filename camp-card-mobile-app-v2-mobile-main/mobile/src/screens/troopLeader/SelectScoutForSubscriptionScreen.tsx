@@ -1,5 +1,5 @@
-// Select Scout for Subscription - Troop Leaders select which scout to attribute the subscription to
-// This screen is shown before checkout when a Troop Leader purchases a subscription
+// Select Scout for Subscription - Unit Leaders select which scout to attribute the subscription to
+// This screen is shown before checkout when a Unit Leader purchases a subscription
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -104,10 +104,10 @@ export default function SelectScoutForSubscriptionScreen() {
 
   const loadScouts = async () => {
     try {
-      // Get scouts from the user's troop
-      const troopId = user?.troopId;
-      if (troopId) {
-        const response = await apiClient.get(`/api/v1/troops/${troopId}/scouts`);
+      // Get scouts from the user's unit
+      const unitId = user?.troopId;
+      if (unitId) {
+        const response = await apiClient.get(`/api/v1/troops/${unitId}/scouts`);
         const scoutsData = response.data.content || response.data || [];
         setScouts(scoutsData.map((scout: any) => ({
           id: scout.id?.toString() || scout.uuid,
@@ -117,7 +117,7 @@ export default function SelectScoutForSubscriptionScreen() {
           subscriptionStatus: scout.subscriptionStatus || 'inactive',
         })));
       } else {
-        // Fallback to mock data if no troop ID
+        // Fallback to mock data if no unit ID
         setScouts(mockScouts);
       }
     } catch (error) {
@@ -320,7 +320,7 @@ export default function SelectScoutForSubscriptionScreen() {
             <Text style={styles.emptySubtext}>
               {searchQuery
                 ? 'Try a different search term'
-                : 'Add scouts to your troop first'}
+                : 'Add scouts to your unit first'}
             </Text>
           </View>
         }

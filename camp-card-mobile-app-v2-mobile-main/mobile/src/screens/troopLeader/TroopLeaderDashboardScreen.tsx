@@ -1,4 +1,4 @@
-// Troop Leader Dashboard showing troop management and quick actions
+// Unit Leader Dashboard showing unit management and quick actions
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Alert } from 'react-native';
@@ -67,7 +67,7 @@ export default function TroopLeaderDashboardScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Troop Dashboard</Text>
+          <Text style={styles.title}>Unit Dashboard</Text>
           <Text style={styles.subtitle}>
             Welcome, {user?.firstName || 'Leader'}
           </Text>
@@ -75,7 +75,7 @@ export default function TroopLeaderDashboardScreen() {
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Troop Management</Text>
+          <Text style={styles.sectionTitle}>Unit Management</Text>
 
           <TouchableOpacity
             style={styles.card}
@@ -86,7 +86,7 @@ export default function TroopLeaderDashboardScreen() {
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Manage Scouts</Text>
-              <Text style={styles.cardSubtitle}>View and manage your troop members</Text>
+              <Text style={styles.cardSubtitle}>View and manage your unit members</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
           </TouchableOpacity>
@@ -99,7 +99,7 @@ export default function TroopLeaderDashboardScreen() {
               <Ionicons name="stats-chart" size={32} color={COLORS.success} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Troop Statistics</Text>
+              <Text style={styles.cardTitle}>Unit Statistics</Text>
               <Text style={styles.cardSubtitle}>View fundraising progress and reports</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
@@ -107,9 +107,9 @@ export default function TroopLeaderDashboardScreen() {
 
         </View>
 
-        {/* Troop Stats Overview */}
+        {/* Unit Stats Overview */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Troop Overview</Text>
+          <Text style={styles.sectionTitle}>Unit Overview</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{stats.activeScouts}</Text>
