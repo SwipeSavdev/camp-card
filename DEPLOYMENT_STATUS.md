@@ -315,3 +315,56 @@ Start testing! 🚀
 - ✅ Email service health check: UP
 - ✅ Password reset emails confirmed sending
 - ✅ All backend services healthy
+
+---
+
+## 📱 App Store Submission - February 6, 2026
+
+### iOS App Store Status: ✅ SUBMITTED FOR APPLE REVIEW
+
+**Submission Details:**
+- **App Name:** Camp Card
+- **Bundle ID:** org.bsa.campcard
+- **Version:** 1.0.30
+- **Build Number:** 65
+- **Platform:** iOS (iPhone + iPad)
+- **Apple Team ID:** CL5DJUWXZY
+- **ASC App ID:** 6758056347
+- **EAS Account:** swipesavvy2026
+
+### Build & Submission Timeline
+
+| Time (EST) | Event | Status |
+|------------|-------|--------|
+| 5:04 PM | EAS production build #64 completed | ✅ |
+| 5:10 PM | Build #64 uploaded to App Store Connect | ✅ (already submitted) |
+| 5:30 PM | Incremented to build #65, triggered new build | ✅ |
+| 5:34 PM | EAS production build #65 completed | ✅ |
+| 5:42 PM | Build #65 uploaded to App Store Connect | ✅ |
+| 5:45 PM | Build #65 attached to version 1.0.30 | ✅ |
+| 5:46 PM | iPhone 6.7" screenshots uploaded (5) | ✅ |
+| 5:48 PM | iPad Pro 12.9" screenshots uploaded (5) | ✅ |
+| 5:50 PM | Content rights declaration set | ✅ |
+| 5:55 PM | App Privacy configured | ✅ |
+| ~6:00 PM | Submitted for Apple Review | ✅ |
+
+### What Was Configured
+- ✅ Production build via EAS (Expo Application Services)
+- ✅ Code signing (Distribution Certificate + Provisioning Profile)
+- ✅ 5 iPhone 6.7" screenshots (1290x2796)
+- ✅ 5 iPad Pro 12.9" screenshots (2048x2732)
+- ✅ Content rights declaration (uses third-party content)
+- ✅ App Privacy / data usage declarations published
+- ✅ App review contact info and demo account configured
+- ✅ "What's New" release notes set
+- ✅ Build #65 selected for version 1.0.30
+
+### App Store Submission Recording
+- **Video:** [app-store-screenshots/submission-recordings/AppStore_Submission_2026-02-06.mov](app-store-screenshots/submission-recordings/AppStore_Submission_2026-02-06.mov)
+
+### Next Steps (Post-Submission)
+- ⏳ Apple review (typically 24-48 hours)
+- ⏳ Respond to any reviewer feedback
+- ⏳ Set release strategy (manual vs. phased rollout)
+- ⏳ Monitor crash reporting (Sentry)
+- ⏳ Plan OTA updates via `eas update`

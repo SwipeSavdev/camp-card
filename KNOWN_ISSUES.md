@@ -62,4 +62,24 @@ One of:
 
 ---
 
-**Last Updated**: January 17, 2026
+---
+
+## App Store Review Submissions Cleanup
+
+**Status**: Resolved (Feb 6, 2026)
+**Severity**: Low
+
+### Problem
+Multiple review submissions (4 total) were created in App Store Connect during the automated submission process due to API state management. They are in `READY_FOR_REVIEW` state and cannot be cancelled/deleted via the API.
+
+### Resolution
+The final submission was completed successfully through the App Store Connect web UI. The stale review submissions do not affect the app or the active review. They will be cleaned up automatically by Apple once the review completes.
+
+### Notes
+- The App Store Connect API key (EAS Submit key) does not have permissions for App Privacy management
+- App Privacy must be configured through the App Store Connect web UI by an Admin-level user
+- Content rights declaration can be set via the API
+
+---
+
+**Last Updated**: February 6, 2026

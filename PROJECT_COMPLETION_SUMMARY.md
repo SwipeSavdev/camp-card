@@ -426,8 +426,52 @@ All components are:
 
 ---
 
-**Final Status:** 🚀 **LAUNCH READY**
+---
 
-**Prepared by:** GitHub Copilot  
-**Date:** January 8, 2026  
-**Last Updated:** January 8, 2026, 16:58 UTC
+## iOS App Store Submission - February 6, 2026
+
+### Status: ✅ SUBMITTED FOR APPLE REVIEW
+
+The Camp Card iOS app has been submitted to the Apple App Store for review.
+
+| Item | Detail |
+|------|--------|
+| **App Version** | 1.0.30 (Build #65) |
+| **Bundle ID** | org.bsa.campcard |
+| **Apple Team** | CL5DJUWXZY (Swipe Savvy LLC) |
+| **ASC App ID** | 6758056347 |
+| **Build System** | Expo Application Services (EAS) |
+| **SDK Version** | Expo 54.0.0 / React Native 0.81.5 |
+| **Distribution** | App Store (store profile) |
+| **Signing** | Remote credentials via EAS |
+
+### Submission Checklist
+- [x] Production build compiled via EAS
+- [x] Binary uploaded to App Store Connect
+- [x] iPhone 6.7" screenshots (5 images, 1290x2796)
+- [x] iPad Pro 12.9" screenshots (5 images, 2048x2732)
+- [x] Content rights declaration configured
+- [x] App Privacy / data usage declarations published
+- [x] App review information (contact, demo account) set
+- [x] "What's New" release notes provided
+- [x] Submitted for Apple Review
+
+### App Store Metadata
+- **Title:** Camp Card
+- **Subtitle:** Scout Fundraising Discounts
+- **Categories:** Shopping, Lifestyle
+- **Keywords:** scout, fundraising, discount, BSA, coupons, local deals
+- **Privacy Policy:** https://www.campcardapp.org/privacy
+- **Support URL:** https://www.campcardapp.org/support
+- **Publisher:** Swipe Savvy, LLC
+
+### Submission Recording
+- Video: `app-store-screenshots/submission-recordings/AppStore_Submission_2026-02-06.mov`
+
+---
+
+**Final Status:** 🚀 **SUBMITTED TO APP STORE**
+
+**Prepared by:** GitHub Copilot
+**Date:** January 8, 2026
+**Last Updated:** February 6, 2026 — iOS App Store submission completed

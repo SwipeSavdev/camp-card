@@ -142,6 +142,16 @@ npx eas build --profile production --platform all --non-interactive
 npx eas submit --platform all
 ```
 
+### iOS App Store Status
+
+| Item | Status |
+|------|--------|
+| **Version** | 1.0.30 (Build #65) |
+| **Submission Date** | February 6, 2026 |
+| **Review Status** | Submitted for Apple Review |
+| **Bundle ID** | org.bsa.campcard |
+| **ASC App ID** | 6758056347 |
+
 ## API Documentation
 
 - Swagger UI: `http://localhost:7010/swagger-ui.html`
@@ -173,6 +183,7 @@ cd camp-card-mobile-app-v2-mobile-main/mobile && npm test
 | **Email** | AWS SES (us-east-2), domain: campcardapp.org |
 | **Payments** | Authorize.Net (Sandbox) |
 | **Mobile Builds** | Expo Application Services (EAS) |
+| **iOS App Store** | Submitted for review (v1.0.30, Feb 6, 2026) |
 
 ## Documentation
 

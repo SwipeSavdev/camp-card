@@ -734,6 +734,16 @@ npm run eas:submit:all      # Both stores
 - **ASC App ID**: 6758056347
 - **Expo Project**: Managed workflow (no native ios/android directories in git)
 
+#### iOS App Store Submission (February 6, 2026)
+
+- **Status**: ✅ Submitted for Apple Review
+- **Version**: 1.0.30 (Build #65)
+- **Runtime Version**: 1.0.30-65
+- **Screenshots**: 5 iPhone (1290x2796) + 5 iPad Pro 12.9" (2048x2732)
+- **Submission Recording**: `app-store-screenshots/submission-recordings/AppStore_Submission_2026-02-06.mov`
+- **Issuer ID**: 51541aa3-d401-43f0-9244-976dbad0ec07
+- **ASC API Key ID**: R227Z5WG3Q (located in Downloads/AuthKey_R227Z5WG3Q.p8)
+
 #### Required Setup Before First Build
 
 1. **EAS Login**: `eas login` (account: swipesavvy2026)
@@ -742,7 +752,7 @@ npm run eas:submit:all      # Both stores
    - `GoogleService-Info.plist` (iOS) - from Firebase Console
    - `google-services.json` (Android) - from Firebase Console
 4. **App Store Listings**:
-   - Apple App Store Connect: Create app with bundle ID `org.bsa.campcard`
+   - Apple App Store Connect: App created with bundle ID `org.bsa.campcard` (ASC App ID: 6758056347)
    - Google Play Console: Create app with package name `org.bsa.campcard`
 
 #### Configuration Files

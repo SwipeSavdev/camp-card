@@ -96,8 +96,7 @@ class IAPService {
     }
     try {
       console.log('[IAP] Fetching products with SKUs:', IAP_CARD_SKUS);
-      // Note: expo-iap uses 'inapp' (not 'in-app') for consumables
-      const products = await expoFetchProducts({ skus: IAP_CARD_SKUS, type: 'inapp' });
+      const products = await expoFetchProducts({ skus: IAP_CARD_SKUS, type: 'in-app' });
       console.log('[IAP] Fetched products:', products?.length || 0, products?.map(p => p.id));
       if (!products || products.length === 0) {
         console.warn('[IAP] No products returned. Ensure products are configured in App Store Connect and you are using a Sandbox tester account.');
@@ -142,7 +141,7 @@ class IAPService {
     try {
       await expoRequestPurchase({
         request: { apple: { sku } },
-        type: 'inapp',
+        type: 'in-app',
       });
     } catch (error) {
       console.error('[IAP] Purchase request failed:', error);

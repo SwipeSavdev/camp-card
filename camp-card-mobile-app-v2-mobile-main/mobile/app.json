@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "64",
+      "buildNumber": "65",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -134,7 +134,7 @@
         }
       ]
     ],
-    "runtimeVersion": "1.0.30-64",
+    "runtimeVersion": "1.0.30-65",
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"
