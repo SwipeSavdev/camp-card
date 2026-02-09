@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 interface FAQItem {
   question: string;
@@ -29,6 +30,8 @@ interface SupportOption {
 
 export default function HelpSupportScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
 
   const faqs: FAQItem[] = [
@@ -144,46 +147,50 @@ export default function HelpSupportScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Help & Support</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Help & Support</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <View style={styles.heroIconContainer}>
-            <Ionicons name="help-buoy" size={48} color={COLORS.primary} />
+        <View style={[styles.heroSection, { backgroundColor: colors.surface }]}>
+          <View style={[styles.heroIconContainer, { backgroundColor: colors.primary + '15' }]}>
+            <Ionicons name="help-buoy" size={48} color={colors.primary} />
           </View>
-          <Text style={styles.heroTitle}>How can we help?</Text>
-          <Text style={styles.heroSubtitle}>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>How can we help?</Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
             Find answers to common questions or contact our support team
           </Text>
         </View>
 
         {/* Contact Support Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Support</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Contact Support</Text>
           <View style={styles.supportGrid}>
             {supportOptions.map((option, index) => (
               <TouchableOpacity
                 key={index}
                 style={styles.supportCard}
                 onPress={option.onPress}
+                accessibilityLabel={option.title}
+                accessibilityRole="button"
               >
-                <View style={styles.supportIconContainer}>
-                  <Ionicons name={option.icon as any} size={24} color={COLORS.primary} />
+                <View style={[styles.supportIconContainer, { backgroundColor: colors.primary + '15' }]}>
+                  <Ionicons name={option.icon as any} size={24} color={colors.primary} />
                 </View>
-                <Text style={styles.supportTitle}>{option.title}</Text>
-                <Text style={styles.supportSubtitle}>{option.subtitle}</Text>
+                <Text style={[styles.supportTitle, { color: colors.text }]}>{option.title}</Text>
+                <Text style={[styles.supportSubtitle, { color: colors.textSecondary }]}>{option.subtitle}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -191,28 +198,31 @@ export default function HelpSupportScreen() {
 
         {/* FAQs Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-          <View style={styles.faqContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Frequently Asked Questions</Text>
+          <View style={[styles.faqContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {faqs.map((faq, index) => (
               <TouchableOpacity
                 key={index}
                 style={[
                   styles.faqItem,
+                  { borderBottomColor: colors.border },
                   index === faqs.length - 1 && styles.faqItemLast,
                 ]}
                 onPress={() => toggleFAQ(index)}
                 activeOpacity={0.7}
+                accessibilityLabel={faq.question}
+                accessibilityRole="button"
               >
                 <View style={styles.faqQuestion}>
-                  <Text style={styles.faqQuestionText}>{faq.question}</Text>
+                  <Text style={[styles.faqQuestionText, { color: colors.text }]}>{faq.question}</Text>
                   <Ionicons
                     name={expandedFAQ === index ? 'chevron-up' : 'chevron-down'}
                     size={20}
-                    color={COLORS.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </View>
                 {expandedFAQ === index && (
-                  <Text style={styles.faqAnswer}>{faq.answer}</Text>
+                  <Text style={[styles.faqAnswer, { color: colors.textSecondary, borderTopColor: colors.border }]}>{faq.answer}</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -221,36 +231,39 @@ export default function HelpSupportScreen() {
 
         {/* Quick Links Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Links</Text>
-          <View style={styles.quickLinksContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Quick Links</Text>
+          <View style={[styles.quickLinksContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {quickLinks.map((link, index) => (
               <TouchableOpacity
                 key={index}
                 style={[
                   styles.quickLinkItem,
+                  { borderBottomColor: colors.border },
                   index === quickLinks.length - 1 && styles.quickLinkItemLast,
                 ]}
                 onPress={link.onPress}
+                accessibilityLabel={link.title}
+                accessibilityRole="button"
               >
-                <View style={styles.quickLinkIconContainer}>
-                  <Ionicons name={link.icon as any} size={22} color={COLORS.primary} />
+                <View style={[styles.quickLinkIconContainer, { backgroundColor: colors.primary + '15' }]}>
+                  <Ionicons name={link.icon as any} size={22} color={colors.primary} />
                 </View>
                 <View style={styles.quickLinkContent}>
-                  <Text style={styles.quickLinkTitle}>{link.title}</Text>
-                  <Text style={styles.quickLinkSubtitle}>{link.subtitle}</Text>
+                  <Text style={[styles.quickLinkTitle, { color: colors.text }]}>{link.title}</Text>
+                  <Text style={[styles.quickLinkSubtitle, { color: colors.textSecondary }]}>{link.subtitle}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
         {/* Support Hours */}
-        <View style={styles.supportHoursCard}>
-          <Ionicons name="time" size={24} color={COLORS.primary} />
+        <View style={[styles.supportHoursCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="time" size={24} color={colors.primary} />
           <View style={styles.supportHoursContent}>
-            <Text style={styles.supportHoursTitle}>Support Hours</Text>
-            <Text style={styles.supportHoursText}>
+            <Text style={[styles.supportHoursTitle, { color: colors.text }]}>Support Hours</Text>
+            <Text style={[styles.supportHoursText, { color: colors.textSecondary }]}>
               Monday - Friday: 8:00 AM - 8:00 PM EST{'\n'}
               Saturday: 9:00 AM - 5:00 PM EST{'\n'}
               Sunday: Closed

@@ -13,7 +13,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { apiClient } from '../../services/apiClient';
-import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
@@ -26,6 +26,7 @@ export default function EmailVerificationScreen() {
 
   const navigation = useNavigation();
   const route = useRoute<EmailVerificationRouteProp>();
+  const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const logoSize = Math.min(180, Math.round(width * 0.5));
 
@@ -58,11 +59,11 @@ export default function EmailVerificationScreen() {
 
   if (isLoading || verificationStatus === 'loading') {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.centerContainer}>
           <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
-          <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
-          <Text style={styles.loadingText}>Verifying your email...</Text>
+          <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loader} />
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Verifying your email...</Text>
         </View>
       </SafeAreaView>
     );
@@ -70,21 +71,23 @@ export default function EmailVerificationScreen() {
 
   if (verificationStatus === 'success') {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.centerContainer}>
           <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
-          <View style={styles.successIconContainer}>
-            <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
+          <View style={[styles.successIconContainer, { backgroundColor: `${theme.colors.success}15` }]}>
+            <Ionicons name="checkmark-circle" size={80} color={theme.colors.success} />
           </View>
-          <Text style={styles.successTitle}>Email Verified!</Text>
-          <Text style={styles.successMessage}>
+          <Text style={[styles.successTitle, { color: theme.colors.text }]}>Email Verified!</Text>
+          <Text style={[styles.successMessage, { color: theme.colors.textSecondary }]}>
             Your email has been successfully verified. You can now access all features of the BSA Camp Card app.
           </Text>
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.continueButton, { backgroundColor: theme.colors.primary }]}
             onPress={() => navigation.navigate('Login' as never)}
+            accessibilityLabel="Continue to app"
+            accessibilityRole="button"
           >
-            <Text style={styles.continueButtonText}>Continue to App</Text>
+            <Text style={[styles.continueButtonText, { color: theme.colors.surface }]}>Continue to App</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -93,29 +96,33 @@ export default function EmailVerificationScreen() {
 
   // Error state
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.centerContainer}>
         <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
-        <View style={styles.errorIconContainer}>
-          <Ionicons name="alert-circle" size={80} color={COLORS.error} />
+        <View style={[styles.errorIconContainer, { backgroundColor: `${theme.colors.error}15` }]}>
+          <Ionicons name="alert-circle" size={80} color={theme.colors.error} />
         </View>
-        <Text style={styles.errorTitle}>Verification Failed</Text>
-        <Text style={styles.errorMessage}>{errorMessage}</Text>
+        <Text style={[styles.errorTitle, { color: theme.colors.text }]}>Verification Failed</Text>
+        <Text style={[styles.errorMessage, { color: theme.colors.textSecondary }]}>{errorMessage}</Text>
         <TouchableOpacity
-          style={styles.retryButton}
+          style={[styles.retryButton, { backgroundColor: theme.colors.primary }]}
           onPress={() => {
             setIsLoading(true);
             setVerificationStatus('loading');
             verifyEmail();
           }}
+          accessibilityLabel="Try again"
+          accessibilityRole="button"
         >
-          <Text style={styles.retryButtonText}>Try Again</Text>
+          <Text style={[styles.retryButtonText, { color: theme.colors.surface }]}>Try Again</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.navigate('Login' as never)}
+          accessibilityLabel="Back to login"
+          accessibilityRole="button"
         >
-          <Text style={styles.backButtonText}>Back to Login</Text>
+          <Text style={[styles.backButtonText, { color: theme.colors.primary }]}>Back to Login</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -125,7 +132,6 @@ export default function EmailVerificationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   centerContainer: {
     flex: 1,
@@ -143,14 +149,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   successIconContainer: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: `${COLORS.success}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -158,27 +162,23 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 16,
     textAlign: 'center',
   },
   successMessage: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
     marginBottom: 32,
   },
   continueButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingHorizontal: 48,
     paddingVertical: 16,
     minWidth: 200,
   },
   continueButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
@@ -187,7 +187,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: `${COLORS.error}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -195,20 +194,17 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 16,
     textAlign: 'center',
   },
   errorMessage: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
     marginBottom: 32,
   },
   retryButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingHorizontal: 48,
     paddingVertical: 16,
@@ -216,7 +212,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   retryButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
@@ -226,7 +221,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backButtonText: {
-    color: COLORS.primary,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',

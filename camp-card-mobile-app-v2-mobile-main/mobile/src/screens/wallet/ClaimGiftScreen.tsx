@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { cardsApi, authApi } from '../../services/apiClient';
 import { useAuthStore } from '../../store/authStore';
 
@@ -39,6 +40,8 @@ export default function ClaimGiftScreen() {
   const route = useRoute<RouteProp<ClaimGiftRouteParams, 'ClaimGift'>>();
   const { token } = route.params;
   const { isAuthenticated, user, login } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
@@ -178,10 +181,10 @@ export default function ClaimGiftScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading gift details...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading gift details...</Text>
         </View>
       </SafeAreaView>
     );
@@ -189,16 +192,18 @@ export default function ClaimGiftScreen() {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color={COLORS.error} />
-          <Text style={styles.errorTitle}>Unable to Load Gift</Text>
-          <Text style={styles.errorMessage}>{error}</Text>
+          <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Unable to Load Gift</Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>{error}</Text>
           <TouchableOpacity
-            style={styles.retryButton}
+            style={[styles.retryButton, { backgroundColor: colors.primary }]}
             onPress={fetchGiftDetails}
+            accessibilityLabel="Try Again"
+            accessibilityRole="button"
           >
-            <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={[styles.retryButtonText, { color: colors.surface }]}>Try Again</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -212,7 +217,7 @@ export default function ClaimGiftScreen() {
   const daysLeft = getDaysUntilExpiry(giftDetails.expiresAt);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -220,48 +225,48 @@ export default function ClaimGiftScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.giftIconContainer}>
-              <Ionicons name="gift" size={48} color={COLORS.surface} />
+            <View style={[styles.giftIconContainer, { backgroundColor: colors.success }]}>
+              <Ionicons name="gift" size={48} color={colors.surface} />
             </View>
-            <Text style={styles.title}>You've Received a Gift!</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>You've Received a Gift!</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               {giftDetails.senderName} sent you a Camp Card
             </Text>
           </View>
 
           {/* Gift Details Card */}
-          <View style={styles.giftCard}>
+          <View style={[styles.giftCard, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardLabel}>CAMP CARD</Text>
-              <Text style={styles.cardNumber}>{giftDetails.cardNumber}</Text>
+              <Text style={[styles.cardLabel, { color: colors.primary }]}>CAMP CARD</Text>
+              <Text style={[styles.cardNumber, { color: colors.text }]}>{giftDetails.cardNumber}</Text>
             </View>
 
             {giftDetails.message && (
-              <View style={styles.messageContainer}>
-                <Ionicons name="chatbubble-outline" size={20} color={COLORS.textSecondary} />
-                <Text style={styles.messageText}>"{giftDetails.message}"</Text>
+              <View style={[styles.messageContainer, { backgroundColor: colors.background }]}>
+                <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
+                <Text style={[styles.messageText, { color: colors.text }]}>"{giftDetails.message}"</Text>
               </View>
             )}
 
             <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>From</Text>
-                <Text style={styles.detailValue}>{giftDetails.senderName}</Text>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>From</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{giftDetails.senderName}</Text>
               </View>
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Expires</Text>
-                <Text style={styles.detailValue}>{formatExpiryDate(giftDetails.expiresAt)}</Text>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Expires</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatExpiryDate(giftDetails.expiresAt)}</Text>
               </View>
             </View>
 
             {daysLeft <= 30 && (
-              <View style={[styles.expiryWarning, daysLeft <= 7 && styles.expiryWarningUrgent]}>
+              <View style={[styles.expiryWarning, { backgroundColor: colors.warning + '15' }, daysLeft <= 7 && { backgroundColor: colors.error + '15' }]}>
                 <Ionicons
                   name="time-outline"
                   size={16}
-                  color={daysLeft <= 7 ? COLORS.error : COLORS.warning}
+                  color={daysLeft <= 7 ? colors.error : colors.warning}
                 />
-                <Text style={[styles.expiryWarningText, daysLeft <= 7 && styles.expiryWarningTextUrgent]}>
+                <Text style={[styles.expiryWarningText, { color: colors.warning }, daysLeft <= 7 && { color: colors.error }]}>
                   {daysLeft} days until this card expires
                 </Text>
               </View>
@@ -273,120 +278,133 @@ export default function ClaimGiftScreen() {
             <View style={styles.actionSection}>
               {isAuthenticated ? (
                 <>
-                  <Text style={styles.actionText}>
+                  <Text style={[styles.actionText, { color: colors.textSecondary }]}>
                     Claim this card to add it to your wallet and start saving!
                   </Text>
                   <TouchableOpacity
-                    style={[styles.claimButton, claiming && styles.claimButtonDisabled]}
+                    style={[styles.claimButton, { backgroundColor: colors.success }, claiming && styles.claimButtonDisabled]}
                     onPress={handleClaimAsAuthenticated}
                     disabled={claiming}
+                    accessibilityLabel="Claim Card"
+                    accessibilityRole="button"
                   >
                     {claiming ? (
-                      <ActivityIndicator size="small" color={COLORS.surface} />
+                      <ActivityIndicator size="small" color={colors.surface} />
                     ) : (
                       <>
-                        <Ionicons name="checkmark-circle" size={24} color={COLORS.surface} />
-                        <Text style={styles.claimButtonText}>Claim Card</Text>
+                        <Ionicons name="checkmark-circle" size={24} color={colors.surface} />
+                        <Text style={[styles.claimButtonText, { color: colors.surface }]}>Claim Card</Text>
                       </>
                     )}
                   </TouchableOpacity>
-                  <Text style={styles.loggedInAs}>
+                  <Text style={[styles.loggedInAs, { color: colors.textSecondary }]}>
                     Logged in as {user?.email}
                   </Text>
                 </>
               ) : (
                 <>
-                  <Text style={styles.actionText}>
+                  <Text style={[styles.actionText, { color: colors.textSecondary }]}>
                     Create an account or log in to claim your gift card.
                   </Text>
                   <TouchableOpacity
-                    style={styles.claimButton}
+                    style={[styles.claimButton, { backgroundColor: colors.success }]}
                     onPress={() => setShowRegistration(true)}
+                    accessibilityLabel="Create Account"
+                    accessibilityRole="button"
                   >
-                    <Ionicons name="person-add" size={24} color={COLORS.surface} />
-                    <Text style={styles.claimButtonText}>Create Account</Text>
+                    <Ionicons name="person-add" size={24} color={colors.surface} />
+                    <Text style={[styles.claimButtonText, { color: colors.surface }]}>Create Account</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.loginButton}
                     onPress={() => navigation.navigate('Login' as never)}
+                    accessibilityLabel="Log In"
+                    accessibilityRole="button"
                   >
-                    <Text style={styles.loginButtonText}>Already have an account? Log In</Text>
+                    <Text style={[styles.loginButtonText, { color: colors.primary }]}>Already have an account? Log In</Text>
                   </TouchableOpacity>
                 </>
               )}
             </View>
           ) : (
             <View style={styles.registrationForm}>
-              <Text style={styles.formTitle}>Create Your Account</Text>
+              <Text style={[styles.formTitle, { color: colors.text }]}>Create Your Account</Text>
 
               <View style={styles.inputRow}>
                 <View style={[styles.inputContainer, styles.halfInput]}>
-                  <Text style={styles.inputLabel}>First Name</Text>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>First Name</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholder="John"
+                    placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                   />
                 </View>
                 <View style={[styles.inputContainer, styles.halfInput]}>
-                  <Text style={styles.inputLabel}>Last Name</Text>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>Last Name</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Smith"
+                    placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                   />
                 </View>
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Email</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Email</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                   value={email}
                   onChangeText={setEmail}
                   placeholder="you@example.com"
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Password</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                   value={password}
                   onChangeText={setPassword}
                   placeholder="At least 8 characters"
+                  placeholderTextColor={colors.textSecondary}
                   secureTextEntry
                 />
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Confirm Password</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Confirm Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Confirm your password"
+                  placeholderTextColor={colors.textSecondary}
                   secureTextEntry
                 />
               </View>
 
               <TouchableOpacity
-                style={[styles.claimButton, claiming && styles.claimButtonDisabled]}
+                style={[styles.claimButton, { backgroundColor: colors.success }, claiming && styles.claimButtonDisabled]}
                 onPress={handleClaimAsNewUser}
                 disabled={claiming}
+                accessibilityLabel="Create Account and Claim"
+                accessibilityRole="button"
               >
                 {claiming ? (
-                  <ActivityIndicator size="small" color={COLORS.surface} />
+                  <ActivityIndicator size="small" color={colors.surface} />
                 ) : (
                   <>
-                    <Ionicons name="checkmark-circle" size={24} color={COLORS.surface} />
-                    <Text style={styles.claimButtonText}>Create Account & Claim</Text>
+                    <Ionicons name="checkmark-circle" size={24} color={colors.surface} />
+                    <Text style={[styles.claimButtonText, { color: colors.surface }]}>Create Account & Claim</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -394,16 +412,18 @@ export default function ClaimGiftScreen() {
               <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => setShowRegistration(false)}
+                accessibilityLabel="Go back"
+                accessibilityRole="button"
               >
-                <Text style={styles.backButtonText}>Back</Text>
+                <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Back</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* Info Section */}
-          <View style={styles.infoSection}>
-            <Text style={styles.infoTitle}>What is Camp Card?</Text>
-            <Text style={styles.infoText}>
+          <View style={[styles.infoSection, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.infoTitle, { color: colors.text }]}>What is Camp Card?</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               Camp Card gives you access to exclusive discounts at local merchants while
               supporting Scout fundraising. Use your card to save money on dining,
               entertainment, services, and more!

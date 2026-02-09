@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Platform, Alert } from 'react-native';
+import { Alert } from 'react-native';
 import { ErrorCode, type Product, type ProductSubscription, type Purchase, type ExpoPurchaseError } from 'expo-iap';
 import { iapService } from '../services/iapService';
 import { IAP_CARD_PRODUCTS } from '../config/constants';
@@ -102,7 +102,7 @@ export function useIAP(options: UseIAPOptions = {}): UseIAPReturn {
 
   // Initialize IAP and fetch products
   useEffect(() => {
-    if (Platform.OS !== 'ios' || !autoInit) {
+    if (!autoInit) {
       setLoading(false);
       return;
     }

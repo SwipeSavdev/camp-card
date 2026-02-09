@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiClient } from '../utils/api';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '../utils/notifications';
+import { useTheme } from '../config/ThemeContext';
 
 interface Notification {
   id: number;
@@ -29,6 +30,8 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   useEffect(() => {
     loadNotifications();
@@ -92,17 +95,17 @@ export default function NotificationsScreen() {
   const getNotificationColor = (type: string) => {
     switch (type) {
       case 'NEW_OFFER':
-        return '#ce1126';
+        return colors.primary;
       case 'PAYMENT_SUCCESS':
-        return '#4CAF50';
+        return colors.success;
       case 'PAYMENT_FAILED':
-        return '#f44336';
+        return colors.error;
       case 'SUBSCRIPTION_EXPIRING':
-        return '#ff9800';
+        return colors.warning;
       case 'REFERRAL_REWARD':
         return '#9c27b0';
       default:
-        return '#003f87';
+        return colors.secondary;
     }
   };
 
@@ -124,7 +127,7 @@ export default function NotificationsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
+        <ActivityIndicator size="large" color={colors.secondary} />
       </View>
     );
   }
@@ -132,25 +135,33 @@ export default function NotificationsScreen() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#003f87" />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Notifications</Text>
+        <Text style={[styles.title, { color: colors.secondary }]}>Notifications</Text>
         {unreadCount > 0 && (
-          <TouchableOpacity onPress={handleMarkAllRead}>
-            <Text style={styles.markAllRead}>Mark all read</Text>
+          <TouchableOpacity
+            onPress={handleMarkAllRead}
+            accessibilityLabel="Mark all as read"
+            accessibilityRole="button"
+          >
+            <Text style={[styles.markAllRead, { color: colors.secondary }]}>Mark all read</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="notifications-off" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>No notifications yet</Text>
-          <Text style={styles.emptySubtext}>
+          <Ionicons name="notifications-off" size={64} color={colors.border} />
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No notifications yet</Text>
+          <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
             You'll receive notifications about new offers, payments, and more
           </Text>
         </View>
@@ -163,8 +174,10 @@ export default function NotificationsScreen() {
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.notificationItem, !item.read && styles.unreadItem]}
+              style={[styles.notificationItem, { backgroundColor: colors.surface }, !item.read && styles.unreadItem]}
               onPress={() => handleNotificationPress(item)}
+              accessibilityLabel={`${item.title} - ${item.read ? 'read' : 'unread'}`}
+              accessibilityRole="button"
             >
               <View
                 style={[
@@ -179,15 +192,15 @@ export default function NotificationsScreen() {
                 />
               </View>
               <View style={styles.notificationContent}>
-                <Text style={styles.notificationTitle}>{item.title}</Text>
-                <Text style={styles.notificationBody} numberOfLines={2}>
+                <Text style={[styles.notificationTitle, { color: colors.text }]}>{item.title}</Text>
+                <Text style={[styles.notificationBody, { color: colors.textSecondary }]} numberOfLines={2}>
                   {item.body}
                 </Text>
-                <Text style={styles.notificationTime}>
+                <Text style={[styles.notificationTime, { color: colors.textSecondary }]}>
                   {formatTime(item.createdAt)}
                 </Text>
               </View>
-              {!item.read && <View style={styles.unreadDot} />}
+              {!item.read && <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />}
             </TouchableOpacity>
           )}
         />

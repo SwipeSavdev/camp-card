@@ -86,7 +86,7 @@ export const MAP_CONFIG = {
   defaultRadius: 25, // miles
 };
 
-// Apple In-App Purchase Product IDs
+// In-App Purchase Product IDs (iOS & Android)
 export const IAP_PRODUCTS = {
   SUBSCRIPTION_ANNUAL: 'org.bsa.campcard.subscription.annual',
   SUBSCRIPTION_ANNUAL_SCOUT: 'org.bsa.campcard.subscription.annual.scout',

@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiClient } from '../../utils/api';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../store/authStore';
+import { useTheme } from '../../config/ThemeContext';
 
 interface Offer {
   id: number;
@@ -65,6 +66,8 @@ export default function OfferDetailScreen() {
   const route = useRoute();
   const { offerId } = route.params as { offerId: number };
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   useEffect(() => {
     loadOffer();
@@ -203,9 +206,9 @@ export default function OfferDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.secondary} />
-        <Text style={styles.loadingText}>Loading offer...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.secondary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading offer...</Text>
       </View>
     );
   }
@@ -213,16 +216,25 @@ export default function OfferDetailScreen() {
   if (!offer) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.secondary} />
+      <SafeAreaView edges={['top']} style={[styles.headerSafeArea, { backgroundColor: colors.surface }]}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.secondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Offer Details</Text>
-          <TouchableOpacity style={styles.shareButton}>
-            <Ionicons name="share-outline" size={24} color={COLORS.secondary} />
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Offer Details</Text>
+          <TouchableOpacity
+            style={styles.shareButton}
+            accessibilityLabel="Share offer"
+            accessibilityRole="button"
+          >
+            <Ionicons name="share-outline" size={24} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -231,14 +243,14 @@ export default function OfferDetailScreen() {
         {/* Hero Image */}
         <View style={styles.imageContainer}>
           {offer.imageUrl ? (
-            <Image source={{ uri: offer.imageUrl }} style={styles.heroImage} />
+            <Image source={{ uri: offer.imageUrl }} style={[styles.heroImage, { backgroundColor: colors.border }]} />
           ) : (
-            <View style={[styles.heroImage, styles.imagePlaceholder]}>
-              <Ionicons name="pricetag" size={80} color={COLORS.border} />
+            <View style={[styles.heroImage, styles.imagePlaceholder, { backgroundColor: colors.border }]}>
+              <Ionicons name="pricetag" size={80} color={colors.background} />
             </View>
           )}
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{getDiscountText()}</Text>
+          <View style={[styles.discountBadge, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.discountText, { color: colors.surface }]}>{getDiscountText()}</Text>
           </View>
         </View>
 
@@ -246,28 +258,29 @@ export default function OfferDetailScreen() {
           {/* Tags */}
           <View style={styles.tagsRow}>
             {offer.featured && (
-              <View style={styles.featuredTag}>
-                <Ionicons name="star" size={14} color="#fff" />
-                <Text style={styles.tagText}>Featured</Text>
+              <View style={[styles.featuredTag, { backgroundColor: colors.warning }]}>
+                <Ionicons name="star" size={14} color={colors.white} />
+                <Text style={[styles.tagText, { color: colors.surface }]}>Featured</Text>
               </View>
             )}
             {offer.scoutExclusive && (
-              <View style={styles.scoutTag}>
-                <Text style={styles.tagText}>Scout Exclusive</Text>
+              <View style={[styles.scoutTag, { backgroundColor: colors.success }]}>
+                <Text style={[styles.tagText, { color: colors.surface }]}>Scout Exclusive</Text>
               </View>
             )}
             <View style={[
               styles.usageTag,
-              !canRedeem() && styles.usageTagDisabled
+              !canRedeem() && [styles.usageTagDisabled, { backgroundColor: colors.border }]
             ]}>
               <Ionicons
                 name={offer.usageType === 'one_time' ? 'flash' : 'infinite'}
                 size={12}
-                color={canRedeem() ? COLORS.secondary : COLORS.textSecondary}
+                color={canRedeem() ? colors.secondary : colors.textSecondary}
               />
               <Text style={[
                 styles.usageTagText,
-                !canRedeem() && styles.usageTagTextDisabled
+                { color: colors.secondary },
+                !canRedeem() && [styles.usageTagTextDisabled, { color: colors.textSecondary }]
               ]}>
                 {getRedemptionStatus()}
               </Text>
@@ -275,45 +288,47 @@ export default function OfferDetailScreen() {
           </View>
 
           {/* Title and Merchant */}
-          <Text style={styles.title}>{offer.title}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{offer.title}</Text>
 
           {Boolean(offer.merchantName) && (
-            <View style={styles.merchantSection}>
+            <View style={[styles.merchantSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {offer.merchantLogoUrl ? (
                 <Image source={{ uri: offer.merchantLogoUrl }} style={styles.merchantLogo} />
               ) : (
-                <View style={styles.merchantLogoPlaceholder}>
-                  <Ionicons name="storefront" size={20} color={COLORS.textSecondary} />
+                <View style={[styles.merchantLogoPlaceholder, { backgroundColor: colors.background }]}>
+                  <Ionicons name="storefront" size={20} color={colors.textSecondary} />
                 </View>
               )}
               <View style={styles.merchantInfo}>
-                <Text style={styles.merchantName}>{offer.merchantName}</Text>
+                <Text style={[styles.merchantName, { color: colors.text }]}>{offer.merchantName}</Text>
                 {Boolean(offer.merchantAddress) && (
-                  <Text style={styles.merchantAddress}>{offer.merchantAddress}</Text>
+                  <Text style={[styles.merchantAddress, { color: colors.textSecondary }]}>{offer.merchantAddress}</Text>
                 )}
               </View>
               {Boolean(offer.merchantLatitude && offer.merchantLongitude) && (
                 <TouchableOpacity
-                  style={styles.directionsButton}
+                  style={[styles.directionsButton, { backgroundColor: colors.background }]}
                   onPress={() => {
                     const url = `https://maps.google.com/?q=${offer.merchantLatitude},${offer.merchantLongitude}`;
                     Linking.openURL(url);
                   }}
+                  accessibilityLabel="Get directions"
+                  accessibilityRole="button"
                 >
-                  <Ionicons name="navigate" size={18} color={COLORS.primary} />
+                  <Ionicons name="navigate" size={18} color={colors.primary} />
                 </TouchableOpacity>
               )}
             </View>
           )}
 
           {/* Description */}
-          <Text style={styles.description}>{offer.description}</Text>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>{offer.description}</Text>
 
           {/* Expiry */}
           <View style={styles.expirySection}>
-            <Ionicons name="time-outline" size={18} color={COLORS.warning} />
-            <Text style={styles.expiryText}>{getDaysRemaining()}</Text>
-            <Text style={styles.expiryDate}>
+            <Ionicons name="time-outline" size={18} color={colors.warning} />
+            <Text style={[styles.expiryText, { color: colors.warning }]}>{getDaysRemaining()}</Text>
+            <Text style={[styles.expiryDate, { color: colors.textSecondary }]}>
               Valid until {new Date(offer.validUntil).toLocaleDateString()}
             </Text>
           </View>
@@ -321,60 +336,62 @@ export default function OfferDetailScreen() {
           {/* Terms and Conditions */}
           {Boolean(offer.terms) && (
             <View style={styles.termsSection}>
-              <Text style={styles.sectionTitle}>Terms & Conditions</Text>
-              <Text style={styles.termsText}>{offer.terms}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Terms & Conditions</Text>
+              <Text style={[styles.termsText, { color: colors.textSecondary }]}>{offer.terms}</Text>
             </View>
           )}
 
           {/* Minimum Purchase */}
           {Boolean(offer.minPurchaseAmount) && (
             <View style={styles.minPurchaseSection}>
-              <Ionicons name="information-circle" size={18} color={COLORS.secondary} />
-              <Text style={styles.minPurchaseText}>
+              <Ionicons name="information-circle" size={18} color={colors.secondary} />
+              <Text style={[styles.minPurchaseText, { color: colors.secondary }]}>
                 Minimum purchase: ${offer.minPurchaseAmount?.toFixed(2)}
               </Text>
             </View>
           )}
 
           {/* How to Redeem */}
-          <View style={styles.howToSection}>
-            <Text style={styles.sectionTitle}>How to Redeem</Text>
+          <View style={[styles.howToSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>How to Redeem</Text>
             <View style={styles.howToStep}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>1</Text>
+              <View style={[styles.stepNumber, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.stepNumberText, { color: colors.surface }]}>1</Text>
               </View>
-              <Text style={styles.stepText}>Tap "Redeem Now" when ready to use</Text>
+              <Text style={[styles.stepText, { color: colors.text }]}>Tap "Redeem Now" when ready to use</Text>
             </View>
             <View style={styles.howToStep}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>2</Text>
+              <View style={[styles.stepNumber, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.stepNumberText, { color: colors.surface }]}>2</Text>
               </View>
-              <Text style={styles.stepText}>Choose your redemption method</Text>
+              <Text style={[styles.stepText, { color: colors.text }]}>Choose your redemption method</Text>
             </View>
             <View style={styles.howToStep}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>3</Text>
+              <View style={[styles.stepNumber, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.stepNumberText, { color: colors.surface }]}>3</Text>
               </View>
-              <Text style={styles.stepText}>Show confirmation to the cashier</Text>
+              <Text style={[styles.stepText, { color: colors.text }]}>Show confirmation to the cashier</Text>
             </View>
           </View>
         </View>
       </ScrollView>
 
       {/* Footer with Redeem Button */}
-      <SafeAreaView edges={['bottom']} style={styles.footerSafeArea}>
-        <View style={styles.footer}>
+      <SafeAreaView edges={['bottom']} style={[styles.footerSafeArea, { backgroundColor: colors.surface }]}>
+        <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <TouchableOpacity
-            style={[styles.redeemButton, !canRedeem() && styles.buttonDisabled]}
+            style={[styles.redeemButton, { backgroundColor: colors.success }, !canRedeem() && [styles.buttonDisabled, { backgroundColor: colors.textSecondary }]]}
             onPress={handleStartRedemption}
             disabled={!canRedeem()}
+            accessibilityLabel={canRedeem() ? 'Redeem Now' : 'Already Redeemed'}
+            accessibilityRole="button"
           >
             <Ionicons
               name={canRedeem() ? 'checkmark-circle' : 'close-circle'}
               size={24}
-              color={COLORS.surface}
+              color={colors.surface}
             />
-            <Text style={styles.redeemButtonText}>
+            <Text style={[styles.redeemButtonText, { color: colors.surface }]}>
               {canRedeem() ? 'Redeem Now' : 'Already Redeemed'}
             </Text>
           </TouchableOpacity>
@@ -388,50 +405,58 @@ export default function OfferDetailScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowRedemptionModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowRedemptionModal(false)}>
-              <Text style={styles.modalCancel}>Cancel</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+            <TouchableOpacity
+              onPress={() => setShowRedemptionModal(false)}
+              accessibilityLabel="Cancel redemption"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.modalCancel, { color: colors.secondary }]}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Redeem Offer</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Redeem Offer</Text>
             <View style={{ width: 60 }} />
           </View>
 
           <ScrollView style={styles.modalContent}>
             {/* Offer Summary */}
-            <View style={styles.offerSummary}>
-              <View style={styles.summaryBadge}>
-                <Text style={styles.summaryBadgeText}>{getDiscountText()}</Text>
+            <View style={[styles.offerSummary, { borderBottomColor: colors.border }]}>
+              <View style={[styles.summaryBadge, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.summaryBadgeText, { color: colors.surface }]}>{getDiscountText()}</Text>
               </View>
-              <Text style={styles.summaryTitle}>{offer.title}</Text>
-              <Text style={styles.summaryMerchant}>{offer.merchantName}</Text>
+              <Text style={[styles.summaryTitle, { color: colors.text }]}>{offer.title}</Text>
+              <Text style={[styles.summaryMerchant, { color: colors.textSecondary }]}>{offer.merchantName}</Text>
             </View>
 
             {/* Redemption Methods (FR-12) */}
-            <Text style={styles.methodsTitle}>Choose Redemption Method</Text>
+            <Text style={[styles.methodsTitle, { color: colors.text }]}>Choose Redemption Method</Text>
 
             <TouchableOpacity
               style={[
                 styles.methodCard,
-                selectedMethod === 'show_to_cashier' && styles.methodCardSelected
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                selectedMethod === 'show_to_cashier' && [styles.methodCardSelected, { borderColor: colors.secondary }]
               ]}
               onPress={() => handleSelectMethod('show_to_cashier')}
+              accessibilityLabel="Show to Cashier redemption method"
+              accessibilityRole="button"
             >
-              <View style={styles.methodIcon}>
-                <Ionicons name="phone-portrait" size={32} color={COLORS.secondary} />
+              <View style={[styles.methodIcon, { backgroundColor: colors.background }]}>
+                <Ionicons name="phone-portrait" size={32} color={colors.secondary} />
               </View>
               <View style={styles.methodInfo}>
-                <Text style={styles.methodName}>Show to Cashier</Text>
-                <Text style={styles.methodDescription}>
+                <Text style={[styles.methodName, { color: colors.text }]}>Show to Cashier</Text>
+                <Text style={[styles.methodDescription, { color: colors.textSecondary }]}>
                   Present this screen to the cashier during checkout
                 </Text>
               </View>
               <View style={[
                 styles.methodRadio,
-                selectedMethod === 'show_to_cashier' && styles.methodRadioSelected
+                { borderColor: colors.border },
+                selectedMethod === 'show_to_cashier' && [styles.methodRadioSelected, { backgroundColor: colors.secondary, borderColor: colors.secondary }]
               ]}>
                 {selectedMethod === 'show_to_cashier' && (
-                  <Ionicons name="checkmark" size={16} color={COLORS.surface} />
+                  <Ionicons name="checkmark" size={16} color={colors.surface} />
                 )}
               </View>
             </TouchableOpacity>
@@ -439,25 +464,29 @@ export default function OfferDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.methodCard,
-                selectedMethod === 'scan_merchant_code' && styles.methodCardSelected
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                selectedMethod === 'scan_merchant_code' && [styles.methodCardSelected, { borderColor: colors.secondary }]
               ]}
               onPress={() => handleSelectMethod('scan_merchant_code')}
+              accessibilityLabel="Scan Merchant Code redemption method"
+              accessibilityRole="button"
             >
-              <View style={styles.methodIcon}>
-                <Ionicons name="qr-code" size={32} color={COLORS.secondary} />
+              <View style={[styles.methodIcon, { backgroundColor: colors.background }]}>
+                <Ionicons name="qr-code" size={32} color={colors.secondary} />
               </View>
               <View style={styles.methodInfo}>
-                <Text style={styles.methodName}>Scan Merchant Code</Text>
-                <Text style={styles.methodDescription}>
+                <Text style={[styles.methodName, { color: colors.text }]}>Scan Merchant Code</Text>
+                <Text style={[styles.methodDescription, { color: colors.textSecondary }]}>
                   Let the merchant scan your unique QR code
                 </Text>
               </View>
               <View style={[
                 styles.methodRadio,
-                selectedMethod === 'scan_merchant_code' && styles.methodRadioSelected
+                { borderColor: colors.border },
+                selectedMethod === 'scan_merchant_code' && [styles.methodRadioSelected, { backgroundColor: colors.secondary, borderColor: colors.secondary }]
               ]}>
                 {selectedMethod === 'scan_merchant_code' && (
-                  <Ionicons name="checkmark" size={16} color={COLORS.surface} />
+                  <Ionicons name="checkmark" size={16} color={colors.surface} />
                 )}
               </View>
             </TouchableOpacity>
@@ -465,8 +494,8 @@ export default function OfferDetailScreen() {
             {/* Warning for one-time offers (FR-14) */}
             {offer.usageType === 'one_time' && (
               <View style={styles.warningBox}>
-                <Ionicons name="warning" size={20} color={COLORS.warning} />
-                <Text style={styles.warningText}>
+                <Ionicons name="warning" size={20} color={colors.warning} />
+                <Text style={[styles.warningText, { color: colors.text }]}>
                   This is a one-time offer. Once redeemed, it cannot be used again.
                 </Text>
               </View>
@@ -476,17 +505,20 @@ export default function OfferDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.confirmButton,
-                !selectedMethod && styles.confirmButtonDisabled
+                { backgroundColor: colors.success },
+                !selectedMethod && [styles.confirmButtonDisabled, { backgroundColor: colors.textSecondary }]
               ]}
               onPress={handleConfirmRedemption}
               disabled={!selectedMethod || isRedeeming}
+              accessibilityLabel="Confirm Redemption"
+              accessibilityRole="button"
             >
               {isRedeeming ? (
-                <ActivityIndicator color={COLORS.surface} />
+                <ActivityIndicator color={colors.surface} />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle" size={24} color={COLORS.surface} />
-                  <Text style={styles.confirmButtonText}>Confirm Redemption</Text>
+                  <Ionicons name="checkmark-circle" size={24} color={colors.surface} />
+                  <Text style={[styles.confirmButtonText, { color: colors.surface }]}>Confirm Redemption</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -502,32 +534,37 @@ export default function OfferDetailScreen() {
         onRequestClose={handleCloseSuccess}
       >
         <View style={styles.successOverlay}>
-          <View style={styles.successModal}>
+          <View style={[styles.successModal, { backgroundColor: colors.surface }]}>
             <View style={styles.successIcon}>
-              <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
+              <Ionicons name="checkmark-circle" size={80} color={colors.success} />
             </View>
-            <Text style={styles.successTitle}>Offer Redeemed!</Text>
-            <Text style={styles.successMessage}>
+            <Text style={[styles.successTitle, { color: colors.success }]}>Offer Redeemed!</Text>
+            <Text style={[styles.successMessage, { color: colors.textSecondary }]}>
               Show this screen to the cashier to apply your discount.
             </Text>
 
-            <View style={styles.successDetails}>
-              <Text style={styles.successDiscount}>{getDiscountText()}</Text>
-              <Text style={styles.successOfferTitle}>{offer.title}</Text>
-              <Text style={styles.successMerchant}>{offer.merchantName}</Text>
+            <View style={[styles.successDetails, { borderColor: colors.border }]}>
+              <Text style={[styles.successDiscount, { color: colors.primary }]}>{getDiscountText()}</Text>
+              <Text style={[styles.successOfferTitle, { color: colors.text }]}>{offer.title}</Text>
+              <Text style={[styles.successMerchant, { color: colors.textSecondary }]}>{offer.merchantName}</Text>
             </View>
 
             {selectedMethod === 'show_to_cashier' && (
-              <View style={styles.redemptionCode}>
-                <Text style={styles.redemptionCodeLabel}>Redemption Code</Text>
-                <Text style={styles.redemptionCodeValue}>
+              <View style={[styles.redemptionCode, { backgroundColor: colors.background }]}>
+                <Text style={[styles.redemptionCodeLabel, { color: colors.textSecondary }]}>Redemption Code</Text>
+                <Text style={[styles.redemptionCodeValue, { color: colors.secondary }]}>
                   {`RDM-${offer.id}-${Date.now().toString(36).toUpperCase()}`}
                 </Text>
               </View>
             )}
 
-            <TouchableOpacity style={styles.doneButton} onPress={handleCloseSuccess}>
-              <Text style={styles.doneButtonText}>Done</Text>
+            <TouchableOpacity
+              style={[styles.doneButton, { backgroundColor: colors.secondary }]}
+              onPress={handleCloseSuccess}
+              accessibilityLabel="Done"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.doneButtonText, { color: colors.surface }]}>Done</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -13,6 +13,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiClient } from '../utils/api';
+import { useTheme } from '../config/ThemeContext';
 
 interface Offer {
   id: number;
@@ -30,7 +31,9 @@ export default function OfferDetailsScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { offer, fromScanner } = route.params as { offer: Offer; fromScanner?: boolean };
-  
+  const { theme } = useTheme();
+  const { colors } = theme;
+
   const [redeeming, setRedeeming] = useState(false);
 
   const handleRedeem = async () => {
@@ -83,82 +86,88 @@ export default function OfferDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Image */}
         <View style={styles.imageContainer}>
           {offer.imageUrl ? (
-            <Image 
-              source={{ uri: offer.imageUrl }} 
+            <Image
+              source={{ uri: offer.imageUrl }}
               style={styles.image}
               resizeMode="cover"
             />
           ) : (
-            <View style={[styles.image, styles.placeholderImage]}>
-              <Ionicons name="gift" size={64} color="#999" />
+            <View style={[styles.image, styles.placeholderImage, { backgroundColor: colors.background }]}>
+              <Ionicons name="gift" size={64} color={colors.textSecondary} />
             </View>
           )}
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={24} color={colors.white} />
           </TouchableOpacity>
         </View>
 
         {/* Offer Details */}
         <View style={styles.content}>
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{offer.discountPercentage}% OFF</Text>
+          <View style={[styles.discountBadge, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.discountText, { color: colors.white }]}>{offer.discountPercentage}% OFF</Text>
           </View>
-          
-          <Text style={styles.merchantName}>{offer.merchantName}</Text>
-          <Text style={styles.title}>{offer.title}</Text>
-          
+
+          <Text style={[styles.merchantName, { color: colors.textSecondary }]}>{offer.merchantName}</Text>
+          <Text style={[styles.title, { color: colors.secondary }]}>{offer.title}</Text>
+
           <View style={styles.categoryContainer}>
-            <Ionicons name="pricetag" size={16} color="#666" />
-            <Text style={styles.category}>{offer.category}</Text>
+            <Ionicons name="pricetag" size={16} color={colors.textSecondary} />
+            <Text style={[styles.category, { color: colors.textSecondary }]}>{offer.category}</Text>
           </View>
-          
+
           <View style={styles.expiryContainer}>
-            <Ionicons name="calendar" size={16} color="#666" />
-            <Text style={styles.expiry}>Expires: {formatDate(offer.expiresAt)}</Text>
+            <Ionicons name="calendar" size={16} color={colors.textSecondary} />
+            <Text style={[styles.expiry, { color: colors.textSecondary }]}>Expires: {formatDate(offer.expiresAt)}</Text>
           </View>
-          
-          <View style={styles.divider} />
-          
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{offer.description}</Text>
-          
-          <View style={styles.divider} />
-          
-          <Text style={styles.sectionTitle}>Terms & Conditions</Text>
-          <Text style={styles.terms}>{offer.termsAndConditions}</Text>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Description</Text>
+          <Text style={[styles.description, { color: colors.text }]}>{offer.description}</Text>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Terms & Conditions</Text>
+          <Text style={[styles.terms, { color: colors.textSecondary }]}>{offer.termsAndConditions}</Text>
         </View>
       </ScrollView>
-      
+
       {/* Action Buttons */}
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.shareButton}
+      <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.shareButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}
           onPress={handleShareOffer}
+          accessibilityLabel="Share Offer"
+          accessibilityRole="button"
         >
-          <Ionicons name="share-social" size={20} color="#003f87" />
-          <Text style={styles.shareButtonText}>Share Offer</Text>
+          <Ionicons name="share-social" size={20} color={colors.secondary} />
+          <Text style={[styles.shareButtonText, { color: colors.secondary }]}>Share Offer</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.redeemButton, redeeming && styles.redeemButtonDisabled]}
+        <TouchableOpacity
+          style={[styles.redeemButton, { backgroundColor: colors.primary }, redeeming && styles.redeemButtonDisabled]}
           onPress={handleRedeem}
           disabled={redeeming}
+          accessibilityLabel="Redeem Offer"
+          accessibilityRole="button"
         >
           {redeeming ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color={colors.white} />
           ) : (
             <>
-              <Ionicons name="checkmark-circle" size={24} color="white" />
-              <Text style={styles.redeemButtonText}>Redeem Offer</Text>
+              <Ionicons name="checkmark-circle" size={24} color={colors.white} />
+              <Text style={[styles.redeemButtonText, { color: colors.white }]}>Redeem Offer</Text>
             </>
           )}
         </TouchableOpacity>

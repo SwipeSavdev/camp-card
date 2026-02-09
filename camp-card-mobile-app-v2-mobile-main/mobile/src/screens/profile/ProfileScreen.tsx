@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { useIAP } from '../../hooks/useIAP';
 
 export default function ProfileScreen() {
@@ -16,10 +17,12 @@ export default function ProfileScreen() {
   const [isRestoring, setIsRestoring] = useState(false);
   const navigation = useNavigation<RootNavigation>();
   const isIOS = Platform.OS === 'ios';
+  const { theme } = useTheme();
+  const { colors } = theme;
 
-  // Apple IAP hook for restore purchases (only active on iOS)
+  // IAP hook for restore purchases
   const { restorePurchases } = useIAP({
-    autoInit: isIOS,
+    autoInit: true,
     userId: user?.id,
     onPurchaseComplete: () => {
       Alert.alert('Restored', 'Your purchases have been restored successfully.');
@@ -77,92 +80,100 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.content}>
         {/* User Info Header */}
-        <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={48} color={COLORS.surface} />
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: colors.primary }]}>
+            <Ionicons name="person" size={48} color={colors.surface} />
           </View>
-          <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
-          <Text style={styles.email}>{user?.email}</Text>
+          <Text style={[styles.name, { color: colors.text }]}>{user?.firstName} {user?.lastName}</Text>
+          <Text style={[styles.email, { color: colors.textSecondary }]}>{user?.email}</Text>
         </View>
 
         {/* Menu Items */}
-        <View style={styles.menuSection}>
+        <View style={[styles.menuSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.menuItem}
+              style={[styles.menuItem, { borderBottomColor: colors.border }]}
               onPress={item.onPress}
+              accessibilityLabel={item.title}
+              accessibilityRole="button"
             >
-              <View style={styles.menuIconContainer}>
-                <Ionicons name={item.icon as any} size={24} color={COLORS.primary} />
+              <View style={[styles.menuIconContainer, { backgroundColor: colors.background }]}>
+                <Ionicons name={item.icon as any} size={24} color={colors.primary} />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                <Text style={[styles.menuTitle, { color: colors.text }]}>{item.title}</Text>
+                <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+        <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Account</Text>
 
           {isIOS && (
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.menuItem, { borderBottomColor: colors.border }]}
               onPress={handleRestorePurchases}
               disabled={isRestoring}
+              accessibilityLabel="Restore Purchases"
+              accessibilityRole="button"
             >
-              <View style={styles.menuIconContainer}>
-                <Ionicons name="refresh-outline" size={24} color={COLORS.primary} />
+              <View style={[styles.menuIconContainer, { backgroundColor: colors.background }]}>
+                <Ionicons name="refresh-outline" size={24} color={colors.primary} />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>Restore Purchases</Text>
-                <Text style={styles.menuSubtitle}>Restore previous Apple purchases</Text>
+                <Text style={[styles.menuTitle, { color: colors.text }]}>Restore Purchases</Text>
+                <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>Restore previous Apple purchases</Text>
               </View>
               {isRestoring ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               )}
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, { borderBottomColor: colors.border }]}
             onPress={() => navigation.navigate('Settings')}
+            accessibilityLabel="Settings"
+            accessibilityRole="button"
           >
-            <View style={styles.menuIconContainer}>
-              <Ionicons name="settings-outline" size={24} color={COLORS.textSecondary} />
+            <View style={[styles.menuIconContainer, { backgroundColor: colors.background }]}>
+              <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />
             </View>
             <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>Settings</Text>
+              <Text style={[styles.menuTitle, { color: colors.text }]}>Settings</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, { borderBottomColor: colors.border }]}
             onPress={() => navigation.navigate('HelpSupport')}
+            accessibilityLabel="Help and Support"
+            accessibilityRole="button"
           >
-            <View style={styles.menuIconContainer}>
-              <Ionicons name="help-circle-outline" size={24} color={COLORS.textSecondary} />
+            <View style={[styles.menuIconContainer, { backgroundColor: colors.background }]}>
+              <Ionicons name="help-circle-outline" size={24} color={colors.textSecondary} />
             </View>
             <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>Help & Support</Text>
+              <Text style={[styles.menuTitle, { color: colors.text }]}>Help & Support</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Logout Button */}
         <TouchableOpacity
-          style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]}
+          style={[styles.logoutButton, { borderColor: colors.error, backgroundColor: colors.surface }, isLoggingOut && styles.logoutButtonDisabled]}
           onPress={async () => {
             if (isLoggingOut) return;
 
@@ -186,16 +197,18 @@ export default function ProfileScreen() {
             );
           }}
           disabled={isLoggingOut}
+          accessibilityLabel={isLoggingOut ? 'Logging out' : 'Logout'}
+          accessibilityRole="button"
         >
           {isLoggingOut ? (
-            <ActivityIndicator size="small" color={COLORS.error} />
+            <ActivityIndicator size="small" color={colors.error} />
           ) : (
-            <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
+            <Ionicons name="log-out-outline" size={20} color={colors.error} />
           )}
-          <Text style={styles.logoutText}>{isLoggingOut ? 'Logging out...' : 'Logout'}</Text>
+          <Text style={[styles.logoutText, { color: colors.error }]}>{isLoggingOut ? 'Logging out...' : 'Logout'}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textSecondary }]}>Version 1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );

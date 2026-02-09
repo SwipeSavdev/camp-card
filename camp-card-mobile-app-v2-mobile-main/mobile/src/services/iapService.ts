@@ -33,17 +33,13 @@ class IAPService {
   private onExpoPurchaseError: ((error: ExpoPurchaseError) => void) | null = null;
 
   async init(): Promise<boolean> {
-    if (Platform.OS !== 'ios') {
-      console.log('[IAP] Skipping init - not iOS');
-      return false;
-    }
     if (this.connected) {
       console.log('[IAP] Already connected');
       return true;
     }
 
     try {
-      console.log('[IAP] Initializing StoreKit connection...');
+      console.log(`[IAP] Initializing ${Platform.OS === 'ios' ? 'StoreKit' : 'Google Play Billing'} connection...`);
       const result = await initConnection();
       this.connected = !!result;
       console.log('[IAP] Connection result:', result, 'Connected:', this.connected);
@@ -135,12 +131,15 @@ class IAPService {
     const product = products.find(p => p.id === sku);
     if (!product) {
       console.error('[IAP] Product SKU not found:', sku, 'Available:', products.map(p => p.id));
-      throw new Error(`SKU not found: ${sku}. Please ensure the product is configured in App Store Connect.`);
+      throw new Error(`SKU not found: ${sku}. Please ensure the product is configured in the store.`);
     }
 
     try {
       await expoRequestPurchase({
-        request: { apple: { sku } },
+        request: {
+          apple: { sku },
+          google: { skus: [sku] },
+        },
         type: 'in-app',
       });
     } catch (error) {
@@ -157,12 +156,15 @@ class IAPService {
     const product = subs.find(s => s.id === sku);
     if (!product) {
       console.error('[IAP] Subscription SKU not found:', sku, 'Available:', subs.map(s => s.id));
-      throw new Error(`SKU not found: ${sku}. Please ensure the subscription is configured in App Store Connect.`);
+      throw new Error(`SKU not found: ${sku}. Please ensure the subscription is configured in the store.`);
     }
 
     try {
       await expoRequestPurchase({
-        request: { apple: { sku } },
+        request: {
+          apple: { sku },
+          google: { skus: [sku] },
+        },
         type: 'subs',
       });
     } catch (error) {
@@ -211,7 +213,10 @@ class IAPService {
     cardsPurchased?: number;
     expiresDate?: string;
   }> {
-    const response = await apiClient.post('/api/v1/apple/verify-receipt', data);
+    const endpoint = Platform.OS === 'ios'
+      ? '/api/v1/apple/verify-receipt'
+      : '/api/v1/google/verify-receipt';
+    const response = await apiClient.post(endpoint, data);
     return response.data;
   }
 
@@ -228,7 +233,7 @@ class IAPService {
   }
 
   isAvailable(): boolean {
-    return Platform.OS === 'ios';
+    return Platform.OS === 'ios' || Platform.OS === 'android';
   }
 }
 

@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS, IAP_PRICES } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
 import { paymentsApi } from '../../services/apiClient';
 import { useIAP } from '../../hooks/useIAP';
@@ -31,6 +32,8 @@ export default function PaymentScreen() {
   const { selectedPlan, quantity = 1, scoutCode } = route.params;
   const { width } = useWindowDimensions();
   const isIOS = Platform.OS === 'ios';
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   // Get card product details for the selected quantity
   // Note: Card price INCLUDES the annual subscription (bundled)
@@ -55,7 +58,7 @@ export default function PaymentScreen() {
     return cardProduct?.productId || IAP_PRODUCTS.CARDS_1;
   };
 
-  // Apple IAP hook (only active on iOS)
+  // IAP hook for in-app purchases (iOS StoreKit / Android Google Play Billing)
   const {
     products: iapProducts,
     loading: iapLoading,
@@ -63,7 +66,7 @@ export default function PaymentScreen() {
     purchaseProduct,
     getLocalizedPrice,
   } = useIAP({
-    autoInit: isIOS,
+    autoInit: true,
     onPurchaseComplete: (result) => {
       // Card purchase complete (subscription included) - navigate to signup
       (navigation as any).navigate('Signup', {
@@ -238,7 +241,7 @@ export default function PaymentScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -248,14 +251,17 @@ export default function PaymentScreen() {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerLogoContainer}>
             <Image
               source={CAMP_CARD_LOGO}
               style={[styles.logoImage, { width: headerLogoSize, height: headerLogoSize * 0.4 }]}
+              accessibilityLabel="Camp Card logo"
             />
           </View>
 
@@ -269,18 +275,18 @@ export default function PaymentScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Order Summary */}
-          <View style={styles.orderSummary}>
-            <Text style={styles.sectionTitle}>Order Summary</Text>
+          <View style={[styles.orderSummary, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Order Summary</Text>
 
             {/* Camp Cards (subscription included in first card) */}
             <View style={styles.orderItem}>
               <View style={styles.orderItemLeft}>
-                <Text style={styles.planName}>{quantity} Camp Card{quantity > 1 ? 's' : ''}</Text>
-                <Text style={styles.planInterval}>
+                <Text style={[styles.planName, { color: colors.text }]}>{quantity} Camp Card{quantity > 1 ? 's' : ''}</Text>
+                <Text style={[styles.planInterval, { color: colors.textSecondary }]}>
                   {isIOS ? 'Includes annual subscription' : `${quantity} × ${formatPrice(selectedPlan.priceCents)}`}
                 </Text>
               </View>
-              <Text style={styles.planPrice}>
+              <Text style={[styles.planPrice, { color: colors.text }]}>
                 {isIOS
                   ? (getLocalizedPrice(getCardSku()) || formatPrice(cardPriceCents))
                   : formatPrice(cardPriceCents)
@@ -289,25 +295,25 @@ export default function PaymentScreen() {
             </View>
 
             {/* Subscription included note */}
-            <Text style={styles.subscriptionNote}>
+            <Text style={[styles.subscriptionNote, { color: colors.textSecondary }]}>
               Annual subscription included with first card
             </Text>
 
             {!isIOS && (
               <View style={styles.feeRow}>
-                <Text style={styles.feeLabel}>Credit Card Processing Fee (3%)</Text>
-                <Text style={styles.feeAmount}>{formatPrice(processingFee)}</Text>
+                <Text style={[styles.feeLabel, { color: colors.textSecondary }]}>Credit Card Processing Fee (3%)</Text>
+                <Text style={[styles.feeAmount, { color: colors.text }]}>{formatPrice(processingFee)}</Text>
               </View>
             )}
             {scoutCode ? (
               <View style={styles.scoutRow}>
-                <Text style={styles.scoutLabel}>Scout Referral: {scoutCode}</Text>
+                <Text style={[styles.scoutLabel, { color: colors.secondary }]}>Scout Referral: {scoutCode}</Text>
               </View>
             ) : null}
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total Due Today</Text>
-              <Text style={styles.totalAmount}>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>Total Due Today</Text>
+              <Text style={[styles.totalAmount, { color: colors.primary }]}>
                 {formatPrice(isIOS ? cardPriceCents : totalPrice)}
               </Text>
             </View>
@@ -316,11 +322,11 @@ export default function PaymentScreen() {
           {isIOS ? (
             <>
               {/* iOS IAP Info */}
-              <View style={styles.paymentForm}>
-                <Text style={styles.sectionTitle}>Apple In-App Purchase</Text>
-                <View style={styles.securityNotice}>
-                  <Ionicons name="logo-apple" size={20} color="#333" />
-                  <Text style={styles.securityText}>
+              <View style={[styles.paymentForm, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Apple In-App Purchase</Text>
+                <View style={[styles.securityNotice, { backgroundColor: colors.success + '15' }]}>
+                  <Ionicons name="logo-apple" size={20} color={colors.text} />
+                  <Text style={[styles.securityText, { color: colors.success }]}>
                     Your purchase will be processed securely through your Apple ID. No card details needed.
                   </Text>
                 </View>
@@ -329,104 +335,109 @@ export default function PaymentScreen() {
           ) : (
             <>
               {/* Payment Form (Android — Authorize.net) */}
-              <View style={styles.paymentForm}>
-                <Text style={styles.sectionTitle}>Payment Details</Text>
+              <View style={[styles.paymentForm, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment Details</Text>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Card Number</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="card-outline" size={20} color="#999" style={styles.inputIcon} />
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>Card Number</Text>
+                  <View style={[styles.inputWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Ionicons name="card-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="1234 5678 9012 3456"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={colors.textSecondary}
                       value={cardNumber}
                       onChangeText={handleCardNumberChange}
                       keyboardType="numeric"
                       maxLength={19}
                       returnKeyType="next"
+                      accessibilityLabel="Card number"
                     />
                   </View>
                 </View>
 
                 <View style={styles.row}>
                   <View style={[styles.inputGroup, styles.halfWidth]}>
-                    <Text style={styles.inputLabel}>Expiry Date</Text>
-                    <View style={styles.inputWrapper}>
+                    <Text style={[styles.inputLabel, { color: colors.text }]}>Expiry Date</Text>
+                    <View style={[styles.inputWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
                       <TextInput
                         ref={expiryRef}
-                        style={styles.input}
+                        style={[styles.input, { color: colors.text }]}
                         placeholder="MM/YY"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textSecondary}
                         value={expiryDate}
                         onChangeText={handleExpiryChange}
                         keyboardType="numeric"
                         maxLength={5}
                         returnKeyType="next"
+                        accessibilityLabel="Expiry date"
                       />
                     </View>
                   </View>
 
                   <View style={[styles.inputGroup, styles.halfWidth]}>
-                    <Text style={styles.inputLabel}>CVV</Text>
-                    <View style={styles.inputWrapper}>
+                    <Text style={[styles.inputLabel, { color: colors.text }]}>CVV</Text>
+                    <View style={[styles.inputWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
                       <TextInput
                         ref={cvvRef}
-                        style={styles.input}
+                        style={[styles.input, { color: colors.text }]}
                         placeholder="123"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textSecondary}
                         value={cvv}
                         onChangeText={handleCvvChange}
                         keyboardType="numeric"
                         maxLength={4}
                         secureTextEntry
                         returnKeyType="next"
+                        accessibilityLabel="CVV"
                       />
                     </View>
                   </View>
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Cardholder Name</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="person-outline" size={20} color="#999" style={styles.inputIcon} />
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>Cardholder Name</Text>
+                  <View style={[styles.inputWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
                       ref={nameRef}
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="John Doe"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={colors.textSecondary}
                       value={cardholderName}
                       onChangeText={setCardholderName}
                       autoCapitalize="words"
                       returnKeyType="next"
                       onSubmitEditing={() => zipRef.current?.focus()}
+                      accessibilityLabel="Cardholder name"
                     />
                   </View>
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Billing ZIP Code</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="location-outline" size={20} color="#999" style={styles.inputIcon} />
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>Billing ZIP Code</Text>
+                  <View style={[styles.inputWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Ionicons name="location-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
                       ref={zipRef}
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="12345"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={colors.textSecondary}
                       value={zipCode}
                       onChangeText={(text) => setZipCode(text.replace(/\D/g, '').substring(0, 5))}
                       keyboardType="numeric"
                       maxLength={5}
                       returnKeyType="done"
+                      accessibilityLabel="Billing ZIP code"
                     />
                   </View>
                 </View>
               </View>
 
               {/* Security Notice (Android only) */}
-              <View style={styles.securityNotice}>
-                <Ionicons name="shield-checkmark" size={20} color="#4CAF50" />
-                <Text style={styles.securityText}>
+              <View style={[styles.securityNotice, { backgroundColor: colors.success + '15' }]}>
+                <Ionicons name="shield-checkmark" size={20} color={colors.success} />
+                <Text style={[styles.securityText, { color: colors.success }]}>
                   Your payment is secured by Authorize.net with 256-bit SSL encryption
                 </Text>
               </View>
@@ -435,22 +446,25 @@ export default function PaymentScreen() {
         </ScrollView>
 
         {/* Pay Button */}
-        <View style={styles.bottomSection}>
+        <View style={[styles.bottomSection, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <TouchableOpacity
             style={[
               styles.payButton,
+              { backgroundColor: colors.primary },
               (processing || iapPurchasing || (isIOS && iapLoading)) && styles.payButtonDisabled,
               isIOS && !iapLoading && !iapProductAvailable && styles.payButtonWarning,
             ]}
             onPress={isIOS ? handleIAPPurchase : handlePayment}
             disabled={processing || iapPurchasing || (isIOS && iapLoading)}
+            accessibilityLabel={isIOS ? (iapProductAvailable ? 'Purchase with Apple' : 'Product unavailable') : `Pay ${formatPrice(totalPrice)}`}
+            accessibilityRole="button"
           >
             {processing || iapPurchasing || (isIOS && iapLoading) ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <>
-                <Ionicons name={isIOS ? 'logo-apple' : 'lock-closed'} size={20} color="#fff" />
-                <Text style={styles.payButtonText}>
+                <Ionicons name={isIOS ? 'logo-apple' : 'lock-closed'} size={20} color={colors.white} />
+                <Text style={[styles.payButtonText, { color: colors.white }]}>
                   {isIOS
                     ? (iapProductAvailable ? 'Purchase with Apple' : 'Product Unavailable')
                     : `Pay ${formatPrice(totalPrice)}`}
@@ -461,12 +475,12 @@ export default function PaymentScreen() {
 
           {!isIOS && (
             <View style={styles.cardLogos}>
-              <Text style={styles.acceptedText}>We accept</Text>
+              <Text style={[styles.acceptedText, { color: colors.textSecondary }]}>We accept</Text>
               <View style={styles.logoRow}>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>VISA</Text></View>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>MC</Text></View>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>AMEX</Text></View>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>DISC</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.background, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>VISA</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.background, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>MC</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.background, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>AMEX</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.background, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>DISC</Text></View>
               </View>
             </View>
           )}

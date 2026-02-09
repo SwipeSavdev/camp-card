@@ -11,16 +11,14 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { apiClient } from '../../services/apiClient';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 // Card status types matching backend
 type CardStatus = 'UNASSIGNED' | 'ACTIVE' | 'GIFTED' | 'REPLACED' | 'EXPIRED' | 'REVOKED';
@@ -64,6 +62,8 @@ const STATUS_CONFIG: Record<CardStatus, { color: string; label: string; icon: st
 export default function CardInventoryScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [cardsData, setCardsData] = useState<MyCardsResponse | null>(null);
@@ -178,11 +178,11 @@ export default function CardInventoryScreen() {
     const isExpiringSoon = daysLeft <= 30 && daysLeft > 0;
 
     return (
-      <View key={card.id} style={styles.cardItem}>
+      <View key={card.id} style={[styles.cardItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.cardHeader}>
           <View style={styles.cardNumberContainer}>
             <Ionicons name={statusConfig.icon as any} size={20} color={statusConfig.color} />
-            <Text style={styles.cardNumber}>{card.cardNumber}</Text>
+            <Text style={[styles.cardNumber, { color: colors.text }]}>{card.cardNumber}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: statusConfig.color }]}>
             <Text style={styles.statusText}>{statusConfig.label}</Text>
@@ -192,8 +192,8 @@ export default function CardInventoryScreen() {
         <View style={styles.cardDetails}>
           {card.status === 'ACTIVE' && (
             <View style={styles.offersInfo}>
-              <Ionicons name="pricetag" size={16} color={COLORS.primary} />
-              <Text style={styles.offersText}>
+              <Ionicons name="pricetag" size={16} color={colors.primary} />
+              <Text style={[styles.offersText, { color: colors.text }]}>
                 {card.offersUsed} / {card.totalOffers} offers used
               </Text>
             </View>
@@ -208,8 +208,8 @@ export default function CardInventoryScreen() {
 
           {card.scoutName && (
             <View style={styles.scoutInfo}>
-              <Ionicons name="ribbon" size={16} color={COLORS.secondary} />
-              <Text style={styles.scoutText}>Supporting: {card.scoutName}</Text>
+              <Ionicons name="ribbon" size={16} color={colors.secondary} />
+              <Text style={[styles.scoutText, { color: colors.secondary }]}>Supporting: {card.scoutName}</Text>
             </View>
           )}
 
@@ -217,9 +217,9 @@ export default function CardInventoryScreen() {
             <Ionicons
               name="calendar"
               size={16}
-              color={isExpiringSoon ? '#FF9800' : COLORS.textSecondary}
+              color={isExpiringSoon ? '#FF9800' : colors.textSecondary}
             />
-            <Text style={[styles.expiryText, isExpiringSoon && styles.expiryWarning]}>
+            <Text style={[styles.expiryText, { color: colors.textSecondary }, isExpiringSoon && styles.expiryWarning]}>
               {isExpiringSoon
                 ? `Expires in ${daysLeft} days`
                 : `Expires: ${formatDate(card.expiresAt)}`}
@@ -228,13 +228,15 @@ export default function CardInventoryScreen() {
         </View>
 
         {showActions && (
-          <View style={styles.cardActions}>
+          <View style={[styles.cardActions, { borderTopColor: colors.border }]}>
             {card.status === 'UNASSIGNED' && (
               <>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.activateButton]}
                   onPress={() => handleActivateCard(card.id)}
                   disabled={activatingCardId === card.id}
+                  accessibilityLabel={`Activate card ${card.cardNumber}`}
+                  accessibilityRole="button"
                 >
                   {activatingCardId === card.id ? (
                     <ActivityIndicator size="small" color="#fff" />
@@ -248,6 +250,8 @@ export default function CardInventoryScreen() {
                 <TouchableOpacity
                   style={[styles.actionButton, styles.giftButton]}
                   onPress={() => handleGiftCard(card.id)}
+                  accessibilityLabel={`Gift card ${card.cardNumber}`}
+                  accessibilityRole="button"
                 >
                   <Ionicons name="gift" size={16} color="#fff" />
                   <Text style={styles.actionButtonText}>Gift</Text>
@@ -260,6 +264,8 @@ export default function CardInventoryScreen() {
                 <TouchableOpacity
                   style={[styles.actionButton, styles.resendButton]}
                   onPress={() => handleResendGift(card.id)}
+                  accessibilityLabel="Resend gift email"
+                  accessibilityRole="button"
                 >
                   <Ionicons name="mail" size={16} color="#fff" />
                   <Text style={styles.actionButtonText}>Resend</Text>
@@ -267,6 +273,8 @@ export default function CardInventoryScreen() {
                 <TouchableOpacity
                   style={[styles.actionButton, styles.cancelButton]}
                   onPress={() => handleCancelGift(card.id)}
+                  accessibilityLabel="Cancel gift"
+                  accessibilityRole="button"
                 >
                   <Ionicons name="close" size={16} color="#fff" />
                   <Text style={styles.actionButtonText}>Cancel</Text>
@@ -281,10 +289,10 @@ export default function CardInventoryScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading your cards...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading your cards...</Text>
         </View>
       </SafeAreaView>
     );
@@ -299,16 +307,18 @@ export default function CardInventoryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Cards</Text>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Cards</Text>
         <TouchableOpacity
-          style={styles.buyMoreButton}
+          style={[styles.buyMoreButton, { backgroundColor: colors.primary + '15' }]}
           onPress={() => (navigation as any).navigate('BuyMoreCards')}
+          accessibilityLabel="Buy more cards"
+          accessibilityRole="button"
         >
-          <Ionicons name="add" size={20} color={COLORS.primary} />
-          <Text style={styles.buyMoreText}>Buy More</Text>
+          <Ionicons name="add" size={20} color={colors.primary} />
+          <Text style={[styles.buyMoreText, { color: colors.primary }]}>Buy More</Text>
         </TouchableOpacity>
       </View>
 
@@ -319,36 +329,36 @@ export default function CardInventoryScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Summary Stats */}
-        <View style={styles.summarySection}>
+        <View style={[styles.summarySection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{totalCards}</Text>
-            <Text style={styles.statLabel}>Total Cards</Text>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>{totalCards}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Cards</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{unusedCards.length}</Text>
-            <Text style={styles.statLabel}>Unused</Text>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>{unusedCards.length}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Unused</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>
               {giftedCards.filter((c) => !c.giftClaimedAt).length}
             </Text>
-            <Text style={styles.statLabel}>Pending Gifts</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending Gifts</Text>
           </View>
         </View>
 
         {/* Active Card Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Active Card</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Active Card</Text>
           {activeCard ? (
             renderCardItem(activeCard, false)
           ) : (
-            <View style={styles.emptySection}>
-              <Ionicons name="card-outline" size={48} color={COLORS.textSecondary} />
-              <Text style={styles.emptyText}>No active card</Text>
+            <View style={[styles.emptySection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Ionicons name="card-outline" size={48} color={colors.textSecondary} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No active card</Text>
               {unusedCards.length > 0 && (
-                <Text style={styles.emptyHint}>Activate one of your unused cards below</Text>
+                <Text style={[styles.emptyHint, { color: colors.textSecondary }]}>Activate one of your unused cards below</Text>
               )}
             </View>
           )}
@@ -357,10 +367,10 @@ export default function CardInventoryScreen() {
         {/* Unused Cards Section */}
         {unusedCards.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Unused Cards ({unusedCards.length})
             </Text>
-            <Text style={styles.sectionHint}>
+            <Text style={[styles.sectionHint, { color: colors.textSecondary }]}>
               Activate to replenish offers, or gift to friends & family
             </Text>
             {unusedCards.map((card) => renderCardItem(card))}
@@ -370,7 +380,7 @@ export default function CardInventoryScreen() {
         {/* Gifted Cards Section */}
         {giftedCards.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Gifted Cards ({giftedCards.length})
             </Text>
             {giftedCards.map((card) => renderCardItem(card))}
@@ -380,10 +390,10 @@ export default function CardInventoryScreen() {
         {/* Card History Section - Shows replaced, expired, and revoked cards */}
         {historicalCards.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Card History ({historicalCards.length})
             </Text>
-            <Text style={styles.sectionHint}>
+            <Text style={[styles.sectionHint, { color: colors.textSecondary }]}>
               Previously used cards that have been replaced or expired
             </Text>
             {historicalCards.map((card) => renderCardItem(card, false))}
@@ -393,14 +403,16 @@ export default function CardInventoryScreen() {
         {/* Empty State */}
         {totalCards === 0 && (
           <View style={styles.emptyState}>
-            <Ionicons name="wallet-outline" size={64} color={COLORS.textSecondary} />
-            <Text style={styles.emptyStateTitle}>No Cards Yet</Text>
-            <Text style={styles.emptyStateText}>
+            <Ionicons name="wallet-outline" size={64} color={colors.textSecondary} />
+            <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No Cards Yet</Text>
+            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
               Purchase Camp Cards to unlock exclusive offers and support Scouts in your community.
             </Text>
             <TouchableOpacity
-              style={styles.purchaseButton}
+              style={[styles.purchaseButton, { backgroundColor: colors.primary }]}
               onPress={() => (navigation as any).navigate('BuyMoreCards')}
+              accessibilityLabel="Purchase cards"
+              accessibilityRole="button"
             >
               <Text style={styles.purchaseButtonText}>Purchase Cards</Text>
             </TouchableOpacity>
@@ -409,8 +421,8 @@ export default function CardInventoryScreen() {
 
         {/* Info Banner */}
         {totalCards > 0 && (
-          <View style={styles.infoBanner}>
-            <Ionicons name="information-circle" size={20} color={COLORS.secondary} />
+          <View style={[styles.infoBanner, { backgroundColor: '#FFF3E0' }]}>
+            <Ionicons name="information-circle" size={20} color={colors.secondary} />
             <Text style={styles.infoBannerText}>
               All Camp Cards expire on December 31st. Use or gift your cards before they expire!
             </Text>

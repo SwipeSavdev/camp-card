@@ -14,9 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 export default function TermsOfServiceScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const openEmail = (email: string) => {
     Linking.openURL(`mailto:${email}`);
@@ -27,25 +30,27 @@ export default function TermsOfServiceScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Terms of Service</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Terms of Service</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <View style={styles.publisherBadge}>
-            <Text style={styles.publisherText}>Published by Swipe Savvy, LLC</Text>
+          <View style={[styles.publisherBadge, { backgroundColor: colors.primary + '15' }]}>
+            <Text style={[styles.publisherText, { color: colors.primary }]}>Published by Swipe Savvy, LLC</Text>
           </View>
-          <Text style={styles.lastUpdated}>Last Updated: January 30, 2026</Text>
+          <Text style={[styles.lastUpdated, { color: colors.textSecondary }]}>Last Updated: January 30, 2026</Text>
 
           <View style={styles.introduction}>
             <Text style={styles.paragraph}>
@@ -315,7 +320,7 @@ export default function TermsOfServiceScreen() {
 
           {/* 6. Scout Data and Fundraising */}
           <Section title="6. Scout Data and Fundraising">
-            <View style={styles.highlightBox}>
+            <View style={[styles.highlightBox, { backgroundColor: colors.primary + '10', borderLeftColor: colors.primary }]}>
               <Text style={[styles.paragraph, styles.bold, { marginBottom: 8 }]}>
                 Scout Data Protection Commitment
               </Text>
@@ -958,8 +963,8 @@ export default function TermsOfServiceScreen() {
               For questions, concerns, or feedback about these Terms of Service, the Camp Card
               application, or any of our services, please contact us using the information below:
             </Text>
-            <View style={styles.contactBox}>
-              <Text style={styles.companyName}>Swipe Savvy, LLC</Text>
+            <View style={[styles.contactBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.companyName, { color: colors.text }]}>Swipe Savvy, LLC</Text>
               <ContactItem
                 icon="mail"
                 text="support@swipesavvy.com"
@@ -978,16 +983,16 @@ export default function TermsOfServiceScreen() {
             </View>
           </Section>
 
-          <View style={styles.acknowledgment}>
-            <Text style={styles.acknowledgmentText}>
+          <View style={[styles.acknowledgment, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
+            <Text style={[styles.acknowledgmentText, { color: colors.primary }]}>
               By using the Camp Card app, you acknowledge that you have read, understood, and agree
               to be bound by these Terms of Service.
             </Text>
           </View>
 
-          <View style={styles.publisherFooter}>
-            <Text style={styles.footerText}>Swipe Savvy, LLC</Text>
-            <Text style={styles.footerSubtext}>Publisher of Camp Card</Text>
+          <View style={[styles.publisherFooter, { borderTopColor: colors.border }]}>
+            <Text style={[styles.footerText, { color: colors.text }]}>Swipe Savvy, LLC</Text>
+            <Text style={[styles.footerSubtext, { color: colors.textSecondary }]}>Publisher of Camp Card</Text>
           </View>
         </View>
 
@@ -1002,23 +1007,31 @@ interface SectionProps {
   children: React.ReactNode;
 }
 
-const Section: React.FC<SectionProps> = ({ title, children }) => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {children}
-  </View>
-);
+const Section: React.FC<SectionProps> = ({ title, children }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  return (
+    <View style={styles.sectionContainer}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
+      {children}
+    </View>
+  );
+};
 
 interface BulletPointProps {
   children: React.ReactNode;
 }
 
-const BulletPoint: React.FC<BulletPointProps> = ({ children }) => (
-  <View style={styles.bulletPoint}>
-    <View style={styles.bullet} />
-    <Text style={styles.bulletText}>{children}</Text>
-  </View>
-);
+const BulletPoint: React.FC<BulletPointProps> = ({ children }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  return (
+    <View style={styles.bulletPoint}>
+      <View style={[styles.bullet, { backgroundColor: colors.primary }]} />
+      <Text style={[styles.bulletText, { color: colors.text }]}>{children}</Text>
+    </View>
+  );
+};
 
 interface ContactItemProps {
   icon: string;
@@ -1026,12 +1039,16 @@ interface ContactItemProps {
   onPress?: () => void;
 }
 
-const ContactItem: React.FC<ContactItemProps> = ({ icon, text, onPress }) => (
-  <TouchableOpacity style={styles.contactItem} onPress={onPress} activeOpacity={0.7}>
-    <Ionicons name={icon as any} size={18} color={COLORS.primary} />
-    <Text style={[styles.contactText, onPress && styles.contactLink]}>{text}</Text>
-  </TouchableOpacity>
-);
+const ContactItem: React.FC<ContactItemProps> = ({ icon, text, onPress }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  return (
+    <TouchableOpacity style={styles.contactItem} onPress={onPress} activeOpacity={0.7} accessibilityLabel={text} accessibilityRole="button">
+      <Ionicons name={icon as any} size={18} color={colors.primary} />
+      <Text style={[styles.contactText, { color: colors.text }, onPress && { color: colors.primary, textDecorationLine: 'underline' as const }]}>{text}</Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

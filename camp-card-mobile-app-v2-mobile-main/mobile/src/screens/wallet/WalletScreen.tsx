@@ -7,7 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
   RefreshControl,
   ImageBackground,
   Animated,
@@ -18,14 +18,11 @@ import { useNavigation } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { RootNavigation } from '../../types/navigation';
 import { apiClient } from '../../services/apiClient';
 import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus';
 import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
-
-const { width: screenWidth } = Dimensions.get('window');
-const CARD_WIDTH = screenWidth - 40;
-const CARD_HEIGHT = CARD_WIDTH * 0.63; // Standard card ratio
 
 interface CardData {
   cardNumber: string;
@@ -63,6 +60,13 @@ interface ActiveCardData {
 export default function WalletScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation<RootNavigation>();
+  const { width: screenWidth } = useWindowDimensions();
+  const { theme } = useTheme();
+  const { colors } = theme;
+
+  // Dynamic card dimensions based on screen width
+  const CARD_WIDTH = screenWidth - 40;
+  const CARD_HEIGHT = CARD_WIDTH * 0.63;
   const [refreshing, setRefreshing] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [activeCard, setActiveCard] = useState<ActiveCardData | null>(null);
@@ -230,13 +234,13 @@ export default function WalletScreen() {
   const getStatusColor = (status: CardData['status']) => {
     switch (status) {
       case 'active':
-        return COLORS.success;
+        return colors.success;
       case 'expired':
-        return COLORS.error;
+        return colors.error;
       case 'pending':
-        return COLORS.warning;
+        return colors.warning;
       default:
-        return COLORS.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -254,15 +258,17 @@ export default function WalletScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Wallet</Text>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Wallet</Text>
         <TouchableOpacity
-          style={styles.notificationButton}
+          style={[styles.notificationButton, { backgroundColor: colors.background }]}
           onPress={() => navigation.navigate('Notifications')}
+          accessibilityLabel="Notifications"
+          accessibilityRole="button"
         >
-          <Ionicons name="notifications-outline" size={24} color={COLORS.text} />
+          <Ionicons name="notifications-outline" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -302,14 +308,14 @@ export default function WalletScreen() {
         {/* Digital Card with Flip */}
         <View style={styles.cardSection}>
           <View style={styles.cardTitleRow}>
-            <Text style={styles.sectionTitle}>Your Camp Card</Text>
-            <TouchableOpacity onPress={flipCard} style={styles.flipButton}>
-              <Ionicons name="sync-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.flipButtonText}>Flip</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Camp Card</Text>
+            <TouchableOpacity onPress={flipCard} style={[styles.flipButton, { backgroundColor: colors.primary + '15' }]} accessibilityLabel="Flip card" accessibilityRole="button">
+              <Ionicons name="sync-outline" size={18} color={colors.primary} />
+              <Text style={[styles.flipButtonText, { color: colors.primary }]}>Flip</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.cardContainer}>
+          <View style={[styles.cardContainer, { width: CARD_WIDTH, height: CARD_HEIGHT }]}>
             {/* Front of Card */}
             <Animated.View style={[styles.cardFace, frontAnimatedStyle]}>
               <ImageBackground
@@ -381,51 +387,51 @@ export default function WalletScreen() {
                     value={cardData.cardNumber}
                     size={60}
                     backgroundColor="white"
-                    color={COLORS.navy || '#001a3a'}
+                    color="#001a3a"
                   />
                 </View>
               </View>
             </Animated.View>
           </View>
 
-          <Text style={styles.cardHint}>Tap the flip button to see card details</Text>
+          <Text style={[styles.cardHint, { color: colors.textSecondary }]}>Tap the flip button to see card details</Text>
         </View>
 
         {/* Analytics Section */}
         <View style={styles.analyticsSection}>
-          <Text style={styles.sectionTitle}>Your Savings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Savings</Text>
 
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <View style={[styles.statIcon, { backgroundColor: '#E8F5E9' }]}>
-                <Ionicons name="cash-outline" size={24} color={COLORS.success} />
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.statIcon, { backgroundColor: colors.success + '15' }]}>
+                <Ionicons name="cash-outline" size={24} color={colors.success} />
               </View>
-              <Text style={styles.statValue}>${redemptionStats.totalSavings.toFixed(2)}</Text>
-              <Text style={styles.statLabel}>Total Saved</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>${redemptionStats.totalSavings.toFixed(2)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Saved</Text>
             </View>
 
-            <View style={styles.statCard}>
-              <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
-                <Ionicons name="receipt-outline" size={24} color={COLORS.secondary} />
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.statIcon, { backgroundColor: colors.secondary + '15' }]}>
+                <Ionicons name="receipt-outline" size={24} color={colors.secondary} />
               </View>
-              <Text style={styles.statValue}>{redemptionStats.totalRedemptions}</Text>
-              <Text style={styles.statLabel}>Redemptions</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{redemptionStats.totalRedemptions}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Redemptions</Text>
             </View>
 
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.statIcon, { backgroundColor: '#FFF3E0' }]}>
                 <Ionicons name="calendar-outline" size={24} color="#F57C00" />
               </View>
-              <Text style={styles.statValue}>{redemptionStats.thisMonth}</Text>
-              <Text style={styles.statLabel}>This Month</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{redemptionStats.thisMonth}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>This Month</Text>
             </View>
 
-            <View style={styles.statCard}>
-              <View style={[styles.statIcon, { backgroundColor: '#FCE4EC' }]}>
-                <Ionicons name="heart-outline" size={24} color={COLORS.primary} />
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.statIcon, { backgroundColor: colors.primary + '15' }]}>
+                <Ionicons name="heart-outline" size={24} color={colors.primary} />
               </View>
-              <Text style={styles.statValue} numberOfLines={1}>{redemptionStats.favoriteCategory}</Text>
-              <Text style={styles.statLabel}>Top Category</Text>
+              <Text style={[styles.statValue, { color: colors.text }]} numberOfLines={1}>{redemptionStats.favoriteCategory}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Top Category</Text>
             </View>
           </View>
         </View>
@@ -433,43 +439,44 @@ export default function WalletScreen() {
         {/* Recent Redemptions */}
         <View style={styles.redemptionsSection}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Recent Redemptions</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('RedemptionHistory' as any)}>
-              <Text style={styles.seeAllLink}>See All</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Redemptions</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('RedemptionHistory' as any)} accessibilityLabel="See all redemptions" accessibilityRole="button">
+              <Text style={[styles.seeAllLink, { color: colors.primary }]}>See All</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.redemptionsList}>
+          <View style={[styles.redemptionsList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {recentRedemptions.length > 0 ? (
               recentRedemptions.map((redemption, index) => (
                 <View
                   key={redemption.id || index}
                   style={[
                     styles.redemptionItem,
+                    { borderBottomColor: colors.border },
                     index === recentRedemptions.length - 1 && styles.redemptionItemLast,
                   ]}
                 >
-                  <View style={styles.redemptionIcon}>
+                  <View style={[styles.redemptionIcon, { backgroundColor: colors.background }]}>
                     <Ionicons
                       name={getCategoryIcon(redemption.category) as any}
                       size={20}
-                      color={COLORS.primary}
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.redemptionInfo}>
-                    <Text style={styles.redemptionName}>{redemption.merchantName}</Text>
-                    <Text style={styles.redemptionDate}>{formatDate(redemption.redeemedAt)}</Text>
+                    <Text style={[styles.redemptionName, { color: colors.text }]}>{redemption.merchantName}</Text>
+                    <Text style={[styles.redemptionDate, { color: colors.textSecondary }]}>{formatDate(redemption.redeemedAt)}</Text>
                   </View>
-                  <Text style={styles.redemptionSavings}>
+                  <Text style={[styles.redemptionSavings, { color: colors.success }]}>
                     -${redemption.savings.toFixed(2)}
                   </Text>
                 </View>
               ))
             ) : (
               <View style={styles.emptyRedemptions}>
-                <Ionicons name="receipt-outline" size={32} color={COLORS.textSecondary} />
-                <Text style={styles.emptyRedemptionsText}>No redemptions yet</Text>
-                <Text style={styles.emptyRedemptionsSubtext}>
+                <Ionicons name="receipt-outline" size={32} color={colors.textSecondary} />
+                <Text style={[styles.emptyRedemptionsText, { color: colors.text }]}>No redemptions yet</Text>
+                <Text style={[styles.emptyRedemptionsSubtext, { color: colors.textSecondary }]}>
                   Use your card at participating merchants to start saving!
                 </Text>
               </View>
@@ -479,57 +486,65 @@ export default function WalletScreen() {
 
         {/* Quick Actions */}
         <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
 
           <View style={styles.actionsGrid}>
             <TouchableOpacity
-              style={styles.actionCard}
+              style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={handleAddToWallet}
+              accessibilityLabel="Add to wallet"
+              accessibilityRole="button"
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#E3F2FD' }]}>
-                <Ionicons name="wallet" size={24} color={COLORS.secondary} />
+              <View style={[styles.actionIcon, { backgroundColor: colors.secondary + '15' }]}>
+                <Ionicons name="wallet" size={24} color={colors.secondary} />
               </View>
-              <Text style={styles.actionLabel}>Add to Wallet</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Add to Wallet</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionCard}
+              style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => navigation.navigate('QRScanner' as any)}
+              accessibilityLabel="Show QR code"
+              accessibilityRole="button"
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
-                <Ionicons name="qr-code" size={24} color={COLORS.success} />
+              <View style={[styles.actionIcon, { backgroundColor: colors.success + '15' }]}>
+                <Ionicons name="qr-code" size={24} color={colors.success} />
               </View>
-              <Text style={styles.actionLabel}>Show QR</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Show QR</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionCard}
+              style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => (navigation as any).navigate('CardInventory')}
+              accessibilityLabel="Manage cards"
+              accessibilityRole="button"
             >
               <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
                 <Ionicons name="layers" size={24} color="#F57C00" />
               </View>
-              <Text style={styles.actionLabel}>Manage Cards</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Manage Cards</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionCard}
+              style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => (navigation as any).navigate('Subscription')}
+              accessibilityLabel="Subscription"
+              accessibilityRole="button"
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#FCE4EC' }]}>
-                <Ionicons name="card" size={24} color={COLORS.primary} />
+              <View style={[styles.actionIcon, { backgroundColor: colors.primary + '15' }]}>
+                <Ionicons name="card" size={24} color={colors.primary} />
               </View>
-              <Text style={styles.actionLabel}>Subscription</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Subscription</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Info Banner */}
-        <View style={styles.infoBanner}>
-          <Ionicons name="information-circle" size={24} color={COLORS.secondary} />
+        <View style={[styles.infoBanner, { backgroundColor: colors.secondary + '15' }]}>
+          <Ionicons name="information-circle" size={24} color={colors.secondary} />
           <View style={styles.infoBannerContent}>
-            <Text style={styles.infoBannerTitle}>How to use your card</Text>
-            <Text style={styles.infoBannerText}>
+            <Text style={[styles.infoBannerTitle, { color: colors.text }]}>How to use your card</Text>
+            <Text style={[styles.infoBannerText, { color: colors.textSecondary }]}>
               Show your QR code or card number at participating merchants to redeem offers and discounts.
             </Text>
           </View>
@@ -602,8 +617,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   cardContainer: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
     transform: [{ perspective: 1000 }],
   },
   cardFace: {

@@ -98,3 +98,4 @@ logs/
 .expo/
 google-play-service-account.json
 credentials.json
+*-g3-*.json

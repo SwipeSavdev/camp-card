@@ -4,6 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../store/authStore';
+import { useTheme } from '../config/ThemeContext';
+import { roleColors } from '../config/theme';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -252,6 +254,7 @@ function OffersNavigator() {
 // ============================================================================
 
 function ScoutTabNavigator() {
+  const { theme } = useTheme();
   return (
     <ScoutTab.Navigator
       id="ScoutTabs"
@@ -265,8 +268,8 @@ function ScoutTabNavigator() {
           };
           return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#CE1126', // BSA Red
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: roleColors.SCOUT.tabActive,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         headerShown: false,
       })}
     >
@@ -319,6 +322,7 @@ function ScoutMainNavigator() {
 
 function TroopLeaderTabNavigator() {
   const { user } = useAuthStore();
+  const { theme } = useTheme();
   const hasActiveSubscription = user?.subscriptionStatus === 'active';
 
   // Debug log in development
@@ -343,8 +347,8 @@ function TroopLeaderTabNavigator() {
           };
           return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#003F87', // BSA Blue
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: roleColors.TROOP_LEADER.tabActive,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         headerShown: false,
       })}
     >
@@ -401,6 +405,7 @@ function TroopLeaderMainNavigator() {
 // ============================================================================
 
 function CustomerTabNavigator() {
+  const { theme } = useTheme();
   return (
     <CustomerTab.Navigator
       id="CustomerTabs"
@@ -415,8 +420,8 @@ function CustomerTabNavigator() {
           };
           return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#FFD700', // Gold
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: roleColors.PARENT.tabActive,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         headerShown: false,
       })}
     >

@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
 import {
   checkBiometricAvailability,
@@ -45,6 +46,8 @@ interface SettingItem {
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const { user, refreshToken } = useAuthStore();
 
   // Settings state
@@ -286,59 +289,63 @@ export default function SettingsScreen() {
   const renderSettingItem = (item: SettingItem, index: number, isLast: boolean) => (
     <TouchableOpacity
       key={index}
-      style={[styles.settingItem, isLast && styles.settingItemLast]}
+      style={[styles.settingItem, { borderBottomColor: colors.border }, isLast && styles.settingItemLast]}
       onPress={item.type === 'link' || item.type === 'action' ? item.onPress : undefined}
       activeOpacity={item.type === 'toggle' ? 1 : 0.7}
+      accessibilityLabel={item.title}
+      accessibilityRole="button"
     >
-      <View style={styles.settingIconContainer}>
-        <Ionicons name={item.icon as any} size={22} color={COLORS.primary} />
+      <View style={[styles.settingIconContainer, { backgroundColor: colors.primary + '15' }]}>
+        <Ionicons name={item.icon as any} size={22} color={colors.primary} />
       </View>
       <View style={styles.settingContent}>
-        <Text style={styles.settingTitle}>{item.title}</Text>
+        <Text style={[styles.settingTitle, { color: colors.text }]}>{item.title}</Text>
         {item.subtitle && (
-          <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+          <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
         )}
       </View>
       {item.type === 'toggle' && (
         <>
           {loadingBiometric && item.title === biometricType ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <Switch
               value={item.value}
               onValueChange={item.onToggle}
-              trackColor={{ false: '#E0E0E0', true: COLORS.primary + '60' }}
-              thumbColor={item.value ? COLORS.primary : '#F4F4F4'}
+              trackColor={{ false: colors.border, true: colors.primary + '60' }}
+              thumbColor={item.value ? colors.primary : colors.surface}
               disabled={(loadingBiometric && item.title === biometricType) || !item.onToggle}
             />
           )}
         </>
       )}
       {item.type === 'link' && (
-        <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
       )}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Notifications</Text>
+          <View style={[styles.sectionContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {notificationSettings.map((item, index) =>
               renderSettingItem(item, index, index === notificationSettings.length - 1)
             )}
@@ -347,8 +354,8 @@ export default function SettingsScreen() {
 
         {/* Privacy & Security Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacy & Security</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Privacy & Security</Text>
+          <View style={[styles.sectionContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {privacySettings.map((item, index) =>
               renderSettingItem(item, index, index === privacySettings.length - 1)
             )}
@@ -357,8 +364,8 @@ export default function SettingsScreen() {
 
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Account</Text>
+          <View style={[styles.sectionContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {accountSettings.map((item, index) =>
               renderSettingItem(item, index, index === accountSettings.length - 1)
             )}
@@ -367,15 +374,15 @@ export default function SettingsScreen() {
 
         {/* App Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>About</Text>
+          <View style={[styles.sectionContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[styles.settingItem, styles.settingItemLast]}>
-              <View style={styles.settingIconContainer}>
-                <Ionicons name="information-circle" size={22} color={COLORS.primary} />
+              <View style={[styles.settingIconContainer, { backgroundColor: colors.primary + '15' }]}>
+                <Ionicons name="information-circle" size={22} color={colors.primary} />
               </View>
               <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>App Version</Text>
-                <Text style={styles.settingSubtitle}>1.0.0 (Build 1)</Text>
+                <Text style={[styles.settingTitle, { color: colors.text }]}>App Version</Text>
+                <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>1.0.0 (Build 1)</Text>
               </View>
             </View>
           </View>
@@ -383,24 +390,26 @@ export default function SettingsScreen() {
 
         {/* Danger Zone */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: COLORS.error }]}>Danger Zone</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: colors.error }]}>Danger Zone</Text>
+          <View style={[styles.sectionContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TouchableOpacity
-              style={[styles.settingItem, styles.settingItemLast, styles.dangerItem]}
+              style={[styles.settingItem, styles.settingItemLast, styles.dangerItem, { backgroundColor: colors.error + '08' }]}
               onPress={handleDeleteAccount}
+              accessibilityLabel="Delete account"
+              accessibilityRole="button"
             >
-              <View style={[styles.settingIconContainer, styles.dangerIconContainer]}>
-                <Ionicons name="trash" size={22} color={COLORS.error} />
+              <View style={[styles.settingIconContainer, styles.dangerIconContainer, { backgroundColor: colors.error + '15' }]}>
+                <Ionicons name="trash" size={22} color={colors.error} />
               </View>
               <View style={styles.settingContent}>
-                <Text style={[styles.settingTitle, { color: COLORS.error }]}>
+                <Text style={[styles.settingTitle, { color: colors.error }]}>
                   Delete Account
                 </Text>
-                <Text style={styles.settingSubtitle}>
+                <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>
                   Permanently delete your account and data
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={COLORS.error} />
+              <Ionicons name="chevron-forward" size={20} color={colors.error} />
             </TouchableOpacity>
           </View>
         </View>

@@ -16,6 +16,7 @@ import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
 import { apiClient } from '../utils/api';
 import { useAuthStore } from '../store/authStore';
+import { useTheme } from '../config/ThemeContext';
 
 export default function MyQRCodeScreen() {
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,8 @@ export default function MyQRCodeScreen() {
   const [shareableLink, setShareableLink] = useState('');
   const navigation = useNavigation();
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   useEffect(() => {
     loadUserQRCode();
@@ -71,34 +74,36 @@ export default function MyQRCodeScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.secondary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Fixed Header with Back Button */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color="#003f87" />
+          <Ionicons name="arrow-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My QR Code</Text>
+        <Text style={[styles.headerTitle, { color: colors.secondary }]}>My QR Code</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>My Camp Card</Text>
-      <Text style={styles.subtitle}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+        <Text style={[styles.title, { color: colors.secondary }]}>My Camp Card</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         Share your unique QR code or link to earn referral rewards
       </Text>
 
       {/* QR Code Display */}
-      <View style={styles.qrContainer}>
+      <View style={[styles.qrContainer, { backgroundColor: colors.surface }]}>
         <QRCode
           value={JSON.stringify(qrData)}
           size={250}
@@ -108,54 +113,58 @@ export default function MyQRCodeScreen() {
       </View>
 
       {/* User Info */}
-      <View style={styles.infoCard}>
+      <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
         <View style={styles.infoRow}>
-          <Ionicons name="person" size={20} color="#003f87" />
-          <Text style={styles.infoLabel}>Name</Text>
+          <Ionicons name="person" size={20} color={colors.secondary} />
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Name</Text>
         </View>
-        <Text style={styles.infoValue}>{user?.firstName} {user?.lastName}</Text>
-        
-        <View style={styles.divider} />
-        
+        <Text style={[styles.infoValue, { color: colors.text }]}>{user?.firstName} {user?.lastName}</Text>
+
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
         <View style={styles.infoRow}>
-          <Ionicons name="card" size={20} color="#003f87" />
-          <Text style={styles.infoLabel}>Member ID</Text>
+          <Ionicons name="card" size={20} color={colors.secondary} />
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Member ID</Text>
         </View>
-        <Text style={styles.infoValue}>{qrData?.uniqueCode}</Text>
+        <Text style={[styles.infoValue, { color: colors.text }]}>{qrData?.uniqueCode}</Text>
       </View>
 
       {/* Share Options */}
       <View style={styles.shareSection}>
-        <Text style={styles.sectionTitle}>Share Your Link</Text>
-        
+        <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Share Your Link</Text>
+
         <View style={styles.linkContainer}>
-          <Text style={styles.linkText} numberOfLines={1}>
+          <Text style={[styles.linkText, { color: colors.secondary }]} numberOfLines={1}>
             {shareableLink}
           </Text>
         </View>
 
         <View style={styles.buttonRow}>
-          <TouchableOpacity 
-            style={styles.actionButton}
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.secondary }]}
             onPress={handleCopyLink}
+            accessibilityLabel="Copy link"
+            accessibilityRole="button"
           >
-            <Ionicons name="copy" size={20} color="white" />
-            <Text style={styles.actionButtonText}>Copy Link</Text>
+            <Ionicons name="copy" size={20} color={colors.white} />
+            <Text style={[styles.actionButtonText, { color: colors.white }]}>Copy Link</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.shareButton]}
+          <TouchableOpacity
+            style={[styles.actionButton, styles.shareButton, { backgroundColor: colors.primary }]}
             onPress={handleShare}
+            accessibilityLabel="Share"
+            accessibilityRole="button"
           >
-            <Ionicons name="share-social" size={20} color="white" />
-            <Text style={styles.actionButtonText}>Share</Text>
+            <Ionicons name="share-social" size={20} color={colors.white} />
+            <Text style={[styles.actionButtonText, { color: colors.white }]}>Share</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Info Box */}
       <View style={styles.infoBox}>
-        <Ionicons name="information-circle" size={20} color="#666" />
+        <Ionicons name="information-circle" size={20} color={colors.textSecondary} />
         <Text style={styles.infoBoxText}>
           Friends who join using your link will help support your unit's fundraising goals!
         </Text>

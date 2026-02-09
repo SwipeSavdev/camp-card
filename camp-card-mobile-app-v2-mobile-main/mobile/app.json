@@ -51,7 +51,7 @@
     },
     "android": {
       "package": "org.bsa.campcard",
-      "versionCode": 59,
+      "versionCode": 60,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
@@ -134,7 +134,15 @@
         }
       ]
     ],
-    "runtimeVersion": "1.0.30-65",
+    "updates": {
+      "url": "https://u.expo.dev/b4af49da-5fe8-402f-8339-92131b27ff3e",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 5000
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "extra": {
       "eas": {
         "projectId": "b4af49da-5fe8-402f-8339-92131b27ff3e"

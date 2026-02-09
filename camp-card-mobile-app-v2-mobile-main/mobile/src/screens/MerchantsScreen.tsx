@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocation, useDistance } from '../hooks/useLocation';
 import { merchantsApi } from '../utils/api';
+import { useTheme } from '../config/ThemeContext';
 
 interface MerchantLocation {
   id: number;
@@ -68,6 +69,8 @@ export default function MerchantsScreen() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   // Use the location hook for device location (uses expo-location under the hood)
   const location = useLocation({ enableHighAccuracy: false });
@@ -179,19 +182,23 @@ export default function MerchantsScreen() {
     <TouchableOpacity
       style={[
         styles.categoryButton,
-        selectedCategory === item.id && styles.categoryButtonActive,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        selectedCategory === item.id && [styles.categoryButtonActive, { borderColor: colors.secondary }],
       ]}
       onPress={() => setSelectedCategory(item.id)}
+      accessibilityLabel={`Filter by ${item.name}`}
+      accessibilityRole="button"
     >
       <Ionicons
         name={item.icon as any}
         size={24}
-        color={selectedCategory === item.id ? '#003f87' : '#666'}
+        color={selectedCategory === item.id ? colors.secondary : colors.textSecondary}
       />
       <Text
         style={[
           styles.categoryText,
-          selectedCategory === item.id && styles.categoryTextActive,
+          { color: colors.textSecondary },
+          selectedCategory === item.id && [styles.categoryTextActive, { color: colors.secondary }],
         ]}
         numberOfLines={1}
       >
@@ -202,59 +209,61 @@ export default function MerchantsScreen() {
 
   const renderMerchant = ({ item }: { item: Merchant }) => (
     <TouchableOpacity
-      style={styles.merchantCard}
+      style={[styles.merchantCard, { backgroundColor: colors.surface }]}
       onPress={() => handleMerchantPress(item)}
+      accessibilityLabel={`${item.businessName} - ${item.activeOffers} offers`}
+      accessibilityRole="button"
     >
       <View style={styles.merchantHeader}>
         {item.logoUrl ? (
           <Image source={{ uri: item.logoUrl }} style={styles.logo} />
         ) : (
-          <View style={[styles.logo, styles.logoPlaceholder]}>
-            <Ionicons name="business-outline" size={32} color="#ccc" />
+          <View style={[styles.logo, styles.logoPlaceholder, { backgroundColor: colors.background }]}>
+            <Ionicons name="business-outline" size={32} color={colors.border} />
           </View>
         )}
 
         <View style={styles.merchantInfo}>
-          <Text style={styles.merchantName} numberOfLines={1}>
+          <Text style={[styles.merchantName, { color: colors.text }]} numberOfLines={1}>
             {item.businessName}
           </Text>
           {item.dbaName && (
-            <Text style={styles.dbaName} numberOfLines={1}>
+            <Text style={[styles.dbaName, { color: colors.textSecondary }]} numberOfLines={1}>
               {item.dbaName}
             </Text>
           )}
-          <Text style={styles.merchantCategory}>{item.category}</Text>
+          <Text style={[styles.merchantCategory, { color: colors.textSecondary }]}>{item.category}</Text>
         </View>
 
         <View style={styles.rightSection}>
           {item.distance !== undefined && (
             <View style={styles.distanceBadge}>
-              <Ionicons name="navigate" size={12} color="#003f87" />
-              <Text style={styles.distanceText}>{formatDistanceDisplay(item.distance)}</Text>
+              <Ionicons name="navigate" size={12} color={colors.secondary} />
+              <Text style={[styles.distanceText, { color: colors.secondary }]}>{formatDistanceDisplay(item.distance)}</Text>
             </View>
           )}
-          <Ionicons name="chevron-forward" size={24} color="#ccc" />
+          <Ionicons name="chevron-forward" size={24} color={colors.border} />
         </View>
       </View>
 
       {item.description && (
-        <Text style={styles.description} numberOfLines={2}>
+        <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>
           {item.description}
         </Text>
       )}
 
       <View style={styles.merchantFooter}>
         <View style={styles.statItem}>
-          <Ionicons name="pricetag-outline" size={16} color="#ce1126" />
-          <Text style={styles.statText}>
+          <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
+          <Text style={[styles.statText, { color: colors.textSecondary }]}>
             {item.activeOffers} {item.activeOffers === 1 ? 'Offer' : 'Offers'}
           </Text>
         </View>
 
         {item.locations && item.locations.length > 0 && (
           <View style={styles.statItem}>
-            <Ionicons name="location-outline" size={16} color="#003f87" />
-            <Text style={styles.statText}>
+            <Ionicons name="location-outline" size={16} color={colors.secondary} />
+            <Text style={[styles.statText, { color: colors.textSecondary }]}>
               {item.locations[0].city}, {item.locations[0].state}
               {item.locations.length > 1 && ` +${item.locations.length - 1}`}
             </Text>
@@ -267,49 +276,58 @@ export default function MerchantsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
-        <Text style={styles.loadingText}>Loading merchants...</Text>
+        <ActivityIndicator size="large" color={colors.secondary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading merchants...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Merchants</Text>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.secondary }]}>Merchants</Text>
         {location.hasLocation ? (
           <View style={styles.locationIndicator}>
-            <Ionicons name="location" size={16} color="#4CAF50" />
-            <Text style={styles.locationText}>Near you</Text>
+            <Ionicons name="location" size={16} color={colors.success} />
+            <Text style={[styles.locationText, { color: colors.success }]}>Near you</Text>
           </View>
         ) : location.error ? (
-          <TouchableOpacity onPress={() => location.getCurrentPosition()}>
+          <TouchableOpacity
+            onPress={() => location.getCurrentPosition()}
+            accessibilityLabel="Enable location"
+            accessibilityRole="button"
+          >
             <View style={styles.locationIndicator}>
-              <Ionicons name="location-outline" size={16} color="#999" />
-              <Text style={styles.locationErrorText}>Enable location</Text>
+              <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+              <Text style={[styles.locationErrorText, { color: colors.textSecondary }]}>Enable location</Text>
             </View>
           </TouchableOpacity>
         ) : location.loading ? (
           <View style={styles.locationIndicator}>
-            <ActivityIndicator size="small" color="#003f87" />
-            <Text style={styles.locationErrorText}>Getting location...</Text>
+            <ActivityIndicator size="small" color={colors.secondary} />
+            <Text style={[styles.locationErrorText, { color: colors.textSecondary }]}>Getting location...</Text>
           </View>
         ) : null}
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#666" />
+      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder="Search merchants..."
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#999" />
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+          >
+            <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -326,7 +344,7 @@ export default function MerchantsScreen() {
 
       {/* Results count */}
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsText}>
+        <Text style={[styles.resultsText, { color: colors.textSecondary }]}>
           {filteredMerchants.length} {filteredMerchants.length === 1 ? 'merchant' : 'merchants'}
         </Text>
       </View>
@@ -341,15 +359,15 @@ export default function MerchantsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#003f87']}
-            tintColor="#003f87"
+            colors={[colors.secondary]}
+            tintColor={colors.secondary}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="business-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No merchants found</Text>
-            <Text style={styles.emptySubtext}>
+            <Ionicons name="business-outline" size={64} color={colors.border} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No merchants found</Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
               {searchQuery || selectedCategory !== 'ALL'
                 ? 'Try adjusting your filters'
                 : 'Check back soon for new merchants'}

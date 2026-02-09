@@ -1,14 +1,17 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
+import * as Updates from 'expo-updates';
 
 import RootNavigator from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
 import { useNotifications } from './src/utils/notifications';
+import { ThemeProvider } from './src/config/ThemeContext';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -86,15 +89,37 @@ export default function App() {
     initialize();
   }, []);
 
+  // Check for OTA updates on app load (production only)
+  React.useEffect(() => {
+    if (__DEV__) return;
+    (async () => {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          Alert.alert(
+            'Update Available',
+            'A new version has been downloaded. Restart to apply.',
+            [{ text: 'Restart', onPress: () => { Updates.reloadAsync(); } }],
+          );
+        }
+      } catch {
+        // Silently fail - OTA updates are not critical
+      }
+    })();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <NavigationContainer linking={linking}>
-            <RootNavigator />
-            <StatusBar style="auto" />
-          </NavigationContainer>
-        </QueryClientProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <NavigationContainer linking={linking}>
+              <RootNavigator />
+              <StatusBar style="auto" />
+            </NavigationContainer>
+          </QueryClientProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

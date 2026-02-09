@@ -10,6 +10,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
+import { useTheme } from '../config/ThemeContext';
 
 interface Redemption {
   id: number;
@@ -30,7 +31,9 @@ export default function RedemptionSuccessScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { redemption, offer } = route.params as { redemption: Redemption; offer: Offer };
-  
+  const { theme } = useTheme();
+  const { colors } = theme;
+
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -75,8 +78,8 @@ export default function RedemptionSuccessScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View 
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <Animated.View
         style={[
           styles.content,
           {
@@ -87,16 +90,16 @@ export default function RedemptionSuccessScreen() {
       >
         {/* Success Icon */}
         <View style={styles.iconContainer}>
-          <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
+          <Ionicons name="checkmark-circle" size={80} color={colors.success} />
         </View>
-        
-        <Text style={styles.title}>Offer Redeemed!</Text>
-        <Text style={styles.subtitle}>
+
+        <Text style={[styles.title, { color: colors.secondary }]}>Offer Redeemed!</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Show this QR code to the merchant
         </Text>
-        
+
         {/* QR Code */}
-        <View style={styles.qrContainer}>
+        <View style={[styles.qrContainer, { backgroundColor: colors.surface }]}>
           <QRCode
             value={qrData}
             size={200}
@@ -104,56 +107,58 @@ export default function RedemptionSuccessScreen() {
             color="black"
           />
         </View>
-        
+
         {/* Redemption Details */}
-        <View style={styles.detailsCard}>
+        <View style={[styles.detailsCard, { backgroundColor: colors.surface }]}>
           <View style={styles.detailRow}>
-            <Ionicons name="storefront" size={20} color="#003f87" />
-            <Text style={styles.detailLabel}>Merchant</Text>
+            <Ionicons name="storefront" size={20} color={colors.secondary} />
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Merchant</Text>
           </View>
-          <Text style={styles.detailValue}>{offer.merchantName}</Text>
-          
-          <View style={styles.divider} />
-          
+          <Text style={[styles.detailValue, { color: colors.text }]}>{offer.merchantName}</Text>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
           <View style={styles.detailRow}>
-            <Ionicons name="pricetag" size={20} color="#003f87" />
-            <Text style={styles.detailLabel}>Discount</Text>
+            <Ionicons name="pricetag" size={20} color={colors.secondary} />
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Discount</Text>
           </View>
-          <Text style={styles.detailValue}>{offer.discountPercentage}% OFF</Text>
-          
-          <View style={styles.divider} />
-          
+          <Text style={[styles.detailValue, { color: colors.text }]}>{offer.discountPercentage}% OFF</Text>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
           <View style={styles.detailRow}>
-            <Ionicons name="timer" size={20} color="#003f87" />
-            <Text style={styles.detailLabel}>Valid Until</Text>
+            <Ionicons name="timer" size={20} color={colors.secondary} />
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Valid Until</Text>
           </View>
-          <Text style={styles.detailValue}>{formatDate(redemption.expiresAt)}</Text>
-          
-          <View style={styles.divider} />
-          
+          <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(redemption.expiresAt)}</Text>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
           <View style={styles.detailRow}>
-            <Ionicons name="key" size={20} color="#003f87" />
-            <Text style={styles.detailLabel}>Code</Text>
+            <Ionicons name="key" size={20} color={colors.secondary} />
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Code</Text>
           </View>
-          <Text style={styles.codeValue}>{redemption.redemptionCode}</Text>
+          <Text style={[styles.codeValue, { color: colors.primary }]}>{redemption.redemptionCode}</Text>
         </View>
-        
+
         {/* Instructions */}
         <View style={styles.instructionsContainer}>
-          <Ionicons name="information-circle" size={20} color="#666" />
+          <Ionicons name="information-circle" size={20} color={colors.textSecondary} />
           <Text style={styles.instructions}>
             This code is valid for one-time use and expires in 15 minutes
           </Text>
         </View>
       </Animated.View>
-      
+
       {/* Done Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.doneButton}
+      <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.doneButton, { backgroundColor: colors.secondary }]}
           onPress={handleDone}
+          accessibilityLabel="Done"
+          accessibilityRole="button"
         >
-          <Text style={styles.doneButtonText}>Done</Text>
+          <Text style={[styles.doneButtonText, { color: colors.white }]}>Done</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { apiClient } from '../utils/api';
+import { useTheme } from '../config/ThemeContext';
 
 interface ReferralData {
   referralCode: string;
@@ -42,6 +43,8 @@ export default function ReferralScreen() {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   useEffect(() => {
     loadReferralData();
@@ -112,30 +115,34 @@ export default function ReferralScreen() {
     switch (status) {
       case 'COMPLETED':
       case 'REWARDED':
-        return '#4CAF50';
+        return colors.success;
       case 'PENDING':
-        return '#ff9800';
+        return colors.warning;
       default:
-        return '#999';
+        return colors.textSecondary;
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
+        <ActivityIndicator size="large" color={colors.secondary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#003f87" />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Referral Program</Text>
+        <Text style={[styles.title, { color: colors.secondary }]}>Referral Program</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -143,59 +150,71 @@ export default function ReferralScreen() {
         ListHeaderComponent={
           <>
             {/* Referral Code Card */}
-            <View style={styles.codeCard}>
-              <Text style={styles.cardTitle}>Your Referral Code</Text>
-              <View style={styles.codeContainer}>
-                <Text style={styles.code}>{referralData?.referralCode}</Text>
+            <View style={[styles.codeCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.cardTitle, { color: colors.secondary }]}>Your Referral Code</Text>
+              <View style={[styles.codeContainer, { borderColor: colors.secondary }]}>
+                <Text style={[styles.code, { color: colors.secondary }]}>{referralData?.referralCode}</Text>
               </View>
-              
+
               <View style={styles.buttonRow}>
-                <TouchableOpacity style={styles.actionButton} onPress={handleCopyCode}>
-                  <Ionicons name="copy-outline" size={20} color="#003f87" />
-                  <Text style={styles.actionButtonText}>Copy Code</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.actionButton} onPress={handleCopyLink}>
-                  <Ionicons name="link-outline" size={20} color="#003f87" />
-                  <Text style={styles.actionButtonText}>Copy Link</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.shareButton]} 
-                  onPress={handleShare}
+                <TouchableOpacity
+                  style={[styles.actionButton, { borderColor: colors.secondary }]}
+                  onPress={handleCopyCode}
+                  accessibilityLabel="Copy referral code"
+                  accessibilityRole="button"
                 >
-                  <Ionicons name="share-social-outline" size={20} color="white" />
-                  <Text style={[styles.actionButtonText, styles.shareButtonText]}>Share</Text>
+                  <Ionicons name="copy-outline" size={20} color={colors.secondary} />
+                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Copy Code</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, { borderColor: colors.secondary }]}
+                  onPress={handleCopyLink}
+                  accessibilityLabel="Copy referral link"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="link-outline" size={20} color={colors.secondary} />
+                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Copy Link</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.shareButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                  onPress={handleShare}
+                  accessibilityLabel="Share referral"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="share-social-outline" size={20} color={colors.white} />
+                  <Text style={[styles.actionButtonText, styles.shareButtonText, { color: colors.white }]}>Share</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Stats Cards */}
             <View style={styles.statsContainer}>
-              <View style={styles.statCard}>
-                <Ionicons name="people" size={32} color="#003f87" />
-                <Text style={styles.statValue}>{referralData?.directReferrals || 0}</Text>
-                <Text style={styles.statLabel}>Direct Referrals</Text>
+              <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+                <Ionicons name="people" size={32} color={colors.secondary} />
+                <Text style={[styles.statValue, { color: colors.text }]}>{referralData?.directReferrals || 0}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Direct Referrals</Text>
               </View>
 
-              <View style={styles.statCard}>
-                <Ionicons name="git-network" size={32} color="#F57C00" />
-                <Text style={styles.statValue}>{referralData?.indirectReferrals || 0}</Text>
-                <Text style={styles.statLabel}>Indirect Referrals</Text>
+              <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+                <Ionicons name="git-network" size={32} color={colors.warning} />
+                <Text style={[styles.statValue, { color: colors.text }]}>{referralData?.indirectReferrals || 0}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Indirect Referrals</Text>
               </View>
 
-              <View style={styles.statCard}>
-                <Ionicons name="cash" size={32} color="#ce1126" />
-                <Text style={styles.statValue}>
+              <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+                <Ionicons name="cash" size={32} color={colors.primary} />
+                <Text style={[styles.statValue, { color: colors.text }]}>
                   ${referralData?.totalRewardsEarned?.toFixed(2) || '0.00'}
                 </Text>
-                <Text style={styles.statLabel}>Total Earned</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Earned</Text>
               </View>
             </View>
 
             {referralData && referralData.pendingRewards > 0 && (
               <View style={styles.pendingCard}>
-                <Ionicons name="gift" size={24} color="#ff9800" />
+                <Ionicons name="gift" size={24} color={colors.warning} />
                 <View style={styles.pendingContent}>
                   <Text style={styles.pendingTitle}>Pending Rewards</Text>
                   <Text style={styles.pendingAmount}>
@@ -206,46 +225,46 @@ export default function ReferralScreen() {
             )}
 
             {/* How it Works */}
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>How It Works</Text>
+            <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.infoTitle, { color: colors.secondary }]}>How It Works</Text>
               <View style={styles.infoStep}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>1</Text>
+                <View style={[styles.stepNumber, { backgroundColor: colors.secondary }]}>
+                  <Text style={[styles.stepNumberText, { color: colors.white }]}>1</Text>
                 </View>
-                <Text style={styles.stepText}>
+                <Text style={[styles.stepText, { color: colors.text }]}>
                   Share your referral code with friends and family
                 </Text>
               </View>
               <View style={styles.infoStep}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>2</Text>
+                <View style={[styles.stepNumber, { backgroundColor: colors.secondary }]}>
+                  <Text style={[styles.stepNumberText, { color: colors.white }]}>2</Text>
                 </View>
-                <Text style={styles.stepText}>
+                <Text style={[styles.stepText, { color: colors.text }]}>
                   They sign up and purchase a Camp Card subscription
                 </Text>
               </View>
               <View style={styles.infoStep}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>3</Text>
+                <View style={[styles.stepNumber, { backgroundColor: colors.secondary }]}>
+                  <Text style={[styles.stepNumberText, { color: colors.white }]}>3</Text>
                 </View>
-                <Text style={styles.stepText}>
+                <Text style={[styles.stepText, { color: colors.text }]}>
                   You both earn rewards to support your unit!
                 </Text>
               </View>
             </View>
 
             {referrals.length > 0 && (
-              <Text style={styles.sectionTitle}>Your Referrals</Text>
+              <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Your Referrals</Text>
             )}
           </>
         }
         data={referrals}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.referralItem}>
+          <View style={[styles.referralItem, { backgroundColor: colors.surface }]}>
             <View style={styles.referralInfo}>
-              <Text style={styles.referralName}>{item.referredUserName}</Text>
-              <Text style={styles.referralEmail}>{item.referredUserEmail}</Text>
+              <Text style={[styles.referralName, { color: colors.text }]}>{item.referredUserName}</Text>
+              <Text style={[styles.referralEmail, { color: colors.textSecondary }]}>{item.referredUserEmail}</Text>
               <View style={styles.referralMeta}>
                 <View
                   style={[
@@ -257,15 +276,17 @@ export default function ReferralScreen() {
                     {item.status}
                   </Text>
                 </View>
-                <Text style={styles.rewardAmount}>${item.rewardAmount.toFixed(2)}</Text>
+                <Text style={[styles.rewardAmount, { color: colors.success }]}>${item.rewardAmount.toFixed(2)}</Text>
               </View>
             </View>
             {item.status === 'COMPLETED' && !item.rewardClaimed && (
               <TouchableOpacity
-                style={styles.claimButton}
+                style={[styles.claimButton, { backgroundColor: colors.primary }]}
                 onPress={() => handleClaimReward(item.id)}
+                accessibilityLabel={`Claim reward for ${item.referredUserName}`}
+                accessibilityRole="button"
               >
-                <Text style={styles.claimButtonText}>Claim</Text>
+                <Text style={[styles.claimButtonText, { color: colors.white }]}>Claim</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -273,9 +294,9 @@ export default function ReferralScreen() {
         ListEmptyComponent={
           referrals.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="people-outline" size={64} color="#ccc" />
-              <Text style={styles.emptyText}>No referrals yet</Text>
-              <Text style={styles.emptySubtext}>
+              <Ionicons name="people-outline" size={64} color={colors.border} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No referrals yet</Text>
+              <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
                 Start sharing your code to earn rewards!
               </Text>
             </View>

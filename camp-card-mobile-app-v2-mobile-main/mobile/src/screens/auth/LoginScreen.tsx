@@ -20,7 +20,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
-import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import {
   isBiometricEnabled,
   authenticateWithBiometrics,
@@ -46,6 +46,7 @@ export default function LoginScreen() {
 
   const navigation = useNavigation();
   const { login, loginWithBiometric, isLoading } = useAuthStore();
+  const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const logoSize = Math.min(220, Math.round(width * 0.6));
 
@@ -122,7 +123,7 @@ export default function LoginScreen() {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -140,17 +141,17 @@ export default function LoginScreen() {
 
             {/* Form */}
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={theme.colors.textSecondary}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   placeholder="Email"
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -159,20 +160,22 @@ export default function LoginScreen() {
                   autoCorrect={false}
                   editable={!isLoading}
                   textContentType="emailAddress"
+                  accessibilityLabel="Email address"
+                  accessibilityRole="none"
                 />
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={theme.colors.textSecondary}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   placeholder="Password"
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -181,26 +184,32 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   editable={!isLoading}
                   textContentType="password"
+                  accessibilityLabel="Password"
+                  accessibilityRole="none"
                 />
 
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeIcon}
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                  accessibilityRole="button"
                 >
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
-                    color={COLORS.textSecondary}
+                    color={theme.colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
 
               <TouchableOpacity
-                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                style={[styles.loginButton, { backgroundColor: theme.colors.primary }, isLoading && styles.loginButtonDisabled]}
                 onPress={handleLogin}
                 disabled={isLoading}
+                accessibilityLabel={isLoading ? 'Signing in' : 'Sign in'}
+                accessibilityRole="button"
               >
-                <Text style={styles.loginButtonText}>
+                <Text style={[styles.loginButtonText, { color: theme.colors.surface }]}>
                   {isLoading ? 'Signing In...' : 'Sign In'}
                 </Text>
               </TouchableOpacity>
@@ -208,16 +217,18 @@ export default function LoginScreen() {
               {/* Biometric Login Button */}
               {biometricAvailable && biometricEnabled && (
                 <TouchableOpacity
-                  style={styles.biometricButton}
+                  style={[styles.biometricButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary }]}
                   onPress={handleBiometricLogin}
                   disabled={biometricLoading || isLoading}
+                  accessibilityLabel={`Sign in with ${biometricType}`}
+                  accessibilityRole="button"
                 >
                   {biometricLoading ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} />
+                    <ActivityIndicator size="small" color={theme.colors.primary} />
                   ) : (
                     <>
-                      <Ionicons name="finger-print" size={24} color={COLORS.primary} />
-                      <Text style={styles.biometricButtonText}>
+                      <Ionicons name="finger-print" size={24} color={theme.colors.primary} />
+                      <Text style={[styles.biometricButtonText, { color: theme.colors.primary }]}>
                         Sign in with {biometricType}
                       </Text>
                     </>
@@ -228,16 +239,22 @@ export default function LoginScreen() {
               <TouchableOpacity
                 style={styles.forgotPassword}
                 onPress={() => navigation.navigate('ForgotPassword')}
+                accessibilityLabel="Forgot password"
+                accessibilityRole="button"
               >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>Forgot Password?</Text>
               </TouchableOpacity>
             </View>
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('SubscriptionSelection')}>
-                <Text style={styles.signupLink}>Sign Up</Text>
+              <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>Don't have an account? </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('SubscriptionSelection')}
+                accessibilityLabel="Sign up"
+                accessibilityRole="button"
+              >
+                <Text style={[styles.signupLink, { color: theme.colors.primary }]}>Sign Up</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -250,7 +267,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
     flex: 1,
@@ -276,10 +292,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
     marginBottom: 16,
     paddingHorizontal: 16,
   },
@@ -290,13 +304,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     fontSize: 16,
-    color: COLORS.text,
   },
   eyeIcon: {
     padding: 4,
   },
   loginButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     height: 52,
     justifyContent: 'center',
@@ -307,7 +319,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   loginButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -315,16 +326,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     height: 52,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: COLORS.primary,
     gap: 8,
   },
   biometricButtonText: {
-    color: COLORS.primary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -333,7 +341,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   forgotPasswordText: {
-    color: COLORS.primary,
     fontSize: 14,
   },
   footer: {
@@ -342,11 +349,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: COLORS.textSecondary,
     fontSize: 14,
   },
   signupLink: {
-    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },

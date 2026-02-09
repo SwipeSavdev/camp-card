@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../config/constants';
+import { useTheme } from '../config/ThemeContext';
 
 interface CardPaymentModalProps {
   visible: boolean;
@@ -45,6 +46,8 @@ export default function CardPaymentModal({
   description,
   processPayment,
 }: CardPaymentModalProps) {
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
@@ -189,19 +192,21 @@ export default function CardPaymentModal({
       onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
-        style={styles.overlay}
+        style={[styles.overlay, { backgroundColor: colors.overlay }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Payment Details</Text>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Payment Details</Text>
             <TouchableOpacity
               onPress={handleClose}
               disabled={processing}
               style={styles.closeButton}
+              accessibilityLabel="Close payment modal"
+              accessibilityRole="button"
             >
-              <Ionicons name="close" size={24} color={COLORS.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -211,21 +216,21 @@ export default function CardPaymentModal({
             keyboardShouldPersistTaps="handled"
           >
             {/* Order Summary */}
-            <View style={styles.orderSummary}>
-              <Text style={styles.orderLabel}>{description}</Text>
-              <Text style={styles.orderAmount}>{formatPrice(amount)}</Text>
+            <View style={[styles.orderSummary, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.orderLabel, { color: colors.text }]}>{description}</Text>
+              <Text style={[styles.orderAmount, { color: colors.primary }]}>{formatPrice(amount)}</Text>
             </View>
 
             {/* Card Form */}
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Card Number</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="card-outline" size={20} color={COLORS.textSecondary} style={styles.inputIcon} />
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Card Number</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="card-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="1234 5678 9012 3456"
-                    placeholderTextColor={COLORS.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     value={cardNumber}
                     onChangeText={handleCardNumberChange}
                     keyboardType="numeric"
@@ -238,13 +243,13 @@ export default function CardPaymentModal({
 
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.halfWidth]}>
-                  <Text style={styles.inputLabel}>Expiry Date</Text>
-                  <View style={styles.inputWrapper}>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>Expiry Date</Text>
+                  <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                     <TextInput
                       ref={expiryRef}
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="MM/YY"
-                      placeholderTextColor={COLORS.textSecondary}
+                      placeholderTextColor={colors.textSecondary}
                       value={expiryDate}
                       onChangeText={handleExpiryChange}
                       keyboardType="numeric"
@@ -256,13 +261,13 @@ export default function CardPaymentModal({
                 </View>
 
                 <View style={[styles.inputGroup, styles.halfWidth]}>
-                  <Text style={styles.inputLabel}>CVV</Text>
-                  <View style={styles.inputWrapper}>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>CVV</Text>
+                  <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                     <TextInput
                       ref={cvvRef}
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="123"
-                      placeholderTextColor={COLORS.textSecondary}
+                      placeholderTextColor={colors.textSecondary}
                       value={cvv}
                       onChangeText={handleCvvChange}
                       keyboardType="numeric"
@@ -276,14 +281,14 @@ export default function CardPaymentModal({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Cardholder Name</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="person-outline" size={20} color={COLORS.textSecondary} style={styles.inputIcon} />
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Cardholder Name</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                   <TextInput
                     ref={nameRef}
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="John Doe"
-                    placeholderTextColor={COLORS.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     value={cardholderName}
                     onChangeText={setCardholderName}
                     autoCapitalize="words"
@@ -295,14 +300,14 @@ export default function CardPaymentModal({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Billing ZIP Code</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="location-outline" size={20} color={COLORS.textSecondary} style={styles.inputIcon} />
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Billing ZIP Code</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="location-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                   <TextInput
                     ref={zipRef}
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="12345"
-                    placeholderTextColor={COLORS.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     value={zipCode}
                     onChangeText={(text) => setZipCode(text.replace(/\D/g, '').substring(0, 5))}
                     keyboardType="numeric"
@@ -315,38 +320,40 @@ export default function CardPaymentModal({
             </View>
 
             {/* Security Notice */}
-            <View style={styles.securityNotice}>
-              <Ionicons name="shield-checkmark" size={20} color="#4CAF50" />
-              <Text style={styles.securityText}>
+            <View style={[styles.securityNotice, { backgroundColor: colors.success + '15' }]}>
+              <Ionicons name="shield-checkmark" size={20} color={colors.success} />
+              <Text style={[styles.securityText, { color: colors.success }]}>
                 Your payment is secured by Authorize.net with 256-bit SSL encryption
               </Text>
             </View>
 
             {/* Card Logos */}
             <View style={styles.cardLogos}>
-              <Text style={styles.acceptedText}>We accept</Text>
+              <Text style={[styles.acceptedText, { color: colors.textSecondary }]}>We accept</Text>
               <View style={styles.logoRow}>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>VISA</Text></View>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>MC</Text></View>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>AMEX</Text></View>
-                <View style={styles.cardBadge}><Text style={styles.cardBadgeText}>DISC</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>VISA</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>MC</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>AMEX</Text></View>
+                <View style={[styles.cardBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.cardBadgeText, { color: colors.textSecondary }]}>DISC</Text></View>
               </View>
             </View>
           </ScrollView>
 
           {/* Pay Button */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
             <TouchableOpacity
-              style={[styles.payButton, processing && styles.payButtonDisabled]}
+              style={[styles.payButton, { backgroundColor: colors.primary }, processing && styles.payButtonDisabled]}
               onPress={handlePayment}
               disabled={processing}
+              accessibilityLabel={`Pay ${formatPrice(amount)}`}
+              accessibilityRole="button"
             >
               {processing ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <>
-                  <Ionicons name="lock-closed" size={20} color="#fff" />
-                  <Text style={styles.payButtonText}>
+                  <Ionicons name="lock-closed" size={20} color={colors.white} />
+                  <Text style={[styles.payButtonText, { color: colors.white }]}>
                     Pay {formatPrice(amount)}
                   </Text>
                 </>

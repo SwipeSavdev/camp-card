@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
 import { consentApi } from '../../services/apiClient';
-import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
@@ -33,6 +33,7 @@ const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
  */
 export default function ConsentPendingScreen() {
   const { user, logout } = useAuthStore();
+  const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const logoSize = Math.min(180, Math.round(width * 0.5));
 
@@ -97,30 +98,35 @@ export default function ConsentPendingScreen() {
   // Render denied/revoked state
   if (consentStatus === 'DENIED' || consentStatus === 'REVOKED') {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.centerContainer}>
             <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
 
-            <View style={styles.deniedIconContainer}>
-              <Ionicons name="close-circle" size={80} color={COLORS.error} />
+            <View style={[styles.deniedIconContainer, { backgroundColor: `${theme.colors.error}15` }]}>
+              <Ionicons name="close-circle" size={80} color={theme.colors.error} />
             </View>
 
-            <Text style={styles.title}>Access Restricted</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Access Restricted</Text>
 
-            <Text style={styles.message}>
+            <Text style={[styles.message, { color: theme.colors.textSecondary }]}>
               Your parent or guardian has not approved your Camp Card account.
             </Text>
 
-            <View style={styles.infoCard}>
-              <Ionicons name="information-circle" size={24} color={COLORS.primary} style={styles.infoIcon} />
-              <Text style={styles.infoText}>
+            <View style={[styles.infoCard, { backgroundColor: `${theme.colors.primary}10` }]}>
+              <Ionicons name="information-circle" size={24} color={theme.colors.primary} style={styles.infoIcon} />
+              <Text style={[styles.infoText, { color: theme.colors.text }]}>
                 If you think this is a mistake, please talk to your parent or guardian. They can change their decision at any time.
               </Text>
             </View>
 
-            <TouchableOpacity style={styles.secondaryButton} onPress={logout}>
-              <Text style={styles.secondaryButtonText}>Sign Out</Text>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={logout}
+              accessibilityLabel="Sign out"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.secondaryButtonText, { color: theme.colors.textSecondary }]}>Sign Out</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -130,7 +136,7 @@ export default function ConsentPendingScreen() {
 
   // Render pending state
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -139,51 +145,53 @@ export default function ConsentPendingScreen() {
           <View style={styles.centerContainer}>
             <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
 
-            <View style={styles.pendingIconContainer}>
-              <Ionicons name="time" size={80} color={COLORS.warning} />
+            <View style={[styles.pendingIconContainer, { backgroundColor: `${theme.colors.warning}15` }]}>
+              <Ionicons name="time" size={80} color={theme.colors.warning} />
             </View>
 
-            <Text style={styles.title}>Waiting for Parent Approval</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Waiting for Parent Approval</Text>
 
-            <Text style={styles.message}>
+            <Text style={[styles.message, { color: theme.colors.textSecondary }]}>
               We've sent an email to your parent or guardian asking them to approve your Camp Card account.
             </Text>
 
-            <View style={styles.stepsCard}>
-              <Text style={styles.stepsTitle}>What happens next?</Text>
+            <View style={[styles.stepsCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+              <Text style={[styles.stepsTitle, { color: theme.colors.text }]}>What happens next?</Text>
               <View style={styles.step}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>1</Text>
+                <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary }]}>
+                  <Text style={[styles.stepNumberText, { color: theme.colors.surface }]}>1</Text>
                 </View>
-                <Text style={styles.stepText}>Your parent receives our email</Text>
+                <Text style={[styles.stepText, { color: theme.colors.text }]}>Your parent receives our email</Text>
               </View>
               <View style={styles.step}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>2</Text>
+                <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary }]}>
+                  <Text style={[styles.stepNumberText, { color: theme.colors.surface }]}>2</Text>
                 </View>
-                <Text style={styles.stepText}>They click to review and approve</Text>
+                <Text style={[styles.stepText, { color: theme.colors.text }]}>They click to review and approve</Text>
               </View>
               <View style={styles.step}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>3</Text>
+                <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary }]}>
+                  <Text style={[styles.stepNumberText, { color: theme.colors.surface }]}>3</Text>
                 </View>
-                <Text style={styles.stepText}>You get full access to Camp Card!</Text>
+                <Text style={[styles.stepText, { color: theme.colors.text }]}>You get full access to Camp Card!</Text>
               </View>
             </View>
 
             {!showUpdateEmail ? (
               <>
                 <TouchableOpacity
-                  style={[styles.primaryButton, isResending && styles.buttonDisabled]}
+                  style={[styles.primaryButton, { backgroundColor: theme.colors.primary }, isResending && styles.buttonDisabled]}
                   onPress={handleResendEmail}
                   disabled={isResending}
+                  accessibilityLabel={isResending ? 'Resending email' : 'Resend email to parent'}
+                  accessibilityRole="button"
                 >
                   {isResending ? (
-                    <ActivityIndicator color={COLORS.surface} />
+                    <ActivityIndicator color={theme.colors.surface} />
                   ) : (
                     <>
-                      <Ionicons name="mail" size={20} color={COLORS.surface} style={styles.buttonIcon} />
-                      <Text style={styles.primaryButtonText}>Resend Email to Parent</Text>
+                      <Ionicons name="mail" size={20} color={theme.colors.surface} style={styles.buttonIcon} />
+                      <Text style={[styles.primaryButtonText, { color: theme.colors.surface }]}>Resend Email to Parent</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -191,49 +199,57 @@ export default function ConsentPendingScreen() {
                 <TouchableOpacity
                   style={styles.linkButton}
                   onPress={() => setShowUpdateEmail(true)}
+                  accessibilityLabel="Update parent email"
+                  accessibilityRole="button"
                 >
-                  <Text style={styles.linkButtonText}>Wrong parent email? Update it here</Text>
+                  <Text style={[styles.linkButtonText, { color: theme.colors.primary }]}>Wrong parent email? Update it here</Text>
                 </TouchableOpacity>
               </>
             ) : (
-              <View style={styles.updateEmailCard}>
-                <Text style={styles.updateEmailTitle}>Update Parent Information</Text>
+              <View style={[styles.updateEmailCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+                <Text style={[styles.updateEmailTitle, { color: theme.colors.text }]}>Update Parent Information</Text>
 
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Parent's Full Name</Text>
+                  <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Parent's Full Name</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border }]}
                     placeholder="e.g., John Smith"
                     value={newParentName}
                     onChangeText={setNewParentName}
                     autoCapitalize="words"
-                    placeholderTextColor={COLORS.textSecondary}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    accessibilityLabel="Parent's full name"
+                    accessibilityRole="none"
                   />
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Parent's Email</Text>
+                  <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Parent's Email</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border }]}
                     placeholder="e.g., parent@email.com"
                     value={newParentEmail}
                     onChangeText={setNewParentEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    placeholderTextColor={COLORS.textSecondary}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    accessibilityLabel="Parent's email address"
+                    accessibilityRole="none"
                   />
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.primaryButton, isUpdating && styles.buttonDisabled]}
+                  style={[styles.primaryButton, { backgroundColor: theme.colors.primary }, isUpdating && styles.buttonDisabled]}
                   onPress={handleUpdateParent}
                   disabled={isUpdating}
+                  accessibilityLabel={isUpdating ? 'Sending to new email' : 'Send to new email'}
+                  accessibilityRole="button"
                 >
                   {isUpdating ? (
-                    <ActivityIndicator color={COLORS.surface} />
+                    <ActivityIndicator color={theme.colors.surface} />
                   ) : (
-                    <Text style={styles.primaryButtonText}>Send to New Email</Text>
+                    <Text style={[styles.primaryButtonText, { color: theme.colors.surface }]}>Send to New Email</Text>
                   )}
                 </TouchableOpacity>
 
@@ -244,14 +260,21 @@ export default function ConsentPendingScreen() {
                     setNewParentEmail('');
                     setNewParentName('');
                   }}
+                  accessibilityLabel="Cancel"
+                  accessibilityRole="button"
                 >
-                  <Text style={styles.linkButtonText}>Cancel</Text>
+                  <Text style={[styles.linkButtonText, { color: theme.colors.primary }]}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             )}
 
-            <TouchableOpacity style={styles.secondaryButton} onPress={logout}>
-              <Text style={styles.secondaryButtonText}>Sign Out</Text>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={logout}
+              accessibilityLabel="Sign out"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.secondaryButtonText, { color: theme.colors.textSecondary }]}>Sign Out</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -263,7 +286,6 @@ export default function ConsentPendingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   flex: {
     flex: 1,
@@ -286,7 +308,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: `${COLORS.warning}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -295,7 +316,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: `${COLORS.error}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -303,31 +323,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 12,
     textAlign: 'center',
   },
   message: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
     marginBottom: 24,
   },
   stepsCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 20,
     width: '100%',
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   stepsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.text,
     marginBottom: 16,
   },
   step: {
@@ -339,23 +354,19 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   stepNumberText: {
-    color: COLORS.surface,
     fontSize: 14,
     fontWeight: 'bold',
   },
   stepText: {
     fontSize: 15,
-    color: COLORS.text,
     flex: 1,
   },
   infoCard: {
-    backgroundColor: `${COLORS.primary}10`,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -369,12 +380,10 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: COLORS.text,
     flex: 1,
     lineHeight: 20,
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 16,
@@ -391,7 +400,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   primaryButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
@@ -402,7 +410,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   secondaryButtonText: {
-    color: COLORS.textSecondary,
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
@@ -411,23 +418,19 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   linkButtonText: {
-    color: COLORS.primary,
     fontSize: 14,
     textAlign: 'center',
   },
   updateEmailCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 20,
     width: '100%',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   updateEmailTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.text,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -437,17 +440,13 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: COLORS.background,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: COLORS.text,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
 });

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
 import { apiClient } from '../utils/api';
+import { useTheme } from '../config/ThemeContext';
 
 interface Offer {
   id: number;
@@ -28,7 +29,9 @@ export default function ShareOfferScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { offer } = route.params as { offer: Offer };
-  
+  const { theme } = useTheme();
+  const { colors } = theme;
+
   const [loading, setLoading] = useState(true);
   const [shareableLink, setShareableLink] = useState('');
   const [qrData, setQrData] = useState<any>(null);
@@ -99,52 +102,54 @@ export default function ShareOfferScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.secondary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
     <ScrollView contentContainerStyle={styles.content}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
+        accessibilityLabel="Go back"
+        accessibilityRole="button"
       >
-        <Ionicons name="arrow-back" size={24} color="#003f87" />
+        <Ionicons name="arrow-back" size={24} color={colors.secondary} />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Share Offer</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, { color: colors.secondary }]}>Share Offer</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         Share this exclusive discount with friends and family
       </Text>
 
       {/* Offer Details */}
-      <View style={styles.offerCard}>
-        <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>{offer.discountPercentage}% OFF</Text>
+      <View style={[styles.offerCard, { backgroundColor: colors.surface }]}>
+        <View style={[styles.discountBadge, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.discountText, { color: colors.white }]}>{offer.discountPercentage}% OFF</Text>
         </View>
-        <Text style={styles.merchantName}>{offer.merchantName}</Text>
-        <Text style={styles.offerTitle}>{offer.title}</Text>
+        <Text style={[styles.merchantName, { color: colors.textSecondary }]}>{offer.merchantName}</Text>
+        <Text style={[styles.offerTitle, { color: colors.secondary }]}>{offer.title}</Text>
       </View>
 
       {/* QR Code */}
-      <View style={styles.qrContainer}>
+      <View style={[styles.qrContainer, { backgroundColor: colors.surface }]}>
         <QRCode
           value={JSON.stringify(qrData)}
           size={220}
           backgroundColor="white"
           color="#003f87"
         />
-        <Text style={styles.qrLabel}>Scan to claim offer</Text>
+        <Text style={[styles.qrLabel, { color: colors.textSecondary }]}>Scan to claim offer</Text>
       </View>
 
       {/* Shareable Link */}
       <View style={styles.linkSection}>
-        <Text style={styles.sectionTitle}>Shareable Link</Text>
+        <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Shareable Link</Text>
         <View style={styles.linkContainer}>
-          <Text style={styles.linkText} numberOfLines={1}>
+          <Text style={[styles.linkText, { color: colors.secondary }]} numberOfLines={1}>
             {shareableLink}
           </Text>
         </View>
@@ -152,44 +157,52 @@ export default function ShareOfferScreen() {
 
       {/* Share Actions */}
       <View style={styles.actionsSection}>
-        <TouchableOpacity 
-          style={styles.primaryButton}
+        <TouchableOpacity
+          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
           onPress={handleShare}
+          accessibilityLabel="Share offer"
+          accessibilityRole="button"
         >
-          <Ionicons name="share-social" size={24} color="white" />
-          <Text style={styles.primaryButtonText}>Share</Text>
+          <Ionicons name="share-social" size={24} color={colors.white} />
+          <Text style={[styles.primaryButtonText, { color: colors.white }]}>Share</Text>
         </TouchableOpacity>
 
         <View style={styles.secondaryActions}>
-          <TouchableOpacity 
-            style={styles.secondaryButton}
+          <TouchableOpacity
+            style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}
             onPress={handleCopyLink}
+            accessibilityLabel="Copy link"
+            accessibilityRole="button"
           >
-            <Ionicons name="copy-outline" size={20} color="#003f87" />
-            <Text style={styles.secondaryButtonText}>Copy Link</Text>
+            <Ionicons name="copy-outline" size={20} color={colors.secondary} />
+            <Text style={[styles.secondaryButtonText, { color: colors.secondary }]}>Copy Link</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.secondaryButton}
+          <TouchableOpacity
+            style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}
             onPress={handleShareViaEmail}
+            accessibilityLabel="Share via email"
+            accessibilityRole="button"
           >
-            <Ionicons name="mail-outline" size={20} color="#003f87" />
-            <Text style={styles.secondaryButtonText}>Email</Text>
+            <Ionicons name="mail-outline" size={20} color={colors.secondary} />
+            <Text style={[styles.secondaryButtonText, { color: colors.secondary }]}>Email</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.secondaryButton}
+          <TouchableOpacity
+            style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}
             onPress={handleShareViaSMS}
+            accessibilityLabel="Share via SMS"
+            accessibilityRole="button"
           >
-            <Ionicons name="chatbubble-outline" size={20} color="#003f87" />
-            <Text style={styles.secondaryButtonText}>SMS</Text>
+            <Ionicons name="chatbubble-outline" size={20} color={colors.secondary} />
+            <Text style={[styles.secondaryButtonText, { color: colors.secondary }]}>SMS</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Info Box */}
       <View style={styles.infoBox}>
-        <Ionicons name="information-circle" size={20} color="#666" />
+        <Ionicons name="information-circle" size={20} color={colors.textSecondary} />
         <Text style={styles.infoBoxText}>
           Anyone with this link can view the offer. They'll need a Camp Card subscription to redeem it.
         </Text>

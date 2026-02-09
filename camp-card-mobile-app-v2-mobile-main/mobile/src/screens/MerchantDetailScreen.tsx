@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker } from 'react-native-maps';
 import { merchantsApi } from '../utils/api';
+import { useTheme } from '../config/ThemeContext';
 
 interface MerchantLocation {
   id: number;
@@ -68,6 +69,8 @@ export default function MerchantDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { merchantId } = route.params as { merchantId: number };
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   useEffect(() => {
     loadMerchantData();
@@ -161,7 +164,7 @@ export default function MerchantDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
+        <ActivityIndicator size="large" color={colors.secondary} />
       </View>
     );
   }
@@ -171,13 +174,17 @@ export default function MerchantDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#003f87" />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
+        <Text style={[styles.headerTitle, { color: colors.secondary }]} numberOfLines={1}>
           {merchant.businessName}
         </Text>
         <View style={{ width: 24 }} />
@@ -188,107 +195,115 @@ export default function MerchantDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#003f87']}
-            tintColor="#003f87"
+            colors={[colors.secondary]}
+            tintColor={colors.secondary}
           />
         }
       >
         {/* Hero Section */}
-        <View style={styles.heroSection}>
+        <View style={[styles.heroSection, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           {merchant.logoUrl ? (
             <Image source={{ uri: merchant.logoUrl }} style={styles.heroLogo} />
           ) : (
-            <View style={[styles.heroLogo, styles.logoPlaceholder]}>
-              <Ionicons name="business-outline" size={64} color="#ccc" />
+            <View style={[styles.heroLogo, styles.logoPlaceholder, { backgroundColor: colors.background }]}>
+              <Ionicons name="business-outline" size={64} color={colors.border} />
             </View>
           )}
-          
-          <Text style={styles.businessName}>{merchant.businessName}</Text>
+
+          <Text style={[styles.businessName, { color: colors.text }]}>{merchant.businessName}</Text>
           {merchant.dbaName && (
-            <Text style={styles.dbaName}>{merchant.dbaName}</Text>
+            <Text style={[styles.dbaName, { color: colors.textSecondary }]}>{merchant.dbaName}</Text>
           )}
-          <Text style={styles.category}>{merchant.category}</Text>
+          <Text style={[styles.category, { color: colors.textSecondary }]}>{merchant.category}</Text>
         </View>
 
         {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
+        <View style={[styles.actionsContainer, { backgroundColor: colors.surface }]}>
           <View style={styles.actionButton}>
-            <Ionicons name="pricetag" size={24} color="#ce1126" />
-            <Text style={styles.actionButtonText}>
+            <Ionicons name="pricetag" size={24} color={colors.primary} />
+            <Text style={[styles.actionButtonText, { color: colors.text }]}>
               {offers.length} Offers
             </Text>
           </View>
 
           {(selectedLocation?.phone || merchant.contactPhone) && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={handleCall}
+              accessibilityLabel="Call merchant"
+              accessibilityRole="button"
             >
-              <Ionicons name="call" size={24} color="#003f87" />
-              <Text style={styles.actionButtonText}>Call</Text>
+              <Ionicons name="call" size={24} color={colors.secondary} />
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Call</Text>
             </TouchableOpacity>
           )}
 
           {selectedLocation?.latitude && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={handleDirections}
+              accessibilityLabel="Get directions"
+              accessibilityRole="button"
             >
-              <Ionicons name="navigate" size={24} color="#003f87" />
-              <Text style={styles.actionButtonText}>Directions</Text>
+              <Ionicons name="navigate" size={24} color={colors.secondary} />
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Directions</Text>
             </TouchableOpacity>
           )}
 
           {merchant.websiteUrl && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={handleWebsite}
+              accessibilityLabel="Visit website"
+              accessibilityRole="button"
             >
-              <Ionicons name="globe" size={24} color="#003f87" />
-              <Text style={styles.actionButtonText}>Website</Text>
+              <Ionicons name="globe" size={24} color={colors.secondary} />
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Website</Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Description */}
         {merchant.description && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.description}>{merchant.description}</Text>
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.secondary }]}>About</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>{merchant.description}</Text>
           </View>
         )}
 
         {/* Offers */}
         {offers.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Available Offers</Text>
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Available Offers</Text>
             {offers.map((offer) => (
               <TouchableOpacity
                 key={offer.id}
-                style={styles.offerCard}
+                style={[styles.offerCard, { borderColor: colors.border }]}
                 onPress={() => handleOfferPress(offer.id)}
+                accessibilityLabel={`${offer.title} - ${getDiscountText(offer)}`}
+                accessibilityRole="button"
               >
                 <View style={styles.offerHeader}>
                   <View style={styles.offerInfo}>
-                    <Text style={styles.offerTitle} numberOfLines={1}>{offer.title}</Text>
+                    <Text style={[styles.offerTitle, { color: colors.text }]} numberOfLines={1}>{offer.title}</Text>
                     {offer.description && (
-                      <Text style={styles.offerDescription} numberOfLines={2}>
+                      <Text style={[styles.offerDescription, { color: colors.textSecondary }]} numberOfLines={2}>
                         {offer.description}
                       </Text>
                     )}
                   </View>
-                  <View style={styles.discountBadge}>
-                    <Text style={styles.discountText}>{getDiscountText(offer)}</Text>
+                  <View style={[styles.discountBadge, { backgroundColor: colors.primary }]}>
+                    <Text style={[styles.discountText, { color: colors.white }]}>{getDiscountText(offer)}</Text>
                   </View>
                 </View>
-                <View style={styles.offerFooter}>
+                <View style={[styles.offerFooter, { borderTopColor: colors.border }]}>
                   <View style={styles.offerMeta}>
-                    <Ionicons name="time-outline" size={14} color="#666" />
-                    <Text style={styles.offerMetaText}>{getDaysRemaining(offer.validUntil)}</Text>
+                    <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+                    <Text style={[styles.offerMetaText, { color: colors.textSecondary }]}>{getDaysRemaining(offer.validUntil)}</Text>
                   </View>
                   {offer.featured && (
                     <View style={styles.featuredBadge}>
-                      <Ionicons name="star" size={12} color="#F59E0B" />
+                      <Ionicons name="star" size={12} color={colors.warning} />
                       <Text style={styles.featuredText}>Featured</Text>
                     </View>
                   )}
@@ -300,20 +315,20 @@ export default function MerchantDetailScreen() {
 
         {/* No Offers Message */}
         {offers.length === 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Offers</Text>
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Offers</Text>
             <View style={styles.noOffersContainer}>
-              <Ionicons name="pricetag-outline" size={48} color="#ccc" />
-              <Text style={styles.noOffersText}>No active offers</Text>
-              <Text style={styles.noOffersSubtext}>Check back soon for new deals!</Text>
+              <Ionicons name="pricetag-outline" size={48} color={colors.border} />
+              <Text style={[styles.noOffersText, { color: colors.textSecondary }]}>No active offers</Text>
+              <Text style={[styles.noOffersSubtext, { color: colors.textSecondary }]}>Check back soon for new deals!</Text>
             </View>
           </View>
         )}
 
         {/* Map */}
         {selectedLocation?.latitude && selectedLocation?.longitude && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Location</Text>
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Location</Text>
             <MapView
               style={styles.map}
               region={{
@@ -336,8 +351,8 @@ export default function MerchantDetailScreen() {
 
         {/* Locations */}
         {merchant.locations && merchant.locations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.secondary }]}>
               {merchant.locations.length === 1 ? 'Location' : 'Locations'}
             </Text>
             {merchant.locations.map((location) => (
@@ -345,38 +360,41 @@ export default function MerchantDetailScreen() {
                 key={location.id}
                 style={[
                   styles.locationCard,
-                  selectedLocation?.id === location.id && styles.locationCardActive
+                  { borderColor: colors.border },
+                  selectedLocation?.id === location.id && [styles.locationCardActive, { borderColor: colors.secondary }]
                 ]}
                 onPress={() => setSelectedLocation(location)}
+                accessibilityLabel={`${location.locationName} - ${location.city}, ${location.state}`}
+                accessibilityRole="button"
               >
                 <View style={styles.locationHeader}>
-                  <Ionicons 
-                    name={location.primaryLocation ? "star" : "location"} 
-                    size={20} 
-                    color={location.primaryLocation ? "#ce1126" : "#003f87"} 
+                  <Ionicons
+                    name={location.primaryLocation ? "star" : "location"}
+                    size={20}
+                    color={location.primaryLocation ? colors.primary : colors.secondary}
                   />
-                  <Text style={styles.locationName}>{location.locationName}</Text>
+                  <Text style={[styles.locationName, { color: colors.text }]}>{location.locationName}</Text>
                 </View>
-                
-                <Text style={styles.locationAddress}>
+
+                <Text style={[styles.locationAddress, { color: colors.textSecondary }]}>
                   {location.streetAddress}
                   {location.addressLine2 && `\n${location.addressLine2}`}
                 </Text>
-                <Text style={styles.locationAddress}>
+                <Text style={[styles.locationAddress, { color: colors.textSecondary }]}>
                   {location.city}, {location.state} {location.zipCode}
                 </Text>
 
                 {location.phone && (
                   <View style={styles.locationDetail}>
-                    <Ionicons name="call-outline" size={16} color="#666" />
-                    <Text style={styles.locationDetailText}>{location.phone}</Text>
+                    <Ionicons name="call-outline" size={16} color={colors.textSecondary} />
+                    <Text style={[styles.locationDetailText, { color: colors.textSecondary }]}>{location.phone}</Text>
                   </View>
                 )}
 
                 {location.hours && (
                   <View style={styles.locationDetail}>
-                    <Ionicons name="time-outline" size={16} color="#666" />
-                    <Text style={styles.locationDetailText}>{location.hours}</Text>
+                    <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                    <Text style={[styles.locationDetailText, { color: colors.textSecondary }]}>{location.hours}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -385,23 +403,23 @@ export default function MerchantDetailScreen() {
         )}
 
         {/* Stats */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Statistics</Text>
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Statistics</Text>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-              <Ionicons name="pricetag-outline" size={32} color="#ce1126" />
-              <Text style={styles.statValue}>{merchant.activeOffers}</Text>
-              <Text style={styles.statLabel}>Active Offers</Text>
+              <Ionicons name="pricetag-outline" size={32} color={colors.primary} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{merchant.activeOffers}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Active Offers</Text>
             </View>
             <View style={styles.statBox}>
-              <Ionicons name="checkmark-circle-outline" size={32} color="#4CAF50" />
-              <Text style={styles.statValue}>{merchant.totalRedemptions}</Text>
-              <Text style={styles.statLabel}>Total Redemptions</Text>
+              <Ionicons name="checkmark-circle-outline" size={32} color={colors.success} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{merchant.totalRedemptions}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Redemptions</Text>
             </View>
             <View style={styles.statBox}>
-              <Ionicons name="location-outline" size={32} color="#003f87" />
-              <Text style={styles.statValue}>{merchant.locations?.length || 0}</Text>
-              <Text style={styles.statLabel}>Locations</Text>
+              <Ionicons name="location-outline" size={32} color={colors.secondary} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{merchant.locations?.length || 0}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Locations</Text>
             </View>
           </View>
         </View>

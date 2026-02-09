@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { apiClient } from '../../services/apiClient';
 
 type GiftCardScreenRouteProp = RouteProp<{ GiftCard: { cardId: number } }, 'GiftCard'>;
@@ -26,6 +27,8 @@ export default function GiftCardScreen() {
   const navigation = useNavigation();
   const route = useRoute<GiftCardScreenRouteProp>();
   const { cardId } = route.params;
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');
@@ -80,17 +83,22 @@ export default function GiftCardScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Send as Gift</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Send as Gift</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -108,7 +116,7 @@ export default function GiftCardScreen() {
           </View>
 
           {/* Description */}
-          <Text style={styles.description}>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>
             Send this Camp Card as a gift! The recipient will receive an email with a link to
             claim their card and start enjoying exclusive offers.
           </Text>
@@ -116,13 +124,13 @@ export default function GiftCardScreen() {
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Recipient's Email *</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="mail-outline" size={20} color={COLORS.textSecondary} />
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Recipient's Email *</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="friend@example.com"
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={recipientEmail}
                   onChangeText={setRecipientEmail}
                   keyboardType="email-address"
@@ -135,14 +143,14 @@ export default function GiftCardScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Recipient's Name (Optional)</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="person-outline" size={20} color={COLORS.textSecondary} />
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Recipient's Name (Optional)</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Ionicons name="person-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   ref={nameRef}
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Their name"
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={recipientName}
                   onChangeText={setRecipientName}
                   autoCapitalize="words"
@@ -153,13 +161,13 @@ export default function GiftCardScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Gift Message (Optional)</Text>
-              <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Gift Message (Optional)</Text>
+              <View style={[styles.inputWrapper, styles.textAreaWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <TextInput
                   ref={messageRef}
-                  style={[styles.input, styles.textArea]}
+                  style={[styles.input, styles.textArea, { color: colors.text }]}
                   placeholder="Add a personal message..."
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={giftMessage}
                   onChangeText={setGiftMessage}
                   multiline
@@ -168,16 +176,16 @@ export default function GiftCardScreen() {
                   maxLength={500}
                 />
               </View>
-              <Text style={styles.charCount}>{giftMessage.length}/500</Text>
+              <Text style={[styles.charCount, { color: colors.textSecondary }]}>{giftMessage.length}/500</Text>
             </View>
           </View>
 
           {/* Info Box */}
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle" size={24} color={COLORS.secondary} />
+          <View style={[styles.infoBox, { backgroundColor: colors.info + '15' }]}>
+            <Ionicons name="information-circle" size={24} color={colors.secondary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>How it works</Text>
-              <Text style={styles.infoText}>
+              <Text style={[styles.infoTitle, { color: colors.text }]}>How it works</Text>
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                 • The recipient will receive an email with your gift{'\n'}
                 • They can claim the card by creating an account or logging in{'\n'}
                 • Once claimed, the card will be added to their wallet{'\n'}
@@ -187,9 +195,9 @@ export default function GiftCardScreen() {
           </View>
 
           {/* Expiry Warning */}
-          <View style={styles.warningBox}>
-            <Ionicons name="time-outline" size={20} color="#E65100" />
-            <Text style={styles.warningText}>
+          <View style={[styles.warningBox, { backgroundColor: colors.warning + '15' }]}>
+            <Ionicons name="time-outline" size={20} color={colors.warning} />
+            <Text style={[styles.warningText, { color: colors.warning }]}>
               Remember: All Camp Cards expire on December 31st. Make sure your recipient has time
               to enjoy their gift!
             </Text>
@@ -197,18 +205,20 @@ export default function GiftCardScreen() {
         </ScrollView>
 
         {/* Send Button */}
-        <View style={styles.bottomSection}>
+        <View style={[styles.bottomSection, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <TouchableOpacity
             style={[styles.sendButton, sending && styles.sendButtonDisabled]}
             onPress={handleSendGift}
             disabled={sending}
+            accessibilityLabel="Send gift"
+            accessibilityRole="button"
           >
             {sending ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <>
-                <Ionicons name="send" size={20} color="#fff" />
-                <Text style={styles.sendButtonText}>Send Gift</Text>
+                <Ionicons name="send" size={20} color={colors.white} />
+                <Text style={[styles.sendButtonText, { color: colors.white }]}>Send Gift</Text>
               </>
             )}
           </TouchableOpacity>

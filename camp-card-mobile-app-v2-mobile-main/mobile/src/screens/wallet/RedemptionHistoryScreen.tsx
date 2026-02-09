@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { redemptionsApi } from '../../services/apiClient';
 import { useAuthStore } from '../../store/authStore';
 
@@ -30,6 +31,8 @@ interface Redemption {
 export default function RedemptionHistoryScreen() {
   const navigation = useNavigation();
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -104,32 +107,32 @@ export default function RedemptionHistoryScreen() {
   const getStatusColor = (status: Redemption['status']): string => {
     switch (status) {
       case 'completed':
-        return COLORS.success;
+        return colors.success;
       case 'pending':
-        return COLORS.warning;
+        return colors.warning;
       case 'cancelled':
-        return COLORS.error;
+        return colors.error;
       default:
-        return COLORS.textSecondary;
+        return colors.textSecondary;
     }
   };
 
   const renderRedemptionItem = ({ item }: { item: Redemption }) => (
-    <View style={styles.redemptionCard}>
-      <View style={styles.redemptionIcon}>
+    <View style={[styles.redemptionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.redemptionIcon, { backgroundColor: colors.primary + '15' }]}>
         <Ionicons
           name={getCategoryIcon(item.category)}
           size={24}
-          color={COLORS.primary}
+          color={colors.primary}
         />
       </View>
       <View style={styles.redemptionInfo}>
-        <Text style={styles.merchantName}>{item.merchantName}</Text>
-        <Text style={styles.offerTitle} numberOfLines={1}>
+        <Text style={[styles.merchantName, { color: colors.text }]}>{item.merchantName}</Text>
+        <Text style={[styles.offerTitle, { color: colors.textSecondary }]} numberOfLines={1}>
           {item.offerTitle}
         </Text>
         <View style={styles.metaRow}>
-          <Text style={styles.dateText}>{formatDate(item.redeemedAt)}</Text>
+          <Text style={[styles.dateText, { color: colors.textSecondary }]}>{formatDate(item.redeemedAt)}</Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
             <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
               {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
@@ -138,22 +141,24 @@ export default function RedemptionHistoryScreen() {
         </View>
       </View>
       <View style={styles.savingsContainer}>
-        <Text style={styles.savingsLabel}>Saved</Text>
-        <Text style={styles.savingsAmount}>-${item.savings.toFixed(2)}</Text>
+        <Text style={[styles.savingsLabel, { color: colors.textSecondary }]}>Saved</Text>
+        <Text style={[styles.savingsAmount, { color: colors.success }]}>-${item.savings.toFixed(2)}</Text>
       </View>
     </View>
   );
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="receipt-outline" size={64} color={COLORS.textSecondary} />
-      <Text style={styles.emptyTitle}>No Redemptions Yet</Text>
-      <Text style={styles.emptySubtitle}>
+      <Ionicons name="receipt-outline" size={64} color={colors.textSecondary} />
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Redemptions Yet</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         When you redeem offers at participating merchants, they'll appear here.
       </Text>
       <TouchableOpacity
-        style={styles.browseButton}
+        style={[styles.browseButton, { backgroundColor: colors.primary }]}
         onPress={() => navigation.goBack()}
+        accessibilityLabel="Browse Offers"
+        accessibilityRole="button"
       >
         <Text style={styles.browseButtonText}>Browse Offers</Text>
       </TouchableOpacity>
@@ -162,21 +167,21 @@ export default function RedemptionHistoryScreen() {
 
   const renderHeader = () => (
     <View style={styles.statsContainer}>
-      <View style={styles.statCard}>
-        <Ionicons name="receipt-outline" size={20} color={COLORS.primary} />
-        <Text style={styles.statValue}>{redemptions.length}</Text>
-        <Text style={styles.statLabel}>Total</Text>
+      <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="receipt-outline" size={20} color={colors.primary} />
+        <Text style={[styles.statValue, { color: colors.text }]}>{redemptions.length}</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
       </View>
-      <View style={styles.statCard}>
-        <Ionicons name="cash-outline" size={20} color={COLORS.success} />
-        <Text style={styles.statValue}>
+      <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="cash-outline" size={20} color={colors.success} />
+        <Text style={[styles.statValue, { color: colors.text }]}>
           ${redemptions.reduce((sum, r) => sum + r.savings, 0).toFixed(2)}
         </Text>
-        <Text style={styles.statLabel}>Saved</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Saved</Text>
       </View>
-      <View style={styles.statCard}>
-        <Ionicons name="calendar-outline" size={20} color={COLORS.secondary} />
-        <Text style={styles.statValue}>
+      <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="calendar-outline" size={20} color={colors.secondary} />
+        <Text style={[styles.statValue, { color: colors.text }]}>
           {redemptions.filter(r => {
             const redemptionDate = new Date(r.redeemedAt);
             const now = new Date();
@@ -186,43 +191,47 @@ export default function RedemptionHistoryScreen() {
             );
           }).length}
         </Text>
-        <Text style={styles.statLabel}>This Month</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>This Month</Text>
       </View>
     </View>
   );
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Redemption History</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Redemption History</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading history...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading history...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Redemption History</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Redemption History</Text>
         <View style={styles.headerSpacer} />
       </View>
 

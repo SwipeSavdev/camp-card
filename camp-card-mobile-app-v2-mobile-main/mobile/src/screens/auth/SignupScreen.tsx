@@ -16,7 +16,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
-import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
 import { cardsApi } from '../../services/apiClient';
 
@@ -37,9 +37,10 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  
+
   const navigation = useNavigation();
   const { signup, isLoading } = useAuthStore();
+  const { theme } = useTheme();
 
   const handleSignup = async () => {
     // Validation
@@ -127,7 +128,7 @@ export default function SignupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 3 vertical sections: Top (fixed) / Middle (flex) / Bottom (fixed) */}
       <KeyboardAvoidingView
         style={styles.content}
@@ -141,8 +142,10 @@ export default function SignupScreen() {
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={styles.backButton}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
             >
-              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -156,23 +159,23 @@ export default function SignupScreen() {
         >
           {/* moved here so it stays visible above the form */}
           <View style={[styles.headerTextContainer, styles.headerTextAboveForm]}>
-            <Text style={styles.title}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
               {paymentCompleted ? 'Complete Your Account' : 'Create Account'}
             </Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               {paymentCompleted ? 'One more step to activate your subscription' : 'Join BSA Camp Card'}
             </Text>
           </View>
 
           {/* Selected Plan Banner */}
           {selectedPlan && paymentCompleted && (
-            <View style={styles.planBanner}>
+            <View style={[styles.planBanner, { backgroundColor: `${theme.colors.success}15`, borderColor: `${theme.colors.success}30` }]}>
               <View style={styles.planBannerIcon}>
-                <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
               </View>
               <View style={styles.planBannerContent}>
-                <Text style={styles.planBannerTitle}>Payment Successful</Text>
-                <Text style={styles.planBannerText}>
+                <Text style={[styles.planBannerTitle, { color: theme.colors.success }]}>Payment Successful</Text>
+                <Text style={[styles.planBannerText, { color: theme.colors.success }]}>
                   {selectedPlan.name} - ${(selectedPlan.priceCents / 100).toFixed(2)}/{selectedPlan.billingInterval === 'ANNUAL' ? 'year' : 'month'}
                 </Text>
               </View>
@@ -180,154 +183,182 @@ export default function SignupScreen() {
           )}
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <Ionicons
                 name="person-outline"
                 size={20}
-                color={COLORS.textSecondary}
+                color={theme.colors.textSecondary}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="First Name"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={firstName}
                 onChangeText={setFirstName}
                 autoCapitalize="words"
                 editable={!isLoading}
+                accessibilityLabel="First name"
+                accessibilityRole="none"
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <Ionicons
                 name="person-outline"
                 size={20}
-                color={COLORS.textSecondary}
+                color={theme.colors.textSecondary}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Last Name"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={lastName}
                 onChangeText={setLastName}
                 autoCapitalize="words"
                 editable={!isLoading}
+                accessibilityLabel="Last name"
+                accessibilityRole="none"
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <Ionicons
                 name="mail-outline"
                 size={20}
-                color={COLORS.textSecondary}
+                color={theme.colors.textSecondary}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Email"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
                 editable={!isLoading}
+                accessibilityLabel="Email address"
+                accessibilityRole="none"
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <Ionicons
                 name="call-outline"
                 size={20}
-                color={COLORS.textSecondary}
+                color={theme.colors.textSecondary}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Phone Number"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
                 autoComplete="tel"
                 editable={!isLoading}
+                accessibilityLabel="Phone number"
+                accessibilityRole="none"
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={COLORS.textSecondary}
+                color={theme.colors.textSecondary}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Password"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoComplete="password-new"
                 editable={!isLoading}
+                accessibilityLabel="Password"
+                accessibilityRole="none"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeIcon}
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
               >
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={theme.colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={COLORS.textSecondary}
+                color={theme.colors.textSecondary}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Confirm Password"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
                 editable={!isLoading}
+                accessibilityLabel="Confirm password"
+                accessibilityRole="none"
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={styles.eyeIcon}
+                accessibilityLabel={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                accessibilityRole="button"
               >
                 <Ionicons
                   name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={theme.colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.passwordHint}>
+            <Text style={[styles.passwordHint, { color: theme.colors.textSecondary }]}>
               Password must be at least 8 characters
             </Text>
           </View>
         </ScrollView>
 
         {/* Bottom: CTA always visible */}
-        <View style={styles.bottomSection}>
+        <View style={[styles.bottomSection, { borderTopColor: theme.colors.border }]}>
           <TouchableOpacity
-            style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
+            style={[styles.signupButton, { backgroundColor: theme.colors.primary }, isLoading && styles.signupButtonDisabled]}
             onPress={handleSignup}
             disabled={isLoading}
+            accessibilityLabel={isLoading ? 'Creating account' : 'Create account'}
+            accessibilityRole="button"
           >
-            <Text style={styles.signupButtonText}>
+            <Text style={[styles.signupButtonText, { color: theme.colors.surface }]}>
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Sign In</Text>
+            <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>Already have an account? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Login')}
+              accessibilityLabel="Sign in"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.loginLink, { color: theme.colors.primary }]}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -339,7 +370,6 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
     flex: 1,
@@ -371,7 +401,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
   },
   headerTextContainer: {
     alignItems: 'center',
@@ -383,12 +412,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginTop: 0,
   },
   subtitle: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     marginTop: 6,
     marginBottom: 0,
   },
@@ -403,10 +430,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
     marginBottom: 12,
     paddingHorizontal: 16,
   },
@@ -417,20 +442,17 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     fontSize: 16,
-    color: COLORS.text,
   },
   eyeIcon: {
     padding: 4,
   },
   passwordHint: {
     fontSize: 12,
-    color: COLORS.textSecondary,
     marginTop: -8,
     marginBottom: 8,
     marginLeft: 4,
   },
   signupButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     height: 52,
     justifyContent: 'center',
@@ -441,7 +463,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   signupButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -454,24 +475,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   footerText: {
-    color: COLORS.textSecondary,
     fontSize: 14,
   },
   loginLink: {
-    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },
   planBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F5E9',
     marginHorizontal: 24,
     marginBottom: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
   },
   planBannerIcon: {
     marginRight: 12,
@@ -482,11 +499,9 @@ const styles = StyleSheet.create({
   planBannerTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2E7D32',
     marginBottom: 2,
   },
   planBannerText: {
     fontSize: 13,
-    color: '#388E3C',
   },
 });

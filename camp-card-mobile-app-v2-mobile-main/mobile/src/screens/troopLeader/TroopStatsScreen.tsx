@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient, scoutApi } from '../../services/apiClient';
 
@@ -42,6 +43,8 @@ interface ScoutPerformance {
 
 export default function TroopStatsScreen() {
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('month');
 
@@ -139,7 +142,7 @@ export default function TroopStatsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -147,70 +150,80 @@ export default function TroopStatsScreen() {
         }
       >
         {/* Unit Cash Code Section */}
-        <View style={styles.cashCodeSection}>
+        <View style={[styles.cashCodeSection, { backgroundColor: colors.secondary }]}>
           <View style={styles.cashCodeHeader}>
-            <Ionicons name="ticket" size={24} color={COLORS.accent} />
-            <Text style={styles.cashCodeTitle}>Your Unit Cash Code</Text>
+            <Ionicons name="ticket" size={24} color={colors.accent} />
+            <Text style={[styles.cashCodeTitle, { color: colors.surface }]}>Your Unit Cash Code</Text>
           </View>
           <Text style={styles.cashCodeDescription}>
             Share this code with customers to support your unit's fundraising
           </Text>
-          <View style={styles.cashCodeCard}>
-            <Text style={styles.cashCodeText}>{cashCode}</Text>
+          <View style={[styles.cashCodeCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cashCodeText, { color: colors.secondary }]}>{cashCode}</Text>
           </View>
           <View style={styles.cashCodeActions}>
-            <TouchableOpacity style={styles.cashCodeButton} onPress={handleCopyCashCode}>
-              <Ionicons name="copy-outline" size={18} color={COLORS.secondary} />
-              <Text style={styles.cashCodeButtonText}>Copy</Text>
+            <TouchableOpacity
+              style={[styles.cashCodeButton, { backgroundColor: colors.surface }]}
+              onPress={handleCopyCashCode}
+              accessibilityLabel="Copy cash code"
+              accessibilityRole="button"
+            >
+              <Ionicons name="copy-outline" size={18} color={colors.secondary} />
+              <Text style={[styles.cashCodeButtonText, { color: colors.secondary }]}>Copy</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.cashCodeButton, styles.shareButton]}
+              style={[styles.cashCodeButton, styles.shareButton, { backgroundColor: colors.accent }]}
               onPress={handleShareCashCode}
+              accessibilityLabel="Share cash code"
+              accessibilityRole="button"
             >
-              <Ionicons name="share-social" size={18} color={COLORS.surface} />
-              <Text style={[styles.cashCodeButtonText, styles.shareButtonText]}>Share</Text>
+              <Ionicons name="share-social" size={18} color={colors.text} />
+              <Text style={[styles.cashCodeButtonText, styles.shareButtonText, { color: colors.text }]}>Share</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Fundraising Progress */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Fundraising Progress</Text>
-          <View style={styles.progressCard}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Fundraising Progress</Text>
+          <View style={[styles.progressCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressAmount}>
+              <Text style={[styles.progressAmount, { color: colors.secondary }]}>
                 ${stats.totalFundsRaised.toLocaleString()}
               </Text>
-              <Text style={styles.progressGoal}>
+              <Text style={[styles.progressGoal, { color: colors.textSecondary }]}>
                 of ${stats.goalAmount.toLocaleString()} goal
               </Text>
             </View>
-            <View style={styles.progressBarContainer}>
+            <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
               <View
-                style={[styles.progressBar, { width: `${progressPercentage}%` }]}
+                style={[styles.progressBar, { width: `${progressPercentage}%`, backgroundColor: colors.success }]}
               />
             </View>
-            <Text style={styles.progressPercentage}>
+            <Text style={[styles.progressPercentage, { color: colors.textSecondary }]}>
               {progressPercentage.toFixed(0)}% complete
             </Text>
           </View>
         </View>
 
         {/* Period Selector */}
-        <View style={styles.periodSelector}>
+        <View style={[styles.periodSelector, { backgroundColor: colors.surface }]}>
           {(['week', 'month', 'all'] as const).map((period) => (
             <TouchableOpacity
               key={period}
               style={[
                 styles.periodButton,
-                selectedPeriod === period && styles.periodButtonActive,
+                selectedPeriod === period && [styles.periodButtonActive, { backgroundColor: colors.secondary }],
               ]}
               onPress={() => setSelectedPeriod(period)}
+              accessibilityLabel={`Filter by ${period === 'week' ? 'this week' : period === 'month' ? 'this month' : 'all time'}`}
+              accessibilityRole="button"
             >
               <Text
                 style={[
                   styles.periodButtonText,
-                  selectedPeriod === period && styles.periodButtonTextActive,
+                  { color: colors.textSecondary },
+                  selectedPeriod === period && [styles.periodButtonTextActive, { color: colors.surface }],
                 ]}
               >
                 {period === 'week' && 'This Week'}
@@ -223,52 +236,52 @@ export default function TroopStatsScreen() {
 
         {/* Key Metrics Grid */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Key Metrics</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Key Metrics</Text>
           <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
+            <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.metricIcon, { backgroundColor: '#E3F2FD' }]}>
-                <Ionicons name="card" size={24} color={COLORS.secondary} />
+                <Ionicons name="card" size={24} color={colors.secondary} />
               </View>
-              <Text style={styles.metricValue}>{stats.totalCardsSold}</Text>
-              <Text style={styles.metricLabel}>Cards Sold</Text>
+              <Text style={[styles.metricValue, { color: colors.text }]}>{stats.totalCardsSold}</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Cards Sold</Text>
             </View>
 
-            <View style={styles.metricCard}>
+            <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.metricIcon, { backgroundColor: '#E8F5E9' }]}>
-                <Ionicons name="people" size={24} color={COLORS.success} />
+                <Ionicons name="people" size={24} color={colors.success} />
               </View>
-              <Text style={styles.metricValue}>{stats.activeScouts}</Text>
-              <Text style={styles.metricLabel}>Active Scouts</Text>
+              <Text style={[styles.metricValue, { color: colors.text }]}>{stats.activeScouts}</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Active Scouts</Text>
             </View>
 
-            <View style={styles.metricCard}>
+            <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.metricIcon, { backgroundColor: '#FFF3E0' }]}>
-                <Ionicons name="share-social" size={24} color={COLORS.warning} />
+                <Ionicons name="share-social" size={24} color={colors.warning} />
               </View>
-              <Text style={styles.metricValue}>{stats.totalReferrals}</Text>
-              <Text style={styles.metricLabel}>Referrals</Text>
+              <Text style={[styles.metricValue, { color: colors.text }]}>{stats.totalReferrals}</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Referrals</Text>
             </View>
 
-            <View style={styles.metricCard}>
+            <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.metricIcon, { backgroundColor: '#FCE4EC' }]}>
-                <Ionicons name="checkmark-done" size={24} color={COLORS.primary} />
+                <Ionicons name="checkmark-done" size={24} color={colors.primary} />
               </View>
-              <Text style={styles.metricValue}>{stats.totalConversions}</Text>
-              <Text style={styles.metricLabel}>Conversions</Text>
+              <Text style={[styles.metricValue, { color: colors.text }]}>{stats.totalConversions}</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Conversions</Text>
             </View>
           </View>
         </View>
 
         {/* Conversion Stats */}
         <View style={styles.section}>
-          <View style={styles.conversionCard}>
+          <View style={[styles.conversionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.conversionHeader}>
-              <Ionicons name="trending-up" size={20} color={COLORS.success} />
-              <Text style={styles.conversionTitle}>Conversion Rate</Text>
+              <Ionicons name="trending-up" size={20} color={colors.success} />
+              <Text style={[styles.conversionTitle, { color: colors.text }]}>Conversion Rate</Text>
             </View>
             <View style={styles.conversionContent}>
-              <Text style={styles.conversionValue}>{stats.conversionRate}%</Text>
-              <Text style={styles.conversionDescription}>
+              <Text style={[styles.conversionValue, { color: colors.success }]}>{stats.conversionRate}%</Text>
+              <Text style={[styles.conversionDescription, { color: colors.textSecondary }]}>
                 {stats.totalConversions} of {stats.totalReferrals} referrals converted to subscribers
               </Text>
             </View>
@@ -278,41 +291,43 @@ export default function TroopStatsScreen() {
         {/* Top Performers */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Top Performers</Text>
-            <Text style={styles.sectionSubtitle}>By total raised</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Top Performers</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>By total raised</Text>
           </View>
           {topPerformers.map((performer, index) => (
-            <View key={performer.id} style={styles.performerCard}>
+            <View key={performer.id} style={[styles.performerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[
                 styles.rankBadge,
+                { backgroundColor: colors.secondary },
                 index === 0 && { backgroundColor: '#FFD700' },
                 index === 1 && { backgroundColor: '#C0C0C0' },
                 index === 2 && { backgroundColor: '#CD7F32' },
               ]}>
                 <Text style={[
                   styles.rankText,
-                  index < 3 && { color: '#333' },
+                  { color: colors.surface },
+                  index < 3 && { color: colors.text },
                 ]}>{index + 1}</Text>
               </View>
               <View style={styles.performerInfo}>
-                <Text style={styles.performerName}>{performer.name}</Text>
+                <Text style={[styles.performerName, { color: colors.text }]}>{performer.name}</Text>
                 <View style={styles.performerStats}>
                   <View style={styles.performerStat}>
-                    <Ionicons name="card-outline" size={12} color={COLORS.textSecondary} />
-                    <Text style={styles.performerStatText}>{performer.cardsSold} cards</Text>
+                    <Ionicons name="card-outline" size={12} color={colors.textSecondary} />
+                    <Text style={[styles.performerStatText, { color: colors.textSecondary }]}>{performer.cardsSold} cards</Text>
                   </View>
                   <View style={styles.performerStat}>
-                    <Ionicons name="people-outline" size={12} color={COLORS.textSecondary} />
-                    <Text style={styles.performerStatText}>{performer.referrals} refs</Text>
+                    <Ionicons name="people-outline" size={12} color={colors.textSecondary} />
+                    <Text style={[styles.performerStatText, { color: colors.textSecondary }]}>{performer.referrals} refs</Text>
                   </View>
                   <View style={styles.performerStat}>
-                    <Ionicons name="checkmark-circle-outline" size={12} color={COLORS.textSecondary} />
-                    <Text style={styles.performerStatText}>{performer.conversions} conv</Text>
+                    <Ionicons name="checkmark-circle-outline" size={12} color={colors.textSecondary} />
+                    <Text style={[styles.performerStatText, { color: colors.textSecondary }]}>{performer.conversions} conv</Text>
                   </View>
                 </View>
               </View>
               <View style={styles.performerAmount}>
-                <Text style={styles.performerAmountValue}>${performer.totalRaised}</Text>
+                <Text style={[styles.performerAmountValue, { color: colors.success }]}>${performer.totalRaised}</Text>
                 {index === 0 && (
                   <Ionicons name="trophy" size={20} color="#FFD700" />
                 )}
@@ -323,12 +338,12 @@ export default function TroopStatsScreen() {
 
         {/* Redemptions Summary */}
         <View style={styles.section}>
-          <View style={styles.redemptionCard}>
-            <Ionicons name="receipt" size={32} color={COLORS.secondary} />
+          <View style={[styles.redemptionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons name="receipt" size={32} color={colors.secondary} />
             <View style={styles.redemptionContent}>
-              <Text style={styles.redemptionValue}>{stats.totalRedemptions}</Text>
-              <Text style={styles.redemptionLabel}>Total Redemptions</Text>
-              <Text style={styles.redemptionDescription}>
+              <Text style={[styles.redemptionValue, { color: colors.secondary }]}>{stats.totalRedemptions}</Text>
+              <Text style={[styles.redemptionLabel, { color: colors.text }]}>Total Redemptions</Text>
+              <Text style={[styles.redemptionDescription, { color: colors.textSecondary }]}>
                 Offers redeemed by customers using your unit's cards
               </Text>
             </View>
@@ -336,13 +351,13 @@ export default function TroopStatsScreen() {
         </View>
 
         {/* Period Selection Info */}
-        <View style={[styles.section, styles.infoSection]}>
+        <View style={[styles.section, styles.infoSection, { backgroundColor: colors.surface }]}>
           <Ionicons
             name="information-circle-outline"
             size={20}
-            color={COLORS.textSecondary}
+            color={colors.textSecondary}
           />
-          <Text style={styles.infoText}>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
             Statistics shown are for {selectedPeriod === 'week' && 'the current week'}{selectedPeriod === 'month' && 'the current month'}{selectedPeriod === 'all' && 'all time'}. Pull down to refresh.
           </Text>
         </View>

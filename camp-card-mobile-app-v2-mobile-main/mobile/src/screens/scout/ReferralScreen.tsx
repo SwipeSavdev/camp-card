@@ -20,6 +20,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { referralApi, qrCodeApi, scoutApi } from '../../services/apiClient';
 
 interface Referral {
@@ -36,6 +37,8 @@ interface Referral {
 
 export default function ReferralScreen() {
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'direct' | 'indirect'>('direct');
   const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -292,10 +295,10 @@ export default function ReferralScreen() {
 
   const getStatusColor = (status: Referral['status']) => {
     switch (status) {
-      case 'active': return COLORS.success;
-      case 'cancelled': return COLORS.error;
-      case 'expired': return COLORS.warning;
-      default: return COLORS.textSecondary;
+      case 'active': return colors.success;
+      case 'cancelled': return colors.error;
+      case 'expired': return colors.warning;
+      default: return colors.textSecondary;
     }
   };
 
@@ -305,23 +308,23 @@ export default function ReferralScreen() {
   };
 
   const renderReferralItem = ({ item }: { item: Referral }) => (
-    <View style={styles.referralCard}>
-      <View style={styles.referralAvatar}>
-        <Text style={styles.avatarText}>
+    <View style={[styles.referralCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.referralAvatar, { backgroundColor: colors.secondary }]}>
+        <Text style={[styles.avatarText, { color: colors.surface }]}>
           {item.firstName[0]}{item.lastName[0]}
         </Text>
       </View>
       <View style={styles.referralInfo}>
-        <Text style={styles.referralName}>{item.firstName} {item.lastName}</Text>
-        <Text style={styles.referralEmail}>{item.email}</Text>
+        <Text style={[styles.referralName, { color: colors.text }]}>{item.firstName} {item.lastName}</Text>
+        <Text style={[styles.referralEmail, { color: colors.textSecondary }]}>{item.email}</Text>
         <View style={styles.referralMeta}>
-          <Text style={styles.referralPlan}>{item.planType}</Text>
-          <Text style={styles.referralDate}>{formatDate(item.subscriptionDate)}</Text>
+          <Text style={[styles.referralPlan, { color: colors.success }]}>{item.planType}</Text>
+          <Text style={[styles.referralDate, { color: colors.textSecondary }]}>{formatDate(item.subscriptionDate)}</Text>
         </View>
         {!item.isDirectReferral && Boolean(item.referredBy) && (
           <View style={styles.chainInfo}>
-            <Ionicons name="git-branch-outline" size={12} color={COLORS.textSecondary} />
-            <Text style={styles.chainText}>via {item.referredBy}</Text>
+            <Ionicons name="git-branch-outline" size={12} color={colors.textSecondary} />
+            <Text style={[styles.chainText, { color: colors.textSecondary }]}>via {item.referredBy}</Text>
           </View>
         )}
       </View>
@@ -335,7 +338,7 @@ export default function ReferralScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -343,19 +346,19 @@ export default function ReferralScreen() {
         }
       >
         {/* Earnings Summary */}
-        <View style={styles.earningsCard}>
+        <View style={[styles.earningsCard, { backgroundColor: colors.primary }]}>
           <View style={styles.earningsHeader}>
-            <Ionicons name="wallet" size={24} color={COLORS.accent} />
-            <Text style={styles.earningsTitle}>Your Referral Earnings</Text>
+            <Ionicons name="wallet" size={24} color={colors.accent} />
+            <Text style={[styles.earningsTitle, { color: colors.surface }]}>Your Referral Earnings</Text>
           </View>
           <View style={styles.earningsRow}>
             <View style={styles.earningsItem}>
-              <Text style={styles.earningsValue}>${Number(stats.totalEarnings).toFixed(2)}</Text>
+              <Text style={[styles.earningsValue, { color: colors.surface }]}>${Number(stats.totalEarnings).toFixed(2)}</Text>
               <Text style={styles.earningsLabel}>Total Earned</Text>
             </View>
             <View style={styles.earningsDivider} />
             <View style={styles.earningsItem}>
-              <Text style={[styles.earningsValue, { color: COLORS.warning }]}>
+              <Text style={[styles.earningsValue, { color: colors.warning }]}>
                 ${Number(stats.pendingEarnings).toFixed(2)}
               </Text>
               <Text style={styles.earningsLabel}>Pending</Text>
@@ -365,95 +368,111 @@ export default function ReferralScreen() {
 
         {/* Share Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Share Your Link</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Share Your Link</Text>
 
           {/* QR Code Card */}
-          <View style={styles.qrCard}>
-            <View style={styles.qrPlaceholder}>
+          <View style={[styles.qrCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.qrPlaceholder, { backgroundColor: colors.background }]}>
               <QRCode
                 value={affiliateLink + (affiliateLink.includes('?') ? '&' : '?') + 'source=qr'}
                 size={180}
-                color="#003F87"
-                backgroundColor="white"
+                color={colors.secondary}
+                backgroundColor={colors.surface}
                 getRef={(ref: any) => { qrRef.current = ref; }}
               />
-              <Text style={styles.qrHint}>Scan to join</Text>
+              <Text style={[styles.qrHint, { color: colors.textSecondary }]}>Scan to join</Text>
             </View>
-            <Text style={styles.affiliateCode}>{affiliateCode}</Text>
-            <Text style={styles.affiliateLink}>{shortLink}</Text>
+            <Text style={[styles.affiliateCode, { color: colors.primary }]}>{affiliateCode}</Text>
+            <Text style={[styles.affiliateLink, { color: colors.textSecondary }]}>{shortLink}</Text>
           </View>
 
           {/* Action Buttons */}
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleCopyLink}>
-              <Ionicons name="copy-outline" size={22} color={COLORS.secondary} />
-              <Text style={styles.actionButtonText}>Copy Link</Text>
+            <TouchableOpacity
+              style={[styles.actionButton, { borderColor: colors.secondary, backgroundColor: colors.surface }]}
+              onPress={handleCopyLink}
+              accessibilityLabel="Copy referral link"
+              accessibilityRole="button"
+            >
+              <Ionicons name="copy-outline" size={22} color={colors.secondary} />
+              <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Copy Link</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.actionButton, styles.primaryButton]}
+              style={[styles.actionButton, styles.primaryButton, { backgroundColor: colors.secondary, borderColor: colors.secondary }]}
               onPress={handleShareLink}
+              accessibilityLabel="Share referral link"
+              accessibilityRole="button"
             >
-              <Ionicons name="share-social" size={22} color={COLORS.surface} />
-              <Text style={[styles.actionButtonText, styles.primaryButtonText]}>Share</Text>
+              <Ionicons name="share-social" size={22} color={colors.surface} />
+              <Text style={[styles.actionButtonText, styles.primaryButtonText, { color: colors.surface }]}>Share</Text>
             </TouchableOpacity>
           </View>
 
           {/* Print Poster Button (FR-19) */}
-          <TouchableOpacity style={styles.printButton} onPress={handlePrintPoster}>
-            <Ionicons name="print-outline" size={20} color={COLORS.secondary} />
-            <Text style={styles.printButtonText}>Print Poster</Text>
+          <TouchableOpacity
+            style={[styles.printButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={handlePrintPoster}
+            accessibilityLabel="Print poster"
+            accessibilityRole="button"
+          >
+            <Ionicons name="print-outline" size={20} color={colors.secondary} />
+            <Text style={[styles.printButtonText, { color: colors.secondary }]}>Print Poster</Text>
           </TouchableOpacity>
         </View>
 
         {/* Referral Stats */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Referral Summary</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Referral Summary</Text>
           <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.totalReferrals}</Text>
-              <Text style={styles.statLabel}>Total</Text>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats.totalReferrals}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: COLORS.success }]}>{stats.directReferrals}</Text>
-              <Text style={styles.statLabel}>Direct</Text>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statValue, { color: colors.success }]}>{stats.directReferrals}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Direct</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: COLORS.secondary }]}>{stats.indirectReferrals}</Text>
-              <Text style={styles.statLabel}>Indirect</Text>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statValue, { color: colors.secondary }]}>{stats.indirectReferrals}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Indirect</Text>
             </View>
           </View>
           <View style={[styles.statsRow, { marginTop: 12 }]}>
-            <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.qrScans}</Text>
-              <Text style={styles.statLabel}>QR Scans</Text>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{stats.qrScans}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>QR Scans</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: COLORS.primary }]}>{stats.linkClicks}</Text>
-              <Text style={styles.statLabel}>Link Clicks</Text>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{stats.linkClicks}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Link Clicks</Text>
             </View>
           </View>
         </View>
 
         {/* Referrals List */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Referrals</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Referrals</Text>
 
           {/* Tab Selector */}
-          <View style={styles.tabContainer}>
+          <View style={[styles.tabContainer, { backgroundColor: colors.surface }]}>
             <TouchableOpacity
-              style={[styles.tab, activeTab === 'direct' && styles.activeTab]}
+              style={[styles.tab, activeTab === 'direct' && [styles.activeTab, { backgroundColor: colors.secondary }]]}
               onPress={() => setActiveTab('direct')}
+              accessibilityLabel="Direct referrals tab"
+              accessibilityRole="button"
             >
-              <Text style={[styles.tabText, activeTab === 'direct' && styles.activeTabText]}>
+              <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'direct' && [styles.activeTabText, { color: colors.surface }]]}>
                 Direct ({stats.directReferrals})
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tab, activeTab === 'indirect' && styles.activeTab]}
+              style={[styles.tab, activeTab === 'indirect' && [styles.activeTab, { backgroundColor: colors.secondary }]]}
               onPress={() => setActiveTab('indirect')}
+              accessibilityLabel="Indirect referrals tab"
+              accessibilityRole="button"
             >
-              <Text style={[styles.tabText, activeTab === 'indirect' && styles.activeTabText]}>
+              <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'indirect' && [styles.activeTabText, { color: colors.surface }]]}>
                 Indirect ({stats.indirectReferrals})
               </Text>
             </TouchableOpacity>
@@ -462,8 +481,8 @@ export default function ReferralScreen() {
           {/* Help Text for Indirect */}
           {activeTab === 'indirect' && (
             <View style={styles.infoBox}>
-              <Ionicons name="information-circle-outline" size={16} color={COLORS.secondary} />
-              <Text style={styles.infoText}>
+              <Ionicons name="information-circle-outline" size={16} color={colors.secondary} />
+              <Text style={[styles.infoText, { color: colors.secondary }]}>
                 Indirect referrals are people who signed up through someone you referred. You still earn credit! (FR-17)
               </Text>
             </View>
@@ -478,11 +497,11 @@ export default function ReferralScreen() {
             ))
           ) : (
             <View style={styles.emptyContainer}>
-              <Ionicons name="people-outline" size={48} color={COLORS.border} />
-              <Text style={styles.emptyText}>
+              <Ionicons name="people-outline" size={48} color={colors.border} />
+              <Text style={[styles.emptyText, { color: colors.text }]}>
                 No {activeTab} referrals yet
               </Text>
-              <Text style={styles.emptySubtext}>
+              <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
                 Share your link to start earning!
               </Text>
             </View>
@@ -491,10 +510,10 @@ export default function ReferralScreen() {
 
         {/* Tips Section */}
         <View style={styles.tipsCard}>
-          <Ionicons name="bulb" size={24} color={COLORS.warning} />
+          <Ionicons name="bulb" size={24} color={colors.warning} />
           <View style={styles.tipsContent}>
-            <Text style={styles.tipsTitle}>Tips for More Referrals</Text>
-            <Text style={styles.tipsText}>
+            <Text style={[styles.tipsTitle, { color: colors.text }]}>Tips for More Referrals</Text>
+            <Text style={[styles.tipsText, { color: colors.textSecondary }]}>
               • Share at family gatherings and events{'\n'}
               • Post on social media with your story{'\n'}
               • Ask parents to share with neighbors{'\n'}

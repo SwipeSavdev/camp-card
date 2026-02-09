@@ -15,10 +15,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { userApi } from '../../services/apiClient';
 
 export default function ChangePasswordScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const [loading, setLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -114,7 +117,7 @@ export default function ChangePasswordScreen() {
     color: string;
     percentage: number;
   } => {
-    if (!password) return { strength: '', color: COLORS.textSecondary, percentage: 0 };
+    if (!password) return { strength: '', color: colors.textSecondary, percentage: 0 };
 
     let score = 0;
     if (password.length >= 8) score++;
@@ -125,36 +128,38 @@ export default function ChangePasswordScreen() {
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
     if (score <= 2) {
-      return { strength: 'Weak', color: COLORS.error, percentage: 33 };
+      return { strength: 'Weak', color: colors.error, percentage: 33 };
     } else if (score <= 4) {
-      return { strength: 'Medium', color: '#F59E0B', percentage: 66 };
+      return { strength: 'Medium', color: colors.warning, percentage: 66 };
     } else {
-      return { strength: 'Strong', color: COLORS.success, percentage: 100 };
+      return { strength: 'Strong', color: colors.success, percentage: 100 };
     }
   };
 
   const passwordStrength = getPasswordStrength(newPassword);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           disabled={loading}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Change Password</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Change Password</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Security Info */}
-        <View style={styles.securityBox}>
-          <Ionicons name="shield-checkmark" size={24} color={COLORS.primary} />
-          <Text style={styles.securityText}>
+        <View style={[styles.securityBox, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
+          <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
+          <Text style={[styles.securityText, { color: colors.primary }]}>
             For your security, please enter your current password to verify your identity.
           </Text>
         </View>
@@ -163,14 +168,14 @@ export default function ChangePasswordScreen() {
         <View style={styles.form}>
           {/* Current Password */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Current Password</Text>
-            <View style={styles.passwordContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>Current Password</Text>
+            <View style={[styles.passwordContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <TextInput
-                style={styles.passwordInput}
+                style={[styles.passwordInput, { color: colors.text }]}
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 placeholder="Enter your current password"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry={!showCurrentPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -179,11 +184,13 @@ export default function ChangePasswordScreen() {
               <TouchableOpacity
                 style={styles.eyeButton}
                 onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                accessibilityLabel={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                accessibilityRole="button"
               >
                 <Ionicons
                   name={showCurrentPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -191,14 +198,14 @@ export default function ChangePasswordScreen() {
 
           {/* New Password */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>New Password</Text>
-            <View style={styles.passwordContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>New Password</Text>
+            <View style={[styles.passwordContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <TextInput
-                style={styles.passwordInput}
+                style={[styles.passwordInput, { color: colors.text }]}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 placeholder="Enter your new password"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry={!showNewPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -207,11 +214,13 @@ export default function ChangePasswordScreen() {
               <TouchableOpacity
                 style={styles.eyeButton}
                 onPress={() => setShowNewPassword(!showNewPassword)}
+                accessibilityLabel={showNewPassword ? 'Hide new password' : 'Show new password'}
+                accessibilityRole="button"
               >
                 <Ionicons
                   name={showNewPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -219,7 +228,7 @@ export default function ChangePasswordScreen() {
             {/* Password Strength Indicator */}
             {newPassword.length > 0 && (
               <View style={styles.strengthContainer}>
-                <View style={styles.strengthBar}>
+                <View style={[styles.strengthBar, { backgroundColor: colors.border }]}>
                   <View
                     style={[
                       styles.strengthFill,
@@ -239,14 +248,14 @@ export default function ChangePasswordScreen() {
 
           {/* Confirm Password */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm New Password</Text>
-            <View style={styles.passwordContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>Confirm New Password</Text>
+            <View style={[styles.passwordContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <TextInput
-                style={styles.passwordInput}
+                style={[styles.passwordInput, { color: colors.text }]}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholder="Confirm your new password"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -255,44 +264,51 @@ export default function ChangePasswordScreen() {
               <TouchableOpacity
                 style={styles.eyeButton}
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                accessibilityLabel={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                accessibilityRole="button"
               >
                 <Ionicons
                   name={showConfirmPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Password Requirements */}
-          <View style={styles.requirementsBox}>
-            <Text style={styles.requirementsTitle}>Password Requirements:</Text>
+          <View style={[styles.requirementsBox, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.requirementsTitle, { color: colors.text }]}>Password Requirements:</Text>
             <RequirementItem
               text="At least 8 characters"
               met={newPassword.length >= 8}
+              colors={colors}
             />
             <RequirementItem
               text="Contains uppercase letter"
               met={/[A-Z]/.test(newPassword)}
+              colors={colors}
             />
             <RequirementItem
               text="Contains lowercase letter"
               met={/[a-z]/.test(newPassword)}
+              colors={colors}
             />
-            <RequirementItem text="Contains number" met={/[0-9]/.test(newPassword)} />
+            <RequirementItem text="Contains number" met={/[0-9]/.test(newPassword)} colors={colors} />
           </View>
 
           {/* Change Password Button */}
           <TouchableOpacity
-            style={[styles.changeButton, loading && styles.changeButtonDisabled]}
+            style={[styles.changeButton, { backgroundColor: colors.primary }, loading && styles.changeButtonDisabled]}
             onPress={handleChangePassword}
             disabled={loading}
+            accessibilityLabel="Change password"
+            accessibilityRole="button"
           >
             {loading ? (
-              <ActivityIndicator size="small" color={COLORS.white} />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
-              <Text style={styles.changeButtonText}>Change Password</Text>
+              <Text style={[styles.changeButtonText, { color: colors.white }]}>Change Password</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -306,16 +322,17 @@ export default function ChangePasswordScreen() {
 interface RequirementItemProps {
   text: string;
   met: boolean;
+  colors: { success: string; textSecondary: string };
 }
 
-const RequirementItem: React.FC<RequirementItemProps> = ({ text, met }) => (
+const RequirementItem: React.FC<RequirementItemProps> = ({ text, met, colors }) => (
   <View style={styles.requirementItem}>
     <Ionicons
       name={met ? 'checkmark-circle' : 'ellipse-outline'}
       size={18}
-      color={met ? COLORS.success : COLORS.textSecondary}
+      color={met ? colors.success : colors.textSecondary}
     />
-    <Text style={[styles.requirementText, met && styles.requirementTextMet]}>
+    <Text style={[styles.requirementText, { color: colors.textSecondary }, met && { color: colors.success }]}>
       {text}
     </Text>
   </View>

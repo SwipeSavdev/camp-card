@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient, favoritesApi } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
+import { useTheme } from '../../config/ThemeContext';
 
 interface Offer {
   id: number;
@@ -51,6 +52,8 @@ export default function OffersScreen() {
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const navigation = useNavigation();
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const categories = [
     'ALL',
@@ -194,20 +197,22 @@ export default function OffersScreen() {
 
   const renderOfferCard = ({ item }: { item: Offer }) => (
     <TouchableOpacity
-      style={styles.offerCard}
+      style={[styles.offerCard, { backgroundColor: colors.surface }]}
       onPress={() => navigation.navigate('OfferDetail', { offerId: item.id })}
+      accessibilityLabel={`${item.title} - ${getDiscountText(item)}`}
+      accessibilityRole="button"
     >
       <View style={styles.imageContainer}>
         {item.imageUrl ? (
-          <Image source={{ uri: item.imageUrl }} style={styles.offerImage} />
+          <Image source={{ uri: item.imageUrl }} style={[styles.offerImage, { backgroundColor: colors.background }]} />
         ) : (
-          <View style={[styles.offerImage, styles.imagePlaceholder]}>
-            <Ionicons name="pricetag" size={48} color="#ccc" />
+          <View style={[styles.offerImage, styles.imagePlaceholder, { backgroundColor: colors.background }]}>
+            <Ionicons name="pricetag" size={48} color={colors.border} />
           </View>
         )}
         {/* Discount Badge - positioned over image */}
-        <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>{getDiscountText(item)}</Text>
+        <View style={[styles.discountBadge, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.discountText, { color: colors.white }]}>{getDiscountText(item)}</Text>
         </View>
         {/* Heart / Favorite Button */}
         <TouchableOpacity
@@ -217,11 +222,13 @@ export default function OffersScreen() {
             toggleFavorite(item.id);
           }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityLabel={favoriteIds.has(item.id) ? `Remove ${item.title} from favorites` : `Add ${item.title} to favorites`}
+          accessibilityRole="button"
         >
           <Ionicons
             name={favoriteIds.has(item.id) ? 'heart' : 'heart-outline'}
             size={24}
-            color={favoriteIds.has(item.id) ? '#ce1126' : '#fff'}
+            color={favoriteIds.has(item.id) ? colors.primary : colors.white}
           />
         </TouchableOpacity>
       </View>
@@ -231,47 +238,47 @@ export default function OffersScreen() {
         {/* Tags */}
         <View style={styles.tags}>
           {item.featured && (
-            <View style={styles.featuredTag}>
-              <Ionicons name="star" size={12} color="#fff" />
-              <Text style={styles.featuredText}>Featured</Text>
+            <View style={[styles.featuredTag, { backgroundColor: colors.warning }]}>
+              <Ionicons name="star" size={12} color={colors.white} />
+              <Text style={[styles.featuredText, { color: colors.white }]}>Featured</Text>
             </View>
           )}
           {item.scoutExclusive && (
-            <View style={styles.scoutTag}>
-              <Text style={styles.scoutText}>Scout Exclusive</Text>
+            <View style={[styles.scoutTag, { backgroundColor: colors.success }]}>
+              <Text style={[styles.scoutText, { color: colors.white }]}>Scout Exclusive</Text>
             </View>
           )}
         </View>
 
         {/* Title and Merchant */}
-        <Text style={styles.offerTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={[styles.offerTitle, { color: colors.text }]} numberOfLines={2}>{item.title}</Text>
         {item.merchantName && (
           <View style={styles.merchantInfo}>
             {item.merchantLogoUrl ? (
               <Image source={{ uri: item.merchantLogoUrl }} style={styles.merchantLogo} />
             ) : (
-              <Ionicons name="business" size={16} color="#666" />
+              <Ionicons name="business" size={16} color={colors.textSecondary} />
             )}
-            <Text style={styles.merchantName}>{item.merchantName}</Text>
+            <Text style={[styles.merchantName, { color: colors.textSecondary }]}>{item.merchantName}</Text>
           </View>
         )}
 
         {/* Description */}
         {item.description && (
-          <Text style={styles.offerDescription} numberOfLines={2}>
+          <Text style={[styles.offerDescription, { color: colors.textSecondary }]} numberOfLines={2}>
             {item.description}
           </Text>
         )}
 
         {/* Footer */}
-        <View style={styles.offerFooter}>
+        <View style={[styles.offerFooter, { borderTopColor: colors.border }]}>
           <View style={styles.footerLeft}>
-            <Ionicons name="time-outline" size={16} color="#666" />
-            <Text style={styles.expiryText}>{getDaysRemaining(item.validUntil)}</Text>
+            <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.expiryText, { color: colors.textSecondary }]}>{getDaysRemaining(item.validUntil)}</Text>
           </View>
           <View style={styles.footerRight}>
-            <Ionicons name="people-outline" size={16} color="#666" />
-            <Text style={styles.redemptionText}>{item.totalRedemptions} used</Text>
+            <Ionicons name="people-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.redemptionText, { color: colors.textSecondary }]}>{item.totalRedemptions} used</Text>
           </View>
         </View>
       </View>
@@ -280,35 +287,39 @@ export default function OffersScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
-        <Text style={styles.loadingText}>Loading offers...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.secondary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading offers...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Offers</Text>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <Text style={[styles.headerTitle, { color: colors.secondary }]}>Offers</Text>
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder="Search offers, merchants..."
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoCapitalize="none"
           autoCorrect={false}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#999" />
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+          >
+            <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -325,14 +336,18 @@ export default function OffersScreen() {
             key={category}
             style={[
               styles.categoryButton,
-              selectedCategory === category && styles.categoryButtonActive
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              selectedCategory === category && [styles.categoryButtonActive, { backgroundColor: colors.secondary, borderColor: colors.secondary }]
             ]}
             onPress={() => setSelectedCategory(category)}
+            accessibilityLabel={`Filter by ${category.replace('_', ' ')}`}
+            accessibilityRole="button"
           >
             <Text
               style={[
                 styles.categoryButtonText,
-                selectedCategory === category && styles.categoryButtonTextActive
+                { color: colors.textSecondary },
+                selectedCategory === category && [styles.categoryButtonTextActive, { color: colors.white }]
               ]}
             >
               {category.replace('_', ' ')}
@@ -351,15 +366,15 @@ export default function OffersScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#003f87']}
-            tintColor="#003f87"
+            colors={[colors.secondary]}
+            tintColor={colors.secondary}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="pricetag-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No offers found</Text>
-            <Text style={styles.emptySubtext}>Try adjusting your filters</Text>
+            <Ionicons name="pricetag-outline" size={64} color={colors.border} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No offers found</Text>
+            <Text style={[styles.emptySubtext, { color: colors.border }]}>Try adjusting your filters</Text>
           </View>
         }
       />

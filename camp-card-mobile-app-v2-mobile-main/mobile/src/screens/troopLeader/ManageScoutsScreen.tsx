@@ -21,6 +21,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { scoutApi, troopApi } from '../../services/apiClient';
 
 // Unit Types from backend enum
@@ -47,6 +48,8 @@ interface Scout {
 }
 
 export default function ManageScoutsScreen() {
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [scouts, setScouts] = useState<Scout[]>([]);
@@ -153,13 +156,13 @@ export default function ManageScoutsScreen() {
   const getStatusColor = (status: Scout['subscriptionStatus']) => {
     switch (status) {
       case 'active':
-        return COLORS.success;
+        return colors.success;
       case 'inactive':
-        return COLORS.warning;
+        return colors.warning;
       case 'expired':
-        return COLORS.error;
+        return colors.error;
       default:
-        return COLORS.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -306,30 +309,35 @@ export default function ManageScoutsScreen() {
   };
 
   const renderScoutItem = ({ item }: { item: Scout }) => (
-    <TouchableOpacity style={styles.scoutCard} onPress={() => handleViewScoutDetails(item)}>
-      <View style={styles.avatarContainer}>
-        <Text style={styles.avatarText}>
+    <TouchableOpacity
+      style={[styles.scoutCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      onPress={() => handleViewScoutDetails(item)}
+      accessibilityLabel={`View details for ${item.firstName} ${item.lastName}`}
+      accessibilityRole="button"
+    >
+      <View style={[styles.avatarContainer, { backgroundColor: colors.secondary }]}>
+        <Text style={[styles.avatarText, { color: colors.surface }]}>
           {item.firstName[0]}
           {item.lastName[0]}
         </Text>
       </View>
       <View style={styles.scoutInfo}>
-        <Text style={styles.scoutName}>
+        <Text style={[styles.scoutName, { color: colors.text }]}>
           {item.firstName} {item.lastName}
         </Text>
-        <Text style={styles.scoutEmail}>{item.email}</Text>
+        <Text style={[styles.scoutEmail, { color: colors.textSecondary }]}>{item.email}</Text>
         <View style={styles.scoutStats}>
           <View style={styles.statBadge}>
-            <Ionicons name="cash" size={12} color={COLORS.success} />
-            <Text style={styles.statText}>${item.totalSales}</Text>
+            <Ionicons name="cash" size={12} color={colors.success} />
+            <Text style={[styles.statText, { color: colors.textSecondary }]}>${item.totalSales}</Text>
           </View>
           <View style={styles.statBadge}>
-            <Ionicons name="people" size={12} color={COLORS.secondary} />
-            <Text style={styles.statText}>{item.referrals} refs</Text>
+            <Ionicons name="people" size={12} color={colors.secondary} />
+            <Text style={[styles.statText, { color: colors.textSecondary }]}>{item.referrals} refs</Text>
           </View>
           <View style={styles.statBadge}>
-            <Ionicons name="checkmark-circle" size={12} color={COLORS.primary} />
-            <Text style={styles.statText}>{item.redemptions}</Text>
+            <Ionicons name="checkmark-circle" size={12} color={colors.primary} />
+            <Text style={[styles.statText, { color: colors.textSecondary }]}>{item.redemptions}</Text>
           </View>
         </View>
       </View>
@@ -355,7 +363,7 @@ export default function ManageScoutsScreen() {
             {item.subscriptionStatus}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} style={styles.chevron} />
+        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} style={styles.chevron} />
       </View>
     </TouchableOpacity>
   );
@@ -365,67 +373,75 @@ export default function ManageScoutsScreen() {
   const totalSales = scouts.reduce((sum, s) => sum + s.totalSales, 0);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       {/* Header with Add Button */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.secondary }]}>
         <View>
-          <Text style={styles.headerTitle}>Your Unit</Text>
+          <Text style={[styles.headerTitle, { color: colors.surface }]}>Your Unit</Text>
           <Text style={styles.headerSubtitle}>Manage scouts in your unit</Text>
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={() => {
-          // Auto-populate unit fields from troop data
-          if (troopNumber) setNewScoutUnitNumber(troopNumber);
-          if (troopType) setNewScoutUnitType(mapTroopTypeToUnitType(troopType));
-          setShowAddModal(true);
-        }}>
-          <Ionicons name="person-add" size={20} color={COLORS.surface} />
-          <Text style={styles.addButtonText}>Add</Text>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            if (troopNumber) setNewScoutUnitNumber(troopNumber);
+            if (troopType) setNewScoutUnitType(mapTroopTypeToUnitType(troopType));
+            setShowAddModal(true);
+          }}
+          accessibilityLabel="Add scout"
+          accessibilityRole="button"
+        >
+          <Ionicons name="person-add" size={20} color={colors.surface} />
+          <Text style={[styles.addButtonText, { color: colors.surface }]}>Add</Text>
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={COLORS.textSecondary} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder="Search scouts..."
-          placeholderTextColor={COLORS.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color={COLORS.textSecondary} />
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+          >
+            <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Summary Stats */}
-      <View style={styles.summaryContainer}>
+      <View style={[styles.summaryContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>{scouts.length}</Text>
-          <Text style={styles.summaryLabel}>Total</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{scouts.length}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total</Text>
         </View>
-        <View style={styles.summaryDivider} />
+        <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: COLORS.success }]}>
+          <Text style={[styles.summaryValue, { color: colors.success }]}>
             {activeCount}
           </Text>
-          <Text style={styles.summaryLabel}>Active</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Active</Text>
         </View>
-        <View style={styles.summaryDivider} />
+        <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: COLORS.warning }]}>
+          <Text style={[styles.summaryValue, { color: colors.warning }]}>
             {inactiveCount}
           </Text>
-          <Text style={styles.summaryLabel}>Inactive</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Inactive</Text>
         </View>
-        <View style={styles.summaryDivider} />
+        <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: COLORS.secondary }]}>
+          <Text style={[styles.summaryValue, { color: colors.secondary }]}>
             ${totalSales}
           </Text>
-          <Text style={styles.summaryLabel}>Total Sales</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total Sales</Text>
         </View>
       </View>
 
@@ -440,9 +456,9 @@ export default function ManageScoutsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color={COLORS.border} />
-            <Text style={styles.emptyText}>No scouts found</Text>
-            <Text style={styles.emptySubtext}>
+            <Ionicons name="people-outline" size={64} color={colors.border} />
+            <Text style={[styles.emptyText, { color: colors.text }]}>No scouts found</Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
               {searchQuery
                 ? 'Try a different search term'
                 : 'Tap "Add" to invite scouts to your unit'}
@@ -461,20 +477,30 @@ export default function ManageScoutsScreen() {
           resetAddForm();
         }}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => {
-              setShowAddModal(false);
-              resetAddForm();
-            }} disabled={isSubmitting}>
-              <Text style={[styles.modalCancel, isSubmitting && styles.disabledText]}>Cancel</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowAddModal(false);
+                resetAddForm();
+              }}
+              disabled={isSubmitting}
+              accessibilityLabel="Cancel"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.modalCancel, { color: colors.secondary }, isSubmitting && styles.disabledText]}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Add Scout</Text>
-            <TouchableOpacity onPress={handleAddScout} disabled={isSubmitting}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Add Scout</Text>
+            <TouchableOpacity
+              onPress={handleAddScout}
+              disabled={isSubmitting}
+              accessibilityLabel="Add scout"
+              accessibilityRole="button"
+            >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color={COLORS.secondary} />
+                <ActivityIndicator size="small" color={colors.secondary} />
               ) : (
-                <Text style={styles.modalSave}>Add</Text>
+                <Text style={[styles.modalSave, { color: colors.secondary }]}>Add</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -591,9 +617,9 @@ export default function ManageScoutsScreen() {
               </View>
 
               {/* COPPA / Parental Consent Fields */}
-              <View style={styles.coppaHeader}>
-                <Ionicons name="shield-checkmark" size={20} color={COLORS.secondary} />
-                <Text style={styles.coppaTitle}>Parental Consent (COPPA)</Text>
+              <View style={[styles.coppaHeader, { borderTopColor: colors.border }]}>
+                <Ionicons name="shield-checkmark" size={20} color={colors.secondary} />
+                <Text style={[styles.coppaTitle, { color: colors.secondary }]}>Parental Consent (COPPA)</Text>
               </View>
               <Text style={styles.coppaDescription}>
                 Required for scouts under 13. A parental consent email will be sent automatically.
@@ -649,8 +675,8 @@ export default function ManageScoutsScreen() {
               </View>
 
               <View style={styles.infoBox}>
-                <Ionicons name="information-circle" size={20} color={COLORS.secondary} />
-                <Text style={styles.infoText}>
+                <Ionicons name="information-circle" size={20} color={colors.secondary} />
+                <Text style={[styles.infoText, { color: colors.secondary }]}>
                   The scout (or their parent) will need to complete registration and set up their account after receiving the invitation.
                 </Text>
               </View>
@@ -667,28 +693,32 @@ export default function ManageScoutsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowScoutModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowScoutModal(false)}>
-              <Text style={styles.modalCancel}>Close</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+            <TouchableOpacity
+              onPress={() => setShowScoutModal(false)}
+              accessibilityLabel="Close"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.modalCancel, { color: colors.secondary }]}>Close</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Scout Details</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Scout Details</Text>
             <View style={{ width: 50 }} />
           </View>
 
           {selectedScout && (
             <View style={styles.modalContent}>
               {/* Scout Profile */}
-              <View style={styles.profileSection}>
-                <View style={styles.profileAvatar}>
-                  <Text style={styles.profileAvatarText}>
+              <View style={[styles.profileSection, { borderBottomColor: colors.border }]}>
+                <View style={[styles.profileAvatar, { backgroundColor: colors.secondary }]}>
+                  <Text style={[styles.profileAvatarText, { color: colors.surface }]}>
                     {selectedScout.firstName[0]}{selectedScout.lastName[0]}
                   </Text>
                 </View>
-                <Text style={styles.profileName}>
+                <Text style={[styles.profileName, { color: colors.text }]}>
                   {selectedScout.firstName} {selectedScout.lastName}
                 </Text>
-                <Text style={styles.profileEmail}>{selectedScout.email}</Text>
+                <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>{selectedScout.email}</Text>
                 <View style={[
                   styles.profileStatusBadge,
                   { backgroundColor: getStatusColor(selectedScout.subscriptionStatus) + '20' }
@@ -708,27 +738,27 @@ export default function ManageScoutsScreen() {
 
               {/* Stats Grid */}
               <View style={styles.detailStatsGrid}>
-                <View style={styles.detailStatCard}>
-                  <Ionicons name="cash" size={24} color={COLORS.success} />
-                  <Text style={styles.detailStatValue}>${selectedScout.totalSales}</Text>
-                  <Text style={styles.detailStatLabel}>Total Sales</Text>
+                <View style={[styles.detailStatCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="cash" size={24} color={colors.success} />
+                  <Text style={[styles.detailStatValue, { color: colors.text }]}>${selectedScout.totalSales}</Text>
+                  <Text style={[styles.detailStatLabel, { color: colors.textSecondary }]}>Total Sales</Text>
                 </View>
-                <View style={styles.detailStatCard}>
-                  <Ionicons name="people" size={24} color={COLORS.secondary} />
-                  <Text style={styles.detailStatValue}>{selectedScout.referrals}</Text>
-                  <Text style={styles.detailStatLabel}>Referrals</Text>
+                <View style={[styles.detailStatCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="people" size={24} color={colors.secondary} />
+                  <Text style={[styles.detailStatValue, { color: colors.text }]}>{selectedScout.referrals}</Text>
+                  <Text style={[styles.detailStatLabel, { color: colors.textSecondary }]}>Referrals</Text>
                 </View>
-                <View style={styles.detailStatCard}>
-                  <Ionicons name="checkmark-done" size={24} color={COLORS.primary} />
-                  <Text style={styles.detailStatValue}>{selectedScout.redemptions}</Text>
-                  <Text style={styles.detailStatLabel}>Redemptions</Text>
+                <View style={[styles.detailStatCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="checkmark-done" size={24} color={colors.primary} />
+                  <Text style={[styles.detailStatValue, { color: colors.text }]}>{selectedScout.redemptions}</Text>
+                  <Text style={[styles.detailStatLabel, { color: colors.textSecondary }]}>Redemptions</Text>
                 </View>
               </View>
 
               {/* Joined Date */}
-              <View style={styles.joinedSection}>
-                <Ionicons name="calendar-outline" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.joinedText}>
+              <View style={[styles.joinedSection, { borderTopColor: colors.border }]}>
+                <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.joinedText, { color: colors.textSecondary }]}>
                   Joined {formatDate(selectedScout.joinedDate)}
                 </Text>
               </View>
@@ -736,11 +766,13 @@ export default function ManageScoutsScreen() {
               {/* Actions */}
               <View style={styles.detailActions}>
                 <TouchableOpacity
-                  style={styles.removeButton}
+                  style={[styles.removeButton, { backgroundColor: colors.surface, borderColor: colors.error }]}
                   onPress={() => handleRemoveScout(selectedScout)}
+                  accessibilityLabel="Remove from Unit"
+                  accessibilityRole="button"
                 >
-                  <Ionicons name="person-remove" size={20} color={COLORS.error} />
-                  <Text style={styles.removeButtonText}>Remove from Unit</Text>
+                  <Ionicons name="person-remove" size={20} color={colors.error} />
+                  <Text style={[styles.removeButtonText, { color: colors.error }]}>Remove from Unit</Text>
                 </TouchableOpacity>
               </View>
             </View>

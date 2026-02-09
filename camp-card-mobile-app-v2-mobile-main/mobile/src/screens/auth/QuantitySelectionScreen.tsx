@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, IAP_CARD_PRODUCTS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { useIAP } from '../../hooks/useIAP';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
@@ -39,13 +40,15 @@ export default function QuantitySelectionScreen() {
   const { selectedPlan, scoutCode } = route.params;
   const { width } = useWindowDimensions();
   const isIOS = Platform.OS === 'ios';
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const [quantity, setQuantity] = useState(1);
 
   const headerLogoSize = Math.min(80, Math.max(60, Math.round(width * 0.2)));
 
-  // Apple IAP hook for localized pricing (only active on iOS)
-  const { getLocalizedPrice } = useIAP({ autoInit: isIOS });
+  // IAP hook for localized pricing
+  const { getLocalizedPrice } = useIAP({ autoInit: true });
 
   const formatPrice = (priceCents: number) => {
     return `$${(priceCents / 100).toFixed(2)}`;
@@ -64,14 +67,16 @@ export default function QuantitySelectionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerLogoContainer}>
@@ -91,19 +96,19 @@ export default function QuantitySelectionScreen() {
       >
         {/* Title Section */}
         <View style={styles.titleSection}>
-          <Text style={styles.title}>How Many Cards?</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>How Many Cards?</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Purchase multiple Camp Cards to gift to friends and family, or save them for later!
           </Text>
         </View>
 
         {/* Plan Info */}
-        <View style={styles.planInfo}>
+        <View style={[styles.planInfo, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
           <View style={styles.planInfoRow}>
-            <Ionicons name="pricetag" size={20} color={COLORS.primary} />
-            <Text style={styles.planName}>{selectedPlan.name}</Text>
+            <Ionicons name="pricetag" size={20} color={colors.primary} />
+            <Text style={[styles.planName, { color: colors.text }]}>{selectedPlan.name}</Text>
           </View>
-          <Text style={styles.pricePerCard}>
+          <Text style={[styles.pricePerCard, { color: colors.textSecondary }]}>
             {isIOS
               ? (getLocalizedPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.productId || '') || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.priceCents || 1499)) + ' per card'
               : formatPrice(selectedPlan.priceCents) + ' per card'
@@ -113,7 +118,7 @@ export default function QuantitySelectionScreen() {
 
         {/* Quantity Selector */}
         <View style={styles.quantitySection}>
-          <Text style={styles.sectionLabel}>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>
             {isIOS ? 'Select a Package' : 'Select Quantity (1-10)'}
           </Text>
 
@@ -123,22 +128,27 @@ export default function QuantitySelectionScreen() {
                 key={num}
                 style={[
                   styles.quantityButton,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                   isIOS && styles.quantityButtonWide,
-                  quantity === num && styles.quantityButtonSelected,
+                  quantity === num && { backgroundColor: colors.primary, borderColor: colors.primary },
                 ]}
                 onPress={() => setQuantity(num)}
                 activeOpacity={0.7}
+                accessibilityLabel={isIOS ? `Select ${num} card${num > 1 ? 's' : ''}` : `Select quantity ${num}`}
+                accessibilityRole="button"
               >
                 <Text style={[
                   styles.quantityButtonText,
-                  quantity === num && styles.quantityButtonTextSelected,
+                  { color: colors.text },
+                  quantity === num && { color: colors.white },
                 ]}>
                   {isIOS ? `${num} Card${num > 1 ? 's' : ''}` : num}
                 </Text>
                 {isIOS && (
                   <Text style={[
                     styles.quantityButtonPrice,
-                    quantity === num && styles.quantityButtonTextSelected,
+                    { color: colors.textSecondary },
+                    quantity === num && { color: colors.white },
                   ]}>
                     {getLocalizedPrice(
                       IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.productId || ''
@@ -151,16 +161,16 @@ export default function QuantitySelectionScreen() {
         </View>
 
         {/* What You Get */}
-        <View style={styles.benefitsSection}>
-          <Text style={styles.benefitsTitle}>What You'll Get</Text>
+        <View style={[styles.benefitsSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.benefitsTitle, { color: colors.text }]}>What You'll Get</Text>
 
           <View style={styles.benefitItem}>
-            <View style={styles.benefitIcon}>
-              <Ionicons name="card" size={20} color={COLORS.primary} />
+            <View style={[styles.benefitIcon, { backgroundColor: colors.primary + '10' }]}>
+              <Ionicons name="card" size={20} color={colors.primary} />
             </View>
             <View style={styles.benefitContent}>
-              <Text style={styles.benefitLabel}>{quantity} Camp Card{quantity > 1 ? 's' : ''}</Text>
-              <Text style={styles.benefitDescription}>
+              <Text style={[styles.benefitLabel, { color: colors.text }]}>{quantity} Camp Card{quantity > 1 ? 's' : ''}</Text>
+              <Text style={[styles.benefitDescription, { color: colors.textSecondary }]}>
                 {quantity === 1
                   ? 'Your personal card will be activated immediately'
                   : `First card activates now, ${quantity - 1} saved for gifting or later use`
@@ -170,36 +180,36 @@ export default function QuantitySelectionScreen() {
           </View>
 
           <View style={styles.benefitItem}>
-            <View style={styles.benefitIcon}>
+            <View style={[styles.benefitIcon, { backgroundColor: colors.primary + '10' }]}>
               <Ionicons name="gift" size={20} color="#9C27B0" />
             </View>
             <View style={styles.benefitContent}>
-              <Text style={styles.benefitLabel}>Gift to Friends & Family</Text>
-              <Text style={styles.benefitDescription}>
+              <Text style={[styles.benefitLabel, { color: colors.text }]}>Gift to Friends & Family</Text>
+              <Text style={[styles.benefitDescription, { color: colors.textSecondary }]}>
                 Send extra cards via email anytime before Dec 31st
               </Text>
             </View>
           </View>
 
           <View style={styles.benefitItem}>
-            <View style={styles.benefitIcon}>
-              <Ionicons name="refresh" size={20} color="#4CAF50" />
+            <View style={[styles.benefitIcon, { backgroundColor: colors.primary + '10' }]}>
+              <Ionicons name="refresh" size={20} color={colors.success} />
             </View>
             <View style={styles.benefitContent}>
-              <Text style={styles.benefitLabel}>Replenish Your Offers</Text>
-              <Text style={styles.benefitDescription}>
+              <Text style={[styles.benefitLabel, { color: colors.text }]}>Replenish Your Offers</Text>
+              <Text style={[styles.benefitDescription, { color: colors.textSecondary }]}>
                 Used all your one-time offers? Activate another card for fresh deals!
               </Text>
             </View>
           </View>
 
           <View style={styles.benefitItem}>
-            <View style={styles.benefitIcon}>
-              <Ionicons name="calendar" size={20} color="#FF9800" />
+            <View style={[styles.benefitIcon, { backgroundColor: colors.primary + '10' }]}>
+              <Ionicons name="calendar" size={20} color={colors.warning} />
             </View>
             <View style={styles.benefitContent}>
-              <Text style={styles.benefitLabel}>Valid Until December 31st</Text>
-              <Text style={styles.benefitDescription}>
+              <Text style={[styles.benefitLabel, { color: colors.text }]}>Valid Until December 31st</Text>
+              <Text style={[styles.benefitDescription, { color: colors.textSecondary }]}>
                 All cards expire at end of year - use or gift before then!
               </Text>
             </View>
@@ -208,9 +218,9 @@ export default function QuantitySelectionScreen() {
 
         {/* Scout Attribution */}
         {scoutCode && (
-          <View style={styles.scoutAttribution}>
-            <Ionicons name="ribbon" size={20} color={COLORS.primary} />
-            <Text style={styles.scoutAttributionText}>
+          <View style={[styles.scoutAttribution, { backgroundColor: colors.info + '15' }]}>
+            <Ionicons name="ribbon" size={20} color={colors.primary} />
+            <Text style={[styles.scoutAttributionText, { color: colors.secondary }]}>
               Scout referral code: {scoutCode}
             </Text>
           </View>
@@ -218,15 +228,15 @@ export default function QuantitySelectionScreen() {
       </ScrollView>
 
       {/* Bottom Section */}
-      <View style={styles.bottomSection}>
+      <View style={[styles.bottomSection, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         {/* Order Summary */}
         <View style={styles.orderSummary}>
           {/* Cards Line Item - subscription is included in first card */}
           <View style={styles.orderRow}>
-            <Text style={styles.orderLabel}>
+            <Text style={[styles.orderLabel, { color: colors.textSecondary }]}>
               {quantity} Camp Card{quantity > 1 ? 's' : ''}
             </Text>
-            <Text style={styles.orderValue}>
+            <Text style={[styles.orderValue, { color: colors.text }]}>
               {isIOS
                 ? (getLocalizedPrice(
                     IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
@@ -236,19 +246,19 @@ export default function QuantitySelectionScreen() {
             </Text>
           </View>
           {/* Note about subscription included */}
-          <Text style={styles.subscriptionIncludedNote}>
+          <Text style={[styles.subscriptionIncludedNote, { color: colors.textSecondary }]}>
             Annual subscription included with first card
           </Text>
           {!isIOS && (
             <View style={styles.orderRow}>
-              <Text style={styles.feeLabel}>Processing Fee (3%)</Text>
-              <Text style={styles.feeValue}>{formatPrice(processingFee)}</Text>
+              <Text style={[styles.feeLabel, { color: colors.textSecondary }]}>Processing Fee (3%)</Text>
+              <Text style={[styles.feeValue, { color: colors.text }]}>{formatPrice(processingFee)}</Text>
             </View>
           )}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.orderRow}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>
+            <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+            <Text style={[styles.totalValue, { color: colors.primary }]}>
               {isIOS
                 ? formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499)
                 : formatPrice(totalPrice)
@@ -258,11 +268,13 @@ export default function QuantitySelectionScreen() {
         </View>
 
         <TouchableOpacity
-          style={styles.continueButton}
+          style={[styles.continueButton, { backgroundColor: colors.primary }]}
           onPress={handleContinue}
+          accessibilityLabel="Continue to payment"
+          accessibilityRole="button"
         >
-          <Text style={styles.continueButtonText}>Continue to Payment</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
+          <Text style={[styles.continueButtonText, { color: colors.white }]}>Continue to Payment</Text>
+          <Ionicons name="arrow-forward" size={20} color={colors.white} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>

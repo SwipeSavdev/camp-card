@@ -25,6 +25,7 @@ import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus
 import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
 import { useIAP } from '../../hooks/useIAP';
 import { IAP_PRODUCTS, IAP_PRICES } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 interface SubscriptionPlan {
   id: number;
@@ -56,6 +57,8 @@ interface Subscription {
 type TroopLeaderNavProp = NativeStackNavigationProp<TroopLeaderStackParamList>;
 
 export default function SubscriptionScreen() {
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
@@ -94,14 +97,14 @@ export default function SubscriptionScreen() {
   const isUnitLeader = user?.role === 'UNIT_LEADER';
   const isIOS = Platform.OS === 'ios';
 
-  // Apple IAP hook (only active on iOS)
+  // IAP hook for in-app purchases (iOS StoreKit / Android Google Play Billing)
   const {
     purchasing: iapPurchasing,
     purchaseSubscription,
     restorePurchases,
     getLocalizedPrice,
   } = useIAP({
-    autoInit: isIOS,
+    autoInit: true,
     userId: user?.id,
     onPurchaseComplete: async (result) => {
       Alert.alert('Success!', 'Your subscription is now active');
@@ -426,30 +429,34 @@ export default function SubscriptionScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return '#4CAF50';
-      case 'SUSPENDED': return '#ff9800';
-      case 'CANCELED': return '#f44336';
-      default: return '#999';
+      case 'ACTIVE': return colors.success;
+      case 'SUSPENDED': return colors.warning;
+      case 'CANCELED': return colors.error;
+      default: return colors.textSecondary;
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003f87" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.secondary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
     <ScrollView style={{flex: 1}}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#003f87" />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Subscription</Text>
+        <Text style={[styles.title, { color: colors.secondary }]}>Subscription</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -471,9 +478,9 @@ export default function SubscriptionScreen() {
       {subscription ? (
         <>
           {/* Current Subscription */}
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Current Plan</Text>
+              <Text style={[styles.cardTitle, { color: colors.secondary }]}>Current Plan</Text>
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(subscription.status) + '20' }]}>
                 <Text style={[styles.statusText, { color: getStatusColor(subscription.status) }]}>
                   {subscription.status}
@@ -482,8 +489,8 @@ export default function SubscriptionScreen() {
             </View>
 
             <View style={styles.planInfo}>
-              <Text style={styles.planName}>{subscription.plan.name}</Text>
-              <Text style={styles.planPrice}>
+              <Text style={[styles.planName, { color: colors.text }]}>{subscription.plan.name}</Text>
+              <Text style={[styles.planPrice, { color: colors.textSecondary }]}>
                 {isIOS
                   ? `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`
                   : `$${(subscription.plan.priceCents / 100).toFixed(2)}`
@@ -492,23 +499,23 @@ export default function SubscriptionScreen() {
             </View>
 
             <View style={styles.infoRow}>
-              <Ionicons name="calendar-outline" size={20} color="#666" />
-              <Text style={styles.infoText}>
+              <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                 Next billing: {formatDate(subscription.currentPeriodEnd)}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
-              <Ionicons name="cash-outline" size={20} color="#666" />
-              <Text style={styles.infoText}>
+              <Ionicons name="cash-outline" size={20} color={colors.textSecondary} />
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                 Total saved: ${subscription.totalSavings.toFixed(2)}
               </Text>
             </View>
 
             {subscription.scoutAttribution && (
               <View style={styles.infoRow}>
-                <Ionicons name="ribbon-outline" size={20} color="#666" />
-                <Text style={styles.infoText}>
+                <Ionicons name="ribbon-outline" size={20} color={colors.textSecondary} />
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                   Supporting {subscription.scoutAttribution.scoutName}, Unit {subscription.scoutAttribution.troopNumber}
                 </Text>
               </View>
@@ -516,7 +523,7 @@ export default function SubscriptionScreen() {
 
             {subscription.cancelAtPeriodEnd && (
               <View style={styles.warningBox}>
-                <Ionicons name="warning-outline" size={20} color="#ff9800" />
+                <Ionicons name="warning-outline" size={20} color={colors.warning} />
                 <Text style={styles.warningText}>
                   Your subscription will end on {formatDate(subscription.currentPeriodEnd)}
                 </Text>
@@ -528,51 +535,58 @@ export default function SubscriptionScreen() {
           {isIOS ? (
             <>
               {/* iOS: Apple manages auto-renew */}
-              <View style={styles.card}>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
-                    <Text style={styles.settingTitle}>Auto-Renew</Text>
-                    <Text style={styles.settingDescription}>
+                    <Text style={[styles.settingTitle, { color: colors.text }]}>Auto-Renew</Text>
+                    <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
                       Auto-renewal is managed in your Apple ID settings
                     </Text>
                   </View>
-                  <Ionicons name="logo-apple" size={24} color="#333" />
+                  <Ionicons name="logo-apple" size={24} color={colors.text} />
                 </View>
               </View>
 
               {/* iOS: Actions */}
-              <View style={styles.card}>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <TouchableOpacity
-                  style={styles.actionButton}
+                  style={[styles.actionButton, { borderBottomColor: colors.border }]}
                   onPress={() => Linking.openURL('https://apps.apple.com/account/subscriptions')}
+                  accessibilityLabel="Manage Subscription"
+                  accessibilityRole="button"
                 >
-                  <Ionicons name="settings-outline" size={24} color="#003f87" />
-                  <Text style={styles.actionButtonText}>Manage Subscription</Text>
-                  <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                  <Ionicons name="settings-outline" size={24} color={colors.secondary} />
+                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Manage Subscription</Text>
+                  <Ionicons name="chevron-forward" size={24} color={colors.border} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton} onPress={restorePurchases}>
-                  <Ionicons name="refresh-outline" size={24} color="#003f87" />
-                  <Text style={styles.actionButtonText}>Restore Purchases</Text>
-                  <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                <TouchableOpacity
+                  style={[styles.actionButton, { borderBottomColor: colors.border }]}
+                  onPress={restorePurchases}
+                  accessibilityLabel="Restore Purchases"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="refresh-outline" size={24} color={colors.secondary} />
+                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Restore Purchases</Text>
+                  <Ionicons name="chevron-forward" size={24} color={colors.border} />
                 </TouchableOpacity>
               </View>
             </>
           ) : (
             <>
               {/* Android: Auto-Renew Toggle */}
-              <View style={styles.card}>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
-                    <Text style={styles.settingTitle}>Auto-Renew</Text>
-                    <Text style={styles.settingDescription}>
+                    <Text style={[styles.settingTitle, { color: colors.text }]}>Auto-Renew</Text>
+                    <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
                       Automatically renew at end of billing period
                     </Text>
                   </View>
                   <Switch
                     value={!subscription.cancelAtPeriodEnd}
                     onValueChange={toggleAutoRenew}
-                    trackColor={{ false: '#ccc', true: '#003f87' }}
+                    trackColor={{ false: colors.border, true: colors.secondary }}
                   />
                 </View>
               </View>
@@ -580,39 +594,59 @@ export default function SubscriptionScreen() {
               {/* Android: Renew Now Button */}
               <View style={styles.renewCard}>
                 <View style={styles.renewInfo}>
-                  <Ionicons name="sparkles" size={24} color="#003f87" />
+                  <Ionicons name="sparkles" size={24} color={colors.secondary} />
                   <View style={styles.renewTextContainer}>
-                    <Text style={styles.renewTitle}>Ready for more savings?</Text>
-                    <Text style={styles.renewDescription}>
+                    <Text style={[styles.renewTitle, { color: colors.secondary }]}>Ready for more savings?</Text>
+                    <Text style={[styles.renewDescription, { color: colors.textSecondary }]}>
                       Renew now to replenish all one-time offers
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.renewButton} onPress={handleRenewNow}>
-                  <Ionicons name="refresh" size={20} color="white" />
-                  <Text style={styles.renewButtonText}>Renew Now</Text>
+                <TouchableOpacity
+                  style={[styles.renewButton, { backgroundColor: colors.secondary }]}
+                  onPress={handleRenewNow}
+                  accessibilityLabel="Renew Now"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="refresh" size={20} color={colors.textOnPrimary} />
+                  <Text style={[styles.renewButtonText, { color: colors.textOnPrimary }]}>Renew Now</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Android: Actions */}
-              <View style={styles.card}>
-                <TouchableOpacity style={styles.actionButton} onPress={handleUpdatePayment}>
-                  <Ionicons name="card-outline" size={24} color="#003f87" />
-                  <Text style={styles.actionButtonText}>Update Payment Method</Text>
-                  <Ionicons name="chevron-forward" size={24} color="#ccc" />
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <TouchableOpacity
+                  style={[styles.actionButton, { borderBottomColor: colors.border }]}
+                  onPress={handleUpdatePayment}
+                  accessibilityLabel="Update Payment Method"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="card-outline" size={24} color={colors.secondary} />
+                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Update Payment Method</Text>
+                  <Ionicons name="chevron-forward" size={24} color={colors.border} />
                 </TouchableOpacity>
 
                 {subscription.cancelAtPeriodEnd ? (
-                  <TouchableOpacity style={styles.actionButton} onPress={handleReactivate}>
-                    <Ionicons name="refresh-outline" size={24} color="#4CAF50" />
-                    <Text style={[styles.actionButtonText, { color: '#4CAF50' }]}>Reactivate Subscription</Text>
-                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                  <TouchableOpacity
+                    style={[styles.actionButton, { borderBottomColor: colors.border }]}
+                    onPress={handleReactivate}
+                    accessibilityLabel="Reactivate Subscription"
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="refresh-outline" size={24} color={colors.success} />
+                    <Text style={[styles.actionButtonText, { color: colors.success }]}>Reactivate Subscription</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.border} />
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity style={styles.actionButton} onPress={handleCancelSubscription}>
-                    <Ionicons name="close-circle-outline" size={24} color="#f44336" />
-                    <Text style={[styles.actionButtonText, { color: '#f44336' }]}>Cancel Subscription</Text>
-                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                  <TouchableOpacity
+                    style={[styles.actionButton, { borderBottomColor: colors.border }]}
+                    onPress={handleCancelSubscription}
+                    accessibilityLabel="Cancel Subscription"
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="close-circle-outline" size={24} color={colors.error} />
+                    <Text style={[styles.actionButtonText, { color: colors.error }]}>Cancel Subscription</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.border} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -620,30 +654,30 @@ export default function SubscriptionScreen() {
           )}
 
           {/* Features */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Plan Features</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.secondary }]}>Plan Features</Text>
             {subscription.plan.features.map((feature, index) => (
               <View key={index} style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                <Text style={styles.featureText}>{feature}</Text>
+                <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                <Text style={[styles.featureText, { color: colors.text }]}>{feature}</Text>
               </View>
             ))}
           </View>
 
           {/* Your Cards */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Your Cards</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.secondary }]}>Your Cards</Text>
 
             {hasActiveCard ? (
               <View style={styles.infoRow}>
-                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                <Text style={styles.infoText}>
+                <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                   Active card: {statusActiveCard?.cardNumber}
                 </Text>
               </View>
             ) : (
               <View style={styles.warningBox}>
-                <Ionicons name="alert-circle-outline" size={20} color="#ff9800" />
+                <Ionicons name="alert-circle-outline" size={20} color={colors.warning} />
                 <Text style={styles.warningText}>
                   {unusedCardCount > 0
                     ? `No active card. You have ${unusedCardCount} unused card${unusedCardCount !== 1 ? 's' : ''} to activate.`
@@ -654,13 +688,13 @@ export default function SubscriptionScreen() {
 
             {totalCardCount > 0 && (
               <View style={styles.infoRow}>
-                <Ionicons name="layers-outline" size={20} color="#666" />
-                <Text style={styles.infoText}>Total cards: {totalCardCount}</Text>
+                <Ionicons name="layers-outline" size={20} color={colors.textSecondary} />
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>Total cards: {totalCardCount}</Text>
               </View>
             )}
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[styles.actionButton, { borderBottomColor: colors.border }]}
               onPress={() => {
                 if (hasActiveCard || unusedCardCount > 0) {
                   (navigation as any).navigate('CardInventory');
@@ -668,64 +702,69 @@ export default function SubscriptionScreen() {
                   (navigation as any).navigate('BuyMoreCards');
                 }
               }}
+              accessibilityLabel={hasActiveCard ? 'View Cards' : unusedCardCount > 0 ? 'Activate a Card' : 'Purchase Cards'}
+              accessibilityRole="button"
             >
-              <Ionicons name="wallet-outline" size={24} color="#003f87" />
-              <Text style={styles.actionButtonText}>
+              <Ionicons name="wallet-outline" size={24} color={colors.secondary} />
+              <Text style={[styles.actionButtonText, { color: colors.secondary }]}>
                 {hasActiveCard ? 'View Cards' : unusedCardCount > 0 ? 'Activate a Card' : 'Purchase Cards'}
               </Text>
-              <Ionicons name="chevron-forward" size={24} color="#ccc" />
+              <Ionicons name="chevron-forward" size={24} color={colors.border} />
             </TouchableOpacity>
           </View>
         </>
       ) : (
         <>
           {/* No Subscription - Show Plans */}
-          <View style={styles.card}>
-            <Text style={styles.emptyTitle}>No Active Subscription</Text>
-            <Text style={styles.emptyText}>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Active Subscription</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               Choose a plan below to start saving at local merchants!
             </Text>
           </View>
 
           {totalCardCount > 0 && (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <View style={styles.warningBox}>
-                <Ionicons name="information-circle-outline" size={20} color="#2196F3" />
-                <Text style={[styles.warningText, { color: '#1565C0' }]}>
+                <Ionicons name="information-circle-outline" size={20} color={colors.info} />
+                <Text style={[styles.warningText, { color: colors.secondary }]}>
                   You have {totalCardCount} card{totalCardCount !== 1 ? 's' : ''} but need an active subscription to use them at merchants.
                 </Text>
               </View>
             </View>
           )}
 
-          <Text style={styles.sectionTitle}>Available Plans</Text>
+          <Text style={[styles.sectionTitle, { color: colors.secondary }]}>Available Plans</Text>
 
           {availablePlans.map((plan) => (
             <TouchableOpacity
               key={plan.id}
               style={[
                 styles.planCard,
-                plan.billingInterval === 'ANNUAL' && styles.recommendedPlan
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                plan.billingInterval === 'ANNUAL' && [styles.recommendedPlan, { borderColor: colors.primary }]
               ]}
               onPress={() => handleSubscribe(plan)}
+              accessibilityLabel={`Select ${plan.name} plan`}
+              accessibilityRole="button"
             >
               {plan.billingInterval === 'ANNUAL' && (
-                <View style={styles.recommendedBadge}>
-                  <Text style={styles.recommendedText}>BEST VALUE</Text>
+                <View style={[styles.recommendedBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.recommendedText, { color: colors.textOnPrimary }]}>BEST VALUE</Text>
                 </View>
               )}
 
-              <Text style={styles.planCardName}>{plan.name}</Text>
-              <Text style={styles.planCardDescription}>{plan.description}</Text>
-              
+              <Text style={[styles.planCardName, { color: colors.secondary }]}>{plan.name}</Text>
+              <Text style={[styles.planCardDescription, { color: colors.textSecondary }]}>{plan.description}</Text>
+
               <View style={styles.priceContainer}>
-                <Text style={styles.planCardPrice}>
+                <Text style={[styles.planCardPrice, { color: colors.text }]}>
                   {isIOS
                     ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`)
                     : `$${(plan.priceCents / 100).toFixed(2)}`
                   }
                 </Text>
-                <Text style={styles.planCardInterval}>
+                <Text style={[styles.planCardInterval, { color: colors.textSecondary }]}>
                   /{plan.billingInterval.toLowerCase()}
                 </Text>
               </View>
@@ -735,8 +774,8 @@ export default function SubscriptionScreen() {
               <View style={styles.featuresContainer}>
                 {plan.features.map((feature, index) => (
                   <View key={index} style={styles.featureRow}>
-                    <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                    <Text style={styles.planFeatureText}>{feature}</Text>
+                    <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                    <Text style={[styles.planFeatureText, { color: colors.text }]}>{feature}</Text>
                   </View>
                 ))}
               </View>
@@ -744,15 +783,18 @@ export default function SubscriptionScreen() {
               <TouchableOpacity
                 style={[
                   styles.subscribeButton,
-                  plan.billingInterval === 'ANNUAL' && styles.subscribeButtonRecommended
+                  { backgroundColor: colors.secondary },
+                  plan.billingInterval === 'ANNUAL' && [styles.subscribeButtonRecommended, { backgroundColor: colors.primary }]
                 ]}
                 onPress={() => handleSubscribe(plan)}
                 disabled={isIOS && iapPurchasing}
+                accessibilityLabel={isIOS ? 'Subscribe with Apple' : 'Subscribe Now'}
+                accessibilityRole="button"
               >
                 {isIOS && iapPurchasing ? (
-                  <ActivityIndicator color="white" size="small" />
+                  <ActivityIndicator color={colors.textOnPrimary} size="small" />
                 ) : (
-                  <Text style={styles.subscribeButtonText}>
+                  <Text style={[styles.subscribeButtonText, { color: colors.textOnPrimary }]}>
                     {isIOS ? 'Subscribe with Apple' : 'Subscribe Now'}
                   </Text>
                 )}
@@ -761,31 +803,31 @@ export default function SubscriptionScreen() {
           ))}
 
           {/* Info Section */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Why Subscribe?</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.secondary }]}>Why Subscribe?</Text>
             <View style={styles.benefitRow}>
-              <Ionicons name="pricetag" size={24} color="#003f87" />
+              <Ionicons name="pricetag" size={24} color={colors.secondary} />
               <View style={styles.benefitContent}>
-                <Text style={styles.benefitTitle}>Save Money</Text>
-                <Text style={styles.benefitText}>
+                <Text style={[styles.benefitTitle, { color: colors.text }]}>Save Money</Text>
+                <Text style={[styles.benefitText, { color: colors.textSecondary }]}>
                   Average customer saves $200/year at local merchants
                 </Text>
               </View>
             </View>
             <View style={styles.benefitRow}>
-              <Ionicons name="heart" size={24} color="#ce1126" />
+              <Ionicons name="heart" size={24} color={colors.primary} />
               <View style={styles.benefitContent}>
-                <Text style={styles.benefitTitle}>Support Scouts</Text>
-                <Text style={styles.benefitText}>
+                <Text style={[styles.benefitTitle, { color: colors.text }]}>Support Scouts</Text>
+                <Text style={[styles.benefitText, { color: colors.textSecondary }]}>
                   Your subscription helps Scouts attend summer camp
                 </Text>
               </View>
             </View>
             <View style={styles.benefitRow}>
-              <Ionicons name="refresh" size={24} color="#4CAF50" />
+              <Ionicons name="refresh" size={24} color={colors.success} />
               <View style={styles.benefitContent}>
-                <Text style={styles.benefitTitle}>Cancel Anytime</Text>
-                <Text style={styles.benefitText}>
+                <Text style={[styles.benefitTitle, { color: colors.text }]}>Cancel Anytime</Text>
+                <Text style={[styles.benefitText, { color: colors.textSecondary }]}>
                   No long-term commitment, cancel before next billing
                 </Text>
               </View>
@@ -801,11 +843,15 @@ export default function SubscriptionScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowUpdatePaymentModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Payment Methods</Text>
-            <TouchableOpacity onPress={() => setShowUpdatePaymentModal(false)}>
-              <Ionicons name="close" size={24} color="#333" />
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.secondary }]}>Payment Methods</Text>
+            <TouchableOpacity
+              onPress={() => setShowUpdatePaymentModal(false)}
+              accessibilityLabel="Close payment methods"
+              accessibilityRole="button"
+            >
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -813,23 +859,27 @@ export default function SubscriptionScreen() {
             {/* Saved Cards */}
             {savedCards.length > 0 && (
               <View style={styles.savedCardsSection}>
-                <Text style={styles.savedCardsTitle}>Saved Cards</Text>
+                <Text style={[styles.savedCardsTitle, { color: colors.text }]}>Saved Cards</Text>
                 {savedCards.map((card) => (
-                  <View key={card.id} style={styles.savedCardRow}>
+                  <View key={card.id} style={[styles.savedCardRow, { backgroundColor: colors.surface }]}>
                     <View style={styles.savedCardInfo}>
-                      <Ionicons name="card" size={24} color="#003f87" />
+                      <Ionicons name="card" size={24} color={colors.secondary} />
                       <View style={styles.savedCardDetails}>
-                        <Text style={styles.savedCardType}>
+                        <Text style={[styles.savedCardType, { color: colors.text }]}>
                           {card.cardType} ending in {card.cardLastFour}
                           {card.isDefault ? ' (Default)' : ''}
                         </Text>
-                        <Text style={styles.savedCardExpiry}>
+                        <Text style={[styles.savedCardExpiry, { color: colors.textSecondary }]}>
                           Expires {String(card.expirationMonth).padStart(2, '0')}/{card.expirationYear}
                         </Text>
                       </View>
                     </View>
-                    <TouchableOpacity onPress={() => handleRemoveCard(card.id, card.cardLastFour)}>
-                      <Ionicons name="trash-outline" size={20} color="#f44336" />
+                    <TouchableOpacity
+                      onPress={() => handleRemoveCard(card.id, card.cardLastFour)}
+                      accessibilityLabel={`Remove card ending in ${card.cardLastFour}`}
+                      accessibilityRole="button"
+                    >
+                      <Ionicons name="trash-outline" size={20} color={colors.error} />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -837,24 +887,26 @@ export default function SubscriptionScreen() {
             )}
 
             {/* Add New Card */}
-            <View style={styles.addCardSection}>
-              <Text style={styles.addCardTitle}>
+            <View style={[styles.addCardSection, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.addCardTitle, { color: colors.secondary }]}>
                 {savedCards.length > 0 ? 'Replace Payment Method' : 'Add Payment Method'}
               </Text>
-              <Text style={styles.addCardDescription}>
+              <Text style={[styles.addCardDescription, { color: colors.textSecondary }]}>
                 Your card will be securely stored for subscription auto-renewal.
               </Text>
 
               <TextInput
-                style={styles.cardInput}
+                style={[styles.cardInput, { borderColor: colors.border, color: colors.text }]}
                 placeholder="Cardholder Name"
+                placeholderTextColor={colors.textSecondary}
                 value={newCardName}
                 onChangeText={setNewCardName}
                 autoCapitalize="words"
               />
               <TextInput
-                style={styles.cardInput}
+                style={[styles.cardInput, { borderColor: colors.border, color: colors.text }]}
                 placeholder="Card Number"
+                placeholderTextColor={colors.textSecondary}
                 value={newCardNumber}
                 onChangeText={(text) => setNewCardNumber(formatCardInput(text))}
                 keyboardType="number-pad"
@@ -862,16 +914,18 @@ export default function SubscriptionScreen() {
               />
               <View style={styles.cardInputRow}>
                 <TextInput
-                  style={[styles.cardInput, styles.cardInputHalf]}
+                  style={[styles.cardInput, styles.cardInputHalf, { borderColor: colors.border, color: colors.text }]}
                   placeholder="MM/YY"
+                  placeholderTextColor={colors.textSecondary}
                   value={newCardExpiry}
                   onChangeText={(text) => setNewCardExpiry(formatExpiryInput(text))}
                   keyboardType="number-pad"
                   maxLength={5}
                 />
                 <TextInput
-                  style={[styles.cardInput, styles.cardInputHalf]}
+                  style={[styles.cardInput, styles.cardInputHalf, { borderColor: colors.border, color: colors.text }]}
                   placeholder="CVV"
+                  placeholderTextColor={colors.textSecondary}
                   value={newCardCvv}
                   onChangeText={setNewCardCvv}
                   keyboardType="number-pad"
@@ -881,14 +935,16 @@ export default function SubscriptionScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.saveCardButton, savingCard && styles.saveCardButtonDisabled]}
+                style={[styles.saveCardButton, { backgroundColor: colors.secondary }, savingCard && styles.saveCardButtonDisabled]}
                 onPress={handleSaveNewCard}
                 disabled={savingCard}
+                accessibilityLabel="Save Payment Method"
+                accessibilityRole="button"
               >
                 {savingCard ? (
-                  <ActivityIndicator color="white" size="small" />
+                  <ActivityIndicator color={colors.textOnPrimary} size="small" />
                 ) : (
-                  <Text style={styles.saveCardButtonText}>Save Payment Method</Text>
+                  <Text style={[styles.saveCardButtonText, { color: colors.textOnPrimary }]}>Save Payment Method</Text>
                 )}
               </TouchableOpacity>
             </View>

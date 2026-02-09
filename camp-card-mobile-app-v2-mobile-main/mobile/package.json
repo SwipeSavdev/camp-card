@@ -26,7 +26,8 @@
     "eas:submit:ios": "eas submit --platform ios --latest",
     "eas:submit:android": "eas submit --platform android --latest",
     "eas:submit:all": "eas submit --platform all --latest",
-    "eas:update": "eas update --branch production"
+    "eas:update": "eas update --branch production --message",
+    "eas:update:preview": "eas update --branch preview --message"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -57,6 +58,7 @@
     "expo-secure-store": "~15.0.8",
     "expo-sharing": "~14.0.8",
     "expo-status-bar": "~3.0.9",
+    "expo-updates": "~29.0.16",
     "immer": "^10.0.3",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",

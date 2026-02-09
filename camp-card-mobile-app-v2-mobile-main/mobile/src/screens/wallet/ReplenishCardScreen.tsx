@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { apiClient } from '../../services/apiClient';
 
 interface UnusedCard {
@@ -27,6 +28,8 @@ interface UnusedCard {
 
 export default function ReplenishCardScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const [unusedCards, setUnusedCards] = useState<UnusedCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,29 +105,29 @@ export default function ReplenishCardScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} accessibilityLabel="Go back" accessibilityRole="button">
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Replenish Card</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Replenish Card</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} accessibilityLabel="Go back" accessibilityRole="button">
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Replenish Card</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Replenish Card</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -135,23 +138,23 @@ export default function ReplenishCardScreen() {
       >
         {/* Icon */}
         <View style={styles.iconContainer}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="refresh" size={48} color={COLORS.primary} />
+          <View style={[styles.iconCircle, { backgroundColor: `${colors.primary}15` }]}>
+            <Ionicons name="refresh" size={48} color={colors.primary} />
           </View>
         </View>
 
         {/* Description */}
-        <Text style={styles.description}>
+        <Text style={[styles.description, { color: colors.textSecondary }]}>
           Used up your one-time offers? Activate a new card from your inventory to replenish
           all offers and continue saving!
         </Text>
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={24} color={COLORS.secondary} />
+          <Ionicons name="information-circle" size={24} color={colors.secondary} />
           <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>How it works</Text>
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoTitle, { color: colors.text }]}>How it works</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               • Your current card will be marked as "replaced"{'\n'}
               • All one-time use offers will be refreshed{'\n'}
               • Multi-use offers continue as normal{'\n'}
@@ -161,19 +164,21 @@ export default function ReplenishCardScreen() {
         </View>
 
         {/* Unused Cards List */}
-        <Text style={styles.sectionTitle}>Available Cards ({unusedCards.length})</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Available Cards ({unusedCards.length})</Text>
 
         {unusedCards.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="card-outline" size={48} color={COLORS.textSecondary} />
-            <Text style={styles.emptyTitle}>No Unused Cards</Text>
-            <Text style={styles.emptyText}>
+            <Ionicons name="card-outline" size={48} color={colors.textSecondary} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Unused Cards</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               You don't have any unused cards in your inventory. Purchase additional cards to
               replenish your offers later.
             </Text>
             <TouchableOpacity
-              style={styles.purchaseButton}
+              style={[styles.purchaseButton, { backgroundColor: colors.primary }]}
               onPress={() => (navigation as any).navigate('Subscription')}
+              accessibilityLabel="Purchase Cards"
+              accessibilityRole="button"
             >
               <Text style={styles.purchaseButtonText}>Purchase Cards</Text>
             </TouchableOpacity>
@@ -185,18 +190,18 @@ export default function ReplenishCardScreen() {
               const isExpiringSoon = daysLeft <= 30;
 
               return (
-                <View key={card.id} style={styles.cardItem}>
+                <View key={card.id} style={[styles.cardItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <View style={styles.cardInfo}>
                     <View style={styles.cardHeader}>
-                      <Ionicons name="card" size={20} color={COLORS.primary} />
-                      <Text style={styles.cardNumber}>{card.cardNumber}</Text>
+                      <Ionicons name="card" size={20} color={colors.primary} />
+                      <Text style={[styles.cardNumber, { color: colors.text }]}>{card.cardNumber}</Text>
                     </View>
-                    <Text style={styles.cardMeta}>
+                    <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
                       Purchased: {formatDate(card.purchasedAt)}
                     </Text>
                     <View style={styles.expiryRow}>
                       <Text
-                        style={[styles.expiryText, isExpiringSoon && styles.expiryWarning]}
+                        style={[styles.expiryText, { color: colors.textSecondary }, isExpiringSoon && styles.expiryWarning]}
                       >
                         Expires: {formatDate(card.expiresAt)}
                       </Text>
@@ -211,10 +216,13 @@ export default function ReplenishCardScreen() {
                   <TouchableOpacity
                     style={[
                       styles.activateButton,
+                      { backgroundColor: colors.primary },
                       activating === card.id && styles.activateButtonDisabled,
                     ]}
                     onPress={() => handleActivateCard(card.id)}
                     disabled={activating !== null}
+                    accessibilityLabel={`Activate card ${card.cardNumber}`}
+                    accessibilityRole="button"
                   >
                     {activating === card.id ? (
                       <ActivityIndicator size="small" color="#fff" />

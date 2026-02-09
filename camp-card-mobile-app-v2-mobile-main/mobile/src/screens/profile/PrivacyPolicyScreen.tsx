@@ -14,9 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 export default function PrivacyPolicyScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const openEmail = (email: string) => {
     Linking.openURL(`mailto:${email}`);
@@ -27,25 +30,27 @@ export default function PrivacyPolicyScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Privacy Policy</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Privacy Policy</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <View style={styles.publisherBadge}>
-            <Text style={styles.publisherText}>Published by Swipe Savvy, LLC</Text>
+          <View style={[styles.publisherBadge, { backgroundColor: colors.primary + '15' }]}>
+            <Text style={[styles.publisherText, { color: colors.primary }]}>Published by Swipe Savvy, LLC</Text>
           </View>
-          <Text style={styles.lastUpdated}>Last Updated: January 30, 2026</Text>
+          <Text style={[styles.lastUpdated, { color: colors.textSecondary }]}>Last Updated: January 30, 2026</Text>
 
           <View style={styles.introduction}>
             <Text style={styles.paragraph}>
@@ -71,27 +76,27 @@ export default function PrivacyPolicyScreen() {
           </View>
 
           {/* Key Points Summary */}
-          <View style={styles.summaryBox}>
-            <Text style={styles.summaryTitle}>Key Privacy Points</Text>
+          <View style={[styles.summaryBox, { backgroundColor: colors.success + '10', borderColor: colors.success + '30' }]}>
+            <Text style={[styles.summaryTitle, { color: colors.text }]}>Key Privacy Points</Text>
             <View style={styles.summaryItem}>
-              <Ionicons name="shield-checkmark" size={16} color={COLORS.success} />
-              <Text style={styles.summaryText}>We do NOT sell your personal information</Text>
+              <Ionicons name="shield-checkmark" size={16} color={colors.success} />
+              <Text style={[styles.summaryText, { color: colors.text }]}>We do NOT sell your personal information</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Ionicons name="lock-closed" size={16} color={COLORS.success} />
-              <Text style={styles.summaryText}>Data encrypted with industry-standard security</Text>
+              <Ionicons name="lock-closed" size={16} color={colors.success} />
+              <Text style={[styles.summaryText, { color: colors.text }]}>Data encrypted with industry-standard security</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Ionicons name="people" size={16} color={COLORS.success} />
-              <Text style={styles.summaryText}>COPPA compliant for children's privacy</Text>
+              <Ionicons name="people" size={16} color={colors.success} />
+              <Text style={[styles.summaryText, { color: colors.text }]}>COPPA compliant for children's privacy</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Ionicons name="document-text" size={16} color={COLORS.success} />
-              <Text style={styles.summaryText}>CCPA compliant for California residents</Text>
+              <Ionicons name="document-text" size={16} color={colors.success} />
+              <Text style={[styles.summaryText, { color: colors.text }]}>CCPA compliant for California residents</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Ionicons name="ribbon" size={16} color={COLORS.success} />
-              <Text style={styles.summaryText}>Scout data used only for fundraising reporting and sales tracking</Text>
+              <Ionicons name="ribbon" size={16} color={colors.success} />
+              <Text style={[styles.summaryText, { color: colors.text }]}>Scout data used only for fundraising reporting and sales tracking</Text>
             </View>
           </View>
 
@@ -156,9 +161,9 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section title="2. Scout Data Usage Limitation">
-            <View style={styles.highlightBox}>
-              <Ionicons name="ribbon" size={20} color={COLORS.primary} />
-              <Text style={styles.highlightText}>
+            <View style={[styles.highlightBox, { backgroundColor: colors.primary + '10' }]}>
+              <Ionicons name="ribbon" size={20} color={colors.primary} />
+              <Text style={[styles.highlightText, { color: colors.primary }]}>
                 Scout information -- including registration numbers, troop/unit affiliation,
                 council association, and referral codes -- is collected and used solely for
                 fundraising reporting and sales tracking. This data is never used for marketing,
@@ -274,9 +279,9 @@ export default function PrivacyPolicyScreen() {
               the App of any change in ownership or uses of your personal information.
             </BulletPoint>
 
-            <View style={styles.highlightBox}>
-              <Ionicons name="information-circle" size={20} color={COLORS.primary} />
-              <Text style={styles.highlightText}>
+            <View style={[styles.highlightBox, { backgroundColor: colors.primary + '10' }]}>
+              <Ionicons name="information-circle" size={20} color={colors.primary} />
+              <Text style={[styles.highlightText, { color: colors.primary }]}>
                 We do NOT sell your personal information. We have not sold personal information
                 in the preceding 12 months and have no plans to do so.
               </Text>
@@ -367,8 +372,8 @@ export default function PrivacyPolicyScreen() {
 
           <Section title="8. Children's Privacy (COPPA)">
             <View style={styles.coppaBox}>
-              <Ionicons name="shield" size={24} color={COLORS.primary} />
-              <Text style={styles.coppaTitle}>COPPA Compliant</Text>
+              <Ionicons name="shield" size={24} color={colors.primary} />
+              <Text style={[styles.coppaTitle, { color: colors.primary }]}>COPPA Compliant</Text>
             </View>
             <Text style={styles.paragraph}>
               We are committed to protecting the privacy of children and comply fully with the
@@ -687,8 +692,8 @@ export default function PrivacyPolicyScreen() {
               If you have any questions, concerns, or requests regarding this Privacy Policy
               or our privacy practices, please contact us using the appropriate channel below:
             </Text>
-            <View style={styles.contactBox}>
-              <Text style={styles.companyName}>Swipe Savvy, LLC</Text>
+            <View style={[styles.contactBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.companyName, { color: colors.text }]}>Swipe Savvy, LLC</Text>
               <ContactItem
                 icon="mail"
                 text="privacy@swipesavvy.com (General Privacy Inquiries)"
@@ -722,8 +727,8 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <View style={styles.acknowledgment}>
-            <Text style={styles.acknowledgmentText}>
+          <View style={[styles.acknowledgment, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
+            <Text style={[styles.acknowledgmentText, { color: colors.primary }]}>
               By using Camp Card, you acknowledge that you have read, understood, and agree
               to be bound by this Privacy Policy. If you are a parent or guardian consenting
               on behalf of a minor, you confirm that you have the legal authority to do so
@@ -731,9 +736,9 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </View>
 
-          <View style={styles.publisherFooter}>
-            <Text style={styles.footerText}>Swipe Savvy, LLC</Text>
-            <Text style={styles.footerSubtext}>Publisher of Camp Card</Text>
+          <View style={[styles.publisherFooter, { borderTopColor: colors.border }]}>
+            <Text style={[styles.footerText, { color: colors.text }]}>Swipe Savvy, LLC</Text>
+            <Text style={[styles.footerSubtext, { color: colors.textSecondary }]}>Publisher of Camp Card</Text>
           </View>
         </View>
 
@@ -748,23 +753,31 @@ interface SectionProps {
   children: React.ReactNode;
 }
 
-const Section: React.FC<SectionProps> = ({ title, children }) => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {children}
-  </View>
-);
+const Section: React.FC<SectionProps> = ({ title, children }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  return (
+    <View style={styles.sectionContainer}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
+      {children}
+    </View>
+  );
+};
 
 interface BulletPointProps {
   children: React.ReactNode;
 }
 
-const BulletPoint: React.FC<BulletPointProps> = ({ children }) => (
-  <View style={styles.bulletPoint}>
-    <View style={styles.bullet} />
-    <Text style={styles.bulletText}>{children}</Text>
-  </View>
-);
+const BulletPoint: React.FC<BulletPointProps> = ({ children }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  return (
+    <View style={styles.bulletPoint}>
+      <View style={[styles.bullet, { backgroundColor: colors.primary }]} />
+      <Text style={[styles.bulletText, { color: colors.text }]}>{children}</Text>
+    </View>
+  );
+};
 
 interface ContactItemProps {
   icon: string;
@@ -772,12 +785,16 @@ interface ContactItemProps {
   onPress?: () => void;
 }
 
-const ContactItem: React.FC<ContactItemProps> = ({ icon, text, onPress }) => (
-  <TouchableOpacity style={styles.contactItem} onPress={onPress} activeOpacity={0.7}>
-    <Ionicons name={icon as any} size={18} color={COLORS.primary} />
-    <Text style={[styles.contactText, onPress && styles.contactLink]}>{text}</Text>
-  </TouchableOpacity>
-);
+const ContactItem: React.FC<ContactItemProps> = ({ icon, text, onPress }) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  return (
+    <TouchableOpacity style={styles.contactItem} onPress={onPress} activeOpacity={0.7} accessibilityLabel={text} accessibilityRole="button">
+      <Ionicons name={icon as any} size={18} color={colors.primary} />
+      <Text style={[styles.contactText, { color: colors.text }, onPress && { color: colors.primary, textDecorationLine: 'underline' as const }]}>{text}</Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

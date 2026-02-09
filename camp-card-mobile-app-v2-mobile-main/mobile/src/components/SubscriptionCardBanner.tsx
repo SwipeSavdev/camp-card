@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../config/ThemeContext';
 import { CombinedStatus } from '../hooks/useSubscriptionCardStatus';
 
 interface SubscriptionCardBannerProps {
@@ -14,56 +15,14 @@ interface SubscriptionCardBannerProps {
   onDismiss?: () => void;
 }
 
-const STATUS_CONFIG: Record<CombinedStatus, {
+interface StatusConfigEntry {
   backgroundColor: string;
   borderColor: string;
   iconColor: string;
   textColor: string;
   icon: keyof typeof Ionicons.glyphMap;
   actionText: string;
-} | null> = {
-  HEALTHY: null,
-  NEEDS_CARD_ACTIVATION: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#2196F3',
-    iconColor: '#1976D2',
-    textColor: '#1565C0',
-    icon: 'card-outline',
-    actionText: 'Activate Card',
-  },
-  NEEDS_CARDS: {
-    backgroundColor: '#FFF3E0',
-    borderColor: '#FF9800',
-    iconColor: '#F57C00',
-    textColor: '#E65100',
-    icon: 'cart-outline',
-    actionText: 'Purchase Cards',
-  },
-  SUBSCRIPTION_EXPIRED: {
-    backgroundColor: '#FFEBEE',
-    borderColor: '#F44336',
-    iconColor: '#D32F2F',
-    textColor: '#C62828',
-    icon: 'warning',
-    actionText: 'Renew Subscription',
-  },
-  NOTHING_ACTIVE: {
-    backgroundColor: '#F5F5F5',
-    borderColor: '#BDBDBD',
-    iconColor: '#757575',
-    textColor: '#616161',
-    icon: 'alert-circle-outline',
-    actionText: 'Subscribe Now',
-  },
-  SUBSCRIPTION_SUSPENDED: {
-    backgroundColor: '#FFF3E0',
-    borderColor: '#FF9800',
-    iconColor: '#F57C00',
-    textColor: '#E65100',
-    icon: 'alert-circle',
-    actionText: 'Contact Support',
-  },
-};
+}
 
 export default function SubscriptionCardBanner({
   combinedStatus,
@@ -71,6 +30,53 @@ export default function SubscriptionCardBanner({
   onAction,
   onDismiss,
 }: SubscriptionCardBannerProps) {
+  const { theme } = useTheme();
+  const { colors } = theme;
+
+  const STATUS_CONFIG: Record<CombinedStatus, StatusConfigEntry | null> = {
+    HEALTHY: null,
+    NEEDS_CARD_ACTIVATION: {
+      backgroundColor: colors.info + '15',
+      borderColor: colors.info,
+      iconColor: colors.info,
+      textColor: colors.info,
+      icon: 'card-outline',
+      actionText: 'Activate Card',
+    },
+    NEEDS_CARDS: {
+      backgroundColor: colors.warning + '15',
+      borderColor: colors.warning,
+      iconColor: colors.warning,
+      textColor: colors.warning,
+      icon: 'cart-outline',
+      actionText: 'Purchase Cards',
+    },
+    SUBSCRIPTION_EXPIRED: {
+      backgroundColor: colors.error + '15',
+      borderColor: colors.error,
+      iconColor: colors.error,
+      textColor: colors.error,
+      icon: 'warning',
+      actionText: 'Renew Subscription',
+    },
+    NOTHING_ACTIVE: {
+      backgroundColor: colors.background,
+      borderColor: colors.disabled,
+      iconColor: colors.textSecondary,
+      textColor: colors.textSecondary,
+      icon: 'alert-circle-outline',
+      actionText: 'Subscribe Now',
+    },
+    SUBSCRIPTION_SUSPENDED: {
+      backgroundColor: colors.warning + '15',
+      borderColor: colors.warning,
+      iconColor: colors.warning,
+      textColor: colors.warning,
+      icon: 'alert-circle',
+      actionText: 'Contact Support',
+    },
+  };
+
   const config = STATUS_CONFIG[combinedStatus];
 
   if (!config) {
@@ -95,7 +101,7 @@ export default function SubscriptionCardBanner({
         <Text style={[styles.message, { color: config.textColor }]}>
           {statusMessage}
         </Text>
-        <TouchableOpacity style={styles.actionButton} onPress={onAction}>
+        <TouchableOpacity style={styles.actionButton} onPress={onAction} accessibilityLabel={config.actionText} accessibilityRole="button">
           <Text style={[styles.actionText, { color: config.iconColor }]}>
             {config.actionText}
           </Text>
@@ -104,7 +110,7 @@ export default function SubscriptionCardBanner({
       </View>
 
       {onDismiss && (
-        <TouchableOpacity style={styles.dismissButton} onPress={onDismiss}>
+        <TouchableOpacity style={styles.dismissButton} onPress={onDismiss} accessibilityLabel="Dismiss alert" accessibilityRole="button">
           <Ionicons name="close" size={20} color={config.iconColor} />
         </TouchableOpacity>
       )}

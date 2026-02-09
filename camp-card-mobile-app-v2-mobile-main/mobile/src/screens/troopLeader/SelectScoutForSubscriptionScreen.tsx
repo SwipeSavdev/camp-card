@@ -17,6 +17,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
 import { apiClient } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
@@ -75,6 +76,8 @@ export default function SelectScoutForSubscriptionScreen() {
   const route = useRoute<SelectScoutRouteProp>();
   const { planId } = route.params;
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const [loading, setLoading] = useState(true);
   const [scouts, setScouts] = useState<Scout[]>([]);
@@ -203,13 +206,13 @@ export default function SelectScoutForSubscriptionScreen() {
   const getStatusColor = (status: Scout['subscriptionStatus']) => {
     switch (status) {
       case 'active':
-        return COLORS.success;
+        return colors.success;
       case 'inactive':
-        return COLORS.warning;
+        return colors.warning;
       case 'expired':
-        return COLORS.error;
+        return colors.error;
       default:
-        return COLORS.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -221,39 +224,42 @@ export default function SelectScoutForSubscriptionScreen() {
       <TouchableOpacity
         style={[
           styles.scoutCard,
-          isSelected && styles.scoutCardSelected,
-          isActive && styles.scoutCardDisabled,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          isSelected && [styles.scoutCardSelected, { borderColor: colors.secondary }],
+          isActive && [styles.scoutCardDisabled, { backgroundColor: colors.background }],
         ]}
         onPress={() => handleSelectScout(item)}
         disabled={isActive}
+        accessibilityLabel={`Select ${item.firstName} ${item.lastName}`}
+        accessibilityRole="button"
       >
-        <View style={[styles.avatarContainer, isActive && styles.avatarDisabled]}>
-          <Text style={styles.avatarText}>
+        <View style={[styles.avatarContainer, { backgroundColor: colors.secondary }, isActive && { backgroundColor: colors.textSecondary }]}>
+          <Text style={[styles.avatarText, { color: colors.surface }]}>
             {item.firstName[0]}
             {item.lastName[0]}
           </Text>
         </View>
         <View style={styles.scoutInfo}>
-          <Text style={[styles.scoutName, isActive && styles.textDisabled]}>
+          <Text style={[styles.scoutName, { color: colors.text }, isActive && { color: colors.textSecondary }]}>
             {item.firstName} {item.lastName}
           </Text>
-          <Text style={[styles.scoutEmail, isActive && styles.textDisabled]}>
+          <Text style={[styles.scoutEmail, { color: colors.textSecondary }]}>
             {item.email}
           </Text>
           {isActive && (
             <View style={styles.activeTag}>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.success} />
-              <Text style={styles.activeTagText}>Already has subscription</Text>
+              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+              <Text style={[styles.activeTagText, { color: colors.success }]}>Already has subscription</Text>
             </View>
           )}
         </View>
         <View style={styles.selectionIndicator}>
           {isSelected ? (
-            <Ionicons name="checkmark-circle" size={28} color={COLORS.secondary} />
+            <Ionicons name="checkmark-circle" size={28} color={colors.secondary} />
           ) : isActive ? (
-            <Ionicons name="close-circle" size={28} color={COLORS.textSecondary} />
+            <Ionicons name="close-circle" size={28} color={colors.textSecondary} />
           ) : (
-            <View style={styles.radioOuter}>
+            <View style={[styles.radioOuter, { borderColor: colors.border }]}>
               <View style={styles.radioInner} />
             </View>
           )}
@@ -264,45 +270,54 @@ export default function SelectScoutForSubscriptionScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.secondary} />
-        <Text style={styles.loadingText}>Loading scouts...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.secondary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading scouts...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.secondary} />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select Scout</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Select Scout</Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Instructions */}
       <View style={styles.instructionsContainer}>
-        <Ionicons name="information-circle" size={24} color={COLORS.secondary} />
-        <Text style={styles.instructionsText}>
+        <Ionicons name="information-circle" size={24} color={colors.secondary} />
+        <Text style={[styles.instructionsText, { color: colors.secondary }]}>
           Select which scout this subscription will support. The scout will receive credit for the sale.
         </Text>
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={COLORS.textSecondary} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder="Search scouts..."
-          placeholderTextColor={COLORS.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color={COLORS.textSecondary} />
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+          >
+            <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -315,9 +330,9 @@ export default function SelectScoutForSubscriptionScreen() {
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color={COLORS.border} />
-            <Text style={styles.emptyText}>No scouts found</Text>
-            <Text style={styles.emptySubtext}>
+            <Ionicons name="people-outline" size={64} color={colors.border} />
+            <Text style={[styles.emptyText, { color: colors.text }]}>No scouts found</Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
               {searchQuery
                 ? 'Try a different search term'
                 : 'Add scouts to your unit first'}
@@ -327,25 +342,28 @@ export default function SelectScoutForSubscriptionScreen() {
       />
 
       {/* Continue Button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TouchableOpacity
           style={[
             styles.continueButton,
-            (!selectedScout || processingSubscription) && styles.continueButtonDisabled,
+            { backgroundColor: colors.secondary },
+            (!selectedScout || processingSubscription) && [styles.continueButtonDisabled, { backgroundColor: colors.textSecondary }],
           ]}
           onPress={handleContinue}
           disabled={!selectedScout || processingSubscription}
+          accessibilityLabel={selectedScout ? `Subscribe ${selectedScout.firstName}` : 'Select a Scout to Continue'}
+          accessibilityRole="button"
         >
           {processingSubscription ? (
-            <ActivityIndicator size="small" color={COLORS.surface} />
+            <ActivityIndicator size="small" color={colors.surface} />
           ) : (
             <>
-              <Text style={styles.continueButtonText}>
+              <Text style={[styles.continueButtonText, { color: colors.surface }]}>
                 {selectedScout
                   ? `Subscribe ${selectedScout.firstName}`
                   : 'Select a Scout to Continue'}
               </Text>
-              <Ionicons name="arrow-forward" size={20} color={COLORS.surface} />
+              <Ionicons name="arrow-forward" size={20} color={colors.surface} />
             </>
           )}
         </TouchableOpacity>

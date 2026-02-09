@@ -16,6 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
+import { roleColors } from '../../config/theme';
 import ExpiryAlertBanner from '../../components/ExpiryAlertBanner';
 import { useCardExpiry } from '../../hooks/useCardExpiry';
 import { apiClient } from '../../utils/api';
@@ -100,7 +102,7 @@ function UnitLeaderDashboard() {
         }
       >
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: '#003F87' }]}>
+        <View style={[styles.header, { backgroundColor: roleColors.TROOP_LEADER.headerBg }]}>
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Hello, {user?.firstName}!</Text>
             <Text style={styles.roleTag}>Unit Leader</Text>
@@ -108,6 +110,8 @@ function UnitLeaderDashboard() {
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={() => navigation.navigate('Notifications')}
+            accessibilityLabel="Notifications"
+            accessibilityRole="button"
           >
             <Ionicons name="notifications-outline" size={24} color="#fff" />
           </TouchableOpacity>
@@ -330,7 +334,7 @@ function ScoutDashboard() {
         }
       >
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: COLORS.primary }]}>
+        <View style={[styles.header, { backgroundColor: roleColors.SCOUT.headerBg }]}>
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Hello, {user?.firstName}!</Text>
             <Text style={styles.roleTag}>Scout</Text>
@@ -338,6 +342,8 @@ function ScoutDashboard() {
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={() => navigation.navigate('Notifications')}
+            accessibilityLabel="Notifications"
+            accessibilityRole="button"
           >
             <Ionicons name="notifications-outline" size={24} color="#fff" />
           </TouchableOpacity>
@@ -588,7 +594,7 @@ function CustomerDashboard() {
         )}
 
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: '#F59E0B' }]}>
+        <View style={[styles.header, { backgroundColor: roleColors.PARENT.headerBg }]}>
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Hello, {user?.firstName}!</Text>
             <Text style={styles.roleTag}>Parent Dashboard</Text>
@@ -596,6 +602,8 @@ function CustomerDashboard() {
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={() => navigation.navigate('Notifications')}
+            accessibilityLabel="Notifications"
+            accessibilityRole="button"
           >
             <Ionicons name="notifications-outline" size={24} color="#fff" />
           </TouchableOpacity>

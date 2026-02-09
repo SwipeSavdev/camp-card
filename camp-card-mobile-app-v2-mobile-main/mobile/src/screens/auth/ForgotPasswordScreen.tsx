@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { apiClient } from '../../services/apiClient';
-import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -26,6 +26,7 @@ export default function ForgotPasswordScreen() {
   const [emailSent, setEmailSent] = useState(false);
 
   const navigation = useNavigation();
+  const { theme } = useTheme();
 
   const handleResetPassword = async () => {
     if (!email) {
@@ -55,20 +56,22 @@ export default function ForgotPasswordScreen() {
 
   if (emailSent) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.successContainer}>
-          <View style={styles.successIconContainer}>
-            <Ionicons name="mail" size={64} color={COLORS.primary} />
+          <View style={[styles.successIconContainer, { backgroundColor: `${theme.colors.primary}15` }]}>
+            <Ionicons name="mail" size={64} color={theme.colors.primary} />
           </View>
-          <Text style={styles.successTitle}>Check Your Email</Text>
-          <Text style={styles.successMessage}>
+          <Text style={[styles.successTitle, { color: theme.colors.text }]}>Check Your Email</Text>
+          <Text style={[styles.successMessage, { color: theme.colors.textSecondary }]}>
             If an account exists for {email}, you will receive a password reset link shortly.
           </Text>
           <TouchableOpacity
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: theme.colors.primary }]}
             onPress={() => navigation.goBack()}
+            accessibilityLabel="Back to login"
+            accessibilityRole="button"
           >
-            <Text style={styles.backButtonText}>Back to Login</Text>
+            <Text style={[styles.backButtonText, { color: theme.colors.surface }]}>Back to Login</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -76,7 +79,7 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -91,34 +94,36 @@ export default function ForgotPasswordScreen() {
             <TouchableOpacity
               style={styles.backArrow}
               onPress={() => navigation.goBack()}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
             >
-              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
             </TouchableOpacity>
 
             {/* Header */}
             <View style={styles.headerContainer}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="lock-open-outline" size={64} color={COLORS.primary} />
+              <View style={[styles.iconContainer, { backgroundColor: `${theme.colors.primary}15` }]}>
+                <Ionicons name="lock-open-outline" size={64} color={theme.colors.primary} />
               </View>
-              <Text style={styles.title}>Forgot Password?</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: theme.colors.text }]}>Forgot Password?</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
                 Enter your email address and we'll send you a link to reset your password.
               </Text>
             </View>
 
             {/* Form */}
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={theme.colors.textSecondary}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   placeholder="Email"
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -127,27 +132,35 @@ export default function ForgotPasswordScreen() {
                   autoCorrect={false}
                   editable={!isLoading}
                   textContentType="emailAddress"
+                  accessibilityLabel="Email address"
+                  accessibilityRole="none"
                 />
               </View>
 
               <TouchableOpacity
-                style={[styles.resetButton, isLoading && styles.resetButtonDisabled]}
+                style={[styles.resetButton, { backgroundColor: theme.colors.primary }, isLoading && styles.resetButtonDisabled]}
                 onPress={handleResetPassword}
                 disabled={isLoading}
+                accessibilityLabel={isLoading ? 'Sending reset link' : 'Send reset link'}
+                accessibilityRole="button"
               >
                 {isLoading ? (
-                  <ActivityIndicator color={COLORS.surface} />
+                  <ActivityIndicator color={theme.colors.surface} />
                 ) : (
-                  <Text style={styles.resetButtonText}>Send Reset Link</Text>
+                  <Text style={[styles.resetButtonText, { color: theme.colors.surface }]}>Send Reset Link</Text>
                 )}
               </TouchableOpacity>
             </View>
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Remember your password? </Text>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text style={styles.loginLink}>Sign In</Text>
+              <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>Remember your password? </Text>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                accessibilityLabel="Sign in"
+                accessibilityRole="button"
+              >
+                <Text style={[styles.loginLink, { color: theme.colors.primary }]}>Sign In</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -160,7 +173,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
     flex: 1,
@@ -181,7 +193,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: `${COLORS.primary}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -189,12 +200,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
@@ -205,10 +214,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
     marginBottom: 16,
     paddingHorizontal: 16,
   },
@@ -219,10 +226,8 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     fontSize: 16,
-    color: COLORS.text,
   },
   resetButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     height: 52,
     justifyContent: 'center',
@@ -233,7 +238,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   resetButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -243,11 +247,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: COLORS.textSecondary,
     fontSize: 14,
   },
   loginLink: {
-    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -262,7 +264,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: `${COLORS.primary}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -270,25 +271,21 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 16,
   },
   successMessage: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
     marginBottom: 32,
   },
   backButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingHorizontal: 32,
     paddingVertical: 16,
   },
   backButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
   },

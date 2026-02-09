@@ -7,40 +7,43 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootNavigation } from '../../types/navigation';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 export default function ScanScreen() {
   const navigation = useNavigation<RootNavigation>();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         {/* QR Scanner Area Placeholder */}
-        <View style={styles.scannerPlaceholder}>
-          <Ionicons name="qr-code" size={120} color={COLORS.border} />
-          <Text style={styles.scannerText}>QR Code Scanner</Text>
-          <Text style={styles.scannerSubtext}>
+        <View style={[styles.scannerPlaceholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="qr-code" size={120} color={colors.border} />
+          <Text style={[styles.scannerText, { color: colors.text }]}>QR Code Scanner</Text>
+          <Text style={[styles.scannerSubtext, { color: colors.textSecondary }]}>
             Position QR code within the frame
           </Text>
         </View>
 
         {/* Instructions */}
-        <View style={styles.instructions}>
-          <Text style={styles.instructionsTitle}>How to use:</Text>
+        <View style={[styles.instructions, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.instructionsTitle, { color: colors.text }]}>How to use:</Text>
           <View style={styles.instructionItem}>
-            <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-            <Text style={styles.instructionText}>
+            <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+            <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
               Scan merchant QR codes to redeem offers
             </Text>
           </View>
           <View style={styles.instructionItem}>
-            <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-            <Text style={styles.instructionText}>
+            <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+            <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
               Show your QR code to merchants
             </Text>
           </View>
           <View style={styles.instructionItem}>
-            <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-            <Text style={styles.instructionText}>
+            <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+            <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
               Scan Scout QR codes for referrals
             </Text>
           </View>
@@ -48,20 +51,24 @@ export default function ScanScreen() {
 
         {/* Quick Actions */}
         <View style={styles.actions}>
-          <TouchableOpacity 
-            style={styles.actionButton}
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={() => navigation.navigate('QRScanner')}
+            accessibilityLabel="Show My QR Code"
+            accessibilityRole="button"
           >
-            <Ionicons name="qr-code-outline" size={24} color={COLORS.surface} />
-            <Text style={styles.actionText}>Show My QR Code</Text>
+            <Ionicons name="qr-code-outline" size={24} color={colors.surface} />
+            <Text style={[styles.actionText, { color: colors.surface }]}>Show My QR Code</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.actionButtonSecondary]}
+          <TouchableOpacity
+            style={[styles.actionButton, styles.actionButtonSecondary, { backgroundColor: colors.surface, borderColor: colors.primary }]}
             onPress={() => navigation.navigate('Offers')}
+            accessibilityLabel="Browse Offers"
+            accessibilityRole="button"
           >
-            <Ionicons name="pricetag-outline" size={24} color={COLORS.primary} />
-            <Text style={[styles.actionText, styles.actionTextSecondary]}>
+            <Ionicons name="pricetag-outline" size={24} color={colors.primary} />
+            <Text style={[styles.actionText, styles.actionTextSecondary, { color: colors.primary }]}>
               Browse Offers
             </Text>
           </TouchableOpacity>

@@ -15,11 +15,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/apiClient';
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const { user, updateUser } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
@@ -105,42 +108,48 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           disabled={loading}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
         <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSave}
           disabled={loading}
+          accessibilityLabel="Save profile changes"
+          accessibilityRole="button"
         >
           {loading ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
+            <Text style={[styles.saveButtonText, { color: colors.primary }]}>Save</Text>
           )}
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Picture Placeholder */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={48} color={COLORS.primary} />
+        <View style={[styles.avatarSection, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: colors.primary + '20' }]}>
+            <Ionicons name="person" size={48} color={colors.primary} />
           </View>
           <TouchableOpacity
             style={styles.changePhotoButton}
             disabled={loading}
             onPress={() => Alert.alert('Coming Soon', 'Photo upload will be available soon.')}
+            accessibilityLabel="Change profile photo"
+            accessibilityRole="button"
           >
-            <Text style={styles.changePhotoText}>Change Photo</Text>
+            <Text style={[styles.changePhotoText, { color: colors.primary }]}>Change Photo</Text>
           </TouchableOpacity>
         </View>
 
@@ -148,15 +157,15 @@ export default function EditProfileScreen() {
         <View style={styles.form}>
           {/* First Name */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              First Name <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              First Name <Text style={[styles.required, { color: colors.error }]}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               value={firstName}
               onChangeText={setFirstName}
               placeholder="Enter your first name"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               autoCapitalize="words"
               editable={!loading}
             />
@@ -164,15 +173,15 @@ export default function EditProfileScreen() {
 
           {/* Last Name */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Last Name <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Last Name <Text style={[styles.required, { color: colors.error }]}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               value={lastName}
               onChangeText={setLastName}
               placeholder="Enter your last name"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               autoCapitalize="words"
               editable={!loading}
             />
@@ -180,34 +189,34 @@ export default function EditProfileScreen() {
 
           {/* Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Email <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Email <Text style={[styles.required, { color: colors.error }]}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               value={email}
               onChangeText={setEmail}
               placeholder="your.email@example.com"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!loading}
             />
-            <Text style={styles.helpText}>
+            <Text style={[styles.helpText, { color: colors.textSecondary }]}>
               Changing your email will require verification
             </Text>
           </View>
 
           {/* Phone */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Phone Number</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               value={phone}
               onChangeText={handlePhoneChange}
               placeholder="(555) 555-5555"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               keyboardType="phone-pad"
               maxLength={14}
               editable={!loading}
@@ -215,9 +224,9 @@ export default function EditProfileScreen() {
           </View>
 
           {/* Info Box */}
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle" size={20} color={COLORS.info} />
-            <Text style={styles.infoText}>
+          <View style={[styles.infoBox, { backgroundColor: colors.info + '15' }]}>
+            <Ionicons name="information-circle" size={20} color={colors.info} />
+            <Text style={[styles.infoText, { color: colors.info }]}>
               Changes to your email will require email verification. You'll receive a
               confirmation email after updating.
             </Text>

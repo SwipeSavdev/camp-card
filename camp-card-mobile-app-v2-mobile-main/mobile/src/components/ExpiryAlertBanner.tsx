@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../config/constants';
+import { useTheme } from '../config/ThemeContext';
 
 interface ExpiryAlertBannerProps {
   daysUntilExpiry: number;
@@ -19,6 +20,8 @@ export default function ExpiryAlertBanner({
   onDismiss,
 }: ExpiryAlertBannerProps) {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   // Only show for specific thresholds: 30, 15, 7, 3, 1, 0
   const shouldShow =
@@ -32,34 +35,34 @@ export default function ExpiryAlertBanner({
   const getUrgencyConfig = () => {
     if (daysUntilExpiry <= 3) {
       return {
-        backgroundColor: '#FFEBEE',
-        borderColor: '#F44336',
-        iconColor: '#D32F2F',
-        textColor: '#C62828',
+        backgroundColor: colors.error + '15',
+        borderColor: colors.error,
+        iconColor: colors.error,
+        textColor: colors.error,
         urgency: 'critical',
       };
     } else if (daysUntilExpiry <= 7) {
       return {
-        backgroundColor: '#FFF3E0',
-        borderColor: '#FF9800',
-        iconColor: '#F57C00',
-        textColor: '#E65100',
+        backgroundColor: colors.warning + '15',
+        borderColor: colors.warning,
+        iconColor: colors.warning,
+        textColor: colors.warning,
         urgency: 'high',
       };
     } else if (daysUntilExpiry <= 15) {
       return {
-        backgroundColor: '#FFFDE7',
-        borderColor: '#FDD835',
-        iconColor: '#F9A825',
-        textColor: '#F57F17',
+        backgroundColor: colors.warning + '10',
+        borderColor: colors.warning + '80',
+        iconColor: colors.warning,
+        textColor: colors.warning,
         urgency: 'medium',
       };
     } else {
       return {
-        backgroundColor: '#E3F2FD',
-        borderColor: '#2196F3',
-        iconColor: '#1976D2',
-        textColor: '#1565C0',
+        backgroundColor: colors.info + '15',
+        borderColor: colors.info,
+        iconColor: colors.info,
+        textColor: colors.info,
         urgency: 'low',
       };
     }
@@ -114,6 +117,8 @@ export default function ExpiryAlertBanner({
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => (navigation as any).navigate('CardInventory')}
+          accessibilityLabel={getActionText()}
+          accessibilityRole="button"
         >
           <Text style={[styles.actionText, { color: config.iconColor }]}>
             {getActionText()}
@@ -123,7 +128,7 @@ export default function ExpiryAlertBanner({
       </View>
 
       {onDismiss && (
-        <TouchableOpacity style={styles.dismissButton} onPress={onDismiss}>
+        <TouchableOpacity style={styles.dismissButton} onPress={onDismiss} accessibilityLabel="Dismiss alert" accessibilityRole="button">
           <Ionicons name="close" size={20} color={config.iconColor} />
         </TouchableOpacity>
       )}

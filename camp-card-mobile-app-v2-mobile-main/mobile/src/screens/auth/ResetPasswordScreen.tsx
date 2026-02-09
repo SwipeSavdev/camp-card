@@ -20,7 +20,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { apiClient } from '../../services/apiClient';
-import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 
 const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
@@ -36,6 +36,7 @@ export default function ResetPasswordScreen() {
 
   const navigation = useNavigation();
   const route = useRoute<ResetPasswordRouteProp>();
+  const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const logoSize = Math.min(180, Math.round(width * 0.5));
 
@@ -97,20 +98,22 @@ export default function ResetPasswordScreen() {
 
   if (resetSuccess) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.successContainer}>
-          <View style={styles.successIconContainer}>
-            <Ionicons name="checkmark-circle" size={64} color={COLORS.success} />
+          <View style={[styles.successIconContainer, { backgroundColor: `${theme.colors.success}15` }]}>
+            <Ionicons name="checkmark-circle" size={64} color={theme.colors.success} />
           </View>
-          <Text style={styles.successTitle}>Password Reset Successful!</Text>
-          <Text style={styles.successMessage}>
+          <Text style={[styles.successTitle, { color: theme.colors.text }]}>Password Reset Successful!</Text>
+          <Text style={[styles.successMessage, { color: theme.colors.textSecondary }]}>
             Your password has been successfully reset. You can now log in with your new password.
           </Text>
           <TouchableOpacity
-            style={styles.loginButton}
+            style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
             onPress={() => navigation.navigate('Login' as never)}
+            accessibilityLabel="Go to login"
+            accessibilityRole="button"
           >
-            <Text style={styles.loginButtonText}>Go to Login</Text>
+            <Text style={[styles.loginButtonText, { color: theme.colors.surface }]}>Go to Login</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -118,7 +121,7 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -132,11 +135,11 @@ export default function ResetPasswordScreen() {
             {/* Header */}
             <View style={styles.headerContainer}>
               <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
-              <View style={styles.iconContainer}>
-                <Ionicons name="key-outline" size={64} color={COLORS.primary} />
+              <View style={[styles.iconContainer, { backgroundColor: `${theme.colors.primary}15` }]}>
+                <Ionicons name="key-outline" size={64} color={theme.colors.primary} />
               </View>
-              <Text style={styles.title}>Reset Password</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: theme.colors.text }]}>Reset Password</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
                 Enter your new password below.
               </Text>
             </View>
@@ -144,17 +147,17 @@ export default function ResetPasswordScreen() {
             {/* Form */}
             <View style={styles.form}>
               {/* New Password Input */}
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={theme.colors.textSecondary}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   placeholder="New Password"
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={newPassword}
                   onChangeText={setNewPassword}
                   secureTextEntry={!showPassword}
@@ -163,28 +166,34 @@ export default function ResetPasswordScreen() {
                   autoCorrect={false}
                   editable={!isLoading}
                   textContentType="newPassword"
+                  accessibilityLabel="New password"
+                  accessibilityRole="none"
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                  accessibilityRole="button"
+                >
                   <Ionicons
                     name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                     size={20}
-                    color={COLORS.textSecondary}
+                    color={theme.colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
 
               {/* Confirm Password Input */}
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={theme.colors.textSecondary}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   placeholder="Confirm Password"
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showConfirmPassword}
@@ -193,43 +202,55 @@ export default function ResetPasswordScreen() {
                   autoCorrect={false}
                   editable={!isLoading}
                   textContentType="newPassword"
+                  accessibilityLabel="Confirm password"
+                  accessibilityRole="none"
                 />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  accessibilityLabel={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  accessibilityRole="button"
+                >
                   <Ionicons
                     name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
                     size={20}
-                    color={COLORS.textSecondary}
+                    color={theme.colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
 
               {/* Password Requirements */}
-              <View style={styles.requirementsContainer}>
-                <Text style={styles.requirementsTitle}>Password must contain:</Text>
-                <Text style={styles.requirementText}>• At least 8 characters</Text>
-                <Text style={styles.requirementText}>• One uppercase letter</Text>
-                <Text style={styles.requirementText}>• One lowercase letter</Text>
-                <Text style={styles.requirementText}>• One number</Text>
+              <View style={[styles.requirementsContainer, { backgroundColor: `${theme.colors.primary}10` }]}>
+                <Text style={[styles.requirementsTitle, { color: theme.colors.text }]}>Password must contain:</Text>
+                <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>- At least 8 characters</Text>
+                <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>- One uppercase letter</Text>
+                <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>- One lowercase letter</Text>
+                <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>- One number</Text>
               </View>
 
               <TouchableOpacity
-                style={[styles.resetButton, isLoading && styles.resetButtonDisabled]}
+                style={[styles.resetButton, { backgroundColor: theme.colors.primary }, isLoading && styles.resetButtonDisabled]}
                 onPress={handleResetPassword}
                 disabled={isLoading}
+                accessibilityLabel={isLoading ? 'Resetting password' : 'Reset password'}
+                accessibilityRole="button"
               >
                 {isLoading ? (
-                  <ActivityIndicator color={COLORS.surface} />
+                  <ActivityIndicator color={theme.colors.surface} />
                 ) : (
-                  <Text style={styles.resetButtonText}>Reset Password</Text>
+                  <Text style={[styles.resetButtonText, { color: theme.colors.surface }]}>Reset Password</Text>
                 )}
               </TouchableOpacity>
             </View>
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Remember your password? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login' as never)}>
-                <Text style={styles.loginLink}>Sign In</Text>
+              <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>Remember your password? </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Login' as never)}
+                accessibilityLabel="Sign in"
+                accessibilityRole="button"
+              >
+                <Text style={[styles.loginLink, { color: theme.colors.primary }]}>Sign In</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -242,7 +263,6 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
     flex: 1,
@@ -259,7 +279,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: `${COLORS.primary}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -267,12 +286,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
@@ -283,10 +300,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
     marginBottom: 16,
     paddingHorizontal: 16,
   },
@@ -297,10 +312,8 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     fontSize: 16,
-    color: COLORS.text,
   },
   requirementsContainer: {
-    backgroundColor: `${COLORS.primary}10`,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -308,16 +321,13 @@ const styles = StyleSheet.create({
   requirementsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
     marginBottom: 8,
   },
   requirementText: {
     fontSize: 13,
-    color: COLORS.textSecondary,
     marginBottom: 4,
   },
   resetButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     height: 52,
     justifyContent: 'center',
@@ -328,7 +338,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   resetButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -338,11 +347,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: COLORS.textSecondary,
     fontSize: 14,
   },
   loginLink: {
-    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -357,7 +364,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: `${COLORS.success}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -365,25 +371,21 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 16,
   },
   successMessage: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
     marginBottom: 32,
   },
   loginButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingHorizontal: 32,
     paddingVertical: 16,
   },
   loginButtonText: {
-    color: COLORS.surface,
     fontSize: 16,
     fontWeight: '600',
   },

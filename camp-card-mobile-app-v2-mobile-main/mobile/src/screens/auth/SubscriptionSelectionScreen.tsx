@@ -14,6 +14,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../utils/api';
 import { COLORS, IAP_PRODUCTS, IAP_PRICES } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { useIAP } from '../../hooks/useIAP';
 
 type SubscriptionSelectionRouteProp = RouteProp<{
@@ -42,9 +43,11 @@ export default function SubscriptionSelectionScreen() {
   const route = useRoute<SubscriptionSelectionRouteProp>();
   const scoutCode = route.params?.scoutCode;
   const isIOS = Platform.OS === 'ios';
+  const { theme } = useTheme();
+  const { colors } = theme;
 
-  // Apple IAP hook for localized pricing (only active on iOS)
-  const { getLocalizedPrice } = useIAP({ autoInit: isIOS });
+  // IAP hook for localized pricing
+  const { getLocalizedPrice } = useIAP({ autoInit: true });
 
   useEffect(() => {
     loadPlans();
@@ -107,28 +110,31 @@ export default function SubscriptionSelectionScreen() {
         key={plan.id}
         style={[
           styles.planCard,
-          isSelected && styles.planCardSelected,
-          isPopular && styles.planCardPopular,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          isSelected && [styles.planCardSelected, { borderColor: colors.primary, backgroundColor: colors.primary + '08' }],
+          isPopular && { borderColor: colors.warning },
         ]}
         onPress={() => setSelectedPlan(plan)}
         activeOpacity={0.7}
+        accessibilityLabel={`${plan.name} plan, ${formatPrice(plan.priceCents, plan.billingInterval)}`}
+        accessibilityRole="button"
       >
         {isPopular && (
-          <View style={styles.popularBadge}>
-            <Text style={styles.popularBadgeText}>Most Popular</Text>
+          <View style={[styles.popularBadge, { backgroundColor: colors.warning }]}>
+            <Text style={[styles.popularBadgeText, { color: colors.white }]}>Most Popular</Text>
           </View>
         )}
 
         <View style={styles.planHeader}>
           <View style={styles.planTitleRow}>
-            <Text style={[styles.planName, isSelected && styles.planNameSelected]}>
+            <Text style={[styles.planName, { color: colors.text }, isSelected && { color: colors.primary }]}>
               {plan.name}
             </Text>
             {isSelected && (
-              <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+              <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
             )}
           </View>
-          <Text style={styles.planPrice}>
+          <Text style={[styles.planPrice, { color: colors.primary }]}>
             {isIOS
               ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || '$' + (IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2) + '/year')
               : formatPrice(plan.priceCents, plan.billingInterval)
@@ -137,15 +143,15 @@ export default function SubscriptionSelectionScreen() {
         </View>
 
         {plan.description && (
-          <Text style={styles.planDescription}>{plan.description}</Text>
+          <Text style={[styles.planDescription, { color: colors.textSecondary }]}>{plan.description}</Text>
         )}
 
         {plan.features && plan.features.length > 0 && (
           <View style={styles.featuresList}>
             {plan.features.slice(0, 4).map((feature, index) => (
               <View key={index} style={styles.featureItem}>
-                <Ionicons name="checkmark" size={16} color="#4CAF50" />
-                <Text style={styles.featureText}>{feature}</Text>
+                <Ionicons name="checkmark" size={16} color={colors.success} />
+                <Text style={[styles.featureText, { color: colors.text }]}>{feature}</Text>
               </View>
             ))}
           </View>

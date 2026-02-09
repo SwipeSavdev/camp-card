@@ -21,6 +21,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { RootNavigation } from '../../types/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS } from '../../config/constants';
+import { useTheme } from '../../config/ThemeContext';
 import { scoutApi, qrCodeApi } from '../../services/apiClient';
 
 interface ScoutStats {
@@ -37,6 +38,8 @@ interface ScoutStats {
 export default function ScoutDashboardScreen() {
   const navigation = useNavigation<RootNavigation>();
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<ScoutStats>({
     totalSubscribers: 0,
@@ -127,7 +130,7 @@ export default function ScoutDashboardScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -135,88 +138,98 @@ export default function ScoutDashboardScreen() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.primary }]}>
           <View>
-            <Text style={styles.greeting}>Hello, {user?.firstName || 'Scout'}!</Text>
+            <Text style={[styles.greeting, { color: colors.textOnPrimary }]}>Hello, {user?.firstName || 'Scout'}!</Text>
             <Text style={styles.subtitle}>Your Camp Card Dashboard</Text>
           </View>
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={() => navigation.navigate('Notifications')}
+            accessibilityLabel="Notifications"
+            accessibilityRole="button"
           >
-            <Ionicons name="notifications-outline" size={24} color={COLORS.surface} />
+            <Ionicons name="notifications-outline" size={24} color={colors.surface} />
           </TouchableOpacity>
         </View>
 
         {/* Fundraising Progress Card */}
-        <View style={styles.progressCard}>
+        <View style={[styles.progressCard, { backgroundColor: colors.surface }]}>
           <View style={styles.progressHeader}>
-            <Ionicons name="trophy" size={24} color={COLORS.accent} />
-            <Text style={styles.progressTitle}>Your Fundraising Impact</Text>
+            <Ionicons name="trophy" size={24} color={colors.accent} />
+            <Text style={[styles.progressTitle, { color: colors.text }]}>Your Fundraising Impact</Text>
           </View>
           <View style={styles.earningsContainer}>
-            <Text style={styles.earningsAmount}>${stats.totalEarnings.toFixed(2)}</Text>
-            <Text style={styles.earningsLabel}>Total Funds Raised</Text>
+            <Text style={[styles.earningsAmount, { color: colors.primary }]}>${stats.totalEarnings.toFixed(2)}</Text>
+            <Text style={[styles.earningsLabel, { color: colors.textSecondary }]}>Total Funds Raised</Text>
           </View>
-          <View style={styles.progressStats}>
+          <View style={[styles.progressStats, { borderTopColor: colors.border }]}>
             <View style={styles.progressStatItem}>
-              <Text style={styles.progressStatValue}>{stats.totalSubscribers}</Text>
-              <Text style={styles.progressStatLabel}>Subscribers</Text>
+              <Text style={[styles.progressStatValue, { color: colors.text }]}>{stats.totalSubscribers}</Text>
+              <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>Subscribers</Text>
             </View>
-            <View style={styles.progressStatDivider} />
+            <View style={[styles.progressStatDivider, { backgroundColor: colors.border }]} />
             <View style={styles.progressStatItem}>
-              <Text style={styles.progressStatValue}>{stats.directReferrals}</Text>
-              <Text style={styles.progressStatLabel}>Direct</Text>
+              <Text style={[styles.progressStatValue, { color: colors.text }]}>{stats.directReferrals}</Text>
+              <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>Direct</Text>
             </View>
-            <View style={styles.progressStatDivider} />
+            <View style={[styles.progressStatDivider, { backgroundColor: colors.border }]} />
             <View style={styles.progressStatItem}>
-              <Text style={styles.progressStatValue}>{stats.indirectReferrals}</Text>
-              <Text style={styles.progressStatLabel}>Indirect</Text>
+              <Text style={[styles.progressStatValue, { color: colors.text }]}>{stats.indirectReferrals}</Text>
+              <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>Indirect</Text>
             </View>
           </View>
         </View>
 
         {/* Scannable QR Code Section - Main Feature */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Camp Card QR Code</Text>
-          <View style={styles.qrCard}>
-            <View style={styles.qrContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>My Camp Card QR Code</Text>
+          <View style={[styles.qrCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.qrContainer, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
               {isLoadingQR ? (
                 <View style={styles.qrLoading}>
-                  <Text style={styles.qrLoadingText}>Loading...</Text>
+                  <Text style={[styles.qrLoadingText, { color: colors.textSecondary }]}>Loading...</Text>
                 </View>
               ) : affiliateLink ? (
                 <QRCode
                   value={affiliateLink + (affiliateLink.includes('?') ? '&' : '?') + 'source=qr'}
                   size={180}
-                  color={COLORS.text}
-                  backgroundColor={COLORS.surface}
+                  color={colors.text}
+                  backgroundColor={colors.surface}
                 />
               ) : (
                 <View style={styles.qrLoading}>
-                  <Ionicons name="qr-code-outline" size={60} color={COLORS.textSecondary} />
+                  <Ionicons name="qr-code-outline" size={60} color={colors.textSecondary} />
                 </View>
               )}
             </View>
             <View style={styles.qrInfo}>
-              <Text style={styles.qrLabel}>Your Affiliate Code</Text>
-              <Text style={styles.qrCode}>{affiliateCode || '---'}</Text>
-              <Text style={styles.qrHint}>
+              <Text style={[styles.qrLabel, { color: colors.textSecondary }]}>Your Affiliate Code</Text>
+              <Text style={[styles.qrCode, { color: colors.primary }]}>{affiliateCode || '---'}</Text>
+              <Text style={[styles.qrHint, { color: colors.textSecondary }]}>
                 Have customers scan this code to support your fundraising
               </Text>
             </View>
             <View style={styles.linkActions}>
-              <TouchableOpacity style={styles.linkButton} onPress={handleCopyLink} disabled={!affiliateLink}>
-                <Ionicons name="copy-outline" size={20} color={COLORS.secondary} />
-                <Text style={styles.linkButtonText}>Copy Link</Text>
+              <TouchableOpacity
+                style={[styles.linkButton, { borderColor: colors.secondary }]}
+                onPress={handleCopyLink}
+                disabled={!affiliateLink}
+                accessibilityLabel="Copy affiliate link"
+                accessibilityRole="button"
+              >
+                <Ionicons name="copy-outline" size={20} color={colors.secondary} />
+                <Text style={[styles.linkButtonText, { color: colors.secondary }]}>Copy Link</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.linkButton, styles.shareButton]}
+                style={[styles.linkButton, styles.shareButton, { backgroundColor: colors.secondary, borderColor: colors.secondary }]}
                 onPress={handleShareLink}
                 disabled={!affiliateLink}
+                accessibilityLabel="Share affiliate link"
+                accessibilityRole="button"
               >
-                <Ionicons name="share-social" size={20} color={COLORS.surface} />
-                <Text style={[styles.linkButtonText, styles.shareButtonText]}>Share</Text>
+                <Ionicons name="share-social" size={20} color={colors.surface} />
+                <Text style={[styles.linkButtonText, styles.shareButtonText, { color: colors.surface }]}>Share</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -224,40 +237,40 @@ export default function ScoutDashboardScreen() {
 
         {/* Link Performance Stats */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Link Performance</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Link Performance</Text>
           <View style={styles.statsRow}>
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
-                <Ionicons name="link" size={24} color={COLORS.secondary} />
+                <Ionicons name="link" size={24} color={colors.secondary} />
               </View>
-              <Text style={styles.statValue}>{stats.linkClicks}</Text>
-              <Text style={styles.statLabel}>Link Clicks</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats.linkClicks}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Link Clicks</Text>
             </View>
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.statIcon, { backgroundColor: '#E8F5E9' }]}>
-                <Ionicons name="qr-code" size={24} color={COLORS.success} />
+                <Ionicons name="qr-code" size={24} color={colors.success} />
               </View>
-              <Text style={styles.statValue}>{stats.qrScans}</Text>
-              <Text style={styles.statLabel}>QR Scans</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats.qrScans}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>QR Scans</Text>
             </View>
           </View>
         </View>
 
         {/* Your Savings Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Savings</Text>
-          <View style={styles.savingsCard}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Savings</Text>
+          <View style={[styles.savingsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.savingsRow}>
               <View style={styles.savingsItem}>
-                <Ionicons name="wallet" size={28} color={COLORS.success} />
-                <Text style={styles.savingsValue}>${stats.savingsEarned.toFixed(2)}</Text>
-                <Text style={styles.savingsLabel}>Total Saved</Text>
+                <Ionicons name="wallet" size={28} color={colors.success} />
+                <Text style={[styles.savingsValue, { color: colors.text }]}>${stats.savingsEarned.toFixed(2)}</Text>
+                <Text style={[styles.savingsLabel, { color: colors.textSecondary }]}>Total Saved</Text>
               </View>
-              <View style={styles.savingsDivider} />
+              <View style={[styles.savingsDivider, { backgroundColor: colors.border }]} />
               <View style={styles.savingsItem}>
-                <Ionicons name="checkmark-done" size={28} color={COLORS.secondary} />
-                <Text style={styles.savingsValue}>{stats.redemptionsUsed}</Text>
-                <Text style={styles.savingsLabel}>Offers Used</Text>
+                <Ionicons name="checkmark-done" size={28} color={colors.secondary} />
+                <Text style={[styles.savingsValue, { color: colors.text }]}>{stats.redemptionsUsed}</Text>
+                <Text style={[styles.savingsLabel, { color: colors.textSecondary }]}>Offers Used</Text>
               </View>
             </View>
           </View>
@@ -265,55 +278,61 @@ export default function ScoutDashboardScreen() {
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
 
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('ViewOffers')}
+            accessibilityLabel="View Offers"
+            accessibilityRole="button"
           >
             <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
               <Ionicons name="pricetag" size={28} color="#F57C00" />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>View Offers</Text>
-              <Text style={styles.actionSubtitle}>See available discounts for customers</Text>
+              <Text style={[styles.actionTitle, { color: colors.text }]}>View Offers</Text>
+              <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>See available discounts for customers</Text>
             </View>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('Referral')}
+            accessibilityLabel="View Referrals"
+            accessibilityRole="button"
           >
             <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="people" size={28} color={COLORS.success} />
+              <Ionicons name="people" size={28} color={colors.success} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>View Referrals</Text>
-              <Text style={styles.actionSubtitle}>See who signed up with your link</Text>
+              <Text style={[styles.actionTitle, { color: colors.text }]}>View Referrals</Text>
+              <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>See who signed up with your link</Text>
             </View>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('Subscription')}
+            accessibilityLabel="My Subscription"
+            accessibilityRole="button"
           >
             <View style={[styles.actionIcon, { backgroundColor: '#E3F2FD' }]}>
-              <Ionicons name="card" size={28} color={COLORS.secondary} />
+              <Ionicons name="card" size={28} color={colors.secondary} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>My Subscription</Text>
-              <Text style={styles.actionSubtitle}>View and manage your plan</Text>
+              <Text style={[styles.actionTitle, { color: colors.text }]}>My Subscription</Text>
+              <Text style={[styles.actionSubtitle, { color: colors.textSecondary }]}>View and manage your plan</Text>
             </View>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.textSecondary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Help Text */}
-        <View style={styles.helpSection}>
-          <Ionicons name="information-circle-outline" size={20} color={COLORS.textSecondary} />
-          <Text style={styles.helpText}>
+        <View style={[styles.helpSection, { backgroundColor: colors.surface }]}>
+          <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+          <Text style={[styles.helpText, { color: colors.textSecondary }]}>
             Share your link with family and friends. When they subscribe, you earn credit toward your camp fees!
           </Text>
         </View>
