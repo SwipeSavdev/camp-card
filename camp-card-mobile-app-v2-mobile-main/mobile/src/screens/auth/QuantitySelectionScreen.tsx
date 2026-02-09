@@ -5,8 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
-  useWindowDimensions,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,8 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, IAP_CARD_PRODUCTS } from '../../config/constants';
 import { useTheme } from '../../config/ThemeContext';
 import { useIAP } from '../../hooks/useIAP';
-
-const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
 type QuantitySelectionRouteProp = RouteProp<{
   QuantitySelection: {
@@ -38,14 +34,11 @@ export default function QuantitySelectionScreen() {
   const navigation = useNavigation();
   const route = useRoute<QuantitySelectionRouteProp>();
   const { selectedPlan, scoutCode } = route.params;
-  const { width } = useWindowDimensions();
   const isIOS = Platform.OS === 'ios';
   const { theme } = useTheme();
   const { colors } = theme;
 
   const [quantity, setQuantity] = useState(1);
-
-  const headerLogoSize = Math.min(80, Math.max(60, Math.round(width * 0.2)));
 
   // IAP hook for localized pricing
   const { getLocalizedPrice } = useIAP({ autoInit: true });
@@ -79,12 +72,7 @@ export default function QuantitySelectionScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
-        <View style={styles.headerLogoContainer}>
-          <Image
-            source={CAMP_CARD_LOGO}
-            style={[styles.logoImage, { width: headerLogoSize, height: headerLogoSize * 0.4 }]}
-          />
-        </View>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Select Quantity</Text>
 
         <View style={styles.headerSpacer} />
       </View>
@@ -299,15 +287,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
   },
-  headerLogoContainer: {
+  headerTitle: {
     flex: 1,
-    alignItems: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: COLORS.text,
   },
   headerSpacer: {
     width: 44,
-  },
-  logoImage: {
-    resizeMode: 'contain',
   },
   scrollView: {
     flex: 1,
