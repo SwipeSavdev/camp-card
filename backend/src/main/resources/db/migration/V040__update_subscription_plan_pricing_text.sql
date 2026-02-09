@@ -14,10 +14,4 @@ SET name = REPLACE(name, '$15', '$14.99'),
     updated_at = CURRENT_TIMESTAMP
 WHERE name LIKE '%$15%';
 
--- Also update the price column to 14.99 for plans that were $15
-UPDATE campcard.subscription_plans
-SET price = 14.99,
-    updated_at = CURRENT_TIMESTAMP
-WHERE price = 15.00;
-
 COMMENT ON TABLE campcard.subscription_plans IS 'Camp Card subscription plans with Apple IAP pricing ($14.99/year)';
