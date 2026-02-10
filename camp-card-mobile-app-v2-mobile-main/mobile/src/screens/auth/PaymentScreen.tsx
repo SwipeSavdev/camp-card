@@ -10,8 +10,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Image,
-  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -22,15 +20,12 @@ import { AuthStackParamList } from '../../navigation/RootNavigator';
 import { paymentsApi } from '../../services/apiClient';
 import { useIAP } from '../../hooks/useIAP';
 
-const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
-
 type PaymentScreenRouteProp = RouteProp<AuthStackParamList, 'Payment'>;
 
 export default function PaymentScreen() {
   const navigation = useNavigation();
   const route = useRoute<PaymentScreenRouteProp>();
   const { selectedPlan, quantity = 1, scoutCode } = route.params;
-  const { width } = useWindowDimensions();
   const isIOS = Platform.OS === 'ios';
   const { theme } = useTheme();
   const { colors } = theme;
@@ -126,8 +121,6 @@ export default function PaymentScreen() {
   const cvvRef = useRef<TextInput>(null);
   const nameRef = useRef<TextInput>(null);
   const zipRef = useRef<TextInput>(null);
-
-  const headerLogoSize = Math.min(80, Math.max(60, Math.round(width * 0.2)));
 
   const formatCardNumber = (text: string) => {
     const cleaned = text.replace(/\D/g, '');
@@ -257,13 +250,7 @@ export default function PaymentScreen() {
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
-          <View style={styles.headerLogoContainer}>
-            <Image
-              source={CAMP_CARD_LOGO}
-              style={[styles.logoImage, { width: headerLogoSize, height: headerLogoSize * 0.4 }]}
-              accessibilityLabel="Camp Card logo"
-            />
-          </View>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Payment</Text>
 
           <View style={styles.headerSpacer} />
         </View>
@@ -511,15 +498,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
   },
-  headerLogoContainer: {
+  headerTitle: {
     flex: 1,
-    alignItems: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   headerSpacer: {
     width: 44,
-  },
-  logoImage: {
-    resizeMode: 'contain',
   },
   scrollView: {
     flex: 1,

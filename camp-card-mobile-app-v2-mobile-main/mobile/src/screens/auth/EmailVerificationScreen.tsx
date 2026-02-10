@@ -5,8 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
-  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -14,8 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { apiClient } from '../../services/apiClient';
 import { useTheme } from '../../config/ThemeContext';
-
-const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
 type EmailVerificationRouteProp = RouteProp<{ params: { token: string } }, 'params'>;
 
@@ -27,8 +23,6 @@ export default function EmailVerificationScreen() {
   const navigation = useNavigation();
   const route = useRoute<EmailVerificationRouteProp>();
   const { theme } = useTheme();
-  const { width } = useWindowDimensions();
-  const logoSize = Math.min(180, Math.round(width * 0.5));
 
   // Get token from route params (from deep link)
   const token = route.params?.token || '';
@@ -61,7 +55,6 @@ export default function EmailVerificationScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.centerContainer}>
-          <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
           <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loader} />
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Verifying your email...</Text>
         </View>
@@ -73,7 +66,6 @@ export default function EmailVerificationScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.centerContainer}>
-          <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
           <View style={[styles.successIconContainer, { backgroundColor: `${theme.colors.success}15` }]}>
             <Ionicons name="checkmark-circle" size={80} color={theme.colors.success} />
           </View>
@@ -98,7 +90,6 @@ export default function EmailVerificationScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.centerContainer}>
-        <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
         <View style={[styles.errorIconContainer, { backgroundColor: `${theme.colors.error}15` }]}>
           <Ionicons name="alert-circle" size={80} color={theme.colors.error} />
         </View>
@@ -138,10 +129,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  logoImage: {
-    resizeMode: 'contain',
-    marginBottom: 32,
   },
   loader: {
     marginTop: 24,

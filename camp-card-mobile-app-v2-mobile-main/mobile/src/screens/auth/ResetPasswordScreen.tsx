@@ -12,8 +12,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ActivityIndicator,
-  Image,
-  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -21,8 +19,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { apiClient } from '../../services/apiClient';
 import { useTheme } from '../../config/ThemeContext';
-
-const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 
 type ResetPasswordRouteProp = RouteProp<{ params: { token: string } }, 'params'>;
 
@@ -37,8 +33,6 @@ export default function ResetPasswordScreen() {
   const navigation = useNavigation();
   const route = useRoute<ResetPasswordRouteProp>();
   const { theme } = useTheme();
-  const { width } = useWindowDimensions();
-  const logoSize = Math.min(180, Math.round(width * 0.5));
 
   // Get token from route params (from deep link)
   const token = route.params?.token || '';
@@ -134,7 +128,6 @@ export default function ResetPasswordScreen() {
           >
             {/* Header */}
             <View style={styles.headerContainer}>
-              <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
               <View style={[styles.iconContainer, { backgroundColor: `${theme.colors.primary}15` }]}>
                 <Ionicons name="key-outline" size={64} color={theme.colors.primary} />
               </View>
@@ -388,9 +381,5 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  logoImage: {
-    resizeMode: 'contain',
-    marginBottom: 16,
   },
 });

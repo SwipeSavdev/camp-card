@@ -5,8 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
-  useWindowDimensions,
   ScrollView,
   TextInput,
   Alert,
@@ -20,8 +18,6 @@ import { useAuthStore } from '../../store/authStore';
 import { consentApi } from '../../services/apiClient';
 import { useTheme } from '../../config/ThemeContext';
 
-const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
-
 /**
  * ConsentPendingScreen
  *
@@ -34,8 +30,6 @@ const CAMP_CARD_LOGO = require('../../../assets/campcard_lockup_left.png');
 export default function ConsentPendingScreen() {
   const { user, logout } = useAuthStore();
   const { theme } = useTheme();
-  const { width } = useWindowDimensions();
-  const logoSize = Math.min(180, Math.round(width * 0.5));
 
   const [isResending, setIsResending] = useState(false);
   const [showUpdateEmail, setShowUpdateEmail] = useState(false);
@@ -101,8 +95,6 @@ export default function ConsentPendingScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.centerContainer}>
-            <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
-
             <View style={[styles.deniedIconContainer, { backgroundColor: `${theme.colors.error}15` }]}>
               <Ionicons name="close-circle" size={80} color={theme.colors.error} />
             </View>
@@ -143,8 +135,6 @@ export default function ConsentPendingScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.centerContainer}>
-            <Image source={CAMP_CARD_LOGO} style={[styles.logoImage, { width: logoSize, height: logoSize * 0.4 }]} />
-
             <View style={[styles.pendingIconContainer, { backgroundColor: `${theme.colors.warning}15` }]}>
               <Ionicons name="time" size={80} color={theme.colors.warning} />
             </View>
@@ -299,10 +289,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  logoImage: {
-    resizeMode: 'contain',
-    marginBottom: 24,
   },
   pendingIconContainer: {
     width: 140,
