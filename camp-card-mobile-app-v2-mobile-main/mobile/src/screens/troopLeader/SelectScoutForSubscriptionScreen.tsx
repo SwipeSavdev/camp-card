@@ -162,7 +162,7 @@ export default function SelectScoutForSubscriptionScreen() {
     }
 
     // Confirm and create subscription
-    const planPrice = selectedPlan.priceCents ? `$${(selectedPlan.priceCents / 100).toFixed(2)}` : '';
+    const planPrice = '$14.99';
     Alert.alert(
       'Confirm Subscription',
       `Subscribe ${selectedScout.firstName} ${selectedScout.lastName} to ${selectedPlan.name} for ${planPrice}?`,
@@ -178,8 +178,8 @@ export default function SelectScoutForSubscriptionScreen() {
                 planId: selectedPlan.id,
                 referralCode: selectedScout.id, // Use scout ID as referral for attribution
                 paymentMethod: {
-                  type: 'AUTHORIZE_NET',
-                  paymentNonce: 'mock_token' // TODO: Integrate with Authorize.net Accept.js
+                  type: 'IAP',
+                  paymentNonce: 'iap_pending' // TODO: Integrate with IAP purchase flow
                 }
               });
 

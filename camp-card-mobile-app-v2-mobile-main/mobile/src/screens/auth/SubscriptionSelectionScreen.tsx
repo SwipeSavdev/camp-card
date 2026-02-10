@@ -42,7 +42,6 @@ export default function SubscriptionSelectionScreen() {
   const navigation = useNavigation();
   const route = useRoute<SubscriptionSelectionRouteProp>();
   const scoutCode = route.params?.scoutCode;
-  const isIOS = Platform.OS === 'ios';
   const { theme } = useTheme();
   const { colors } = theme;
 
@@ -57,14 +56,14 @@ export default function SubscriptionSelectionScreen() {
     try {
       const response = await apiClient.get('/api/v1/subscription-plans');
       const plansData = response.data.data || response.data || [];
-      // For direct sign-ups (not via Scout QR), only show the $15 plan
+      // For direct sign-ups (not via Scout QR), only show the $14.99 plan
       // The $10 Scout Referral plan is only available when scanning a Scout's QR code
-      const directPlan = plansData.find((p: any) => p.priceCents === 1500);
+      const directPlan = plansData.find((p: any) => p.priceCents >= 1499 && p.priceCents <= 1500);
       if (directPlan) {
         setPlans([directPlan]);
         setSelectedPlan(directPlan);
       } else if (plansData.length > 0) {
-        // Fallback: show first plan if $15 plan not found
+        // Fallback: show first plan if $14.99 plan not found
         setPlans([plansData[0]]);
         setSelectedPlan(plansData[0]);
       }
@@ -135,10 +134,7 @@ export default function SubscriptionSelectionScreen() {
             )}
           </View>
           <Text style={[styles.planPrice, { color: colors.primary }]}>
-            {isIOS
-              ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || '$' + (IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2) + '/year')
-              : formatPrice(plan.priceCents, plan.billingInterval)
-            }
+            {getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || '$' + (IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2) + '/year'}
           </Text>
         </View>
 
@@ -215,9 +211,9 @@ export default function SubscriptionSelectionScreen() {
       {/* Bottom CTA */}
       <View style={styles.bottomSection}>
         <View style={styles.securePayment}>
-          <Ionicons name={isIOS ? 'logo-apple' : 'shield-checkmark'} size={16} color={isIOS ? '#333' : '#4CAF50'} />
+          <Ionicons name={Platform.OS === 'ios' ? 'logo-apple' : 'logo-google'} size={16} color={Platform.OS === 'ios' ? '#333' : '#4CAF50'} />
           <Text style={styles.securePaymentText}>
-            {isIOS ? 'Secure payment through Apple' : 'Secure payment powered by Authorize.net'}
+            {Platform.OS === 'ios' ? 'Secure payment through Apple' : 'Secure payment through Google Play'}
           </Text>
         </View>
 

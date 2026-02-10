@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -27,14 +26,12 @@ type QuantitySelectionRouteProp = RouteProp<{
   };
 }, 'QuantitySelection'>;
 
-const QUANTITY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const IAP_TIER_OPTIONS = [1, 3, 5, 10]; // iOS only supports these fixed tiers
+const IAP_TIER_OPTIONS = [1, 3, 5, 10]; // Fixed tier options for IAP
 
 export default function QuantitySelectionScreen() {
   const navigation = useNavigation();
   const route = useRoute<QuantitySelectionRouteProp>();
   const { selectedPlan, scoutCode } = route.params;
-  const isIOS = Platform.OS === 'ios';
   const { theme } = useTheme();
   const { colors } = theme;
 
@@ -47,9 +44,8 @@ export default function QuantitySelectionScreen() {
     return `$${(priceCents / 100).toFixed(2)}`;
   };
 
-  const subtotal = selectedPlan.priceCents * quantity;
-  const processingFee = isIOS ? 0 : Math.round(subtotal * 0.03); // 3% credit card processing fee (Android only)
-  const totalPrice = subtotal + processingFee;
+  const iapProduct = IAP_CARD_PRODUCTS.find(p => p.quantity === quantity);
+  const iapPriceCents = iapProduct?.priceCents || quantity * 1499;
 
   const handleContinue = () => {
     (navigation as any).navigate('Payment', {
@@ -97,32 +93,29 @@ export default function QuantitySelectionScreen() {
             <Text style={[styles.planName, { color: colors.text }]}>{selectedPlan.name}</Text>
           </View>
           <Text style={[styles.pricePerCard, { color: colors.textSecondary }]}>
-            {isIOS
-              ? (getLocalizedPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.productId || '') || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.priceCents || 1499)) + ' per card'
-              : formatPrice(selectedPlan.priceCents) + ' per card'
-            }
+            {(getLocalizedPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.productId || '') || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === 1)?.priceCents || 1499)) + ' per card'}
           </Text>
         </View>
 
         {/* Quantity Selector */}
         <View style={styles.quantitySection}>
           <Text style={[styles.sectionLabel, { color: colors.text }]}>
-            {isIOS ? 'Select a Package' : 'Select Quantity (1-10)'}
+            Select a Package
           </Text>
 
           <View style={styles.quantityGrid}>
-            {(isIOS ? IAP_TIER_OPTIONS : QUANTITY_OPTIONS).map((num) => (
+            {IAP_TIER_OPTIONS.map((num) => (
               <TouchableOpacity
                 key={num}
                 style={[
                   styles.quantityButton,
                   { backgroundColor: colors.surface, borderColor: colors.border },
-                  isIOS && styles.quantityButtonWide,
+                  styles.quantityButtonWide,
                   quantity === num && { backgroundColor: colors.primary, borderColor: colors.primary },
                 ]}
                 onPress={() => setQuantity(num)}
                 activeOpacity={0.7}
-                accessibilityLabel={isIOS ? `Select ${num} card${num > 1 ? 's' : ''}` : `Select quantity ${num}`}
+                accessibilityLabel={`Select ${num} card${num > 1 ? 's' : ''}`}
                 accessibilityRole="button"
               >
                 <Text style={[
@@ -130,19 +123,17 @@ export default function QuantitySelectionScreen() {
                   { color: colors.text },
                   quantity === num && { color: colors.white },
                 ]}>
-                  {isIOS ? `${num} Card${num > 1 ? 's' : ''}` : num}
+                  {`${num} Card${num > 1 ? 's' : ''}`}
                 </Text>
-                {isIOS && (
-                  <Text style={[
-                    styles.quantityButtonPrice,
-                    { color: colors.textSecondary },
-                    quantity === num && { color: colors.white },
-                  ]}>
-                    {getLocalizedPrice(
-                      IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.productId || ''
-                    ) || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.priceCents || num * 1499)}
-                  </Text>
-                )}
+                <Text style={[
+                  styles.quantityButtonPrice,
+                  { color: colors.textSecondary },
+                  quantity === num && { color: colors.white },
+                ]}>
+                  {getLocalizedPrice(
+                    IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.productId || ''
+                  ) || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === num)?.priceCents || num * 1499)}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -225,32 +216,22 @@ export default function QuantitySelectionScreen() {
               {quantity} Camp Card{quantity > 1 ? 's' : ''}
             </Text>
             <Text style={[styles.orderValue, { color: colors.text }]}>
-              {isIOS
-                ? (getLocalizedPrice(
-                    IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
-                  ) || formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499))
-                : formatPrice(subtotal)
-              }
+              {getLocalizedPrice(
+                IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
+              ) || formatPrice(iapPriceCents)}
             </Text>
           </View>
           {/* Note about subscription included */}
           <Text style={[styles.subscriptionIncludedNote, { color: colors.textSecondary }]}>
             Annual subscription included with first card
           </Text>
-          {!isIOS && (
-            <View style={styles.orderRow}>
-              <Text style={[styles.feeLabel, { color: colors.textSecondary }]}>Processing Fee (3%)</Text>
-              <Text style={[styles.feeValue, { color: colors.text }]}>{formatPrice(processingFee)}</Text>
-            </View>
-          )}
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.orderRow}>
             <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
             <Text style={[styles.totalValue, { color: colors.primary }]}>
-              {isIOS
-                ? formatPrice(IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.priceCents || quantity * 1499)
-                : formatPrice(totalPrice)
-              }
+              {getLocalizedPrice(
+                IAP_CARD_PRODUCTS.find(p => p.quantity === quantity)?.productId || ''
+              ) || formatPrice(iapPriceCents)}
             </Text>
           </View>
         </View>

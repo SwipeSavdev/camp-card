@@ -176,7 +176,7 @@ export default function SignupScreen() {
               <View style={styles.planBannerContent}>
                 <Text style={[styles.planBannerTitle, { color: theme.colors.success }]}>Payment Successful</Text>
                 <Text style={[styles.planBannerText, { color: theme.colors.success }]}>
-                  {selectedPlan.name} - ${(selectedPlan.priceCents / 100).toFixed(2)}/{selectedPlan.billingInterval === 'ANNUAL' ? 'year' : 'month'}
+                  {selectedPlan.name} - $14.99/{selectedPlan.billingInterval === 'ANNUAL' ? 'year' : 'month'}
                 </Text>
               </View>
             </View>

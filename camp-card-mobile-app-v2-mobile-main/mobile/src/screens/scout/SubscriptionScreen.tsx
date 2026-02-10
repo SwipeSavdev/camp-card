@@ -7,9 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Switch,
-  Modal,
-  TextInput,
   Platform,
   Linking,
 } from 'react-native';
@@ -17,10 +14,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiClient, paymentsApi, paymentMethodsApi } from '../../utils/api';
+import { apiClient } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
-import CardPaymentModal, { CardData } from '../../components/CardPaymentModal';
 import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus';
 import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
 import { useIAP } from '../../hooks/useIAP';
@@ -63,22 +59,6 @@ export default function SubscriptionScreen() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [pendingPlan, setPendingPlan] = useState<SubscriptionPlan | null>(null);
-  const [showUpdatePaymentModal, setShowUpdatePaymentModal] = useState(false);
-  const [savedCards, setSavedCards] = useState<Array<{
-    id: number;
-    cardLastFour: string;
-    cardType: string;
-    expirationMonth: number;
-    expirationYear: number;
-    isDefault: boolean;
-  }>>([]);
-  const [newCardNumber, setNewCardNumber] = useState('');
-  const [newCardExpiry, setNewCardExpiry] = useState('');
-  const [newCardCvv, setNewCardCvv] = useState('');
-  const [newCardName, setNewCardName] = useState('');
-  const [savingCard, setSavingCard] = useState(false);
   const navigation = useNavigation<TroopLeaderNavProp>();
   const { user, updateUser } = useAuthStore();
 
@@ -95,7 +75,6 @@ export default function SubscriptionScreen() {
 
   // Check if user is a Unit Leader - they need to select a scout before subscribing
   const isUnitLeader = user?.role === 'UNIT_LEADER';
-  const isIOS = Platform.OS === 'ios';
 
   // IAP hook for in-app purchases (iOS StoreKit / Android Google Play Billing)
   const {
@@ -133,18 +112,18 @@ export default function SubscriptionScreen() {
       ]);
 
       setSubscription(subResponse.data);
-      // For in-app subscription/renewal, only show the $15 Direct plan
+      // For in-app subscription/renewal, only show the $14.99 Direct plan
       // The $10 Scout Referral plan is only available when scanning a Scout's QR code
       const allPlans = plansResponse.data.data || [];
-      const directPlan = allPlans.find((p: any) => p.priceCents === 1500);
+      const directPlan = allPlans.find((p: any) => p.priceCents >= 1499 && p.priceCents <= 1500);
       setAvailablePlans(directPlan ? [directPlan] : allPlans.slice(0, 1));
     } catch (error: any) {
       if (error.response?.status === 404) {
         // No subscription yet, just load plans
         const plansResponse = await apiClient.get('/api/v1/subscription-plans');
-        // For in-app subscription, only show the $15 Direct plan
+        // For in-app subscription, only show the $14.99 Direct plan
         const allPlans = plansResponse.data.data || [];
-        const directPlan = allPlans.find((p: any) => p.priceCents === 1500);
+        const directPlan = allPlans.find((p: any) => p.priceCents >= 1499 && p.priceCents <= 1500);
         setAvailablePlans(directPlan ? [directPlan] : allPlans.slice(0, 1));
       } else {
         console.error('Error loading subscription:', error);
@@ -156,122 +135,35 @@ export default function SubscriptionScreen() {
   };
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
-    // Unit Leaders must select a scout before subscribing
     if (isUnitLeader) {
       navigation.navigate('SelectScoutForSubscription', { planId: plan.uuid });
       return;
     }
 
-    // iOS: Use Apple In-App Purchase
-    if (isIOS) {
-      try {
-        const sku = IAP_PRODUCTS.SUBSCRIPTION_ANNUAL;
-        await purchaseSubscription(sku);
-        // Result handled by onPurchaseComplete callback in useIAP
-      } catch (error: any) {
-        console.error('IAP subscription error:', error);
-      }
-      return;
-    }
-
-    // Android: Show credit card payment modal (Authorize.net)
-    setPendingPlan(plan);
-    setShowPaymentModal(true);
-  };
-
-  const processPayment = async (cardData: CardData): Promise<{ transactionId: string }> => {
-    if (!pendingPlan) {
-      throw new Error('No plan selected');
-    }
-
-    // Process payment via Authorize.net
-    const response = await paymentsApi.charge({
-      amount: pendingPlan.priceCents / 100,
-      cardNumber: cardData.cardNumber,
-      expirationDate: cardData.expirationDate,
-      cvv: cardData.cvv,
-      description: `Subscription: ${pendingPlan.name}`,
-      customerEmail: user?.email,
-      customerName: cardData.cardholderName,
-      billingZip: cardData.billingZip,
-    });
-
-    if (response.data.status !== 'SUCCESS') {
-      throw new Error(response.data.errorMessage || 'Payment failed');
-    }
-
-    // Create subscription with payment transaction ID
-    await apiClient.post('/api/v1/subscriptions', {
-      planId: pendingPlan.id,
-      paymentMethod: {
-        type: 'AUTHORIZE_NET',
-        transactionId: response.data.transactionId,
-      }
-    });
-
-    return { transactionId: response.data.transactionId };
-  };
-
-  const handlePaymentSuccess = async (transactionId: string) => {
-    setShowPaymentModal(false);
-    setPendingPlan(null);
-    Alert.alert('Success!', 'Your subscription is now active');
-    await loadSubscriptionData();
-    // Refresh user in auth store so Offers tab becomes visible
     try {
-      const meResponse = await apiClient.get('/api/v1/auth/me');
-      updateUser(meResponse.data);
-    } catch (e) {
-      console.log('Failed to refresh user after subscription:', e);
+      const sku = IAP_PRODUCTS.SUBSCRIPTION_ANNUAL;
+      await purchaseSubscription(sku);
+    } catch (error: any) {
+      console.error('IAP subscription error:', error);
     }
-  };
-
-  const handlePaymentError = (error: string) => {
-    Alert.alert('Payment Failed', error);
   };
 
   const handleCancelSubscription = () => {
     if (!subscription) return;
 
-    // iOS: Direct to Apple's subscription management
-    if (isIOS) {
-      Alert.alert(
-        'Manage Subscription',
-        'Your subscription is managed through Apple. You\'ll be taken to your Apple ID subscription settings.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Open Settings',
-            onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions'),
-          }
-        ]
-      );
-      return;
-    }
+    const storeName = Platform.OS === 'ios' ? 'Apple' : 'Google Play';
+    const storeUrl = Platform.OS === 'ios'
+      ? 'https://apps.apple.com/account/subscriptions'
+      : 'https://play.google.com/store/account/subscriptions';
 
-    // Android: Cancel via backend
     Alert.alert(
-      'Cancel Subscription',
-      `Are you sure you want to cancel? You've saved $${subscription.totalSavings.toFixed(2)} this year!\n\nYour subscription will remain active until ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}.`,
+      'Manage Subscription',
+      `Your subscription is managed through ${storeName}. You'll be taken to your subscription settings.`,
       [
-        { text: 'Keep Subscription', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await apiClient.patch('/api/v1/subscriptions/me', {
-                cancelAtPeriodEnd: true
-              });
-              Alert.alert('Subscription Canceled', 'Your subscription will end at the current billing period.');
-              loadSubscriptionData();
-            } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.error || error.response?.data?.message || 'Failed to cancel subscription');
-            } finally {
-              setLoading(false);
-            }
-          }
+          text: 'Open Settings',
+          onPress: () => Linking.openURL(storeUrl),
         }
       ]
     );
@@ -295,7 +187,7 @@ export default function SubscriptionScreen() {
 
     Alert.alert(
       'Renew Subscription',
-      `Renew your ${subscription.plan.name} subscription for $${(subscription.plan.priceCents / 100).toFixed(2)}?\n\nThis will:\n• Extend your subscription period\n• Replenish all one-time offers`,
+      `Renew your ${subscription.plan.name} subscription for $14.99?\n\nThis will:\n• Extend your subscription period\n• Replenish all one-time offers`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -318,105 +210,6 @@ export default function SubscriptionScreen() {
         }
       ]
     );
-  };
-
-  const loadSavedCards = async () => {
-    try {
-      const response = await paymentMethodsApi.getAll();
-      setSavedCards(response.data || []);
-    } catch (error) {
-      console.error('Error loading saved cards:', error);
-    }
-  };
-
-  const handleUpdatePayment = async () => {
-    await loadSavedCards();
-    setShowUpdatePaymentModal(true);
-  };
-
-  const handleSaveNewCard = async () => {
-    if (!newCardNumber || !newCardExpiry || !newCardCvv) {
-      Alert.alert('Missing Info', 'Please fill in all card fields.');
-      return;
-    }
-
-    // Validate expiry format (MMYY)
-    const expiryClean = newCardExpiry.replace(/\//g, '');
-    if (expiryClean.length !== 4) {
-      Alert.alert('Invalid Expiry', 'Enter expiration as MM/YY.');
-      return;
-    }
-
-    setSavingCard(true);
-    try {
-      const nameParts = newCardName.trim().split(' ');
-      await paymentMethodsApi.save({
-        cardNumber: newCardNumber.replace(/\s/g, ''),
-        expirationDate: expiryClean,
-        cvv: newCardCvv,
-        firstName: nameParts[0] || undefined,
-        lastName: nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined,
-        setAsDefault: true,
-      });
-
-      Alert.alert('Success', 'Payment method saved for auto-renew.');
-      setNewCardNumber('');
-      setNewCardExpiry('');
-      setNewCardCvv('');
-      setNewCardName('');
-      await loadSavedCards();
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || error.response?.data?.errorMessage || 'Failed to save card. Please check your details.');
-    } finally {
-      setSavingCard(false);
-    }
-  };
-
-  const handleRemoveCard = (cardId: number, lastFour: string) => {
-    Alert.alert(
-      'Remove Card',
-      `Remove card ending in ${lastFour}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await paymentMethodsApi.remove(cardId);
-              await loadSavedCards();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to remove card.');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const formatCardInput = (text: string) => {
-    const cleaned = text.replace(/\D/g, '');
-    const groups = cleaned.match(/.{1,4}/g);
-    return groups ? groups.join(' ') : '';
-  };
-
-  const formatExpiryInput = (text: string) => {
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.length >= 3) {
-      return cleaned.substring(0, 2) + '/' + cleaned.substring(2, 4);
-    }
-    return cleaned;
-  };
-
-  const toggleAutoRenew = async (value: boolean) => {
-    try {
-      await apiClient.patch('/api/v1/subscriptions/me', {
-        cancelAtPeriodEnd: !value
-      });
-      loadSubscriptionData();
-    } catch (error: any) {
-      Alert.alert('Error', 'Failed to update auto-renew setting');
-    }
   };
 
   const formatDate = (dateString: string) => {
@@ -491,10 +284,7 @@ export default function SubscriptionScreen() {
             <View style={styles.planInfo}>
               <Text style={[styles.planName, { color: colors.text }]}>{subscription.plan.name}</Text>
               <Text style={[styles.planPrice, { color: colors.textSecondary }]}>
-                {isIOS
-                  ? `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`
-                  : `$${(subscription.plan.priceCents / 100).toFixed(2)}`
-                }/{subscription.plan.billingInterval.toLowerCase()}
+                {`$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`}/{subscription.plan.billingInterval.toLowerCase()}
               </Text>
             </View>
 
@@ -531,127 +321,50 @@ export default function SubscriptionScreen() {
             )}
           </View>
 
-          {/* Auto-Renew / Subscription Management */}
-          {isIOS ? (
-            <>
-              {/* iOS: Apple manages auto-renew */}
-              <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <Text style={[styles.settingTitle, { color: colors.text }]}>Auto-Renew</Text>
-                    <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-                      Auto-renewal is managed in your Apple ID settings
-                    </Text>
-                  </View>
-                  <Ionicons name="logo-apple" size={24} color={colors.text} />
-                </View>
+          {/* Subscription Management - managed by store */}
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingTitle, { color: colors.text }]}>Auto-Renew</Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                  {Platform.OS === 'ios'
+                    ? 'Auto-renewal is managed in your Apple ID settings'
+                    : 'Auto-renewal is managed in your Google Play settings'}
+                </Text>
               </View>
+              <Ionicons name={Platform.OS === 'ios' ? 'logo-apple' : 'logo-google'} size={24} color={colors.text} />
+            </View>
+          </View>
 
-              {/* iOS: Actions */}
-              <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <TouchableOpacity
-                  style={[styles.actionButton, { borderBottomColor: colors.border }]}
-                  onPress={() => Linking.openURL('https://apps.apple.com/account/subscriptions')}
-                  accessibilityLabel="Manage Subscription"
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="settings-outline" size={24} color={colors.secondary} />
-                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Manage Subscription</Text>
-                  <Ionicons name="chevron-forward" size={24} color={colors.border} />
-                </TouchableOpacity>
+          {/* Actions */}
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <TouchableOpacity
+              style={[styles.actionButton, { borderBottomColor: colors.border }]}
+              onPress={() => {
+                const storeUrl = Platform.OS === 'ios'
+                  ? 'https://apps.apple.com/account/subscriptions'
+                  : 'https://play.google.com/store/account/subscriptions';
+                Linking.openURL(storeUrl);
+              }}
+              accessibilityLabel="Manage Subscription"
+              accessibilityRole="button"
+            >
+              <Ionicons name="settings-outline" size={24} color={colors.secondary} />
+              <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Manage Subscription</Text>
+              <Ionicons name="chevron-forward" size={24} color={colors.border} />
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.actionButton, { borderBottomColor: colors.border }]}
-                  onPress={restorePurchases}
-                  accessibilityLabel="Restore Purchases"
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="refresh-outline" size={24} color={colors.secondary} />
-                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Restore Purchases</Text>
-                  <Ionicons name="chevron-forward" size={24} color={colors.border} />
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-              {/* Android: Auto-Renew Toggle */}
-              <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <Text style={[styles.settingTitle, { color: colors.text }]}>Auto-Renew</Text>
-                    <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-                      Automatically renew at end of billing period
-                    </Text>
-                  </View>
-                  <Switch
-                    value={!subscription.cancelAtPeriodEnd}
-                    onValueChange={toggleAutoRenew}
-                    trackColor={{ false: colors.border, true: colors.secondary }}
-                  />
-                </View>
-              </View>
-
-              {/* Android: Renew Now Button */}
-              <View style={styles.renewCard}>
-                <View style={styles.renewInfo}>
-                  <Ionicons name="sparkles" size={24} color={colors.secondary} />
-                  <View style={styles.renewTextContainer}>
-                    <Text style={[styles.renewTitle, { color: colors.secondary }]}>Ready for more savings?</Text>
-                    <Text style={[styles.renewDescription, { color: colors.textSecondary }]}>
-                      Renew now to replenish all one-time offers
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={[styles.renewButton, { backgroundColor: colors.secondary }]}
-                  onPress={handleRenewNow}
-                  accessibilityLabel="Renew Now"
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="refresh" size={20} color={colors.textOnPrimary} />
-                  <Text style={[styles.renewButtonText, { color: colors.textOnPrimary }]}>Renew Now</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Android: Actions */}
-              <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <TouchableOpacity
-                  style={[styles.actionButton, { borderBottomColor: colors.border }]}
-                  onPress={handleUpdatePayment}
-                  accessibilityLabel="Update Payment Method"
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="card-outline" size={24} color={colors.secondary} />
-                  <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Update Payment Method</Text>
-                  <Ionicons name="chevron-forward" size={24} color={colors.border} />
-                </TouchableOpacity>
-
-                {subscription.cancelAtPeriodEnd ? (
-                  <TouchableOpacity
-                    style={[styles.actionButton, { borderBottomColor: colors.border }]}
-                    onPress={handleReactivate}
-                    accessibilityLabel="Reactivate Subscription"
-                    accessibilityRole="button"
-                  >
-                    <Ionicons name="refresh-outline" size={24} color={colors.success} />
-                    <Text style={[styles.actionButtonText, { color: colors.success }]}>Reactivate Subscription</Text>
-                    <Ionicons name="chevron-forward" size={24} color={colors.border} />
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={[styles.actionButton, { borderBottomColor: colors.border }]}
-                    onPress={handleCancelSubscription}
-                    accessibilityLabel="Cancel Subscription"
-                    accessibilityRole="button"
-                  >
-                    <Ionicons name="close-circle-outline" size={24} color={colors.error} />
-                    <Text style={[styles.actionButtonText, { color: colors.error }]}>Cancel Subscription</Text>
-                    <Ionicons name="chevron-forward" size={24} color={colors.border} />
-                  </TouchableOpacity>
-                )}
-              </View>
-            </>
-          )}
+            <TouchableOpacity
+              style={[styles.actionButton, { borderBottomColor: colors.border }]}
+              onPress={restorePurchases}
+              accessibilityLabel="Restore Purchases"
+              accessibilityRole="button"
+            >
+              <Ionicons name="refresh-outline" size={24} color={colors.secondary} />
+              <Text style={[styles.actionButtonText, { color: colors.secondary }]}>Restore Purchases</Text>
+              <Ionicons name="chevron-forward" size={24} color={colors.border} />
+            </TouchableOpacity>
+          </View>
 
           {/* Features */}
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -759,10 +472,7 @@ export default function SubscriptionScreen() {
 
               <View style={styles.priceContainer}>
                 <Text style={[styles.planCardPrice, { color: colors.text }]}>
-                  {isIOS
-                    ? (getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`)
-                    : `$${(plan.priceCents / 100).toFixed(2)}`
-                  }
+                  {getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`}
                 </Text>
                 <Text style={[styles.planCardInterval, { color: colors.textSecondary }]}>
                   /{plan.billingInterval.toLowerCase()}
@@ -787,15 +497,15 @@ export default function SubscriptionScreen() {
                   plan.billingInterval === 'ANNUAL' && [styles.subscribeButtonRecommended, { backgroundColor: colors.primary }]
                 ]}
                 onPress={() => handleSubscribe(plan)}
-                disabled={isIOS && iapPurchasing}
-                accessibilityLabel={isIOS ? 'Subscribe with Apple' : 'Subscribe Now'}
+                disabled={iapPurchasing}
+                accessibilityLabel="Subscribe"
                 accessibilityRole="button"
               >
-                {isIOS && iapPurchasing ? (
+                {iapPurchasing ? (
                   <ActivityIndicator color={colors.textOnPrimary} size="small" />
                 ) : (
                   <Text style={[styles.subscribeButtonText, { color: colors.textOnPrimary }]}>
-                    {isIOS ? 'Subscribe with Apple' : 'Subscribe Now'}
+                    Subscribe
                   </Text>
                 )}
               </TouchableOpacity>
@@ -836,135 +546,6 @@ export default function SubscriptionScreen() {
         </>
       )}
 
-      {/* Update Payment Method Modal (Android only — iOS uses Apple's payment management) */}
-      {!isIOS && <Modal
-        visible={showUpdatePaymentModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowUpdatePaymentModal(false)}
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
-          <View style={[styles.modalHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-            <Text style={[styles.modalTitle, { color: colors.secondary }]}>Payment Methods</Text>
-            <TouchableOpacity
-              onPress={() => setShowUpdatePaymentModal(false)}
-              accessibilityLabel="Close payment methods"
-              accessibilityRole="button"
-            >
-              <Ionicons name="close" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            {/* Saved Cards */}
-            {savedCards.length > 0 && (
-              <View style={styles.savedCardsSection}>
-                <Text style={[styles.savedCardsTitle, { color: colors.text }]}>Saved Cards</Text>
-                {savedCards.map((card) => (
-                  <View key={card.id} style={[styles.savedCardRow, { backgroundColor: colors.surface }]}>
-                    <View style={styles.savedCardInfo}>
-                      <Ionicons name="card" size={24} color={colors.secondary} />
-                      <View style={styles.savedCardDetails}>
-                        <Text style={[styles.savedCardType, { color: colors.text }]}>
-                          {card.cardType} ending in {card.cardLastFour}
-                          {card.isDefault ? ' (Default)' : ''}
-                        </Text>
-                        <Text style={[styles.savedCardExpiry, { color: colors.textSecondary }]}>
-                          Expires {String(card.expirationMonth).padStart(2, '0')}/{card.expirationYear}
-                        </Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleRemoveCard(card.id, card.cardLastFour)}
-                      accessibilityLabel={`Remove card ending in ${card.cardLastFour}`}
-                      accessibilityRole="button"
-                    >
-                      <Ionicons name="trash-outline" size={20} color={colors.error} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {/* Add New Card */}
-            <View style={[styles.addCardSection, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.addCardTitle, { color: colors.secondary }]}>
-                {savedCards.length > 0 ? 'Replace Payment Method' : 'Add Payment Method'}
-              </Text>
-              <Text style={[styles.addCardDescription, { color: colors.textSecondary }]}>
-                Your card will be securely stored for subscription auto-renewal.
-              </Text>
-
-              <TextInput
-                style={[styles.cardInput, { borderColor: colors.border, color: colors.text }]}
-                placeholder="Cardholder Name"
-                placeholderTextColor={colors.textSecondary}
-                value={newCardName}
-                onChangeText={setNewCardName}
-                autoCapitalize="words"
-              />
-              <TextInput
-                style={[styles.cardInput, { borderColor: colors.border, color: colors.text }]}
-                placeholder="Card Number"
-                placeholderTextColor={colors.textSecondary}
-                value={newCardNumber}
-                onChangeText={(text) => setNewCardNumber(formatCardInput(text))}
-                keyboardType="number-pad"
-                maxLength={19}
-              />
-              <View style={styles.cardInputRow}>
-                <TextInput
-                  style={[styles.cardInput, styles.cardInputHalf, { borderColor: colors.border, color: colors.text }]}
-                  placeholder="MM/YY"
-                  placeholderTextColor={colors.textSecondary}
-                  value={newCardExpiry}
-                  onChangeText={(text) => setNewCardExpiry(formatExpiryInput(text))}
-                  keyboardType="number-pad"
-                  maxLength={5}
-                />
-                <TextInput
-                  style={[styles.cardInput, styles.cardInputHalf, { borderColor: colors.border, color: colors.text }]}
-                  placeholder="CVV"
-                  placeholderTextColor={colors.textSecondary}
-                  value={newCardCvv}
-                  onChangeText={setNewCardCvv}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  secureTextEntry
-                />
-              </View>
-
-              <TouchableOpacity
-                style={[styles.saveCardButton, { backgroundColor: colors.secondary }, savingCard && styles.saveCardButtonDisabled]}
-                onPress={handleSaveNewCard}
-                disabled={savingCard}
-                accessibilityLabel="Save Payment Method"
-                accessibilityRole="button"
-              >
-                {savingCard ? (
-                  <ActivityIndicator color={colors.textOnPrimary} size="small" />
-                ) : (
-                  <Text style={[styles.saveCardButtonText, { color: colors.textOnPrimary }]}>Save Payment Method</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>}
-
-      {/* Payment Modal (Android only — iOS uses Apple IAP) */}
-      {!isIOS && <CardPaymentModal
-        visible={showPaymentModal}
-        onClose={() => {
-          setShowPaymentModal(false);
-          setPendingPlan(null);
-        }}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentError={handlePaymentError}
-        amount={pendingPlan?.priceCents || 0}
-        description={pendingPlan ? `${pendingPlan.name} Subscription` : 'Subscription'}
-        processPayment={processPayment}
-      />}
     </ScrollView>
     </SafeAreaView>
   );
@@ -1231,164 +812,5 @@ const styles = StyleSheet.create({
   benefitText: {
     fontSize: 14,
     color: '#666',
-  },
-  renewCard: {
-    backgroundColor: '#e3f2fd',
-    margin: 20,
-    marginTop: 0,
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#90caf9',
-  },
-  renewInfo: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  renewTextContainer: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  renewTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#003f87',
-    marginBottom: 4,
-  },
-  renewDescription: {
-    fontSize: 14,
-    color: '#666',
-  },
-  renewButton: {
-    backgroundColor: '#003f87',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 8,
-    gap: 8,
-  },
-  renewButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#003f87',
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  savedCardsSection: {
-    marginBottom: 24,
-  },
-  savedCardsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  savedCardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  savedCardInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  savedCardDetails: {
-    marginLeft: 12,
-  },
-  savedCardType: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-  },
-  savedCardExpiry: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-  },
-  addCardSection: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  addCardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#003f87',
-    marginBottom: 4,
-  },
-  addCardDescription: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 16,
-  },
-  cardInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 12,
-    backgroundColor: '#fafafa',
-  },
-  cardInputRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cardInputHalf: {
-    flex: 1,
-  },
-  saveCardButton: {
-    backgroundColor: '#003f87',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  saveCardButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveCardButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

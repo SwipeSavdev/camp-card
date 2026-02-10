@@ -1,7 +1,7 @@
 // Profile Screen with Settings and Navigation
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +16,6 @@ export default function ProfileScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const navigation = useNavigation<RootNavigation>();
-  const isIOS = Platform.OS === 'ios';
   const { theme } = useTheme();
   const { colors } = theme;
 
@@ -117,8 +116,7 @@ export default function ProfileScreen() {
         <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Account</Text>
 
-          {isIOS && (
-            <TouchableOpacity
+          <TouchableOpacity
               style={[styles.menuItem, { borderBottomColor: colors.border }]}
               onPress={handleRestorePurchases}
               disabled={isRestoring}
@@ -130,7 +128,7 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.menuContent}>
                 <Text style={[styles.menuTitle, { color: colors.text }]}>Restore Purchases</Text>
-                <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>Restore previous Apple purchases</Text>
+                <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>Restore previous in-app purchases</Text>
               </View>
               {isRestoring ? (
                 <ActivityIndicator size="small" color={colors.primary} />
@@ -138,7 +136,6 @@ export default function ProfileScreen() {
                 <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               )}
             </TouchableOpacity>
-          )}
 
           <TouchableOpacity
             style={[styles.menuItem, { borderBottomColor: colors.border }]}
