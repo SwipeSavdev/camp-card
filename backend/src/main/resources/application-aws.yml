@@ -120,6 +120,11 @@ aws:
       ios: ${SNS_PLATFORM_ARN_IOS:arn:aws:sns:us-east-1:858955002750:app/APNS/camp-card-mobile-app}
       android: ${SNS_PLATFORM_ARN_ANDROID:arn:aws:sns:us-east-1:858955002750:app/GCM/camp-card-mobile-android}
 
+# Google Play Billing (service account JSON file path)
+google:
+  play:
+    service-account-path: ${GOOGLE_PLAY_SERVICE_ACCOUNT_PATH:/app/google-play-service-account.json}
+
 # Actuator
 management:
   endpoints:

@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 // API Configuration
 // Production API at api.campcardapp.org
@@ -89,7 +90,9 @@ export const MAP_CONFIG = {
 // In-App Purchase Product IDs (iOS & Android)
 export const IAP_PRODUCTS = {
   SUBSCRIPTION_ANNUAL: 'org.bsa.campcard.subscription.annual',
-  SUBSCRIPTION_ANNUAL_SCOUT: 'org.bsa.campcard.subscription.annual.scout',
+  SUBSCRIPTION_ANNUAL_SCOUT: Platform.OS === 'android'
+    ? 'campcard.subscription.annual.scout'
+    : 'org.bsa.campcard.subscription.annual.scout',
   CARDS_1: 'org.bsa.campcard.cards.1',
   CARDS_3: 'org.bsa.campcard.cards.3',
   CARDS_5: 'org.bsa.campcard.cards.5',
