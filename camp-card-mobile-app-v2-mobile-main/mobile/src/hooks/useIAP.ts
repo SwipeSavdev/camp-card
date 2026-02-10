@@ -140,6 +140,13 @@ export function useIAP(options: UseIAPOptions = {}): UseIAPReturn {
     };
   }, [autoInit, handlePurchaseSuccess, handlePurchaseError]);
 
+  const isUserCancellation = useCallback((error: any): boolean => {
+    if (error?.code === ErrorCode.UserCancelled) return true;
+    const msg = (error?.message || '').toLowerCase();
+    return msg.includes('user cancel') || msg.includes('user cancelled') ||
+           msg.includes('payment not completed') || msg.includes('skpaymentqueue');
+  }, []);
+
   const purchaseProduct = useCallback(async (sku: string) => {
     setPurchasing(true);
     try {
@@ -147,9 +154,10 @@ export function useIAP(options: UseIAPOptions = {}): UseIAPReturn {
       // Purchase result will be handled by purchaseUpdatedListener
     } catch (error: any) {
       setPurchasing(false);
+      if (isUserCancellation(error)) return;
       throw error;
     }
-  }, []);
+  }, [isUserCancellation]);
 
   const purchaseSubscription = useCallback(async (sku: string) => {
     setPurchasing(true);
@@ -158,9 +166,10 @@ export function useIAP(options: UseIAPOptions = {}): UseIAPReturn {
       // Purchase result will be handled by purchaseUpdatedListener
     } catch (error: any) {
       setPurchasing(false);
+      if (isUserCancellation(error)) return;
       throw error;
     }
-  }, []);
+  }, [isUserCancellation]);
 
   const restorePurchases = useCallback(async () => {
     setLoading(true);

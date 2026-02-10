@@ -40,10 +40,18 @@ public class AppleIAPService {
 
     /**
      * Verify an Apple IAP receipt and return the validated transaction info.
+     * Supports both StoreKit 2 JWS tokens (expo-iap v3+) and legacy App Store receipts.
      */
     public AppleReceiptValidationResult verifyReceipt(String receiptData, String expectedProductId, String expectedTransactionId) {
         try {
-            // Try production first
+            // StoreKit 2 (expo-iap v3+) sends JWS tokens as purchaseToken.
+            // Detect JWS format (three base64url-encoded segments separated by dots).
+            if (isJwsToken(receiptData)) {
+                log.info("[AppleIAP] Detected StoreKit 2 JWS token, decoding directly");
+                return verifyJwsTransaction(receiptData, expectedProductId, expectedTransactionId);
+            }
+
+            // Legacy receipt verification: try production first
             JsonNode response = callAppleVerifyEndpoint(receiptData, PRODUCTION_VERIFY_URL);
             int status = response.path("status").asInt(-1);
 
@@ -180,6 +188,93 @@ public class AppleIAPService {
                 .isSubscription(false)
                 .cardQuantity(cardQuantity)
                 .build();
+    }
+
+    /**
+     * Check if the data looks like a JWS token (three dot-separated base64url segments).
+     * StoreKit 2 sends JWS tokens as the purchaseToken field.
+     */
+    private boolean isJwsToken(String data) {
+        if (data == null || data.isEmpty()) return false;
+        String[] parts = data.split("\\.");
+        return parts.length == 3 && !data.contains(" ") && data.length() > 100;
+    }
+
+    /**
+     * Verify a StoreKit 2 JWS transaction token by decoding its payload.
+     * The JWS is a signed JSON Web Token containing all transaction details.
+     * The payload includes: transactionId, productId, quantity, type, environment, etc.
+     */
+    private AppleReceiptValidationResult verifyJwsTransaction(String jwsToken, String expectedProductId, String expectedTransactionId) {
+        try {
+            String[] parts = jwsToken.split("\\.");
+            if (parts.length != 3) {
+                return AppleReceiptValidationResult.invalid("Invalid JWS format");
+            }
+
+            // Decode the payload (second segment) - base64url encoding
+            String payloadBase64 = parts[1];
+            // base64url uses - and _ instead of + and /; Java's URL decoder handles this
+            byte[] decoded = Base64.getUrlDecoder().decode(payloadBase64);
+            JsonNode payload = objectMapper.readTree(decoded);
+
+            String productId = payload.path("productId").asText("");
+            String transactionId = payload.path("transactionId").asText("");
+            String originalTransactionId = payload.path("originalTransactionId").asText("");
+            String type = payload.path("type").asText("");
+            String environment = payload.path("environment").asText("");
+            int quantity = payload.path("quantity").asInt(1);
+            long expiresDateMs = payload.path("expiresDate").asLong(0);
+            String bundleId = payload.path("bundleId").asText("");
+
+            log.info("[AppleIAP] JWS decoded: product={}, txn={}, type={}, env={}, bundle={}, quantity={}",
+                    productId, transactionId, type, environment, bundleId, quantity);
+
+            // Validate product ID matches expected
+            if (!productId.equals(expectedProductId)) {
+                log.warn("[AppleIAP] JWS product mismatch: expected={}, got={}", expectedProductId, productId);
+                return AppleReceiptValidationResult.invalid(
+                        "Product ID mismatch: expected " + expectedProductId + " but got " + productId);
+            }
+
+            // Determine if subscription or consumable
+            boolean isSubscription = type.toLowerCase().contains("subscription");
+
+            if (isSubscription) {
+                LocalDateTime expiresDate = expiresDateMs > 0
+                        ? LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresDateMs), ZoneId.systemDefault())
+                        : null;
+
+                log.info("[AppleIAP] JWS subscription validated: product={}, txn={}, expires={}",
+                        productId, transactionId, expiresDate);
+
+                return AppleReceiptValidationResult.builder()
+                        .valid(true)
+                        .productId(productId)
+                        .transactionId(transactionId)
+                        .originalTransactionId(originalTransactionId)
+                        .isSubscription(true)
+                        .expiresDate(expiresDate)
+                        .build();
+            } else {
+                int cardQuantity = mapProductIdToCardQuantity(productId);
+
+                log.info("[AppleIAP] JWS consumable validated: product={}, txn={}, cards={}",
+                        productId, transactionId, cardQuantity);
+
+                return AppleReceiptValidationResult.builder()
+                        .valid(true)
+                        .productId(productId)
+                        .transactionId(transactionId)
+                        .isSubscription(false)
+                        .cardQuantity(cardQuantity)
+                        .build();
+            }
+
+        } catch (Exception e) {
+            log.error("[AppleIAP] JWS verification error", e);
+            return AppleReceiptValidationResult.invalid("JWS verification error: " + e.getMessage());
+        }
     }
 
     private int mapProductIdToCardQuantity(String productId) {
