@@ -17,6 +17,7 @@ import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS, IAP_PRICES } from '../../confi
 import { useTheme } from '../../config/ThemeContext';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
 import { useIAP } from '../../hooks/useIAP';
+import SubscriptionDisclosureModal from '../../components/SubscriptionDisclosureModal';
 
 type PaymentScreenRouteProp = RouteProp<AuthStackParamList, 'Payment'>;
 
@@ -26,6 +27,7 @@ export default function PaymentScreen() {
   const { selectedPlan, quantity = 1, scoutCode } = route.params;
   const { theme } = useTheme();
   const { colors } = theme;
+  const [showDisclosure, setShowDisclosure] = React.useState(false);
 
   // Get card product details for the selected quantity
   // Note: Card price INCLUDES the annual subscription (bundled)
@@ -64,9 +66,8 @@ export default function PaymentScreen() {
   // Check if the required IAP product is available
   const iapProductAvailable = iapProducts.some(p => p.id === getCardSku());
 
-  // Purchase cards (subscription is included in price)
-  const handleIAPPurchase = async () => {
-    // Check if IAP products are loaded
+  // Show disclosure modal before purchase (Apple Guideline 3.1.2)
+  const handleIAPPurchase = () => {
     if (iapLoading) {
       Alert.alert('Please Wait', 'Loading payment options. Please try again in a moment.');
       return;
@@ -91,9 +92,14 @@ export default function PaymentScreen() {
       return;
     }
 
+    setShowDisclosure(true);
+  };
+
+  // Actual purchase after disclosure confirmation
+  const handleDisclosureConfirm = async () => {
+    setShowDisclosure(false);
     try {
       await purchaseProduct(getCardSku());
-      // Success handled by onPurchaseComplete callback
     } catch (error: any) {
       console.error('IAP purchase error:', error);
       const message = error?.message || 'Unable to process purchase. Please try again.';
@@ -209,6 +215,17 @@ export default function PaymentScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {/* Apple Guideline 3.1.2 - Subscription disclosure before payment */}
+        <SubscriptionDisclosureModal
+          visible={showDisclosure}
+          onConfirm={handleDisclosureConfirm}
+          onCancel={() => setShowDisclosure(false)}
+          productName={`${quantity} Camp Card${quantity > 1 ? 's' : ''} + Annual Subscription`}
+          price={getLocalizedPrice(getCardSku()) || formatPrice(cardPriceCents)}
+          period="1 Year (Auto-Renewable)"
+          loading={iapPurchasing}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

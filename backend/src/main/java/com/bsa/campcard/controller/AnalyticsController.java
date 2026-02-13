@@ -1,11 +1,15 @@
 package com.bsa.campcard.controller;
 
+import com.bsa.campcard.dto.AnalyticsBatchRequest;
+import com.bsa.campcard.dto.AnalyticsEventRequest;
 import com.bsa.campcard.dto.WalletAnalyticsResponse;
 import com.bsa.campcard.repository.FavoriteOfferRepository;
 import com.bsa.campcard.repository.OfferRedemptionRepository;
 import com.bsa.campcard.repository.ReferralRepository;
+import com.bsa.campcard.service.AnalyticsEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bsa.campcard.domain.user.User;
@@ -29,6 +33,7 @@ public class AnalyticsController {
     private final OfferRedemptionRepository offerRedemptionRepository;
     private final ReferralRepository referralRepository;
     private final FavoriteOfferRepository favoriteOfferRepository;
+    private final AnalyticsEventService analyticsEventService;
 
     @GetMapping("/wallet")
     @PreAuthorize("isAuthenticated()")
@@ -60,5 +65,45 @@ public class AnalyticsController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    // ========================================================================
+    // EVENT TRACKING
+    // ========================================================================
+
+    @PostMapping("/events")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Track analytics event", description = "Records a single user analytics event")
+    public ResponseEntity<Void> trackEvent(
+            @RequestBody AnalyticsEventRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        User user = (User) authentication.getPrincipal();
+        String ipAddress = httpRequest.getHeader("X-Forwarded-For");
+        if (ipAddress == null) {
+            ipAddress = httpRequest.getRemoteAddr();
+        }
+        analyticsEventService.trackEvent(request, user.getId(), ipAddress);
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/events/batch")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Track analytics events in batch", description = "Records multiple analytics events at once")
+    public ResponseEntity<Void> trackBatchEvents(
+            @RequestBody AnalyticsBatchRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        User user = (User) authentication.getPrincipal();
+        String ipAddress = httpRequest.getHeader("X-Forwarded-For");
+        if (ipAddress == null) {
+            ipAddress = httpRequest.getRemoteAddr();
+        }
+        if (request.getEvents() != null && !request.getEvents().isEmpty()) {
+            analyticsEventService.trackBatch(request.getEvents(), user.getId(), ipAddress);
+        }
+        return ResponseEntity.accepted().build();
     }
 }

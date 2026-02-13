@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiClient, favoritesApi } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../config/ThemeContext';
+import { analyticsService } from '../../services/analyticsService';
 
 interface Offer {
   id: number;
@@ -70,6 +71,7 @@ export default function OffersScreen() {
   useEffect(() => {
     loadOffers();
     loadFavorites();
+    analyticsService.trackScreenView('OffersScreen');
   }, []);
 
   const loadFavorites = async () => {
@@ -86,6 +88,7 @@ export default function OffersScreen() {
     try {
       const response = await favoritesApi.toggle(offerId);
       const nowFavorited = response.data?.favorited;
+      analyticsService.trackAction(nowFavorited ? 'offer_favorite' : 'offer_unfavorite', { offerId });
       setFavoriteIds(prev => {
         const next = new Set(prev);
         if (nowFavorited) {
@@ -146,6 +149,7 @@ export default function OffersScreen() {
     let filtered = [...offers];
 
     if (searchQuery.trim()) {
+      analyticsService.trackSearch(searchQuery.trim(), filtered.length);
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(o =>
         o.title.toLowerCase().includes(query) ||

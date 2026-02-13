@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../config/ThemeContext';
+import { analyticsService } from '../../services/analyticsService';
 import {
   isBiometricEnabled,
   authenticateWithBiometrics,
@@ -78,6 +79,7 @@ export default function LoginScreen() {
       if (result.success && result.credentials) {
         // Use stored refresh token for re-authentication
         await loginWithBiometric(result.credentials.refreshToken);
+        analyticsService.trackAction('login', { method: 'biometric' });
       } else {
         Alert.alert('Authentication Failed', result.error || 'Biometric authentication failed');
       }
@@ -96,6 +98,7 @@ export default function LoginScreen() {
 
     try {
       await login(email.trim(), password);
+      analyticsService.trackAction('login', { method: 'email' });
     } catch (error: any) {
       // Provide more specific error messages for debugging
       let errorMessage = 'Invalid email or password';

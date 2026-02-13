@@ -23,7 +23,7 @@
     ],
     "ios": {
       "bundleIdentifier": "org.bsa.campcard",
-      "buildNumber": "68",
+      "buildNumber": "69",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -39,7 +39,8 @@
           "remote-notification",
           "fetch"
         ],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSUserTrackingUsageDescription": "Camp Card uses this identifier to measure the effectiveness of our advertising and to provide you with a personalized experience. Your data helps support Scout fundraising efforts."
       },
       "entitlements": {
         "aps-environment": "production"
@@ -132,7 +133,8 @@
             "kotlinVersion": "2.1.20"
           }
         }
-      ]
+      ],
+      "expo-tracking-transparency"
     ],
     "updates": {
       "url": "https://u.expo.dev/b4af49da-5fe8-402f-8339-92131b27ff3e",

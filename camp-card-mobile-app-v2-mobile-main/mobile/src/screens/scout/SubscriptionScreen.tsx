@@ -19,9 +19,11 @@ import { useAuthStore } from '../../store/authStore';
 import { TroopLeaderStackParamList } from '../../navigation/RootNavigator';
 import { useSubscriptionCardStatus } from '../../hooks/useSubscriptionCardStatus';
 import SubscriptionCardBanner from '../../components/SubscriptionCardBanner';
+import SubscriptionDisclosureModal from '../../components/SubscriptionDisclosureModal';
 import { useIAP } from '../../hooks/useIAP';
 import { IAP_PRODUCTS, IAP_PRICES } from '../../config/constants';
 import { useTheme } from '../../config/ThemeContext';
+import { analyticsService } from '../../services/analyticsService';
 
 interface SubscriptionPlan {
   id: number;
@@ -58,6 +60,7 @@ export default function SubscriptionScreen() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
+  const [disclosurePlan, setDisclosurePlan] = useState<SubscriptionPlan | null>(null);
 
   const navigation = useNavigation<TroopLeaderNavProp>();
   const { user, updateUser } = useAuthStore();
@@ -86,6 +89,7 @@ export default function SubscriptionScreen() {
     autoInit: true,
     userId: user?.id,
     onPurchaseComplete: async (result) => {
+      analyticsService.trackIAP('iap_purchase_success', { productId: result.productId, transactionId: result.transactionId });
       Alert.alert('Success!', 'Your subscription is now active');
       await loadSubscriptionData();
       try {
@@ -96,12 +100,14 @@ export default function SubscriptionScreen() {
       }
     },
     onPurchaseError: (error) => {
+      analyticsService.trackIAP('iap_purchase_fail', { error });
       Alert.alert('Purchase Failed', error);
     },
   });
 
   useEffect(() => {
     loadSubscriptionData();
+    analyticsService.trackScreenView('SubscriptionScreen');
   }, []);
 
   const loadSubscriptionData = async () => {
@@ -134,14 +140,23 @@ export default function SubscriptionScreen() {
     }
   };
 
-  const handleSubscribe = async (plan: SubscriptionPlan) => {
+  const handleSubscribe = (plan: SubscriptionPlan) => {
     if (isUnitLeader) {
       navigation.navigate('SelectScoutForSubscription', { planId: plan.uuid });
       return;
     }
 
+    // Show disclosure modal (Apple Guideline 3.1.2) before native payment sheet
+    setDisclosurePlan(plan);
+  };
+
+  const handleDisclosureConfirm = async () => {
+    if (!disclosurePlan) return;
+    setDisclosurePlan(null);
+
     try {
       const sku = IAP_PRODUCTS.SUBSCRIPTION_ANNUAL;
+      analyticsService.trackIAP('iap_purchase_start', { sku, planName: disclosurePlan.name });
       await purchaseSubscription(sku);
     } catch (error: any) {
       console.error('IAP subscription error:', error);
@@ -547,6 +562,17 @@ export default function SubscriptionScreen() {
       )}
 
     </ScrollView>
+
+      {/* Apple Guideline 3.1.2 - Subscription disclosure before payment */}
+      <SubscriptionDisclosureModal
+        visible={!!disclosurePlan}
+        onConfirm={handleDisclosureConfirm}
+        onCancel={() => setDisclosurePlan(null)}
+        productName={disclosurePlan?.name || ''}
+        price={getLocalizedPrice(IAP_PRODUCTS.SUBSCRIPTION_ANNUAL) || `$${(IAP_PRICES.SUBSCRIPTION_ANNUAL / 100).toFixed(2)}`}
+        period="1 Year (Auto-Renewable)"
+        loading={iapPurchasing}
+      />
     </SafeAreaView>
   );
 }

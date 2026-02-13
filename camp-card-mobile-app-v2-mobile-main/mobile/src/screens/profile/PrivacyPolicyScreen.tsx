@@ -50,7 +50,7 @@ export default function PrivacyPolicyScreen() {
           <View style={[styles.publisherBadge, { backgroundColor: colors.primary + '15' }]}>
             <Text style={[styles.publisherText, { color: colors.primary }]}>Published by Swipe Savvy, LLC</Text>
           </View>
-          <Text style={[styles.lastUpdated, { color: colors.textSecondary }]}>Last Updated: January 30, 2026</Text>
+          <Text style={[styles.lastUpdated, { color: colors.textSecondary }]}>Last Updated: February 13, 2026</Text>
 
           <View style={styles.introduction}>
             <Text style={styles.paragraph}>
@@ -128,15 +128,16 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.sectionSubtitle}>B. Information Collected Automatically</Text>
             <BulletPoint>
               <Text style={styles.bold}>Device Information:</Text> Device type, model, and
-              manufacturer; operating system type and version; unique device identifiers (e.g.,
-              IDFA, Android Advertising ID); mobile carrier and network information; screen
-              resolution and display settings
+              manufacturer; operating system type and version; mobile carrier and network
+              information. On iOS, the Identifier for Advertisers (IDFA) is only accessed
+              if you grant permission via the App Tracking Transparency prompt.
             </BulletPoint>
             <BulletPoint>
               <Text style={styles.bold}>Usage Information:</Text> App features accessed and
               frequency of use; time, date, and duration of sessions; screens and pages viewed;
               actions taken within the App (e.g., offers viewed, QR codes scanned, subscriptions
-              purchased); search queries entered; crash reports and performance diagnostics
+              purchased); search queries entered. This data is collected by our first-party
+              analytics system and is not shared with third-party analytics providers.
             </BulletPoint>
             <BulletPoint>
               <Text style={styles.bold}>Location Information:</Text> GPS coordinates (only with
@@ -155,8 +156,9 @@ export default function PrivacyPolicyScreen() {
               payment status, and fraud screening results from Authorize.net
             </BulletPoint>
             <BulletPoint>
-              <Text style={styles.bold}>Analytics Providers:</Text> Aggregated usage patterns,
-              app performance metrics, and anonymized behavioral data from Firebase Analytics
+              <Text style={styles.bold}>In-App Purchase Platforms:</Text> Transaction status,
+              purchase receipts, and subscription state from Apple App Store (StoreKit) and
+              Google Play Billing
             </BulletPoint>
           </Section>
 
@@ -237,9 +239,9 @@ export default function PrivacyPolicyScreen() {
               servers.
             </BulletPoint>
             <BulletPoint>
-              <Text style={styles.bold}>Firebase (Google):</Text> Push notification delivery,
-              app analytics, and crash reporting. Firebase processes device tokens and anonymized
-              usage data.
+              <Text style={styles.bold}>Firebase (Google):</Text> Push notification delivery
+              via Firebase Cloud Messaging (FCM). Firebase processes device tokens for
+              notification routing only.
             </BulletPoint>
             <BulletPoint>
               <Text style={styles.bold}>Amazon Web Services (AWS):</Text> Cloud hosting,
@@ -520,9 +522,16 @@ export default function PrivacyPolicyScreen() {
             </BulletPoint>
             <BulletPoint>
               <Text style={styles.bold}>Firebase (Google):</Text> Push notification delivery
-              via Firebase Cloud Messaging (FCM), app analytics and performance monitoring
-              via Firebase Analytics, and crash reporting via Firebase Crashlytics. Firebase
-              processes device tokens, anonymized usage metrics, and app stability data.
+              via Firebase Cloud Messaging (FCM). Firebase processes device tokens for
+              notification routing only. We do not use Firebase Analytics or Firebase
+              Crashlytics. All app usage analytics are collected and processed by our
+              own first-party analytics system on our servers.
+            </BulletPoint>
+            <BulletPoint>
+              <Text style={styles.bold}>Apple App Store / Google Play:</Text> In-app purchase
+              processing, subscription management, and receipt verification via StoreKit 2
+              (iOS) and Google Play Billing (Android). Purchase tokens and transaction data
+              are processed to verify and fulfill purchases.
             </BulletPoint>
             <BulletPoint>
               <Text style={styles.bold}>Amazon Web Services (AWS):</Text> Cloud infrastructure
@@ -546,7 +555,27 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <Section title="13. Do Not Track">
+          <Section title="13. App Tracking Transparency (iOS)">
+            <Text style={styles.paragraph}>
+              On iOS devices, the App requests your permission via Apple's App Tracking
+              Transparency (ATT) framework before accessing the Identifier for Advertisers
+              (IDFA) or engaging in any cross-app tracking. You may grant or deny this
+              permission when prompted. Your choice does not affect your ability to use
+              the App or access any features.
+            </Text>
+            <Text style={styles.paragraph}>
+              If you deny tracking permission, we will not access your IDFA or share data
+              with third parties for cross-app advertising purposes. Our first-party analytics
+              (screen views, session data, feature usage) will continue to function as these
+              do not require tracking permission and are processed solely on our servers.
+            </Text>
+            <Text style={styles.paragraph}>
+              You can change your tracking preference at any time in your device Settings
+              {'>'} Privacy & Security {'>'} Tracking {'>'} Camp Card.
+            </Text>
+          </Section>
+
+          <Section title="14. Do Not Track">
             <Text style={styles.paragraph}>
               Some web browsers include a "Do Not Track" (DNT) feature or similar mechanism
               that signals to websites and online services that you do not wish to be tracked.
@@ -561,7 +590,7 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <Section title="14. International Users">
+          <Section title="15. International Users">
             <Text style={styles.paragraph}>
               The Camp Card Service is operated from and intended for use within the United
               States of America. All data collected through the Service is processed and stored
@@ -577,7 +606,7 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <Section title="15. Limitation of Liability">
+          <Section title="16. Limitation of Liability">
             <Text style={styles.paragraph}>
               TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, SWIPE SAVVY, LLC, ITS OFFICERS,
               DIRECTORS, EMPLOYEES, AGENTS, LICENSORS, AND SERVICE PROVIDERS SHALL NOT BE LIABLE
@@ -604,7 +633,7 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <Section title="16. Dispute Resolution">
+          <Section title="17. Dispute Resolution">
             <Text style={styles.paragraph}>
               In the event of any dispute, claim, or controversy arising out of or relating
               to this Privacy Policy or the processing of your personal information
@@ -649,7 +678,7 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <Section title="17. Indemnification">
+          <Section title="18. Indemnification">
             <Text style={styles.paragraph}>
               You agree to indemnify, defend, and hold harmless Swipe Savvy, LLC, its officers,
               directors, employees, agents, licensors, and service providers from and against
@@ -668,7 +697,7 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <Section title="18. Changes to This Policy">
+          <Section title="19. Changes to This Policy">
             <Text style={styles.paragraph}>
               We reserve the right to update or modify this Privacy Policy at any time. When
               we make changes, we will:
@@ -687,7 +716,7 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </Section>
 
-          <Section title="19. Contact Us">
+          <Section title="20. Contact Us">
             <Text style={styles.paragraph}>
               If you have any questions, concerns, or requests regarding this Privacy Policy
               or our privacy practices, please contact us using the appropriate channel below:
