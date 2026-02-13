@@ -92,11 +92,60 @@
     }
   },
   "releaseNotes": {
-    "version": "1.0.0",
-    "notes": "Initial release of Camp Card!\n\n• Browse and redeem exclusive merchant offers\n• Support Scout fundraising with every purchase\n• Find participating merchants near you\n• Track your redemptions and savings\n• Secure login with biometric authentication"
+    "version": "1.1.0",
+    "notes": "Version 1.1.0:\n\n• App Tracking Transparency (ATT) framework integration\n• Enhanced subscription disclosure before purchases\n• Improved first-party analytics (no third-party tracking)\n• Updated Privacy Policy with ATT section\n• Reduced Android permissions to minimum required\n• Bug fixes and performance improvements"
   },
   "reviewInformation": {
-    "notes": "Test account credentials:\nEmail: test@campcard.org\nPassword: Password123\n\nThe app requires an active subscription to access merchant offers. The test account has an active subscription for review purposes.",
-    "demoAccountRequired": true
+    "demoAccountRequired": true,
+    "demoEmail": "demo@campcard.org",
+    "demoPassword": "Password123",
+    "demoRole": "PARENT",
+    "notes": "Demo Account:\nEmail: demo@campcard.org\nPassword: Password123\nRole: PARENT (has active subscription, full feature access)\n\nATT (App Tracking Transparency):\nThe ATT permission prompt appears on first launch (iOS only) before any analytics tracking begins. The app uses first-party analytics only (no third-party analytics SDKs). If the user denies tracking, no IDFA is accessed. Implementation: App.tsx calls useTrackingPermission() hook.\n\nIn-App Purchases:\nThe app uses StoreKit 2 via expo-iap. Products:\n- org.bsa.campcard.subscription.annual (auto-renewable, $14.99/year)\n- org.bsa.campcard.cards.1 through .cards.10 (consumable card packs)\n\nSubscription Disclosure (Guideline 3.1.2):\nBefore every subscription purchase, a SubscriptionDisclosureModal shows: subscription name, duration, price, auto-renewal terms, Privacy Policy link, Terms of Use link. Displayed BEFORE the native StoreKit payment sheet.\n\niPad Support:\nRuns in portrait mode with responsive layouts. iPad screenshots are genuine iPad Simulator captures (2048x2732).\n\nPrivacy:\n- No Firebase Analytics or Crashlytics\n- First-party analytics only\n- Privacy Policy: https://www.campcardapp.org/privacy\n- Terms of Use: https://www.campcardapp.org/terms"
+  },
+  "googlePlayDataSafety": {
+    "dataCollected": {
+      "location": {
+        "approximateLocation": true,
+        "preciseLocation": true,
+        "purpose": "Find nearby merchants and offers",
+        "optional": true,
+        "userControlled": true
+      },
+      "personalInfo": {
+        "emailAddress": true,
+        "name": true,
+        "phone": true,
+        "purpose": "Account registration and communication",
+        "optional": false
+      },
+      "appActivity": {
+        "screenViews": true,
+        "userActions": true,
+        "purpose": "App analytics and improvement",
+        "optional": false,
+        "note": "First-party analytics only, not shared with third parties"
+      },
+      "deviceIdentifiers": {
+        "deviceModel": true,
+        "osVersion": true,
+        "pushToken": true,
+        "purpose": "Push notifications and analytics",
+        "optional": false
+      },
+      "financialInfo": {
+        "purchaseHistory": true,
+        "purpose": "Subscription and card purchase management",
+        "optional": false
+      }
+    },
+    "dataShared": {
+      "none": true,
+      "note": "No data is shared with third parties for advertising or analytics"
+    },
+    "securityPractices": {
+      "dataEncryptedInTransit": true,
+      "dataCanBeDeleted": true,
+      "independentSecurityReview": false
+    }
   }
 }
