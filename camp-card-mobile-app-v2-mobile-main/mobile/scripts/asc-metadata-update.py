@@ -136,7 +136,7 @@ def get_latest_version(token, platform="IOS"):
     """Get the latest app store version."""
     data = api_request(
         "GET",
-        f"/apps/{ASC_APP_ID}/appStoreVersions?filter[platform]={platform}&limit=1&sort=-createdDate",
+        f"/apps/{ASC_APP_ID}/appStoreVersions?filter[platform]={platform}&limit=1",
         token,
     )
     if data and data.get("data"):
