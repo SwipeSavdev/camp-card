@@ -26,6 +26,7 @@ const themeColors = {
   success200: '#bbf7d0',
   success600: '#16a34a',
   warning50: '#fefce8',
+  warning200: '#fed7aa',
   warning600: '#eab308',
   info50: '#f0f9ff',
   info200: '#cffafe',
@@ -68,6 +69,16 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
        </svg>,
+    download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>,
+    upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>,
   };
   return icons[name] || null;
 }
@@ -148,6 +159,13 @@ export default function MerchantsPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Import/Export state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importDone, setImportDone] = useState(false);
+  const [importResults, setImportResults] = useState<{ success: number; failed: number; errors: string[] }>({ success: 0, failed: 0, errors: [] });
 
   // Dynamic business types extracted from loaded data + common defaults
   const defaultBusinessTypes = [
@@ -385,6 +403,148 @@ export default function MerchantsPage() {
     setNewLocations(newLocations.filter((l) => l.id !== locationId));
   };
 
+  // ── CSV helper ──────────────────────────────────────────────────────────
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"' && !inQuotes) {
+        inQuotes = true;
+      } else if (char === '"' && inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"' && inQuotes) {
+        inQuotes = false;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result;
+  };
+
+  const downloadMerchantsTemplate = () => {
+    const content = [
+      '# Camp Card - Merchants Import Template',
+      '# ─────────────────────────────────────────────────────────────────────',
+      '# INSTRUCTIONS',
+      '# 1. Do NOT modify or remove the header row (the line that starts with merchant_name)',
+      '# 2. Add one merchant per row beneath the header',
+      '# 3. All fields marked REQUIRED must have a value; leave optional fields blank',
+      '# 4. merchant_name   : REQUIRED - Business / merchant name',
+      '# 5. contact_name    : REQUIRED - Primary contact person full name',
+      '# 6. email           : REQUIRED - Contact e-mail address',
+      '# 7. phone           : REQUIRED - Contact phone number',
+      '# 8. business_type   : REQUIRED - One of: Retail, Restaurant, Service, Entertainment, Healthcare, Education, Other',
+      '# 9. hq_street_address: REQUIRED - Street address of the primary / HQ location',
+      '# 10. hq_city         : REQUIRED - City',
+      '# 11. hq_state        : REQUIRED - 2-letter US state abbreviation (e.g. IL)',
+      '# 12. hq_zip_code     : REQUIRED - 5-digit ZIP code',
+      '# NOTE: Additional locations can be added after import via the admin portal.',
+      '#',
+      'merchant_name,contact_name,email,phone,business_type,hq_street_address,hq_city,hq_state,hq_zip_code',
+      '"Acme Hardware","John Smith","john@acmehardware.com","555-123-4567","Retail","123 Main Street","Springfield","IL","62701"',
+      '"Pizza Palace","Maria Garcia","maria@pizzapalace.com","555-987-6543","Restaurant","456 Oak Avenue","Chicago","IL","60601"',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'merchants_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportMerchants = () => {
+    const headers = 'merchant_name,contact_name,email,phone,business_type,status,hq_street_address,hq_city,hq_state,hq_zip_code,total_locations';
+    const rows = items.map((m) => {
+      const hq = m.locations.find((l) => l.isHQ) || m.locations[0];
+      return [
+        m.name, m.contactName, m.email, m.phone,
+        m.businessType, m.status,
+        hq?.streetAddress || '', hq?.city || '', hq?.state || '', hq?.zipCode || '',
+        String(m.locations.length),
+      ].map((v) => `"${String(v || '').replace(/"/g, '""')}"`).join(',');
+    });
+    const csv = [headers, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `merchants_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const executeMerchantsImport = async () => {
+    if (!importFile) return;
+    setImportLoading(true);
+    setImportDone(false);
+    try {
+      const text = await importFile.text();
+      const lines = text.split('\n').filter((line) => {
+        const t = line.trim();
+        return t && !t.startsWith('#');
+      });
+      if (lines.length < 2) {
+        setImportResults({ success: 0, failed: 0, errors: ['File appears empty or only contains headers/comments.'] });
+        setImportDone(true);
+        setImportLoading(false);
+        return;
+      }
+      const headers = parseCSVLine(lines[0]).map((h) => h.trim().replace(/"/g, '').toLowerCase());
+      let success = 0;
+      let failed = 0;
+      const errors: string[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        const row: Record<string, string> = {};
+        headers.forEach((h, idx) => { row[h] = (values[idx] || '').trim(); });
+        if (!row.merchant_name) continue;
+        try {
+          const merchantData = {
+            businessName: row.merchant_name,
+            category: row.business_type || 'Other',
+            contactName: row.contact_name,
+            contactEmail: row.email,
+            contactPhone: row.phone,
+            description: `${row.hq_street_address}, ${row.hq_city}, ${row.hq_state} ${row.hq_zip_code}`.trim(),
+            primaryLocation: {
+              locationName: 'HQ',
+              streetAddress: row.hq_street_address,
+              city: row.hq_city,
+              state: (row.hq_state || '').toUpperCase(),
+              zipCode: row.hq_zip_code,
+              primaryLocation: true,
+              phone: row.phone,
+            },
+            termsAccepted: true,
+          };
+          // eslint-disable-next-line no-await-in-loop
+          await api.createMerchant(merchantData, session);
+          success++;
+        } catch (err) {
+          failed++;
+          errors.push(`Row ${i} "${row.merchant_name}": ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+      }
+      setImportResults({ success, failed, errors });
+      setImportDone(true);
+      if (success > 0) await fetchData();
+    } catch (err) {
+      setImportResults({ success: 0, failed: 0, errors: [`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`] });
+      setImportDone(true);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+  // ────────────────────────────────────────────────────────────────────────
+
   const addMerchant = async () => {
     if (!newMerchantName.trim() || !newContactName.trim() || !newEmail.trim() || !newPhone.trim() || !newBusinessType.trim()) {
       setError('Business name, contact name, email, phone, and business type are required');
@@ -559,16 +719,39 @@ export default function MerchantsPage() {
               {filteredItems.length}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAddForm(true)}
-            style={{
-              background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
-            }}
-          >
-            <Icon name="add" size={18} color={themeColors.white} />
-            Add Merchant
-          </button>
+          <div style={{ display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={handleExportMerchants}
+              disabled={items.length === 0}
+              style={{
+                background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray300}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: items.length === 0 ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center', opacity: items.length === 0 ? 0.5 : 1,
+              }}
+            >
+              <Icon name="download" size={16} color={themeColors.gray600} />
+              Export
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowImportModal(true); setImportFile(null); setImportDone(false); setImportResults({ success: 0, failed: 0, errors: [] }); }}
+              style={{
+                background: themeColors.white, color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, padding: `${themeSpace.sm} ${themeSpace.md}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
+              }}
+            >
+              <Icon name="upload" size={16} color={themeColors.primary600} />
+              Import
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(true)}
+              style={{
+                background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
+              }}
+            >
+              <Icon name="add" size={18} color={themeColors.white} />
+              Add Merchant
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -1665,6 +1848,137 @@ id="field-8"
           </div>
         </div>
       </div>
+      )}
+
+      {/* ── Import Modal ─────────────────────────────────────────────────── */}
+      {showImportModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: themeSpace.lg }}>
+          <div style={{ backgroundColor: themeColors.white, borderRadius: themeRadius.lg, padding: themeSpace.xl, maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: themeShadow.md }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: themeSpace.lg }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', color: themeColors.text, margin: 0 }}>Import Merchants</h2>
+              <button
+                type="button"
+                onClick={() => { setShowImportModal(false); setImportFile(null); setImportDone(false); setImportResults({ success: 0, failed: 0, errors: [] }); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+              >
+                <Icon name="x" size={20} color={themeColors.gray500} />
+              </button>
+            </div>
+
+            {/* Instructions */}
+            <div style={{ backgroundColor: themeColors.primary50, border: `1px solid ${themeColors.primary200}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.lg }}>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: themeColors.primary800, marginBottom: themeSpace.sm }}>Instructions</div>
+              <ol style={{ margin: 0, padding: '0 0 0 18px', fontSize: '13px', color: themeColors.primary800, lineHeight: '1.9' }}>
+                <li>Download the CSV template — it includes column definitions and example rows</li>
+                <li>Fill in one merchant per row. Do not modify the header row</li>
+                <li>
+                  Required columns:
+                  {' '}
+                  <strong>merchant_name, contact_name, email, phone, business_type, hq_street_address, hq_city, hq_state, hq_zip_code</strong>
+                </li>
+                <li>
+                  business_type must be one of: Retail, Restaurant, Service, Entertainment, Healthcare, Education, Other
+                </li>
+                <li>hq_state must be a 2-letter US state code (e.g. IL, CA, TX)</li>
+                <li>Each merchant will be created with one HQ location. Additional locations can be added afterwards via the portal</li>
+                <li>Upload your completed CSV and click Import</li>
+              </ol>
+            </div>
+
+            {/* Template download */}
+            <button
+              type="button"
+              onClick={downloadMerchantsTemplate}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: themeSpace.sm, width: '100%', padding: `${themeSpace.sm} ${themeSpace.md}`, border: `1px solid ${themeColors.primary600}`, borderRadius: themeRadius.sm, color: themeColors.primary600, backgroundColor: themeColors.white, cursor: 'pointer', fontSize: '14px', fontWeight: '500', marginBottom: themeSpace.lg }}
+            >
+              <Icon name="download" size={16} color={themeColors.primary600} />
+              Download CSV Template
+            </button>
+
+            {!importDone ? (
+              <>
+                {/* Drop zone */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => document.getElementById('merchant-import-file')?.click()}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') document.getElementById('merchant-import-file')?.click(); }}
+                  style={{ border: `2px dashed ${importFile ? themeColors.success600 : themeColors.gray300}`, borderRadius: themeRadius.sm, padding: themeSpace.xl, textAlign: 'center', marginBottom: themeSpace.md, backgroundColor: importFile ? themeColors.success50 : themeColors.gray50, cursor: 'pointer' }}
+                >
+                  <Icon name="upload" size={32} color={importFile ? themeColors.success600 : themeColors.gray500} />
+                  <div style={{ marginTop: themeSpace.sm, fontSize: '14px', color: importFile ? themeColors.success600 : themeColors.gray500, fontWeight: importFile ? '600' : '400' }}>
+                    {importFile ? `✓ ${importFile.name}` : 'Click to select a CSV file'}
+                  </div>
+                  {!importFile && (
+                    <div style={{ marginTop: '4px', fontSize: '12px', color: themeColors.gray500 }}>Accepts .csv files only</div>
+                  )}
+                </div>
+                <input
+                  id="merchant-import-file"
+                  type="file"
+                  accept=".csv,text/csv"
+                  style={{ display: 'none' }}
+                  onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                />
+
+                <div style={{ display: 'flex', gap: themeSpace.md }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowImportModal(false); setImportFile(null); }}
+                    style={{ flex: 1, padding: `${themeSpace.sm} ${themeSpace.md}`, border: `1px solid ${themeColors.gray300}`, borderRadius: themeRadius.sm, backgroundColor: themeColors.white, color: themeColors.gray600, cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={executeMerchantsImport}
+                    disabled={!importFile || importLoading}
+                    style={{ flex: 2, padding: `${themeSpace.sm} ${themeSpace.md}`, border: 'none', borderRadius: themeRadius.sm, backgroundColor: importFile && !importLoading ? themeColors.primary600 : themeColors.gray300, color: themeColors.white, cursor: importFile && !importLoading ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: '500' }}
+                  >
+                    {importLoading ? 'Importing…' : 'Import Merchants'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Results */
+              <div>
+                <div style={{ display: 'flex', gap: themeSpace.md, marginBottom: themeSpace.md }}>
+                  <div style={{ flex: 1, padding: themeSpace.md, backgroundColor: themeColors.success50, border: `1px solid ${themeColors.success200}`, borderRadius: themeRadius.sm, textAlign: 'center' }}>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: themeColors.success600 }}>{importResults.success}</div>
+                    <div style={{ fontSize: '12px', color: themeColors.success600, marginTop: '2px' }}>Imported Successfully</div>
+                  </div>
+                  {importResults.failed > 0 && (
+                    <div style={{ flex: 1, padding: themeSpace.md, backgroundColor: themeColors.warning50, border: `1px solid ${themeColors.warning200}`, borderRadius: themeRadius.sm, textAlign: 'center' }}>
+                      <div style={{ fontSize: '28px', fontWeight: '700', color: themeColors.warning600 }}>{importResults.failed}</div>
+                      <div style={{ fontSize: '12px', color: themeColors.warning600, marginTop: '2px' }}>Failed</div>
+                    </div>
+                  )}
+                </div>
+                {importResults.errors.length > 0 && (
+                  <div style={{ backgroundColor: themeColors.warning50, border: `1px solid ${themeColors.warning200}`, borderRadius: themeRadius.sm, padding: themeSpace.md, marginBottom: themeSpace.md, maxHeight: '200px', overflowY: 'auto' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: themeColors.warning600, marginBottom: themeSpace.sm }}>Errors</div>
+                    {importResults.errors.map((err, idx) => (
+                      // eslint-disable-next-line react/no-array-index-key
+                      <div key={idx} style={{ fontSize: '12px', color: themeColors.warning600, marginBottom: '4px' }}>
+                        •
+                        {' '}
+                        {err}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setShowImportModal(false); setImportFile(null); setImportDone(false); setImportResults({ success: 0, failed: 0, errors: [] }); }}
+                  style={{ width: '100%', padding: `${themeSpace.sm} ${themeSpace.md}`, border: 'none', borderRadius: themeRadius.sm, backgroundColor: themeColors.primary600, color: themeColors.white, cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </PageLayout>
   );

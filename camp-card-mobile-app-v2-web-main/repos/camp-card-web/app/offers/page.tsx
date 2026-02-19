@@ -144,6 +144,11 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: string; size?
       <polyline points="17 8 12 3 7 8" />
       <line x1="12" y1="3" x2="12" y2="15" />
     </svg>,
+    download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>,
   };
   return icons[name] || null;
 }
@@ -194,6 +199,13 @@ export default function OffersPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Import/export state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importDone, setImportDone] = useState(false);
+  const [importResults, setImportResults] = useState<{ success: number; failed: number; errors: string[] }>({ success: 0, failed: 0, errors: [] });
 
   // Form states
   const [newMerchantId, setNewMerchantId] = useState('');
@@ -858,6 +870,157 @@ export default function OffersPage() {
 
   const hasActiveFilters = searchTerm !== '' || merchantFilter !== '' || discountTypeFilter !== '' || usageTypeFilter !== '';
 
+  // ── Import / Export helpers ──────────────────────────────────────────────
+
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+        else { inQuotes = !inQuotes; }
+      } else if (ch === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
+  const downloadOffersTemplate = () => {
+    const lines = [
+      '# Offers Import Template',
+      '# Columns: merchant_name, offer_name, description, discount_type, discount_value, usage_type, min_purchase_amount, barcode',
+      '#',
+      '# merchant_name   : Exact name of an APPROVED merchant already in the system',
+      '# offer_name      : Title shown to users (required)',
+      '# description     : Short description of the offer (required)',
+      '# discount_type   : One of: $ | % | BOGO | Free Item | Points | Buy One Get | $ off when $ spent | % off when $ spent',
+      '# discount_value  : Numeric value (e.g. 10 for $10 or 10%); use 0 for BOGO/Free Item',
+      '# usage_type      : one-time  OR  reusable',
+      '# min_purchase_amount : (optional) Minimum purchase in dollars; leave blank for none',
+      '# barcode         : (optional) Barcode string for POS scanning; leave blank for none',
+      '#',
+      '# Example rows:',
+      'Acme Hardware,10% Off Any Purchase,Save 10% on your entire purchase,%,10,reusable,,',
+      'Acme Hardware,Free Widget with $25 Purchase,Get a free widget when you spend $25 or more,Free Item,0,one-time,25,',
+      'City Diner,$5 Off Lunch,Enjoy $5 off any lunch entree,$,5,reusable,10,DINER-LUNCH-2026',
+      'City Diner,BOGO Burger,Buy one burger get one free,BOGO,0,one-time,,',
+      '',
+      'merchant_name,offer_name,description,discount_type,discount_value,usage_type,min_purchase_amount,barcode',
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'offers_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportOffers = () => {
+    const allOfferItems: OfferItem[] = items.flatMap((group) => group.items);
+    if (allOfferItems.length === 0) return;
+    const header = 'merchant_name,offer_name,description,discount_type,discount_value,usage_type,min_purchase_amount,barcode';
+    const rows = allOfferItems.map((o) => {
+      const escape = (v: string | undefined) => `"${(v || '').replace(/"/g, '""')}"`;
+      return [
+        escape(o.merchantName),
+        escape(o.name),
+        escape(o.description),
+        escape(reverseMapDiscountType(o.discountType)),
+        escape(o.discountAmount),
+        escape(o.useType),
+        escape(o.minimumSpend || ''),
+        escape(o.barcode || ''),
+      ].join(',');
+    });
+    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `offers_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const executeOffersImport = async () => {
+    if (!importFile || !session) return;
+    setImportLoading(true);
+    setImportDone(false);
+    setImportResults({ success: 0, failed: 0, errors: [] });
+
+    const text = await importFile.text();
+    const allLines = text.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+    // Skip header row if present
+    const dataLines = allLines.filter((l) => !l.toLowerCase().startsWith('merchant_name'));
+
+    let successCount = 0;
+    const errors: string[] = [];
+
+    // Build a lookup: normalized merchant name → merchant id
+    const merchantLookup = new Map<string, string>();
+    merchants.forEach((m) => {
+      const name = (m.businessName || m.name || '').toLowerCase().trim();
+      if (name) merchantLookup.set(name, String(m.id));
+    });
+
+    for (let i = 0; i < dataLines.length; i++) {
+      const rowNum = i + 1;
+      const cols = parseCSVLine(dataLines[i]);
+      if (cols.length < 6) { errors.push(`Row ${rowNum}: Not enough columns (expected 8, got ${cols.length})`); continue; }
+
+      const [merchantName, offerName, description, discountTypeRaw, discountValueRaw, usageTypeRaw, minPurchaseRaw, barcode] = cols;
+
+      if (!merchantName) { errors.push(`Row ${rowNum}: merchant_name is required`); continue; }
+      if (!offerName) { errors.push(`Row ${rowNum}: offer_name is required`); continue; }
+      if (!description) { errors.push(`Row ${rowNum}: description is required`); continue; }
+
+      const merchantId = merchantLookup.get(merchantName.toLowerCase().trim());
+      if (!merchantId) { errors.push(`Row ${rowNum}: Merchant "${merchantName}" not found or not approved`); continue; }
+
+      const discountValue = parseFloat(discountValueRaw) || 0;
+      const minPurchaseAmount = minPurchaseRaw ? parseFloat(minPurchaseRaw) : undefined;
+      const usageLimitPerUser = usageTypeRaw.toLowerCase() === 'one-time' ? 1 : null;
+
+      const today = new Date().toISOString().split('T')[0];
+      const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      const payload: OfferFormData = {
+        merchantId,
+        title: offerName,
+        description,
+        discountType: mapDiscountType(discountTypeRaw),
+        discountValue,
+        validFrom: today,
+        validUntil: nextYear,
+        usageLimitPerUser,
+        ...(minPurchaseAmount !== undefined && { minPurchaseAmount }),
+        ...(barcode && { barcode }),
+      };
+
+      try {
+        await api.createOffer(payload, session);
+        successCount++;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`Row ${rowNum} ("${offerName}"): ${msg}`);
+      }
+    }
+
+    setImportResults({ success: successCount, failed: errors.length, errors });
+    setImportLoading(false);
+    setImportDone(true);
+    if (successCount > 0) fetchData();
+  };
+
+  // ────────────────────────────────────────────────────────────────────────
+
   if (status === 'loading') return null;
 
   return (
@@ -882,16 +1045,39 @@ export default function OffersPage() {
             {' '}
             merchants
           </span>
-          <button
-            type="button"
-            onClick={() => setShowAddForm(true)}
-            style={{
-              background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
-            }}
-          >
-            <Icon name="add" size={18} color={themeColors.white} />
-            Add Offer
-          </button>
+          <div style={{ display: 'flex', gap: themeSpace.sm, alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={handleExportOffers}
+              disabled={items.flatMap((g) => g.items).length === 0}
+              style={{
+                background: themeColors.white, color: themeColors.primary600, border: `1px solid ${themeColors.primary600}`, padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: items.flatMap((g) => g.items).length === 0 ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center', opacity: items.flatMap((g) => g.items).length === 0 ? 0.5 : 1,
+              }}
+            >
+              <Icon name="download" size={16} color={themeColors.primary600} />
+              Export
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowImportModal(true); setImportFile(null); setImportDone(false); setImportResults({ success: 0, failed: 0, errors: [] }); }}
+              style={{
+                background: themeColors.white, color: themeColors.gray600, border: `1px solid ${themeColors.gray300}`, padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
+              }}
+            >
+              <Icon name="upload" size={16} color={themeColors.gray600} />
+              Import
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(true)}
+              style={{
+                background: themeColors.primary600, color: themeColors.white, border: 'none', padding: `${themeSpace.sm} ${themeSpace.lg}`, borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', gap: themeSpace.sm, alignItems: 'center',
+              }}
+            >
+              <Icon name="add" size={18} color={themeColors.white} />
+              Add Offer
+            </button>
+          </div>
         </div>
 
         <div style={{
@@ -2260,6 +2446,190 @@ htmlFor="field-20" style={{
           </div>
         </div>
       </div>
+      )}
+
+      {/* ── Import Modal ─────────────────────────────────────────────── */}
+      {showImportModal && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: themeSpace.lg,
+        }}
+        >
+          <div style={{
+            backgroundColor: themeColors.white, borderRadius: themeRadius.lg, width: '100%',
+            maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', boxShadow: themeShadow.md,
+          }}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: themeSpace.lg, borderBottom: `1px solid ${themeColors.gray200}`,
+            }}
+            >
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: themeColors.text }}>Import Offers</h2>
+              <button
+                type="button"
+                onClick={() => setShowImportModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: themeSpace.xs }}
+              >
+                <Icon name="x" size={20} color={themeColors.gray500} />
+              </button>
+            </div>
+
+            <div style={{ padding: themeSpace.lg, display: 'flex', flexDirection: 'column', gap: themeSpace.lg }}>
+
+              {/* Instructions */}
+              <div style={{
+                backgroundColor: themeColors.primary50, border: `1px solid ${themeColors.primary200}`,
+                borderRadius: themeRadius.card, padding: themeSpace.lg,
+              }}
+              >
+                <h3 style={{ margin: `0 0 ${themeSpace.md}`, fontSize: '14px', fontWeight: '600', color: themeColors.primary800 }}>
+                  How to Import Offers
+                </h3>
+                <ol style={{ margin: 0, paddingLeft: themeSpace.lg, fontSize: '13px', color: themeColors.primary800, lineHeight: '1.7' }}>
+                  <li>Download the CSV template below.</li>
+                  <li>Open it in Excel, Google Sheets, or any spreadsheet app.</li>
+                  <li>Lines starting with <strong>#</strong> are comments — you can keep or delete them.</li>
+                  <li>The last header row (<code>merchant_name,offer_name,…</code>) must remain.</li>
+                  <li>Fill in one offer per row. Each offer requires a valid, <strong>approved merchant</strong> already in the system.</li>
+                  <li>
+                    <strong>discount_type</strong> must be one of:
+                    {' '}
+                    <em>$ | % | BOGO | Free Item | Points | Buy One Get | $ off when $ spent | % off when $ spent</em>
+                  </li>
+                  <li><strong>usage_type</strong>: <em>one-time</em> (limit 1 per user) or <em>reusable</em> (unlimited).</li>
+                  <li>Save as CSV, then upload the file here and click <strong>Import</strong>.</li>
+                </ol>
+              </div>
+
+              {/* Template download */}
+              <button
+                type="button"
+                onClick={downloadOffersTemplate}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: themeSpace.sm,
+                  padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                  background: themeColors.white, color: themeColors.primary600,
+                  border: `1px solid ${themeColors.primary600}`,
+                  borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <Icon name="download" size={16} color={themeColors.primary600} />
+                Download CSV Template
+              </button>
+
+              {/* File upload zone */}
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: themeColors.text, marginBottom: themeSpace.sm }}>
+                  Upload CSV File
+                </label>
+                <label
+                  htmlFor="offer-import-file"
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: themeSpace.sm, padding: themeSpace.xl,
+                    border: `2px dashed ${importFile ? themeColors.primary600 : themeColors.gray300}`,
+                    borderRadius: themeRadius.card, cursor: 'pointer',
+                    backgroundColor: importFile ? themeColors.primary50 : themeColors.gray50,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Icon name="upload" size={28} color={importFile ? themeColors.primary600 : themeColors.gray500} />
+                  {importFile
+                    ? <span style={{ fontSize: '14px', color: themeColors.primary600, fontWeight: '500' }}>{importFile.name}</span>
+                    : (
+                      <>
+                        <span style={{ fontSize: '14px', color: themeColors.gray600, fontWeight: '500' }}>Click to select a CSV file</span>
+                        <span style={{ fontSize: '12px', color: themeColors.gray500 }}>or drag and drop here</span>
+                      </>
+                    )}
+                  <input
+                    id="offer-import-file"
+                    type="file"
+                    accept=".csv,text/csv"
+                    style={{ display: 'none' }}
+                    onChange={(e) => { setImportFile(e.target.files?.[0] || null); setImportDone(false); }}
+                  />
+                </label>
+              </div>
+
+              {/* Results panel */}
+              {importDone && (
+                <div style={{
+                  border: `1px solid ${importResults.failed > 0 ? themeColors.warning200 : themeColors.success200}`,
+                  borderRadius: themeRadius.card,
+                  backgroundColor: importResults.failed > 0 ? themeColors.warning50 : themeColors.success50,
+                  padding: themeSpace.md,
+                }}
+                >
+                  <div style={{ display: 'flex', gap: themeSpace.lg, marginBottom: importResults.errors.length > 0 ? themeSpace.md : 0 }}>
+                    <span style={{ fontSize: '14px', color: themeColors.success600, fontWeight: '600' }}>
+                      ✓
+                      {' '}
+                      {importResults.success}
+                      {' '}
+                      imported
+                    </span>
+                    {importResults.failed > 0 && (
+                      <span style={{ fontSize: '14px', color: themeColors.warning600, fontWeight: '600' }}>
+                        ✗
+                        {' '}
+                        {importResults.failed}
+                        {' '}
+                        failed
+                      </span>
+                    )}
+                  </div>
+                  {importResults.errors.length > 0 && (
+                    <div style={{
+                      maxHeight: '160px', overflowY: 'auto', fontSize: '12px',
+                      color: themeColors.gray600, display: 'flex', flexDirection: 'column', gap: '4px',
+                    }}
+                    >
+                      {importResults.errors.map((e, idx) => (
+                        // eslint-disable-next-line react/no-array-index-key
+                        <div key={idx} style={{ padding: '4px 0', borderBottom: `1px solid ${themeColors.gray200}` }}>{e}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: themeSpace.md, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                    border: `1px solid ${themeColors.gray200}`,
+                    backgroundColor: themeColors.white, borderRadius: themeRadius.sm,
+                    cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: themeColors.gray600,
+                  }}
+                >
+                  {importDone ? 'Close' : 'Cancel'}
+                </button>
+                <button
+                  type="button"
+                  onClick={executeOffersImport}
+                  disabled={!importFile || importLoading}
+                  style={{
+                    padding: `${themeSpace.sm} ${themeSpace.lg}`,
+                    background: !importFile || importLoading ? themeColors.gray300 : themeColors.primary600,
+                    color: themeColors.white, border: 'none',
+                    borderRadius: themeRadius.sm,
+                    cursor: !importFile || importLoading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px', fontWeight: '500',
+                  }}
+                >
+                  {importLoading ? 'Importing…' : 'Import Offers'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </PageLayout>
   );
