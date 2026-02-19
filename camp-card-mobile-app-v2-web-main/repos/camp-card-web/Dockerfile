@@ -40,7 +40,7 @@ RUN addgroup -S campcard && adduser -S campcard -G campcard
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --legacy-peer-deps --only=production
+RUN npm ci --legacy-peer-deps --omit=dev
 
 # Copy built application from builder
 COPY --from=builder /app/.next ./.next
