@@ -1,0 +1,894 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		03F846B565758B38C5033837 /* ScoutTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18CCF048B96B56AF7F09493 /* ScoutTabView.swift */; };
+		0667F76FB9555DCF8F4E6684 /* MerchantsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E660FE7BBB5FB20885CFCD /* MerchantsListView.swift */; };
+		0CD7D4E1F8AF2792798589B2 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE10E77CFC552A1C673B1F91 /* NotificationsView.swift */; };
+		13746329BB8E39A974270906 /* AccountCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E03DBDF1AD8B80B3B7732F /* AccountCreationView.swift */; };
+		174795FD326D9D7EE3BE787E /* ScoutHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85CF63213633F5B80D7EE52 /* ScoutHomeView.swift */; };
+		2508DB048992A149417625D6 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E5596D3B1B56DBD4D8D4B5 /* DesignTokens.swift */; };
+		25965F9DD7963ABA1A4A35D9 /* CampCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C6022EA1EE080B04C72DF73 /* CampCardTests.swift */; };
+		27AA1EDD77CDE21CCEC54EFC /* ReplenishCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F144C4D2A18E6AB4AF61434 /* ReplenishCardView.swift */; };
+		29750F601B1BDDA94E93A023 /* CardInventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E9DC517B2AB8C6DB662AEB /* CardInventoryView.swift */; };
+		2B0D30780301DA6143E61B4C /* APIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083931C9CA2C31F6CE8A2E4F /* APIConstants.swift */; };
+		2E352AB44B7E9210B59E9842 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B7F706D0DE8201DCDF78D2 /* KeychainService.swift */; };
+		3C791C3309F172A4D1972223 /* BuyMoreCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F4B8001DBFFBF06B6C8ECD4 /* BuyMoreCardsView.swift */; };
+		4030BBCD0F72AFA19E100949 /* ScoutQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB8029F6373A948FCED20733 /* ScoutQRCodeView.swift */; };
+		415080D843DE5945C886576A /* OffersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFE7EC7DB9D7D17CEAD32E /* OffersListView.swift */; };
+		4ACA76875D74BEF4A3197BCA /* ParentTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A261A295FEA057B4B5B3D82A /* ParentTabView.swift */; };
+		4B10B2AB7B7BFACEEDE90D22 /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0347D9AC65DFE329CE1AFE /* SubscriptionView.swift */; };
+		4E44169D587E0327A310ECB2 /* RedemptionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E0614000381587DC208837 /* RedemptionHistoryView.swift */; };
+		4E5A90A1E9A0D57448222FA4 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9553982B6CBB9737453775BC /* WalletView.swift */; };
+		50129F9125ECAABB3214E440 /* CampCardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADC4D6F4952FC22F0256CDE8 /* CampCardApp.swift */; };
+		535F02B7B7E0BAFC57A18E71 /* ConsentPendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A6649908B0AB15C3773C39 /* ConsentPendingView.swift */; };
+		5475FB07FEE95A9C33F09CF0 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704DABBD8443AB8B38C41498 /* Endpoint.swift */; };
+		5611D53D43B91CF78A9335D8 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057B4B3EADA1230D3843CCD2 /* ForgotPasswordView.swift */; };
+		5689E60359B7D936B3F83E21 /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C7B18FF9DB875A47539824 /* StoreService.swift */; };
+		577A236464DCE7341D1E53B5 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 14A897FEB92A1A25E5BC0AC0 /* FirebaseMessaging */; };
+		5D4F3BB9872E2ED696CD51AC /* SkeletonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012404B2797529443EB71829 /* SkeletonComponents.swift */; };
+		63A0C511E8757EB0D14BBED9 /* campcard_skin.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F1FB209C070DADEC83A658C8 /* campcard_skin.jpg */; };
+		63E774FD2F996107D0179B2B /* GiftCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD69638DF2B0728244DB3E2 /* GiftCardView.swift */; };
+		65068EB3F9803E0E61EA9849 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983F75F8A08FA9737DD7A9DF /* AppDelegate.swift */; };
+		670C79A9BF1957754D562E42 /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6221D8D673A1E771F85B888A /* PrivacyPolicyView.swift */; };
+		6925009EFB3B1464E7207581 /* AppIcon_BSA.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 14A8DD20E53082CFC9534C91 /* AppIcon_BSA.jpg */; };
+		6DFA754C89F10370CB7A4DCD /* ManageScoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E147EC488EB42B3825A30AD8 /* ManageScoutsView.swift */; };
+		7168EBB7BE88B3828C08D910 /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5887CCD3863B94CE210A68DC /* NetworkError.swift */; };
+		77276D4ED26752EA294E6E4F /* ParentHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1271EDC84C9CBD10A0ABFA /* ParentHomeView.swift */; };
+		78D741424CB1E01E4BCE4BAD /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F14CCDC53F224CBAA7A3B3 /* APIClient.swift */; };
+		7E7A6D31DBA295921B8F23FB /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF471F797CD09F38EDC259C5 /* Models.swift */; };
+		85503C43758FE7A1C7A8C4C6 /* SubscriptionDisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3456B9C000BEA77843CBE5D8 /* SubscriptionDisclosureView.swift */; };
+		8676D98302DEFDEAB44CD5F4 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E1196EAD3D244676FB2196D /* EditProfileView.swift */; };
+		88634B9C1D30881D0BE81755 /* TroopLeaderTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3641455B111762D6E1A8B421 /* TroopLeaderTabView.swift */; };
+		8A5A25BF7D0596B8CEFF8263 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 516CE194EDD85FD9548E3F96 /* ProfileView.swift */; };
+		8DDE186D78567067A0A9EE30 /* HelpSupportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A504D4BB1A8A5A7400F5C98 /* HelpSupportView.swift */; };
+		905D413C9737D980FD0090B9 /* MerchantDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E715A329E45FFA6357799A1C /* MerchantDetailView.swift */; };
+		97004D6D790D8D8D912D0F1D /* RoleSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2174086A8F7E03F1D9B00B1E /* RoleSelectionView.swift */; };
+		A1FE67C4546FAC523B4E8CBA /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 739EAB8EF16A91E83CDF700D /* SignupView.swift */; };
+		A971330B4A241575D5157975 /* RedemptionSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D125B71182CE448288BD5B84 /* RedemptionSuccessView.swift */; };
+		AB3593F47E3C99E055492FA7 /* DeepLinkHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4406B7B2624282B767A1B270 /* DeepLinkHandler.swift */; };
+		AE14E7906BEBE8E8E439074B /* ClaimGiftView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4E2C315287EC86A169807E /* ClaimGiftView.swift */; };
+		AFEEBA4A29010AB64610B15C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5881CBC0E54F2FCFBB3648DF /* LoginView.swift */; };
+		B0B0769217B8DB5669216555 /* OfferDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4EB20BEECCA2BC0ED30D604 /* OfferDetailView.swift */; };
+		B27CDDB6CCCC543709A18E82 /* CCTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF86D7FF267082A8F3AC03B5 /* CCTabBar.swift */; };
+		B291623C41E2047B0FA4A307 /* OnboardingGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4733F96D2B91936D4CD7848 /* OnboardingGateView.swift */; };
+		B6F910C1A61A79607DE229A5 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 840B672522304B09260B01F0 /* AuthViewModel.swift */; };
+		B7C13F9F08BD5C174448E4A1 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD391DEC1EB49EEBB0C9F8A /* Extensions.swift */; };
+		BD78DEB0BAB0A927721DBD98 /* TroopStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FED1189AA843ED60A6F466A /* TroopStatsView.swift */; };
+		BE0901D55BDE40306589A86B /* ReferralView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F220A0B7120CF3282E9C55 /* ReferralView.swift */; };
+		C53EB2672B771014CF725711 /* NearbyMerchantsMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E5DD291B18A7CD168EA88E /* NearbyMerchantsMapView.swift */; };
+		D01872691CFF6993A343F09F /* ChangePasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDE7B4A38FAE02FF0DACABF /* ChangePasswordView.swift */; };
+		D10C287A895E2D6AD81C23D2 /* TroopLeaderHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F867F70441811C05A06C4EF1 /* TroopLeaderHomeView.swift */; };
+		D5351D7C6BF31DFF686E62FB /* SubscriptionSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342628A810418539F1E23E5C /* SubscriptionSelectionView.swift */; };
+		D7BFCCA27CD08A43E34EC052 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13A9A37B70546E3BF8302F6 /* SettingsView.swift */; };
+		DB41E7A9F9A5575561D470F8 /* InviteScoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF6437E4A751E25FBF8AFF0 /* InviteScoutView.swift */; };
+		DFBB1F81336F163246192CE7 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C627AD95FE0F5AF3C2D705 /* NotificationManager.swift */; };
+		E95532CAC18F9EC94D9E189A /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5307FF58ABDE0A67E638693B /* QRScannerView.swift */; };
+		EF10BCB95D27FE0C63A05E23 /* QuantitySelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7430008FA612BCEEF6E234D7 /* QuantitySelectionView.swift */; };
+		F73BF73B8BA486C62EA180A3 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FDC0587EF7A069134D19A4 /* RootView.swift */; };
+		FA70A04FBDDBF661B491D3B6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A210B3F69CC9AB103CED81E1 /* Assets.xcassets */; };
+		FB5FAEBA2CA565596E9E5664 /* SelectScoutForSubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CEB8B3C539E9D9C464E1250 /* SelectScoutForSubscriptionView.swift */; };
+		FD50EA2105F3E2E186F54C9B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5987E9D095FEF6674AE0E8E5 /* PrivacyInfo.xcprivacy */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		ECCCF3897DA2290392F6737A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3253617B1327D39AB8919455 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43CC45B1CE58494CC4EDB022;
+			remoteInfo = CampCard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		012404B2797529443EB71829 /* SkeletonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonComponents.swift; sourceTree = "<group>"; };
+		057B4B3EADA1230D3843CCD2 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
+		083931C9CA2C31F6CE8A2E4F /* APIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConstants.swift; sourceTree = "<group>"; };
+		0F1271EDC84C9CBD10A0ABFA /* ParentHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentHomeView.swift; sourceTree = "<group>"; };
+		14A8DD20E53082CFC9534C91 /* AppIcon_BSA.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = AppIcon_BSA.jpg; sourceTree = "<group>"; };
+		15E5DD291B18A7CD168EA88E /* NearbyMerchantsMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyMerchantsMapView.swift; sourceTree = "<group>"; };
+		1A504D4BB1A8A5A7400F5C98 /* HelpSupportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSupportView.swift; sourceTree = "<group>"; };
+		2174086A8F7E03F1D9B00B1E /* RoleSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleSelectionView.swift; sourceTree = "<group>"; };
+		24F14CCDC53F224CBAA7A3B3 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		33E0614000381587DC208837 /* RedemptionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedemptionHistoryView.swift; sourceTree = "<group>"; };
+		342628A810418539F1E23E5C /* SubscriptionSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionSelectionView.swift; sourceTree = "<group>"; };
+		3456B9C000BEA77843CBE5D8 /* SubscriptionDisclosureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionDisclosureView.swift; sourceTree = "<group>"; };
+		3641455B111762D6E1A8B421 /* TroopLeaderTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroopLeaderTabView.swift; sourceTree = "<group>"; };
+		3ADCB4B14A0BE932E8AE070A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3E1196EAD3D244676FB2196D /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		41FDC0587EF7A069134D19A4 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		4406B7B2624282B767A1B270 /* DeepLinkHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkHandler.swift; sourceTree = "<group>"; };
+		45C627AD95FE0F5AF3C2D705 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		4A4E2C315287EC86A169807E /* ClaimGiftView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimGiftView.swift; sourceTree = "<group>"; };
+		4BDE7B4A38FAE02FF0DACABF /* ChangePasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordView.swift; sourceTree = "<group>"; };
+		4F4B8001DBFFBF06B6C8ECD4 /* BuyMoreCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuyMoreCardsView.swift; sourceTree = "<group>"; };
+		4FED1189AA843ED60A6F466A /* TroopStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroopStatsView.swift; sourceTree = "<group>"; };
+		516CE194EDD85FD9548E3F96 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		5307FF58ABDE0A67E638693B /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		55A6649908B0AB15C3773C39 /* ConsentPendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentPendingView.swift; sourceTree = "<group>"; };
+		5881CBC0E54F2FCFBB3648DF /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		5887CCD3863B94CE210A68DC /* NetworkError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkError.swift; sourceTree = "<group>"; };
+		5987E9D095FEF6674AE0E8E5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		5C6022EA1EE080B04C72DF73 /* CampCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CampCardTests.swift; sourceTree = "<group>"; };
+		5CB24A48EF9199E4ADED92B9 /* CampCard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CampCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5EDFE7EC7DB9D7D17CEAD32E /* OffersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffersListView.swift; sourceTree = "<group>"; };
+		6221D8D673A1E771F85B888A /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
+		66E9DC517B2AB8C6DB662AEB /* CardInventoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardInventoryView.swift; sourceTree = "<group>"; };
+		67F220A0B7120CF3282E9C55 /* ReferralView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralView.swift; sourceTree = "<group>"; };
+		6CEB8B3C539E9D9C464E1250 /* SelectScoutForSubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectScoutForSubscriptionView.swift; sourceTree = "<group>"; };
+		704DABBD8443AB8B38C41498 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
+		739EAB8EF16A91E83CDF700D /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
+		7430008FA612BCEEF6E234D7 /* QuantitySelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuantitySelectionView.swift; sourceTree = "<group>"; };
+		840B672522304B09260B01F0 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		8F144C4D2A18E6AB4AF61434 /* ReplenishCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplenishCardView.swift; sourceTree = "<group>"; };
+		94C7B18FF9DB875A47539824 /* StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreService.swift; sourceTree = "<group>"; };
+		9553982B6CBB9737453775BC /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
+		983F75F8A08FA9737DD7A9DF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		990C594691AC7EECE9532BC3 /* CampCardTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CampCardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AD69638DF2B0728244DB3E2 /* GiftCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftCardView.swift; sourceTree = "<group>"; };
+		A210B3F69CC9AB103CED81E1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A261A295FEA057B4B5B3D82A /* ParentTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentTabView.swift; sourceTree = "<group>"; };
+		A7E03DBDF1AD8B80B3B7732F /* AccountCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCreationView.swift; sourceTree = "<group>"; };
+		AB8029F6373A948FCED20733 /* ScoutQRCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoutQRCodeView.swift; sourceTree = "<group>"; };
+		ABF6437E4A751E25FBF8AFF0 /* InviteScoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteScoutView.swift; sourceTree = "<group>"; };
+		ADC4D6F4952FC22F0256CDE8 /* CampCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CampCardApp.swift; sourceTree = "<group>"; };
+		B1E660FE7BBB5FB20885CFCD /* MerchantsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantsListView.swift; sourceTree = "<group>"; };
+		B4733F96D2B91936D4CD7848 /* OnboardingGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGateView.swift; sourceTree = "<group>"; };
+		B5815F730FA5EF3E09716365 /* CampCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CampCard.entitlements; sourceTree = "<group>"; };
+		BF471F797CD09F38EDC259C5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		C18CCF048B96B56AF7F09493 /* ScoutTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoutTabView.swift; sourceTree = "<group>"; };
+		C4EB20BEECCA2BC0ED30D604 /* OfferDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfferDetailView.swift; sourceTree = "<group>"; };
+		C6E5596D3B1B56DBD4D8D4B5 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		CDD391DEC1EB49EEBB0C9F8A /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		D125B71182CE448288BD5B84 /* RedemptionSuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedemptionSuccessView.swift; sourceTree = "<group>"; };
+		DE10E77CFC552A1C673B1F91 /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
+		DF86D7FF267082A8F3AC03B5 /* CCTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CCTabBar.swift; sourceTree = "<group>"; };
+		E13A9A37B70546E3BF8302F6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E147EC488EB42B3825A30AD8 /* ManageScoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageScoutsView.swift; sourceTree = "<group>"; };
+		E715A329E45FFA6357799A1C /* MerchantDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantDetailView.swift; sourceTree = "<group>"; };
+		E85CF63213633F5B80D7EE52 /* ScoutHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoutHomeView.swift; sourceTree = "<group>"; };
+		F1FB209C070DADEC83A658C8 /* campcard_skin.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = campcard_skin.jpg; sourceTree = "<group>"; };
+		F4B7F706D0DE8201DCDF78D2 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		F867F70441811C05A06C4EF1 /* TroopLeaderHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroopLeaderHomeView.swift; sourceTree = "<group>"; };
+		FE0347D9AC65DFE329CE1AFE /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9EEF6402BA99A22520A9F49A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				577A236464DCE7341D1E53B5 /* FirebaseMessaging in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		00503988F65E1CEC1C627A2A /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				07EAFABF0D0967FE68DAF6E8 /* Auth */,
+				99559C8818873520ABF1D0E6 /* IAP */,
+				DFD039D1FE9B2E3EC8CA8E44 /* Parent */,
+				2A235A8A27F8C2CE27E15BB3 /* Profile */,
+				76609209147F618426A9CE01 /* Scout */,
+				7E3D994E4313433CB7D62A6E /* Shared */,
+				9AD93F5C0C9F3D9078AA86FB /* TroopLeader */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		07EAFABF0D0967FE68DAF6E8 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				A7E03DBDF1AD8B80B3B7732F /* AccountCreationView.swift */,
+				55A6649908B0AB15C3773C39 /* ConsentPendingView.swift */,
+				057B4B3EADA1230D3843CCD2 /* ForgotPasswordView.swift */,
+				5881CBC0E54F2FCFBB3648DF /* LoginView.swift */,
+				B4733F96D2B91936D4CD7848 /* OnboardingGateView.swift */,
+				7430008FA612BCEEF6E234D7 /* QuantitySelectionView.swift */,
+				2174086A8F7E03F1D9B00B1E /* RoleSelectionView.swift */,
+				739EAB8EF16A91E83CDF700D /* SignupView.swift */,
+				342628A810418539F1E23E5C /* SubscriptionSelectionView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		1D1516A0C133EAE02E9E96F5 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				DE10E77CFC552A1C673B1F91 /* NotificationsView.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		1EE900130AF35A836CCA40BC /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				14A8DD20E53082CFC9534C91 /* AppIcon_BSA.jpg */,
+				A210B3F69CC9AB103CED81E1 /* Assets.xcassets */,
+				F1FB209C070DADEC83A658C8 /* campcard_skin.jpg */,
+				B5815F730FA5EF3E09716365 /* CampCard.entitlements */,
+				3ADCB4B14A0BE932E8AE070A /* Info.plist */,
+				5987E9D095FEF6674AE0E8E5 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		279DF3A0A6D43DEAAAAFCB42 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				BF471F797CD09F38EDC259C5 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		2A235A8A27F8C2CE27E15BB3 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				1A504D4BB1A8A5A7400F5C98 /* HelpSupportView.swift */,
+				6221D8D673A1E771F85B888A /* PrivacyPolicyView.swift */,
+				E13A9A37B70546E3BF8302F6 /* SettingsView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		343C1BE6F66451205A78C238 = {
+			isa = PBXGroup;
+			children = (
+				D9AE07A48A58C13B5D801859 /* Sources */,
+				A0FFEA188BC57A5CE5FCEACB /* Tests */,
+				3BAEC45401948E28BBD115C2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3BAEC45401948E28BBD115C2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5CB24A48EF9199E4ADED92B9 /* CampCard.app */,
+				990C594691AC7EECE9532BC3 /* CampCardTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4E21636F5D2803A5EDBD980B /* Offers */ = {
+			isa = PBXGroup;
+			children = (
+				C4EB20BEECCA2BC0ED30D604 /* OfferDetailView.swift */,
+				5EDFE7EC7DB9D7D17CEAD32E /* OffersListView.swift */,
+			);
+			path = Offers;
+			sourceTree = "<group>";
+		};
+		52E71D21783149436D7542CC /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				F4B7F706D0DE8201DCDF78D2 /* KeychainService.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		5CDFF063351CC301BF8C3398 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				4BDE7B4A38FAE02FF0DACABF /* ChangePasswordView.swift */,
+				3E1196EAD3D244676FB2196D /* EditProfileView.swift */,
+				516CE194EDD85FD9548E3F96 /* ProfileView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		6442A7722B2DC573BA18B36D /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				45C627AD95FE0F5AF3C2D705 /* NotificationManager.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		76609209147F618426A9CE01 /* Scout */ = {
+			isa = PBXGroup;
+			children = (
+				66E9DC517B2AB8C6DB662AEB /* CardInventoryView.swift */,
+				9AD69638DF2B0728244DB3E2 /* GiftCardView.swift */,
+				33E0614000381587DC208837 /* RedemptionHistoryView.swift */,
+				D125B71182CE448288BD5B84 /* RedemptionSuccessView.swift */,
+				67F220A0B7120CF3282E9C55 /* ReferralView.swift */,
+				8F144C4D2A18E6AB4AF61434 /* ReplenishCardView.swift */,
+				E85CF63213633F5B80D7EE52 /* ScoutHomeView.swift */,
+				AB8029F6373A948FCED20733 /* ScoutQRCodeView.swift */,
+				9553982B6CBB9737453775BC /* WalletView.swift */,
+			);
+			path = Scout;
+			sourceTree = "<group>";
+		};
+		7AAD61326C4878C6BE7DE715 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				983F75F8A08FA9737DD7A9DF /* AppDelegate.swift */,
+				ADC4D6F4952FC22F0256CDE8 /* CampCardApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		7E3D994E4313433CB7D62A6E /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				4A4E2C315287EC86A169807E /* ClaimGiftView.swift */,
+				15E5DD291B18A7CD168EA88E /* NearbyMerchantsMapView.swift */,
+				AEAFD9EED8B42A44B913948A /* Merchants */,
+				1D1516A0C133EAE02E9E96F5 /* Notifications */,
+				4E21636F5D2803A5EDBD980B /* Offers */,
+				BD2C4CBCF13468E10F0B6521 /* QRScanner */,
+				5CDFF063351CC301BF8C3398 /* Settings */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		99559C8818873520ABF1D0E6 /* IAP */ = {
+			isa = PBXGroup;
+			children = (
+				4F4B8001DBFFBF06B6C8ECD4 /* BuyMoreCardsView.swift */,
+				94C7B18FF9DB875A47539824 /* StoreService.swift */,
+				3456B9C000BEA77843CBE5D8 /* SubscriptionDisclosureView.swift */,
+				FE0347D9AC65DFE329CE1AFE /* SubscriptionView.swift */,
+			);
+			path = IAP;
+			sourceTree = "<group>";
+		};
+		9AD93F5C0C9F3D9078AA86FB /* TroopLeader */ = {
+			isa = PBXGroup;
+			children = (
+				ABF6437E4A751E25FBF8AFF0 /* InviteScoutView.swift */,
+				E147EC488EB42B3825A30AD8 /* ManageScoutsView.swift */,
+				6CEB8B3C539E9D9C464E1250 /* SelectScoutForSubscriptionView.swift */,
+				F867F70441811C05A06C4EF1 /* TroopLeaderHomeView.swift */,
+				4FED1189AA843ED60A6F466A /* TroopStatsView.swift */,
+			);
+			path = TroopLeader;
+			sourceTree = "<group>";
+		};
+		A0FFEA188BC57A5CE5FCEACB /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				5C6022EA1EE080B04C72DF73 /* CampCardTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		A460A64001D48AE268514A00 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				24F14CCDC53F224CBAA7A3B3 /* APIClient.swift */,
+				083931C9CA2C31F6CE8A2E4F /* APIConstants.swift */,
+				704DABBD8443AB8B38C41498 /* Endpoint.swift */,
+				5887CCD3863B94CE210A68DC /* NetworkError.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		AEAFD9EED8B42A44B913948A /* Merchants */ = {
+			isa = PBXGroup;
+			children = (
+				E715A329E45FFA6357799A1C /* MerchantDetailView.swift */,
+				B1E660FE7BBB5FB20885CFCD /* MerchantsListView.swift */,
+			);
+			path = Merchants;
+			sourceTree = "<group>";
+		};
+		B2C078B1744AE03860A33678 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				DF86D7FF267082A8F3AC03B5 /* CCTabBar.swift */,
+				4406B7B2624282B767A1B270 /* DeepLinkHandler.swift */,
+				A261A295FEA057B4B5B3D82A /* ParentTabView.swift */,
+				41FDC0587EF7A069134D19A4 /* RootView.swift */,
+				C18CCF048B96B56AF7F09493 /* ScoutTabView.swift */,
+				3641455B111762D6E1A8B421 /* TroopLeaderTabView.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		B371011AF44D3E996B7109D9 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				840B672522304B09260B01F0 /* AuthViewModel.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		B6726A19B3D3E28894568566 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				C6E5596D3B1B56DBD4D8D4B5 /* DesignTokens.swift */,
+				CDD391DEC1EB49EEBB0C9F8A /* Extensions.swift */,
+				B371011AF44D3E996B7109D9 /* Auth */,
+				EA3AB933D72082C5FFA313EC /* Components */,
+				279DF3A0A6D43DEAAAAFCB42 /* Models */,
+				A460A64001D48AE268514A00 /* Network */,
+				6442A7722B2DC573BA18B36D /* Notifications */,
+				52E71D21783149436D7542CC /* Storage */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		BD2C4CBCF13468E10F0B6521 /* QRScanner */ = {
+			isa = PBXGroup;
+			children = (
+				5307FF58ABDE0A67E638693B /* QRScannerView.swift */,
+			);
+			path = QRScanner;
+			sourceTree = "<group>";
+		};
+		D9AE07A48A58C13B5D801859 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				7AAD61326C4878C6BE7DE715 /* App */,
+				B6726A19B3D3E28894568566 /* Core */,
+				00503988F65E1CEC1C627A2A /* Features */,
+				B2C078B1744AE03860A33678 /* Navigation */,
+				1EE900130AF35A836CCA40BC /* Resources */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		DFD039D1FE9B2E3EC8CA8E44 /* Parent */ = {
+			isa = PBXGroup;
+			children = (
+				0F1271EDC84C9CBD10A0ABFA /* ParentHomeView.swift */,
+			);
+			path = Parent;
+			sourceTree = "<group>";
+		};
+		EA3AB933D72082C5FFA313EC /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				012404B2797529443EB71829 /* SkeletonComponents.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1E406A4A55388473611560DF /* CampCardTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 80270B2CD93F5CAE243AAC35 /* Build configuration list for PBXNativeTarget "CampCardTests" */;
+			buildPhases = (
+				F8ED02B9E446844792757594 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0CACD8A86B2C3E143684195D /* PBXTargetDependency */,
+			);
+			name = CampCardTests;
+			packageProductDependencies = (
+			);
+			productName = CampCardTests;
+			productReference = 990C594691AC7EECE9532BC3 /* CampCardTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		43CC45B1CE58494CC4EDB022 /* CampCard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E6DDF7EFBA1469FEF1E9D101 /* Build configuration list for PBXNativeTarget "CampCard" */;
+			buildPhases = (
+				92C9B49117B54F2553FE456E /* Sources */,
+				363FB028ED299C474F1051AD /* Resources */,
+				9EEF6402BA99A22520A9F49A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CampCard;
+			packageProductDependencies = (
+				14A897FEB92A1A25E5BC0AC0 /* FirebaseMessaging */,
+			);
+			productName = CampCard;
+			productReference = 5CB24A48EF9199E4ADED92B9 /* CampCard.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3253617B1327D39AB8919455 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					1E406A4A55388473611560DF = {
+						DevelopmentTeam = CL5DJUWXZY;
+						ProvisioningStyle = Automatic;
+					};
+					43CC45B1CE58494CC4EDB022 = {
+						DevelopmentTeam = CL5DJUWXZY;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 02C55C60727DD2F5BC90E195 /* Build configuration list for PBXProject "CampCard" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 343C1BE6F66451205A78C238;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CBF5BAD25370CE410AA09D55 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				43CC45B1CE58494CC4EDB022 /* CampCard */,
+				1E406A4A55388473611560DF /* CampCardTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		363FB028ED299C474F1051AD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6925009EFB3B1464E7207581 /* AppIcon_BSA.jpg in Resources */,
+				FA70A04FBDDBF661B491D3B6 /* Assets.xcassets in Resources */,
+				FD50EA2105F3E2E186F54C9B /* PrivacyInfo.xcprivacy in Resources */,
+				63A0C511E8757EB0D14BBED9 /* campcard_skin.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		92C9B49117B54F2553FE456E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78D741424CB1E01E4BCE4BAD /* APIClient.swift in Sources */,
+				2B0D30780301DA6143E61B4C /* APIConstants.swift in Sources */,
+				13746329BB8E39A974270906 /* AccountCreationView.swift in Sources */,
+				65068EB3F9803E0E61EA9849 /* AppDelegate.swift in Sources */,
+				B6F910C1A61A79607DE229A5 /* AuthViewModel.swift in Sources */,
+				3C791C3309F172A4D1972223 /* BuyMoreCardsView.swift in Sources */,
+				B27CDDB6CCCC543709A18E82 /* CCTabBar.swift in Sources */,
+				50129F9125ECAABB3214E440 /* CampCardApp.swift in Sources */,
+				29750F601B1BDDA94E93A023 /* CardInventoryView.swift in Sources */,
+				D01872691CFF6993A343F09F /* ChangePasswordView.swift in Sources */,
+				AE14E7906BEBE8E8E439074B /* ClaimGiftView.swift in Sources */,
+				535F02B7B7E0BAFC57A18E71 /* ConsentPendingView.swift in Sources */,
+				AB3593F47E3C99E055492FA7 /* DeepLinkHandler.swift in Sources */,
+				2508DB048992A149417625D6 /* DesignTokens.swift in Sources */,
+				8676D98302DEFDEAB44CD5F4 /* EditProfileView.swift in Sources */,
+				5475FB07FEE95A9C33F09CF0 /* Endpoint.swift in Sources */,
+				B7C13F9F08BD5C174448E4A1 /* Extensions.swift in Sources */,
+				5611D53D43B91CF78A9335D8 /* ForgotPasswordView.swift in Sources */,
+				63E774FD2F996107D0179B2B /* GiftCardView.swift in Sources */,
+				8DDE186D78567067A0A9EE30 /* HelpSupportView.swift in Sources */,
+				DB41E7A9F9A5575561D470F8 /* InviteScoutView.swift in Sources */,
+				2E352AB44B7E9210B59E9842 /* KeychainService.swift in Sources */,
+				AFEEBA4A29010AB64610B15C /* LoginView.swift in Sources */,
+				6DFA754C89F10370CB7A4DCD /* ManageScoutsView.swift in Sources */,
+				905D413C9737D980FD0090B9 /* MerchantDetailView.swift in Sources */,
+				0667F76FB9555DCF8F4E6684 /* MerchantsListView.swift in Sources */,
+				7E7A6D31DBA295921B8F23FB /* Models.swift in Sources */,
+				C53EB2672B771014CF725711 /* NearbyMerchantsMapView.swift in Sources */,
+				7168EBB7BE88B3828C08D910 /* NetworkError.swift in Sources */,
+				DFBB1F81336F163246192CE7 /* NotificationManager.swift in Sources */,
+				0CD7D4E1F8AF2792798589B2 /* NotificationsView.swift in Sources */,
+				B0B0769217B8DB5669216555 /* OfferDetailView.swift in Sources */,
+				415080D843DE5945C886576A /* OffersListView.swift in Sources */,
+				B291623C41E2047B0FA4A307 /* OnboardingGateView.swift in Sources */,
+				77276D4ED26752EA294E6E4F /* ParentHomeView.swift in Sources */,
+				4ACA76875D74BEF4A3197BCA /* ParentTabView.swift in Sources */,
+				670C79A9BF1957754D562E42 /* PrivacyPolicyView.swift in Sources */,
+				8A5A25BF7D0596B8CEFF8263 /* ProfileView.swift in Sources */,
+				E95532CAC18F9EC94D9E189A /* QRScannerView.swift in Sources */,
+				EF10BCB95D27FE0C63A05E23 /* QuantitySelectionView.swift in Sources */,
+				4E44169D587E0327A310ECB2 /* RedemptionHistoryView.swift in Sources */,
+				A971330B4A241575D5157975 /* RedemptionSuccessView.swift in Sources */,
+				BE0901D55BDE40306589A86B /* ReferralView.swift in Sources */,
+				27AA1EDD77CDE21CCEC54EFC /* ReplenishCardView.swift in Sources */,
+				97004D6D790D8D8D912D0F1D /* RoleSelectionView.swift in Sources */,
+				F73BF73B8BA486C62EA180A3 /* RootView.swift in Sources */,
+				174795FD326D9D7EE3BE787E /* ScoutHomeView.swift in Sources */,
+				4030BBCD0F72AFA19E100949 /* ScoutQRCodeView.swift in Sources */,
+				03F846B565758B38C5033837 /* ScoutTabView.swift in Sources */,
+				FB5FAEBA2CA565596E9E5664 /* SelectScoutForSubscriptionView.swift in Sources */,
+				D7BFCCA27CD08A43E34EC052 /* SettingsView.swift in Sources */,
+				A1FE67C4546FAC523B4E8CBA /* SignupView.swift in Sources */,
+				5D4F3BB9872E2ED696CD51AC /* SkeletonComponents.swift in Sources */,
+				5689E60359B7D936B3F83E21 /* StoreService.swift in Sources */,
+				85503C43758FE7A1C7A8C4C6 /* SubscriptionDisclosureView.swift in Sources */,
+				D5351D7C6BF31DFF686E62FB /* SubscriptionSelectionView.swift in Sources */,
+				4B10B2AB7B7BFACEEDE90D22 /* SubscriptionView.swift in Sources */,
+				D10C287A895E2D6AD81C23D2 /* TroopLeaderHomeView.swift in Sources */,
+				88634B9C1D30881D0BE81755 /* TroopLeaderTabView.swift in Sources */,
+				BD78DEB0BAB0A927721DBD98 /* TroopStatsView.swift in Sources */,
+				4E5A90A1E9A0D57448222FA4 /* WalletView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F8ED02B9E446844792757594 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				25965F9DD7963ABA1A4A35D9 /* CampCardTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0CACD8A86B2C3E143684195D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43CC45B1CE58494CC4EDB022 /* CampCard */;
+			targetProxy = ECCCF3897DA2290392F6737A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1F4BA7712208FC69161DEB36 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Resources/CampCard.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Sources/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.bsa.campcard;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		504C483759EFB6088B38DB26 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.bsa.campcard.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CampCard.app/CampCard";
+			};
+			name = Debug;
+		};
+		918821F61B84D1DF8EAF5DE3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.bsa.campcard.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CampCard.app/CampCard";
+			};
+			name = Release;
+		};
+		A859FAFF58FB6C85B3C73F1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Resources/CampCard.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Sources/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.bsa.campcard;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BB7EF6BA4F9A59E39AD99D5F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 71;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = CL5DJUWXZY;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 2.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		EA4ECA89C5BFC4A4EBD3B669 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 71;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = CL5DJUWXZY;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 2.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		02C55C60727DD2F5BC90E195 /* Build configuration list for PBXProject "CampCard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA4ECA89C5BFC4A4EBD3B669 /* Debug */,
+				BB7EF6BA4F9A59E39AD99D5F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		80270B2CD93F5CAE243AAC35 /* Build configuration list for PBXNativeTarget "CampCardTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				504C483759EFB6088B38DB26 /* Debug */,
+				918821F61B84D1DF8EAF5DE3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E6DDF7EFBA1469FEF1E9D101 /* Build configuration list for PBXNativeTarget "CampCard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1F4BA7712208FC69161DEB36 /* Debug */,
+				A859FAFF58FB6C85B3C73F1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CBF5BAD25370CE410AA09D55 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		14A897FEB92A1A25E5BC0AC0 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CBF5BAD25370CE410AA09D55 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3253617B1327D39AB8919455 /* Project object */;
+}

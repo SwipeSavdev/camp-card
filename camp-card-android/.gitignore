@@ -1,0 +1,19 @@
+# Android build artifacts
+build/
+.gradle/
+local.properties
+*.apk
+*.aab
+
+# Signing credentials (stored in GitHub Secrets + AWS Secrets Manager)
+key.properties
+campcard-upload.p12
+campcard-upload.jks
+*.jks
+
+# IDE
+.idea/
+*.iml
+
+# macOS
+.DS_Store

@@ -1,0 +1,20 @@
+# Xcode build artifacts
+build/
+DerivedData/
+*.xcworkspace
+xcuserdata/
+*.xcuserstate
+*.xcscheme
+
+# Signing credentials (stored in GitHub Secrets + AWS Secrets Manager)
+*.p8
+*.p12
+*.mobileprovision
+ExportOptions.plist
+
+# Archives and IPAs
+*.xcarchive
+*.ipa
+
+# macOS
+.DS_Store

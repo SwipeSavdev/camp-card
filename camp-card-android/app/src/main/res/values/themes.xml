@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CampCard" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/bsa_blue</item>
+        <item name="android:navigationBarColor">@color/bsa_blue</item>
+    </style>
+</resources>
