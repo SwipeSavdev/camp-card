@@ -18,17 +18,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../config/ThemeContext';
 import { AuthStackParamList } from '../../navigation/RootNavigator';
-import { cardsApi } from '../../services/apiClient';
 
 type SignupScreenRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
 
 export default function SignupScreen() {
   const route = useRoute<SignupScreenRouteProp>();
-  const selectedPlan = route.params?.selectedPlan;
-  const paymentCompleted = route.params?.paymentCompleted;
-  const quantity = route.params?.quantity || 1;
   const scoutCode = route.params?.scoutCode;
-  const transactionId = route.params?.transactionId;
   const [firstName, setFirstName] = React.useState('');
   const [lastName, setLastName] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -50,7 +45,7 @@ export default function SignupScreen() {
     }
 
     // Phone validation (at least 10 digits)
-    const phoneDigits = phone.replace(/\D/g, '');
+    const phoneDigits = phone.replaceAll(/\D/g, '');
     if (phoneDigits.length < 10) {
       Alert.alert('Error', 'Please enter a valid phone number (at least 10 digits)');
       return;
@@ -74,49 +69,17 @@ export default function SignupScreen() {
     }
 
     try {
-      // Call the signup API
-      const signupData: any = {
+      await signup({
         email: email.trim(),
         password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phone: phone.trim(),
-        role: 'PARENT' as const, // Default to customer role for mobile signups
-      };
-
-      // Include subscription plan if payment was completed
-      if (selectedPlan && paymentCompleted) {
-        signupData.subscriptionPlanId = selectedPlan.id;
-      }
-
-      await signup(signupData);
-
-      // If payment was completed, purchase the cards now that user is authenticated
-      if (paymentCompleted && transactionId) {
-        try {
-          console.log('Purchasing cards with transaction:', transactionId);
-          await cardsApi.purchaseCards({
-            quantity: quantity,
-            planId: selectedPlan?.id?.toString(),
-            scoutCode: scoutCode,
-            paymentToken: transactionId,
-            email: email.trim(),
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-          });
-          console.log('Cards purchased successfully');
-        } catch (cardError: any) {
-          console.error('Card purchase error:', cardError);
-          // Show warning but don't fail signup - payment was already successful
-          Alert.alert(
-            'Card Activation Issue',
-            'Your account was created and payment received, but there was an issue activating your cards. Please contact support with your transaction ID: ' + transactionId
-          );
-        }
-      }
-
-      // If signup succeeds, we're automatically logged in
-      // The auth store handles the navigation
+        role: 'PARENT',
+        ...(scoutCode ? { scoutCode } : {}),
+      });
+      // Auth state change (isAuthenticated=true) triggers RootNavigator to show
+      // SubscriptionNavigator for new PARENT users with no active subscription.
     } catch (error: any) {
       console.error('Signup error:', error);
       const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message;
@@ -160,27 +123,12 @@ export default function SignupScreen() {
           {/* moved here so it stays visible above the form */}
           <View style={[styles.headerTextContainer, styles.headerTextAboveForm]}>
             <Text style={[styles.title, { color: theme.colors.text }]}>
-              {paymentCompleted ? 'Complete Your Account' : 'Create Account'}
+              Create Account
             </Text>
             <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-              {paymentCompleted ? 'One more step to activate your subscription' : 'Join BSA Camp Card'}
+              Join BSA Camp Card
             </Text>
           </View>
-
-          {/* Selected Plan Banner */}
-          {selectedPlan && paymentCompleted && (
-            <View style={[styles.planBanner, { backgroundColor: `${theme.colors.success}15`, borderColor: `${theme.colors.success}30` }]}>
-              <View style={styles.planBannerIcon}>
-                <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
-              </View>
-              <View style={styles.planBannerContent}>
-                <Text style={[styles.planBannerTitle, { color: theme.colors.success }]}>Payment Successful</Text>
-                <Text style={[styles.planBannerText, { color: theme.colors.success }]}>
-                  {selectedPlan.name} - $14.99/{selectedPlan.billingInterval === 'ANNUAL' ? 'year' : 'month'}
-                </Text>
-              </View>
-            </View>
-          )}
 
           <View style={styles.form}>
             <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
@@ -480,28 +428,5 @@ const styles = StyleSheet.create({
   loginLink: {
     fontSize: 14,
     fontWeight: '600',
-  },
-  planBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 24,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  planBannerIcon: {
-    marginRight: 12,
-  },
-  planBannerContent: {
-    flex: 1,
-  },
-  planBannerTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  planBannerText: {
-    fontSize: 13,
   },
 });

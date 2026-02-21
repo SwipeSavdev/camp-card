@@ -11,22 +11,23 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS, IAP_PRICES } from '../../config/constants';
 import { useTheme } from '../../config/ThemeContext';
-import { AuthStackParamList } from '../../navigation/RootNavigator';
+import { SubscriptionStackParamList } from '../../navigation/RootNavigator';
 import { useIAP } from '../../hooks/useIAP';
+import { useAuthStore } from '../../store/authStore';
 import SubscriptionDisclosureModal from '../../components/SubscriptionDisclosureModal';
 
-type PaymentScreenRouteProp = RouteProp<AuthStackParamList, 'Payment'>;
+type PaymentScreenRouteProp = RouteProp<SubscriptionStackParamList, 'Payment'>;
 
 export default function PaymentScreen() {
-  const navigation = useNavigation();
   const route = useRoute<PaymentScreenRouteProp>();
-  const { selectedPlan, quantity = 1, scoutCode } = route.params;
+  const { quantity = 1, scoutCode } = route.params;
   const { theme } = useTheme();
   const { colors } = theme;
+  const { user, fetchUser } = useAuthStore();
   const [showDisclosure, setShowDisclosure] = React.useState(false);
 
   // Get card product details for the selected quantity
@@ -48,15 +49,12 @@ export default function PaymentScreen() {
     getLocalizedPrice,
   } = useIAP({
     autoInit: true,
-    onPurchaseComplete: (result) => {
-      // Card purchase complete (subscription included) - navigate to signup
-      (navigation as any).navigate('Signup', {
-        selectedPlan: selectedPlan,
-        paymentCompleted: true,
-        quantity: quantity,
-        scoutCode: scoutCode,
-        transactionId: result.transactionId,
-      });
+    userId: user?.id,
+    onPurchaseComplete: () => {
+      // Refresh user data — backend has linked the IAP receipt to this user.
+      // subscriptionStatus will now be 'active', which causes RootNavigator
+      // to route to the main app automatically. No second payment call needed.
+      fetchUser().catch(console.error);
     },
     onPurchaseError: (error) => {
       Alert.alert('Purchase Failed', error);

@@ -138,14 +138,14 @@ export default function SubscriptionSelectionScreen() {
           </Text>
         </View>
 
-        {plan.description && (
+        {!!plan.description && (
           <Text style={[styles.planDescription, { color: colors.textSecondary }]}>{plan.description}</Text>
         )}
 
         {plan.features && plan.features.length > 0 && (
           <View style={styles.featuresList}>
-            {plan.features.slice(0, 4).map((feature, index) => (
-              <View key={index} style={styles.featureItem}>
+            {plan.features.slice(0, 4).map((feature) => (
+              <View key={feature} style={styles.featureItem}>
                 <Ionicons name="checkmark" size={16} color={colors.success} />
                 <Text style={[styles.featureText, { color: colors.text }]}>{feature}</Text>
               </View>
@@ -231,12 +231,6 @@ export default function SubscriptionSelectionScreen() {
           <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.skipButton}
-          onPress={() => (navigation as any).navigate('Signup')}
-        >
-          <Text style={styles.skipButtonText}>Skip for now</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -444,14 +438,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  skipButton: {
-    marginTop: 12,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  skipButtonText: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
   },
 });

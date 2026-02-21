@@ -38,6 +38,7 @@ interface AuthState {
   logout: () => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   refreshAccessToken: () => Promise<void>;
+  fetchUser: () => Promise<void>;
   updateUser: (user: User) => void;
   initialize: () => Promise<void>;
   devBypass: () => void;
@@ -45,7 +46,7 @@ interface AuthState {
 
 // DEV MODE: Always start with login screen for testing
 // Set to true to clear auth state on every app reload
-const DEV_ALWAYS_SHOW_LOGIN = __DEV__ && true;
+const DEV_ALWAYS_SHOW_LOGIN = __DEV__;
 
 const DEV_MOCK_USER: User = {
   id: 'dev-user-123',
@@ -294,6 +295,15 @@ export const useAuthStore = create<AuthState>()(
 
       updateUser: (user: User) => {
         set({ user });
+      },
+
+      fetchUser: async () => {
+        try {
+          const response = await apiClient.get('/api/v1/auth/me');
+          set({ user: response.data });
+        } catch (error) {
+          console.error('fetchUser error:', error);
+        }
       },
     }),
     {

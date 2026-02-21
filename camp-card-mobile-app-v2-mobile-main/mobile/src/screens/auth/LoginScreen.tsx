@@ -253,7 +253,7 @@ export default function LoginScreen() {
             <View style={styles.footer}>
               <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>Don't have an account? </Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate('SubscriptionSelection')}
+                onPress={() => navigation.navigate('Signup')}
                 accessibilityLabel="Sign up"
                 accessibilityRole="button"
               >

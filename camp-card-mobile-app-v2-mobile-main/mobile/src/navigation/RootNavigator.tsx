@@ -62,6 +62,14 @@ import BuyMoreCardsScreen from '../screens/wallet/BuyMoreCardsScreen';
 
 export type AuthStackParamList = {
   Login: undefined;
+  Signup: { scoutCode?: string } | undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { token: string };
+  EmailVerification: { token: string };
+  ConsentPending: undefined;
+};
+
+export type SubscriptionStackParamList = {
   SubscriptionSelection: { scoutCode?: string } | undefined;
   QuantitySelection: {
     selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
@@ -72,16 +80,6 @@ export type AuthStackParamList = {
     quantity: number;
     scoutCode?: string;
   };
-  Signup: {
-    selectedPlan?: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
-    paymentCompleted?: boolean;
-    quantity?: number;
-    scoutCode?: string;
-    transactionId?: string;
-  } | undefined;
-  ForgotPassword: undefined;
-  ResetPassword: { token: string };
-  EmailVerification: { token: string };
 };
 
 export type OffersStackParamList = {
@@ -197,6 +195,7 @@ export type CustomerStackParamList = {
 // ============================================================================
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const SubscriptionStack = createNativeStackNavigator<SubscriptionStackParamList>();
 const OffersStack = createNativeStackNavigator<OffersStackParamList>();
 
 // Scout navigators
@@ -219,14 +218,22 @@ function AuthNavigator() {
   return (
     <AuthStack.Navigator id="AuthStack" screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
-      <AuthStack.Screen name="SubscriptionSelection" component={SubscriptionSelectionScreen} />
-      <AuthStack.Screen name="QuantitySelection" component={QuantitySelectionScreen} />
-      <AuthStack.Screen name="Payment" component={PaymentScreen} />
       <AuthStack.Screen name="Signup" component={SignupScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <AuthStack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <AuthStack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+      <AuthStack.Screen name="ConsentPending" component={ConsentPendingScreen} />
     </AuthStack.Navigator>
+  );
+}
+
+function SubscriptionNavigator() {
+  return (
+    <SubscriptionStack.Navigator id="SubscriptionStack" screenOptions={{ headerShown: false }}>
+      <SubscriptionStack.Screen name="SubscriptionSelection" component={SubscriptionSelectionScreen} />
+      <SubscriptionStack.Screen name="QuantitySelection" component={QuantitySelectionScreen} />
+      <SubscriptionStack.Screen name="Payment" component={PaymentScreen} />
+    </SubscriptionStack.Navigator>
   );
 }
 
@@ -475,19 +482,27 @@ export default function RootNavigator() {
   const userRole = user?.role;
   const consentStatus = user?.consentStatus;
 
-  // Not authenticated - show login/signup
+  // Not authenticated — show login/signup only
   if (!isAuthenticated) {
     return <AuthNavigator />;
   }
 
   // COPPA Compliance: Check if parental consent is pending or denied
-  // This applies to minors (SCOUT role and PARENT role under 18)
   if (consentStatus === 'PENDING' || consentStatus === 'DENIED' || consentStatus === 'REVOKED') {
     return <ConsentPendingScreen />;
   }
 
-  // Role-based navigation
+  // PARENT users who have not yet purchased a subscription go through
+  // the subscription flow (Plan → Qty → IAP Payment) before entering the main app.
+  // After payment, fetchUser() refreshes subscriptionStatus → 'active' and this
+  // condition becomes false, routing them to CustomerMainNavigator automatically.
+  if (userRole === 'PARENT' && user?.subscriptionStatus !== 'active') {
+    return <SubscriptionNavigator />;
+  }
+
+  // Role-based navigation into the main app
   switch (userRole) {
+    case 'TROOP_LEADER':
     case 'UNIT_LEADER':
       // Blue theme - Unit management features
       return <TroopLeaderMainNavigator />;

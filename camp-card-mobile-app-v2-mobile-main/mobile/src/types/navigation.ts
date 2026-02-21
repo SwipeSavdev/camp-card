@@ -166,6 +166,14 @@ export type CustomerStackParamList = {
 
 export type AuthStackParamList = {
   Login: undefined;
+  Signup: { scoutCode?: string } | undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { token: string };
+  EmailVerification: { token: string };
+  ConsentPending: undefined;
+};
+
+export type SubscriptionStackParamList = {
   SubscriptionSelection: { scoutCode?: string } | undefined;
   QuantitySelection: {
     selectedPlan: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
@@ -176,15 +184,6 @@ export type AuthStackParamList = {
     quantity: number;
     scoutCode?: string;
   };
-  Signup: {
-    selectedPlan?: { id: number; uuid: string; name: string; priceCents: number; billingInterval: string };
-    paymentCompleted?: boolean;
-    quantity?: number;
-    scoutCode?: string;
-  } | undefined;
-  ForgotPassword: undefined;
-  ResetPassword: { token: string };
-  EmailVerification: { token: string };
 };
 
 // ============================================================================
