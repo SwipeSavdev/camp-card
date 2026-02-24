@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, IAP_PRODUCTS, IAP_CARD_PRODUCTS, IAP_PRICES } from '../../config/constants';
 import { useTheme } from '../../config/ThemeContext';
@@ -27,7 +27,8 @@ export default function PaymentScreen() {
   const { quantity = 1, scoutCode } = route.params;
   const { theme } = useTheme();
   const { colors } = theme;
-  const { user, fetchUser } = useAuthStore();
+  const navigation = useNavigation();
+  const { user, fetchUser, updateUser } = useAuthStore();
   const [showDisclosure, setShowDisclosure] = React.useState(false);
 
   // Get card product details for the selected quantity
@@ -51,9 +52,13 @@ export default function PaymentScreen() {
     autoInit: true,
     userId: user?.id,
     onPurchaseComplete: () => {
-      // Refresh user data — backend has linked the IAP receipt to this user.
-      // subscriptionStatus will now be 'active', which causes RootNavigator
-      // to route to the main app automatically. No second payment call needed.
+      // Optimistically set subscriptionStatus to 'active' so RootNavigator
+      // routes to the main app immediately. The backend has already created
+      // the subscription during receipt verification.
+      if (user) {
+        updateUser({ ...user, subscriptionStatus: 'active' });
+      }
+      // Also fetch fresh user data from backend as a backup
       fetchUser().catch(console.error);
     },
     onPurchaseError: (error) => {

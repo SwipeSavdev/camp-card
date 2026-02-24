@@ -127,14 +127,21 @@ public class AppleIAPController {
 
             PurchaseCardsResponse cardsResponse = campCardService.purchaseCards(userId, cardsRequest);
 
-            return ResponseEntity.ok(Map.of(
-                    "valid", true,
-                    "productId", result.getProductId(),
-                    "transactionId", result.getTransactionId(),
-                    "isSubscription", false,
-                    "cardsPurchased", result.getCardQuantity(),
-                    "orderId", cardsResponse.getOrderId().toString()
-            ));
+            // Card products bundle an annual subscription — create one so the user
+            // can access the main app (RootNavigator gates on subscriptionStatus).
+            String subscriptionId = createBundledSubscription(userId, result);
+
+            var responseMap = new java.util.HashMap<String, Object>();
+            responseMap.put("valid", true);
+            responseMap.put("productId", result.getProductId());
+            responseMap.put("transactionId", result.getTransactionId());
+            responseMap.put("isSubscription", false);
+            responseMap.put("cardsPurchased", result.getCardQuantity());
+            responseMap.put("orderId", cardsResponse.getOrderId().toString());
+            if (subscriptionId != null) {
+                responseMap.put("subscriptionId", subscriptionId);
+            }
+            return ResponseEntity.ok(responseMap);
         } catch (Exception e) {
             log.error("[AppleIAP] Failed to fulfill card purchase", e);
             return ResponseEntity.ok(Map.of(
@@ -145,6 +152,25 @@ public class AppleIAPController {
                     "cardsPurchased", result.getCardQuantity(),
                     "message", "Receipt valid but card creation failed: " + e.getMessage()
             ));
+        }
+    }
+
+    private String createBundledSubscription(UUID userId, AppleIAPService.AppleReceiptValidationResult result) {
+        try {
+            CreateSubscriptionRequest subRequest = new CreateSubscriptionRequest();
+            subRequest.setPlanId(resolvePlanId(result.getProductId()));
+
+            CreateSubscriptionRequest.PaymentMethod paymentMethod = new CreateSubscriptionRequest.PaymentMethod();
+            paymentMethod.setType("APPLE_IAP");
+            paymentMethod.setApplePayToken(result.getTransactionId());
+            subRequest.setPaymentMethod(paymentMethod);
+
+            var subscription = subscriptionService.createSubscription(userId, subRequest);
+            log.info("[AppleIAP] Created bundled subscription {} for card purchase", subscription.getId());
+            return subscription.getId();
+        } catch (Exception e) {
+            log.warn("[AppleIAP] Card purchase succeeded but bundled subscription creation failed: {}", e.getMessage());
+            return null;
         }
     }
 
