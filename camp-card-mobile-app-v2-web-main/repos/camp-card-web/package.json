@@ -42,7 +42,7 @@
     "lodash": "^4.18.1",
     "lucide-react": "^0.309.0",
     "nanoid": "^5.0.4",
-    "next": "14.2.35",
+    "next": "16.2.5",
     "next-auth": "^4.24.5",
     "papaparse": "^5.4.1",
     "react": "^18.2.0",
