@@ -1,0 +1,84 @@
+# Enforces Claude Code team-collaboration discipline on every PR.
+# Re-runs the same lints as `.githooks/pre-commit` to catch devs who bypass
+# the local hook with --no-verify.
+# Triggers only on pull_request that touches CLAUDE.md / .mcp.json / .claude/.
+name: "Claude.md Gate"
+
+on:
+  pull_request:
+    paths:
+      - "**/CLAUDE.md"
+      - ".mcp.json"
+      - ".claude/agents/**"
+      - ".claude/skills/**"
+      - ".claude/commands/**"
+      - ".gitignore"
+      - ".githooks/pre-commit"
+      - ".github/workflows/claude-md-gate.yml"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  lint-claude-md:
+    name: Lint CLAUDE.md / .mcp.json / agents / skills
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Find changed files in this PR
+        id: changed
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          CHANGED=$(git diff --name-only --diff-filter=ACMR \
+            "origin/${{ github.base_ref }}...HEAD" || true)
+          echo "$CHANGED" > /tmp/changed-files.txt
+
+      - name: Run lints
+        run: |
+          STAGED_FILES=$(cat /tmp/changed-files.txt)
+          if [ -z "$STAGED_FILES" ]; then
+            echo "No relevant files changed — gate is a no-op."
+            exit 0
+          fi
+          FAIL=0
+          STAGED_MD=$(echo "$STAGED_FILES" | grep -E '^(CLAUDE\.md|.+/CLAUDE\.md|\.claude/agents/.+\.md|\.claude/skills/.+/SKILL\.md)$' || true)
+          for f in $STAGED_MD; do
+            if [ ! -f "$f" ]; then continue; fi
+            if awk '
+              /^```/ { in_code = !in_code; next }
+              in_code { next }
+              /^\|/ { next }
+              length > 800 { print NR": "length" chars"; found=1 }
+              END { exit !found }
+            ' "$f" > /tmp/lint-long.$$; then
+              echo "::error file=$f::has lines longer than 800 chars"
+              cat /tmp/lint-long.$$
+              FAIL=1
+            fi
+            rm -f /tmp/lint-long.$$
+          done
+          if echo "$STAGED_FILES" | grep -qE '^\.mcp\.json$' && [ -f .mcp.json ]; then
+            if ! jq -e '.mcpServers' .mcp.json > /dev/null 2>&1; then
+              echo "::error file=.mcp.json::not valid JSON or missing 'mcpServers' key"
+              FAIL=1
+            fi
+          fi
+          STAGED_AGENTS=$(echo "$STAGED_FILES" | grep -E '^\.claude/(agents/.+\.md|skills/.+/SKILL\.md)$' || true)
+          for f in $STAGED_AGENTS; do
+            if [ ! -f "$f" ]; then continue; fi
+            head -10 "$f" | grep -q '^name:' || { echo "::error file=$f::missing 'name:' frontmatter"; FAIL=1; }
+            head -10 "$f" | grep -q '^description:' || { echo "::error file=$f::missing 'description:' frontmatter"; FAIL=1; }
+          done
+          exit $FAIL
+
+      - name: Warn if root CLAUDE.md exceeds 200 lines
+        run: |
+          if [ -f CLAUDE.md ]; then
+            LINES=$(wc -l < CLAUDE.md)
+            if [ "$LINES" -gt 200 ]; then
+              echo "::warning file=CLAUDE.md::root CLAUDE.md is $LINES lines (target ≤200). Consider extracting a section into a nested CLAUDE.md."
+            fi
+          fi

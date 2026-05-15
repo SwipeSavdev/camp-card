@@ -91,3 +91,35 @@ coverage/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
+
+# Append these lines to the target repo's .gitignore.
+# If the repo has no .gitignore yet, copy this file's contents into a new .gitignore.
+
+# Claude Code internals — local-only files that MUST NOT be committed.
+# - `settings.local.json` is per-developer permission overrides (Anthropic convention).
+# - `CLAUDE.local.md` is project-specific notes for one dev only.
+# - `memory/` contains auto-memory — personal to each dev.
+# - `scheduled_tasks*.lock` is runtime scheduler state.
+.claude/scheduled_tasks*.lock
+.claude/settings.local.json
+.claude/memory/
+CLAUDE.local.md
+
+# macOS metadata
+.DS_Store
+
+# Keys & credentials
+keys/
+**/keys/
+credentials.json
+**/credentials.json
+*.p8
+*.pem
+*.key
+*.jks
+*.p12
+
+# Terraform variables (often contain secrets)
+*.tfvars
+!*.tfvars.example
+terraform.tfvars.local
