@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Pre-commit hook — enforces Claude Code collaboration hygiene.
+#
+# Lints staged CLAUDE.md / .mcp.json / .claude/agents/*.md / .claude/skills/**/SKILL.md
+# files before allowing commit. Skips silently if no relevant files are staged.
+#
+# To bypass once (NOT recommended): git commit --no-verify
+#
+# After copying to your repo, activate with:
+#   git config core.hooksPath .githooks
+#   chmod +x .githooks/pre-commit
+
+set -e
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED_FILES" ] && exit 0
+
+FAIL=0
+
+STAGED_MD=$(echo "$STAGED_FILES" | grep -E '^(CLAUDE\.md|.+/CLAUDE\.md|\.claude/agents/.+\.md|\.claude/skills/.+/SKILL\.md)$' || true)
+
+if [ -n "$STAGED_MD" ]; then
+  for f in $STAGED_MD; do
+    if awk '
+      /^```/ { in_code = !in_code; next }
+      in_code { next }
+      /^\|/ { next }
+      length > 800 { print NR": "length" chars"; found=1 }
+      END { exit !found }
+    ' "$f" > /tmp/precommit-longlines.$$; then
+      echo "✗ $f has lines longer than 800 chars (wrap them):" >&2
+      cat /tmp/precommit-longlines.$$ >&2
+      FAIL=1
+    fi
+    rm -f /tmp/precommit-longlines.$$
+
+    if grep -nE '(^|[^A-Z])TODO([^:(-]|$)' "$f" > /tmp/precommit-todos.$$; then
+      if grep -vE 'TODO.*(KI-[0-9]+|@[a-zA-Z0-9-]+)' /tmp/precommit-todos.$$ > /tmp/precommit-orphans.$$ 2>&1 \
+         && [ -s /tmp/precommit-orphans.$$ ]; then
+        echo "✗ $f has unowned TODO (need KI-### or @owner):" >&2
+        cat /tmp/precommit-orphans.$$ >&2
+        FAIL=1
+      fi
+    fi
+    rm -f /tmp/precommit-todos.$$ /tmp/precommit-orphans.$$
+  done
+fi
+
+if echo "$STAGED_FILES" | grep -qE '^\.mcp\.json$'; then
+  if ! jq -e '.mcpServers' .mcp.json > /dev/null 2>&1; then
+    echo "✗ .mcp.json is not valid JSON or missing 'mcpServers' key" >&2
+    FAIL=1
+  fi
+fi
+
+STAGED_AGENTS=$(echo "$STAGED_FILES" | grep -E '^\.claude/(agents/.+\.md|skills/.+/SKILL\.md)$' || true)
+if [ -n "$STAGED_AGENTS" ]; then
+  for f in $STAGED_AGENTS; do
+    if ! head -10 "$f" | grep -q '^name:'; then
+      echo "✗ $f missing 'name:' in frontmatter" >&2
+      FAIL=1
+    fi
+    if ! head -10 "$f" | grep -q '^description:'; then
+      echo "✗ $f missing 'description:' in frontmatter" >&2
+      FAIL=1
+    fi
+  done
+fi
+
+if [ "$FAIL" -ne 0 ]; then
+  echo "" >&2
+  echo "Pre-commit hook rejected the commit. Fix the issues above, re-stage, and retry." >&2
+  echo "To bypass (rarely correct): git commit --no-verify" >&2
+  exit 1
+fi
+
+exit 0
