@@ -502,7 +502,6 @@ export default function RootNavigator() {
 
   // Role-based navigation into the main app
   switch (userRole) {
-    case 'TROOP_LEADER':
     case 'UNIT_LEADER':
       // Blue theme - Unit management features
       return <TroopLeaderMainNavigator />;
