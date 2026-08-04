@@ -352,22 +352,34 @@ aws ssm get-command-invocation \
 
 ## User Roles (IMPORTANT)
 
-The backend `UserRole` enum defines exactly 5 valid roles:
+The backend `UserRole` enum (in `org.bsa.campcard.domain.user.User`) defines these roles:
 
 ```java
 public enum UserRole {
+    // System-level roles (only assignable by GLOBAL_SYSTEM_ADMIN)
+    GLOBAL_SYSTEM_ADMIN,
+    ADMIN,                  // Full Access Admin
+    SUPPORT_REPRESENTATIVE, // Support Rep
+    SYSTEM_ANALYST,         // System Analyst
+    SYSTEM_QA,              // QA Role
+    SECURITY_ANALYST,       // Security Role
+    // Organization-level roles
     NATIONAL_ADMIN,
     COUNCIL_ADMIN,
-    TROOP_LEADER,
+    UNIT_LEADER,
     PARENT,
     SCOUT
 }
 ```
 
+**NOTE (August 2026)**: `TROOP_LEADER` was renamed to `UNIT_LEADER`. Any remaining
+`TROOP_LEADER` references in frontend code are legacy (UI theme keys may still use
+`TROOP_LEADER` as a style label, but role comparisons must use `UNIT_LEADER`).
+
 **All role references must use these exact uppercase values.** The frontend must match:
-- Type definition: `type UserRole = 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN' | 'TROOP_LEADER' | 'PARENT' | 'SCOUT'`
+- Type definition: `type UserRole = 'SCOUT' | 'UNIT_LEADER' | 'PARENT' | 'NATIONAL_ADMIN' | 'COUNCIL_ADMIN'`
 - Default values: `useState<UserRole>('SCOUT')`
-- Comparisons: `item.role === 'TROOP_LEADER'`
+- Comparisons: `item.role === 'UNIT_LEADER'`
 
 Backend `@PreAuthorize` annotations must also use these exact role names with `ROLE_` prefix:
 - `@PreAuthorize("hasRole('NATIONAL_ADMIN')")`
@@ -768,7 +780,47 @@ npm run eas:submit:all      # Both stores
 
 - `google-services.json` - Android Firebase config
 - `GoogleService-Info.plist` - iOS Firebase config
-- `google-service-account.json` - Google Play upload credentials
+- `google-play-service-account.json` - Google Play upload credentials (referenced by eas.json submit config)
+
+#### EAS Builds From This Monorepo (IMPORTANT)
+
+EAS builds must run with `EAS_NO_VCS=1` from the `mobile/` directory. Without it,
+eas-cli shallow-clones and compresses the ENTIRE monorepo (backend, iOS project,
+PDFs) and dies silently during "Compressing project files" (exit 0, no build created).
+
+A new build machine needs three local (gitignored) files in `mobile/`:
+
+1. `google-services.json` — Firebase Android config (project `camp-card`, package `org.bsa.campcard`)
+2. `google-play-service-account.json` — Play API service account key for `eas submit`
+3. `.easignore` — copy of `mobile/.gitignore` MINUS the `google-services.json` line,
+   so the Firebase config is included in the EAS upload. Required because the app uses
+   the `fingerprint` runtimeVersion policy: if the file is present locally but missing
+   from the upload (or vice versa), the build fails with "Runtime version calculated on
+   local machine not equal to runtime version calculated during build". Do NOT use an
+   app.config.js/env-var workaround for this — it causes the same fingerprint mismatch.
+
+Build + submit:
+
+```bash
+cd camp-card-mobile-app-v2-mobile-main/mobile
+EAS_NO_VCS=1 npx eas-cli build --profile production --platform android --non-interactive --no-wait
+npx eas-cli submit --platform android --latest --profile production --non-interactive
+```
+
+`eas submit` delivers to the **internal track as a draft** (see eas.json). Promotion to
+production is done in Play Console, or via the Google Play Developer API using
+`google-play-service-account.json` (androidpublisher v3: create edit → PUT tracks/production
+with the versionCode → commit).
+
+#### Google Play Billing Compliance (August 2026)
+
+Google requires Play Billing Library 8.0.0+ for all app updates from Aug 30, 2026.
+The Billing Library comes exclusively from `expo-iap` (→ `openiap-google` → billing-ktx).
+`expo-iap` 3.4.13 bundles Billing 8.3.0 (compliant). versionCode 70 (v1.2.0) with
+Billing 8.3.0 was published to ALL four Play tracks (production/beta/alpha/internal)
+on Aug 4, 2026, superseding older bundles including the v2.0.0 Kotlin-rewrite internal
+build (vc 66) and a v1.0.4 bundle (vc 22) on alpha. When upgrading further, expo-iap
+4.x/5.x bundle Billing 9.1 but are breaking major versions.
 
 #### Deep Linking
 
