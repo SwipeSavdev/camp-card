@@ -127,7 +127,8 @@
         }
       ],
       "expo-tracking-transparency",
-      "./plugins/withRemoveAdIdPermission"
+      "./plugins/withRemoveAdIdPermission",
+      "expo-asset"
     ],
     "updates": {
       "url": "https://u.expo.dev/b4af49da-5fe8-402f-8339-92131b27ff3e",

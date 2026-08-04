@@ -879,8 +879,7 @@ export default function OffersPage() {
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
       if (ch === '"') {
-        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-        else { inQuotes = !inQuotes; }
+        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; } else { inQuotes = !inQuotes; }
       } else if (ch === ',' && !inQuotes) {
         result.push(current.trim());
         current = '';
@@ -2451,19 +2450,33 @@ htmlFor="field-20" style={{
       {/* ── Import Modal ─────────────────────────────────────────────── */}
       {showImportModal && (
         <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: themeSpace.lg,
+          position: 'fixed',
+inset: 0,
+backgroundColor: 'rgba(0,0,0,0.5)',
+display: 'flex',
+          alignItems: 'center',
+justifyContent: 'center',
+zIndex: 1000,
+padding: themeSpace.lg,
         }}
         >
           <div style={{
-            backgroundColor: themeColors.white, borderRadius: themeRadius.lg, width: '100%',
-            maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', boxShadow: themeShadow.md,
+            backgroundColor: themeColors.white,
+borderRadius: themeRadius.lg,
+width: '100%',
+            maxWidth: '640px',
+maxHeight: '90vh',
+overflowY: 'auto',
+boxShadow: themeShadow.md,
           }}
           >
             {/* Header */}
             <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: themeSpace.lg, borderBottom: `1px solid ${themeColors.gray200}`,
+              display: 'flex',
+justifyContent: 'space-between',
+alignItems: 'center',
+              padding: themeSpace.lg,
+borderBottom: `1px solid ${themeColors.gray200}`,
             }}
             >
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: themeColors.text }}>Import Offers</h2>
@@ -2480,8 +2493,10 @@ htmlFor="field-20" style={{
 
               {/* Instructions */}
               <div style={{
-                backgroundColor: themeColors.primary50, border: `1px solid ${themeColors.primary200}`,
-                borderRadius: themeRadius.card, padding: themeSpace.lg,
+                backgroundColor: themeColors.primary50,
+border: `1px solid ${themeColors.primary200}`,
+                borderRadius: themeRadius.card,
+padding: themeSpace.lg,
               }}
               >
                 <h3 style={{ margin: `0 0 ${themeSpace.md}`, fontSize: '14px', fontWeight: '600', color: themeColors.primary800 }}>
@@ -2508,11 +2523,17 @@ htmlFor="field-20" style={{
                 type="button"
                 onClick={downloadOffersTemplate}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: themeSpace.sm,
+                  display: 'flex',
+alignItems: 'center',
+gap: themeSpace.sm,
                   padding: `${themeSpace.sm} ${themeSpace.lg}`,
-                  background: themeColors.white, color: themeColors.primary600,
+                  background: themeColors.white,
+color: themeColors.primary600,
                   border: `1px solid ${themeColors.primary600}`,
-                  borderRadius: themeRadius.sm, cursor: 'pointer', fontSize: '14px', fontWeight: '500',
+                  borderRadius: themeRadius.sm,
+cursor: 'pointer',
+fontSize: '14px',
+fontWeight: '500',
                   alignSelf: 'flex-start',
                 }}
               >
@@ -2528,10 +2549,15 @@ htmlFor="field-20" style={{
                 <label
                   htmlFor="offer-import-file"
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    gap: themeSpace.sm, padding: themeSpace.xl,
+                    display: 'flex',
+flexDirection: 'column',
+alignItems: 'center',
+justifyContent: 'center',
+                    gap: themeSpace.sm,
+padding: themeSpace.xl,
                     border: `2px dashed ${importFile ? themeColors.primary600 : themeColors.gray300}`,
-                    borderRadius: themeRadius.card, cursor: 'pointer',
+                    borderRadius: themeRadius.card,
+cursor: 'pointer',
                     backgroundColor: importFile ? themeColors.primary50 : themeColors.gray50,
                     transition: 'all 0.15s',
                   }}
@@ -2584,8 +2610,13 @@ htmlFor="field-20" style={{
                   </div>
                   {importResults.errors.length > 0 && (
                     <div style={{
-                      maxHeight: '160px', overflowY: 'auto', fontSize: '12px',
-                      color: themeColors.gray600, display: 'flex', flexDirection: 'column', gap: '4px',
+                      maxHeight: '160px',
+overflowY: 'auto',
+fontSize: '12px',
+                      color: themeColors.gray600,
+display: 'flex',
+flexDirection: 'column',
+gap: '4px',
                     }}
                     >
                       {importResults.errors.map((e, idx) => (
@@ -2605,8 +2636,12 @@ htmlFor="field-20" style={{
                   style={{
                     padding: `${themeSpace.sm} ${themeSpace.lg}`,
                     border: `1px solid ${themeColors.gray200}`,
-                    backgroundColor: themeColors.white, borderRadius: themeRadius.sm,
-                    cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: themeColors.gray600,
+                    backgroundColor: themeColors.white,
+borderRadius: themeRadius.sm,
+                    cursor: 'pointer',
+fontSize: '14px',
+fontWeight: '500',
+color: themeColors.gray600,
                   }}
                 >
                   {importDone ? 'Close' : 'Cancel'}
@@ -2618,10 +2653,12 @@ htmlFor="field-20" style={{
                   style={{
                     padding: `${themeSpace.sm} ${themeSpace.lg}`,
                     background: !importFile || importLoading ? themeColors.gray300 : themeColors.primary600,
-                    color: themeColors.white, border: 'none',
+                    color: themeColors.white,
+border: 'none',
                     borderRadius: themeRadius.sm,
                     cursor: !importFile || importLoading ? 'not-allowed' : 'pointer',
-                    fontSize: '14px', fontWeight: '500',
+                    fontSize: '14px',
+fontWeight: '500',
                   }}
                 >
                   {importLoading ? 'Importing…' : 'Import Offers'}

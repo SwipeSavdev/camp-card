@@ -1489,7 +1489,8 @@ class OfferServiceTest {
 
             // Assert
             assertThat(response).isNotNull();
-            assertThat(response.getDiscountAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            // With no purchase amount, a PERCENTAGE offer reports discountValue as expected savings
+            assertThat(response.getDiscountAmount()).isEqualByComparingTo(new BigDecimal("10"));
             assertThat(response.getFinalAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         }
 

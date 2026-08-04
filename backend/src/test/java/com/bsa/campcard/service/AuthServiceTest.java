@@ -129,7 +129,7 @@ class AuthServiceTest {
             when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
 
             // When/Then
-            assertThrows(AuthenticationException.class, () -> authService.register(request));
+            assertThrows(IllegalStateException.class, () -> authService.register(request));
 
             verify(userRepository, never()).save(any(User.class));
         }
@@ -590,7 +590,7 @@ class AuthServiceTest {
             verify(userRepository).save(captor.capture());
             assertTrue(captor.getValue().getEmailVerified());
             assertNull(captor.getValue().getEmailVerificationToken());
-            verify(emailService).sendWelcomeEmail(eq("test@example.com"), eq("John"));
+            verify(emailService).sendPasswordSetupEmail(eq("test@example.com"), eq("John"), anyString());
         }
 
         @Test

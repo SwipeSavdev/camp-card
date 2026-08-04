@@ -4,6 +4,8 @@ import com.bsa.campcard.dto.referral.ReferralCodeResponse;
 import com.bsa.campcard.dto.referral.ReferralResponse;
 import com.bsa.campcard.entity.Referral;
 import com.bsa.campcard.exception.ResourceNotFoundException;
+import com.bsa.campcard.repository.OfferRedemptionRepository;
+import com.bsa.campcard.repository.ReferralClickRepository;
 import com.bsa.campcard.repository.ReferralRepository;
 import org.bsa.campcard.domain.user.User;
 import org.bsa.campcard.domain.user.UserRepository;
@@ -16,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -38,7 +41,16 @@ class ReferralServiceTest {
     private ReferralRepository referralRepository;
 
     @Mock
+    private ReferralClickRepository referralClickRepository;
+
+    @Mock
+    private OfferRedemptionRepository offerRedemptionRepository;
+
+    @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
 
     @InjectMocks
     private ReferralService referralService;
@@ -60,6 +72,7 @@ class ReferralServiceTest {
         // Set the @Value fields via reflection
         ReflectionTestUtils.setField(referralService, "referralRewardAmount", new BigDecimal("10.00"));
         ReflectionTestUtils.setField(referralService, "baseUrl", "https://api.campcardapp.org");
+        ReflectionTestUtils.setField(referralService, "staticSiteUrl", "https://www.campcardapp.org");
 
         testUser = User.builder()
                 .id(testUserId)
@@ -124,7 +137,7 @@ class ReferralServiceTest {
             // Then
             assertNotNull(response);
             assertEquals("TESTCODE", response.getReferralCode());
-            assertTrue(response.getShareableLink().startsWith("https://api.campcardapp.org/campcard/subscribe/?ref=TESTCODE"));
+            assertTrue(response.getShareableLink().startsWith("https://www.campcardapp.org/subscribe/?scout=TESTCODE"));
             assertEquals(0, response.getTotalReferrals());
             assertEquals(0, response.getSuccessfulReferrals());
             assertEquals(0, response.getTotalRewardsEarned().compareTo(BigDecimal.ZERO));
@@ -387,7 +400,7 @@ class ReferralServiceTest {
             verify(referralRepository).save(captor.capture());
 
             Referral savedReferral = captor.getValue();
-            assertEquals(Referral.ReferralStatus.COMPLETED, savedReferral.getStatus());
+            assertEquals(Referral.ReferralStatus.SUBSCRIBED, savedReferral.getStatus());
             assertNotNull(savedReferral.getCompletedAt());
         }
 

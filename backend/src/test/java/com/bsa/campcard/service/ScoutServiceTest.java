@@ -5,6 +5,7 @@ import com.bsa.campcard.dto.ScoutResponse;
 import com.bsa.campcard.entity.Scout;
 import com.bsa.campcard.entity.Scout.ScoutRank;
 import com.bsa.campcard.entity.Scout.ScoutStatus;
+import com.bsa.campcard.repository.ReferralRepository;
 import com.bsa.campcard.repository.ScoutRepository;
 import com.bsa.campcard.repository.TroopRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,15 @@ class ScoutServiceTest {
 
     @Mock
     private TroopService troopService;
+
+    @Mock
+    private ReferralRepository referralRepository;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
 
     @InjectMocks
     private ScoutService scoutService;

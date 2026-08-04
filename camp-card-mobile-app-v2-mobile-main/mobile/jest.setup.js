@@ -5,6 +5,13 @@
 
 import 'react-native-gesture-handler/jestSetup';
 
+// Use Node's native web streams instead of expo's polyfill — axios's fetch
+// adapter feature-probe crashes against the polyfill under Jest.
+const nodeStreams = require('node:stream/web');
+global.ReadableStream = nodeStreams.ReadableStream;
+global.WritableStream = nodeStreams.WritableStream;
+global.TransformStream = nodeStreams.TransformStream;
+
 // Mock expo-constants
 jest.mock('expo-constants', () => ({
   expoConfig: {
@@ -37,6 +44,20 @@ jest.mock('expo-location', () => ({
 // Mock @expo/vector-icons
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: 'Ionicons',
+}));
+
+// Mock expo-notifications (native push-token registration crashes under Jest)
+jest.mock('expo-notifications', () => ({
+  getExpoPushTokenAsync: jest.fn().mockResolvedValue({ data: 'test-push-token' }),
+  getDevicePushTokenAsync: jest.fn().mockResolvedValue({ data: 'test-device-token' }),
+  requestPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+  getPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(),
+  addNotificationReceivedListener: jest.fn().mockReturnValue({ remove: jest.fn() }),
+  addNotificationResponseReceivedListener: jest.fn().mockReturnValue({ remove: jest.fn() }),
+  removeNotificationSubscription: jest.fn(),
+  AndroidImportance: { MAX: 5, HIGH: 4, DEFAULT: 3, LOW: 2, MIN: 1 },
 }));
 
 // Mock expo-clipboard
@@ -102,13 +123,6 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(),
   clear: jest.fn(),
 }));
-
-// Mock react-native reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
-  return Reanimated;
-});
 
 // Silence console warnings in tests
 const originalWarn = console.warn;
