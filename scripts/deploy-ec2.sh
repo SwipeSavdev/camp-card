@@ -8,8 +8,10 @@
 
 set -e
 
-# Configuration
-DEPLOY_DIR="/home/ubuntu/campcard"
+# Configuration — run from the directory the workflow scp'd files into
+# (/home/<EC2_USER>/campcard); the old hardcoded /home/ubuntu path broke on
+# instances whose user is ec2-user.
+DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 COMPOSE_FILE="docker-compose-aws.yml"
 ENV_FILE=".env"
 

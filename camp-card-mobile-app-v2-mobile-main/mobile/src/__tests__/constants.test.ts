@@ -24,7 +24,7 @@ describe('App Constants', () => {
 
     it('should use default fallback when env var not set', () => {
       const { API_BASE_URL } = require('../config/constants');
-      expect(API_BASE_URL).toBe('http://18.190.69.205:7010');
+      expect(API_BASE_URL).toBe('https://api.campcardapp.org');
     });
   });
 

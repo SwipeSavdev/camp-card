@@ -419,7 +419,7 @@ export default function AnalyticsPage() {
       case 'new_users':
         return { value: d.newUsersLast30Days || 0, change: 0 };
       case 'user_growth': {
-        const growth = d.totalUsers > 0 ? ((d.newUsersLast30Days || 0) / d.totalUsers * 100) : 0;
+        const growth = d.totalUsers > 0 ? (((d.newUsersLast30Days || 0) / d.totalUsers) * 100) : 0;
         return { value: `${growth.toFixed(1)}%`, change: 0 };
       }
       // Merchants
@@ -435,7 +435,7 @@ export default function AnalyticsPage() {
       case 'offer_redemptions':
         return { value: d.totalRedemptions || 0, change: 0 };
       case 'redemption_rate': {
-        const rate = d.activeSubscriptions > 0 ? ((d.totalRedemptions || 0) / d.activeSubscriptions * 100) : 0;
+        const rate = d.activeSubscriptions > 0 ? (((d.totalRedemptions || 0) / d.activeSubscriptions) * 100) : 0;
         return { value: `${rate.toFixed(1)}%`, change: 0 };
       }
       // Cards

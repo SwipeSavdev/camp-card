@@ -1,8 +1,12 @@
 name: Build and Deploy to AWS EC2
 
+# Manual-trigger only. This pipeline has never completed an end-to-end deploy:
+# production containers on EC2 are managed manually (see CLAUDE.md), and this
+# workflow's compose file/.env layout conflicts with that setup (container
+# names/ports collide; it expects /home/<user>/campcard/.env which is not the
+# production /home/ec2-user/camp-card/.env.aws). Validate on the instance
+# before wiring it back to push triggers.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       deploy_backend:
